@@ -745,10 +745,20 @@ public partial class GameScr : mScreen, IChatable
 					}
 					if (GameCanvas.isPointerJustRelease)
 					{
-						disableSingleClick = checkSingleClickEarly();
-						lastSingleClick = num;
-						lastClickCMX = cmx;
-						lastClickCMY = cmy;
+						bool hasTarget = checkSingleClickEarly();
+						if (hasTarget)
+						{
+							disableSingleClick = true;
+							lastSingleClick = num;
+							lastClickCMX = cmx;
+							lastClickCMY = cmy;
+						}
+						else
+						{
+							disableSingleClick = false;
+							lastSingleClick = 0L;
+							isWaitingDoubleClick = false;
+						}
 						GameCanvas.isPointerJustRelease = false;
 					}
 				}
@@ -865,19 +875,13 @@ public partial class GameScr : mScreen, IChatable
 						Char @char = (Char)mapObject;
 						if (@char.cTypePk != 5 && !@char.isAttacPlayerStatus())
 						{
-							checkClickMoveTo(num, num2, 2);
 							return false;
 						}
 					}
-					if (Char.myCharz().mobFocus == mapObject || Char.myCharz().itemFocus == mapObject)
+					if (Char.myCharz().mobFocus == mapObject || Char.myCharz().itemFocus == mapObject || Char.myCharz().npcFocus == mapObject)
 					{
 						doDoubleClickToObj(mapObject);
 						return true;
-					}
-					if (TileMap.mapID == 51 && mapObject.Equals(Char.myCharz().npcFocus))
-					{
-						checkClickMoveTo(num, num2, 3);
-						return false;
 					}
 					if (Char.myCharz().skillPaint != null || Char.myCharz().arr != null || Char.myCharz().dart != null || Char.myCharz().skillInfoPaint() != null)
 					{
@@ -885,7 +889,7 @@ public partial class GameScr : mScreen, IChatable
 					}
 					Char.myCharz().focusManualTo(mapObject);
 					mapObject.stopMoving();
-					return false;
+					return true;
 				}
 				return false;
 			}
@@ -894,7 +898,6 @@ public partial class GameScr : mScreen, IChatable
 			{
 				int num = GameCanvas.px + lastClickCMX;
 				int num2 = GameCanvas.py + lastClickCMY;
-				int cy = Char.myCharz().cy;
 				if (isLockKey)
 				{
 					return;
@@ -902,38 +905,11 @@ public partial class GameScr : mScreen, IChatable
 				IMapObject mapObject = findClickToItem(num, num2);
 				if (mapObject != null)
 				{
-					if (mapObject is Mob && !isMeCanAttackMob((Mob)mapObject))
+					if (checkClickToBotton(mapObject) || (!mapObject.Equals(Char.myCharz().npcFocus) && mobCapcha != null))
 					{
-						checkClickMoveTo(num, num2, 4);
+						return;
 					}
-					else
-					{
-						if (checkClickToBotton(mapObject) || (!mapObject.Equals(Char.myCharz().npcFocus) && mobCapcha != null))
-						{
-							return;
-						}
-						if (Char.myCharz().isAttacPlayerStatus() && Char.myCharz().charFocus != null && !mapObject.Equals(Char.myCharz().charFocus) && !mapObject.Equals(Char.myCharz().charFocus.mobMe) && mapObject is Char)
-						{
-							Char @char = (Char)mapObject;
-							if (@char.cTypePk != 5 && !@char.isAttacPlayerStatus())
-							{
-								checkClickMoveTo(num, num2, 5);
-								return;
-							}
-						}
-						if (TileMap.mapID == 51 && mapObject.Equals(Char.myCharz().npcFocus))
-						{
-							checkClickMoveTo(num, num2, 6);
-						}
-						else
-						{
-							doDoubleClickToObj(mapObject);
-						}
-					}
-				}
-				else if (!checkClickToPopup(num, num2) && !checkClipTopChatPopUp(num, num2) && !Main.isPC)
-				{
-					checkClickMoveTo(num, num2, 7);
+					doDoubleClickToObj(mapObject);
 				}
 			}
 
@@ -973,13 +949,6 @@ public partial class GameScr : mScreen, IChatable
 					obj.stopMoving();
 					auto = 10;
 					doFire(isFireByShortCut: false, skipWaypoint: true);
-					clickToX = obj.getX();
-					clickToY = obj.getY();
-					clickOnTileTop = false;
-					clickMoving = true;
-					clickMovingRed = true;
-					clickMovingTimeOut = 20;
-					clickMovingP1 = 30;
 				}
 			}
 
@@ -989,7 +958,11 @@ public partial class GameScr : mScreen, IChatable
 				int yClick = GameCanvas.py + lastClickCMY;
 				if (!isLockKey && !checkClickToPopup(xClick, yClick) && !checkClipTopChatPopUp(xClick, yClick))
 				{
-					checkClickMoveTo(xClick, yClick, 0);
+					IMapObject mapObject = findClickToItem(xClick, yClick);
+					if (mapObject != null)
+					{
+						Char.myCharz().focusManualTo(mapObject);
+					}
 				}
 			}
 
