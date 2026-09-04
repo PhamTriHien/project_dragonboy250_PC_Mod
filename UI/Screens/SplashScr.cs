@@ -72,19 +72,15 @@ public class SplashScr : mScreen
 
 	public static void loadIP()
 	{
-		Res.err(">>>>>loadIP:  svselect == " + Rms.loadRMSInt(ServerListScreen.RMS_svselect) + "  clientType:" + mSystem.clientType);
-		ServerListScreen.SetIpSelect(Rms.loadRMSInt(ServerListScreen.RMS_svselect), issave: false);
-		if (ServerListScreen.ipSelect == -1)
+		int sv = Rms.loadRMSInt(ServerListScreen.RMS_svselect);
+		Res.err(">>>>>loadIP:  svselect == " + sv + "  clientType:" + mSystem.clientType);
+		if (sv == -1)
 		{
-			Res.err(">>>loadIP:  svselect == -1");
-			if (ServerListScreen.serverPriority == -1)
-			{
-				ServerListScreen.SetIpSelect(ServerListScreen.serverPriority, issave: true);
-			}
-			else
-			{
-				ServerListScreen.SetIpSelect(ServerListScreen.serverPriority, issave: true);
-			}
+			ServerListScreen.SetIpSelect((ServerListScreen.serverPriority >= 0) ? ServerListScreen.serverPriority : 0, issave: true);
+		}
+		else
+		{
+			ServerListScreen.SetIpSelect(sv, issave: false);
 		}
 		ServerListScreen.ConnectIP();
 	}

@@ -482,17 +482,10 @@ public partial class LoginScr : mScreen, IActionListener
 				}
 				return;
 			}
-			if (!Session_ME.gI().isConnected() || !Session_ME.isKeyComplete())
+			if (!Session_ME.gI().isConnected())
 			{
 				GameCanvas.connect();
-				int waitAttempts = 0;
-				while ((!Session_ME.gI().isConnected() || !Session_ME.isKeyComplete()) && waitAttempts < 40)
-				{
-					System.Threading.Thread.Sleep(30);
-					waitAttempts++;
-				}
 			}
-			Service.gI().setClientType();
 			Service.gI().login(text, text2, GameMidlet.VERSION, (sbyte)(isLogin2 ? 1 : 0));
 			Res.outz(Controller.isEXTRA_LINK + " = Controller.isEXTRA_LINK " + text + " " + text2 + " " + GameMidlet.VERSION + " " + (sbyte)(isLogin2 ? 1 : 0));
 			Rms.saveRMSInt(ServerListScreen.RMS_svselect, ServerListScreen.ipSelect);

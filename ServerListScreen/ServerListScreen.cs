@@ -749,19 +749,13 @@ public partial class ServerListScreen : mScreen, IActionListener
 			catch (Exception)
 			{
 			}
-			if (!Session_ME.gI().isConnected() || !Session_ME.isKeyComplete())
+			if (!Session_ME.gI().isConnected())
 			{
 				GameCanvas.connect();
-				int waitAttempts = 0;
-				while ((!Session_ME.gI().isConnected() || !Session_ME.isKeyComplete()) && waitAttempts < 40)
-				{
-					System.Threading.Thread.Sleep(30);
-					waitAttempts++;
-				}
 			}
+			Service.gI().setClientType();
 			if (!flag && !flag2)
 			{
-				Service.gI().setClientType();
 				if (text == null || text.Equals(string.Empty))
 				{
 					Debug.LogError(">>>>Login_New: login2: ");

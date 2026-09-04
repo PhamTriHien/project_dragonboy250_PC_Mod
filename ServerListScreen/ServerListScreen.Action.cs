@@ -170,15 +170,9 @@ public partial class ServerListScreen : mScreen, IActionListener
 					GameCanvas.loginScr = new LoginScr();
 				}
 				GameCanvas.loginScr.switchToMe();
-				if (!Session_ME.gI().isConnected() || !Session_ME.isKeyComplete())
+				if (!Session_ME.gI().isConnected())
 				{
 					GameCanvas.connect();
-					int waitAttempts = 0;
-					while ((!Session_ME.gI().isConnected() || !Session_ME.isKeyComplete()) && waitAttempts < 40)
-					{
-						System.Threading.Thread.Sleep(30);
-						waitAttempts++;
-					}
 				}
 				Service.gI().setClientType();
 				Service.gI().login2(string.Empty);
@@ -251,15 +245,9 @@ public partial class ServerListScreen : mScreen, IActionListener
 				}
 				GameCanvas.loginScr.switchToMe();
 				string text = Rms.loadRMSString(Rms.RMS_userAo + ipSelect);
-				if (!Session_ME.gI().isConnected() || !Session_ME.isKeyComplete())
+				if (!Session_ME.gI().isConnected())
 				{
 					GameCanvas.connect();
-					int waitAttempts = 0;
-					while ((!Session_ME.gI().isConnected() || !Session_ME.isKeyComplete()) && waitAttempts < 40)
-					{
-						System.Threading.Thread.Sleep(30);
-						waitAttempts++;
-					}
 				}
 				Service.gI().setClientType();
 				if (text == null || text.Equals(string.Empty))
@@ -350,7 +338,14 @@ public partial class ServerListScreen : mScreen, IActionListener
 
 	public static void SetIpSelect(int index, bool issave)
 		{
-			if (nameServer != null && nameServer.Length > 0)
+			if (address != null && address.Length > 0)
+			{
+				if (index < 0 || index >= address.Length)
+				{
+					index = (serverPriority >= 0 && serverPriority < address.Length) ? serverPriority : 0;
+				}
+			}
+			else if (nameServer != null && nameServer.Length > 0)
 			{
 				if (index < 0 || index >= nameServer.Length)
 				{
