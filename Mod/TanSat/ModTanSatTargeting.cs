@@ -25,21 +25,51 @@ public static class ModTanSatTargeting
 			return;
 		}
 
-		// 1. Luôn sử dụng toạ độ thực tế thời gian thực của quái (thay vì toạ độ hồi sinh cũ)
+		// 1. Luôn sử dụng toạ độ thực tế thời gian thực của quái
 		int mobX = target.x;
 		int mobY = target.y;
 
-		// 2. Khoảng cách tiếp cận tối ưu: 18px cho cận chiến, 45px cho chưởng xa
-		int offset = isRanged ? 45 : 18;
+		// Xác định cao độ mặt đất chuẩn (ground level) cho quái đất để tránh rơi tự do gây lệch tầm
+		int groundY = mobY;
+		if (target.getTemplate() != null && target.getTemplate().type != 4)
+		{
+			// Quét tìm nền đất vững chắc tại vị trí quái
+			int checkY = mobY;
+			bool foundGround = false;
+			for (int dy = 0; dy <= 48; dy += 2)
+			{
+				if ((TileMap.tileTypeAtPixel(mobX, checkY + dy) & 2) == 2)
+				{
+					groundY = checkY + dy;
+					foundGround = true;
+					break;
+				}
+			}
+			if (!foundGround)
+			{
+				for (int dy = -2; dy >= -48; dy -= 2)
+				{
+					if ((TileMap.tileTypeAtPixel(mobX, checkY + dy) & 2) == 2)
+					{
+						groundY = checkY + dy;
+						foundGround = true;
+						break;
+					}
+				}
+			}
+		}
+
+		// 2. Khoảng cách tiếp cận tối ưu: 20px cho cận chiến, 45px cho chưởng xa
+		int offset = isRanged ? 45 : 20;
 		Char me = Char.myCharz();
 
 		int preferredDir = (me != null && me.cx > mobX) ? 1 : -1;
 
 		int x1 = mobX + preferredDir * offset;
-		int y1 = mobY;
+		int y1 = groundY;
 
 		int x2 = mobX - preferredDir * offset;
-		int y2 = mobY;
+		int y2 = groundY;
 
 		bool b1 = IsTileBlocked(x1, y1);
 		bool b2 = IsTileBlocked(x2, y2);
@@ -57,7 +87,7 @@ public static class ModTanSatTargeting
 		else
 		{
 			outX = mobX;
-			outY = mobY;
+			outY = groundY;
 		}
 
 		// 3. Ràng buộc toạ độ không vượt quá mép bản đồ

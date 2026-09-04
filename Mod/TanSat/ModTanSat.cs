@@ -121,6 +121,11 @@ public static class ModTanSat
 						continue;
 					}
 
+					if (!GameScr.gI().isMeCanAttackMob(m))
+					{
+						continue;
+					}
+
 					// Lọc theo cấu hình quái
 					if (!selectAllMobs && tickedMobTemplateIds.Count > 0 && !tickedMobTemplateIds.Contains(m.templateId))
 					{
@@ -160,7 +165,7 @@ public static class ModTanSat
 			GetSafeAttackPosition(currentFarmTarget, isRanged, out safeX, out safeY);
 
 			int distToTarget = Res.distance(me.cx, me.cy, safeX, safeY);
-			int maxAttackDist = isRanged ? 60 : 30;
+			int maxAttackDist = isRanged ? 45 : 25;
 
 			// Tiếp cận quái
 			if (distToTarget > maxAttackDist)
@@ -170,10 +175,14 @@ public static class ModTanSat
 					ModTeleport.TeleportTo(safeX, safeY);
 					me.cx = safeX;
 					me.cy = safeY;
+					me.cxSend = safeX;
+					me.cySend = safeY;
+					me.cdir = (currentFarmTarget.x >= me.cx) ? 1 : -1;
 					me.statusMe = 1;
 					me.cvx = 0;
 					me.cvy = 0;
 					me.delayFall = 30; // Chống rơi tự do khi đánh quái bay
+					return; // Nhường 1 frame (30-50ms) để server nhận và áp dụng toạ độ mới trước khi xuất đòn
 				}
 				else
 				{
@@ -182,7 +191,7 @@ public static class ModTanSat
 				}
 			}
 
-			// Đã ở vị trí áp sát quái: Ổn định trạng thái và hướng mặt về phía quái
+			// Đã ở vị trí áp sát quái trong tầm đánh: Ổn định trạng thái và hướng mặt về phía quái
 			me.cvx = 0;
 			me.cvy = 0;
 			me.statusMe = 1;
@@ -190,6 +199,12 @@ public static class ModTanSat
 			me.cdir = (currentFarmTarget.x >= me.cx) ? 1 : -1;
 			me.mobFocus = currentFarmTarget;
 			me.charFocus = null;
+
+			// Đảm bảo toạ độ trên server luôn đồng bộ tuyệt đối trước khi ra đòn
+			if (me.cx != me.cxSend || me.cy != me.cySend)
+			{
+				Service.gI().charMove();
+			}
 
 			// Đồng bộ kỹ năng với Server nếu đổi chiêu
 			if (me.myskill != skillToUse)
