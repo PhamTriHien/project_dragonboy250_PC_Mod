@@ -2813,3 +2813,37 @@ Dự án Mod Ngọc Rồng Online PC phiên bản 2.5.0 đã hoàn thiện toàn
 - **Triển khai**: File DLL đã cập nhật vào `DragonBoy250_pc\DragonBoy250_Data\Managed\Assembly-CSharp.dll`.
 - **Đồng bộ mã nguồn**: Đã cập nhật `C:\ModNRO\DragonBoy250_Source\` và kho GitHub commit `61c8a5b`.
 
+---
+
+## 51. Tối Ưu Mỹ Quan Giao Diện: Tự Động Ẩn FPS & Ping Khi Mở Hành Trang & Menu (Auto-Hide FPS & Ping Overlay on UI Open)
+
+### 1. Bối Cảnh & Nhu Cầu Người Dùng
+- **Hiện trạng trước**: Dòng hiển thị FPS và Ping (`ModFps.PaintFPS()`) luôn được vẽ đè lên góc trái màn hình (`drawX = 84, drawY = 28/43`) trong suốt quá trình chơi game.
+- **Vấn đề mỹ quan**: Khi người chơi mở **Hành trang** (`Panel`), **Menu** game hoặc các **Hộp thoại** chọn chức năng, dòng thông số FPS/Ping có thể đè lên tiêu đề tab hoặc chi tiết vật phẩm trong bảng, gây rối mắt và phá vỡ thẩm mỹ nguyên bản của trò chơi.
+
+### 2. Giải Pháp Kỹ Thuật
+- **Tệp chỉnh sửa**: [`Mod\Graphics\ModFps.cs`](file:///C:/ModNRO/ModNRO_Tools/Decompiled/Dragonboy250_PC_projectbuild/Mod/Graphics/ModFps.cs)
+- **Phương thức**: `PaintFPS(mGraphics g)`
+- **Xử lý**:
+  ```csharp
+  // Tự động ẩn FPS khi mở Hành trang (Panel), Menu, Hộp thoại hoặc giao diện Mod
+  if ((GameCanvas.panel != null && GameCanvas.panel.isShow) ||
+      (GameCanvas.panel2 != null && GameCanvas.panel2.isShow) ||
+      (GameCanvas.menu != null && GameCanvas.menu.showMenu) ||
+      GameCanvas.currentDialog != null ||
+      ModUI.uiCustomOpen)
+  {
+      return;
+  }
+  ```
+- **Tính Toàn Vẹn & Trải Nghiệm Người Dùng**:
+  1. Khi đóng toàn bộ giao diện: Dòng thông số FPS và Ping lập tức hiển thị lại sắc nét, mượt mà.
+  2. Khi mở bất kỳ giao diện nào (Hành trang `Panel`, Rương đồ, Menu trò chuyện `Menu`, Hộp thoại xác nhận `currentDialog`, hay Bảng cài đặt Mod `ModUI`): Dòng FPS/Ping tự động ẩn hoàn toàn, nhường 100% không gian hiển thị cho giao diện trò chơi.
+  3. Hoàn toàn không ảnh hưởng đến bộ đếm FPS thực tế (`ModFps.targetFps`, `Main.realFPS`), bộ đếm tốc độ khung hình của engine vẫn duy trì chuẩn xác.
+
+### 3. Kết Quả Xác Minh Thực Nghiệm
+- **Biên dịch**: `dotnet build -c Release` $\rightarrow$ **0 Warning(s), 0 Error(s)**.
+- **Triển khai**: File DLL đã cập nhật vào `DragonBoy250_pc\DragonBoy250_Data\Managed\Assembly-CSharp.dll`.
+- **Đồng bộ mã nguồn**: Đã cập nhật `C:\ModNRO\DragonBoy250_Source\` và kho GitHub commit `c44779f`.
+
+
