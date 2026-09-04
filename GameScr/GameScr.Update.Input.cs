@@ -995,76 +995,8 @@ public partial class GameScr : mScreen, IChatable
 
 	private void checkClickMoveTo(int xClick, int yClick, int index)
 			{
-				if (gamePad.disableClickMove())
-				{
-					return;
-				}
-				Char.myCharz().cancelAttack();
-				if (xClick < TileMap.pxw && xClick > TileMap.pxw - 32)
-				{
-					Char.myCharz().currentMovePoint = new MovePoint(TileMap.pxw, yClick);
-					return;
-				}
-				if (xClick < 32 && xClick > 0)
-				{
-					Char.myCharz().currentMovePoint = new MovePoint(0, yClick);
-					return;
-				}
-				if (xClick < TileMap.pxw && xClick > TileMap.pxw - 48)
-				{
-					Char.myCharz().currentMovePoint = new MovePoint(TileMap.pxw, yClick);
-					return;
-				}
-				if (xClick < 48 && xClick > 0)
-				{
-					Char.myCharz().currentMovePoint = new MovePoint(0, yClick);
-					return;
-				}
-				clickToX = xClick;
-				clickToY = yClick;
-				clickOnTileTop = false;
-				Char.myCharz().delayFall = 0;
-				int num = ((!Char.myCharz().canFly || Char.myCharz().cMP <= 0) ? 1000 : 0);
-				if (clickToY > Char.myCharz().cy && Res.abs(clickToX - Char.myCharz().cx) < 12)
-				{
-					return;
-				}
-				for (int i = 0; i < 60 + num && clickToY + i < TileMap.pxh - 24; i += 24)
-				{
-					if (TileMap.tileTypeAt(clickToX, clickToY + i, 2))
-					{
-						clickToY = TileMap.tileYofPixel(clickToY + i);
-						clickOnTileTop = true;
-						break;
-					}
-				}
-				for (int j = 0; j < 40 + num; j += 24)
-				{
-					if (TileMap.tileTypeAt(clickToX, clickToY - j, 2))
-					{
-						clickToY = TileMap.tileYofPixel(clickToY - j);
-						clickOnTileTop = true;
-						break;
-					}
-				}
-				clickMoving = true;
-				clickMovingRed = false;
-				clickMovingP1 = ((!clickOnTileTop) ? 30 : ((yClick >= clickToY) ? clickToY : yClick));
-				Char.myCharz().delayFall = 0;
-				if (!clickOnTileTop && clickToY < Char.myCharz().cy - 50)
-				{
-					Char.myCharz().delayFall = 20;
-				}
-				clickMovingTimeOut = 30;
-				auto = 0;
-				if (Char.myCharz().holder)
-				{
-					Char.myCharz().removeHoleEff();
-				}
-				Char.myCharz().currentMovePoint = new MovePoint(clickToX, clickToY);
-				Char.myCharz().cdir = ((Char.myCharz().cx - Char.myCharz().currentMovePoint.xEnd <= 0) ? 1 : (-1));
-				Char.myCharz().endMovePointCommand = null;
-				isAutoPlay = false;
+				// Bỏ hoàn toàn việc nhân vật tự động di chuyển theo vị trí click chuột bên ngoài
+				return;
 			}
 
 	public void updateKeyTouchCapcha()
