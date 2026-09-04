@@ -124,6 +124,17 @@ public static class ModFps
 			{
 				return;
 			}
+
+			// Tự động ẩn FPS khi mở Hành trang (Panel), Menu, Hộp thoại hoặc giao diện Mod
+			if ((GameCanvas.panel != null && GameCanvas.panel.isShow) ||
+			    (GameCanvas.panel2 != null && GameCanvas.panel2.isShow) ||
+			    (GameCanvas.menu != null && GameCanvas.menu.showMenu) ||
+			    GameCanvas.currentDialog != null ||
+			    ModUI.uiCustomOpen)
+			{
+				return;
+			}
+
 			g.translate(-g.getTranslateX(), -g.getTranslateY());
 			g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
 
