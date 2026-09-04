@@ -87,7 +87,7 @@ public static class ModNextMap
 
 		string targetMapName = GetMapName(nextMapId);
 
-		// 1. So khớp tên cổng chính xác (bao gồm cả popup says)
+		// 1. So khớp tên cổng chính xác & từ khóa (bao gồm cả popup says)
 		for (int j = 0; j < TileMap.vGo.size(); j++)
 		{
 			Waypoint wp = (Waypoint)TileMap.vGo.elementAt(j);
@@ -114,7 +114,7 @@ public static class ModNextMap
 			for (int j = 0; j < TileMap.vGo.size(); j++)
 			{
 				Waypoint wp = (Waypoint)TileMap.vGo.elementAt(j);
-				if (wp != null && (wp.isOffline || wp.isEnter))
+				if (wp != null && (wp.isOffline || wp.isEnter || wp.minX < 300 || MatchMapName(wp.name, "Nhà")))
 				{
 					return wp;
 				}
@@ -131,14 +131,70 @@ public static class ModNextMap
 			for (int j = 0; j < TileMap.vGo.size(); j++)
 			{
 				Waypoint wp = (Waypoint)TileMap.vGo.elementAt(j);
-				if (wp != null && (wp.minX < 200 || (wp.name != null && (wp.name.ToLower().Contains("vách") || wp.name.ToLower().Contains("núi")))))
+				if (wp != null && (wp.minX < 200 || (wp.name != null && (MatchMapName(wp.name, "Vách") || MatchMapName(wp.name, "núi")))))
 				{
 					return wp;
 				}
 			}
 		}
 
-		// 4. Tuyến đường thẳng nối tiếp: chọn cổng theo hướng tọa độ X
+		// 4. Xử lý tháp Karin & trên không (47, 46, 45, 48)
+		if (TileMap.mapID == 47) // Rừng Karin: 46 (lên Tháp) / 42 (xuống Vách)
+		{
+			if (nextMapId == 46)
+			{
+				// Tìm cổng trên cao (minY nhỏ nhất)
+				Waypoint topWp = null;
+				int minTopY = int.MaxValue;
+				for (int k = 0; k < TileMap.vGo.size(); k++)
+				{
+					Waypoint w = (Waypoint)TileMap.vGo.elementAt(k);
+					if (w != null && w.minY < minTopY)
+					{
+						minTopY = w.minY;
+						topWp = w;
+					}
+				}
+				if (topWp != null) return topWp;
+			}
+		}
+		else if (TileMap.mapID == 46) // Tháp Karin: 45 (lên Thần điện) / 47 (xuống Rừng Karin)
+		{
+			if (nextMapId == 45)
+			{
+				// Tìm cổng trên đỉnh tháp
+				Waypoint topWp = null;
+				int minTopY = int.MaxValue;
+				for (int k = 0; k < TileMap.vGo.size(); k++)
+				{
+					Waypoint w = (Waypoint)TileMap.vGo.elementAt(k);
+					if (w != null && w.minY < minTopY)
+					{
+						minTopY = w.minY;
+						topWp = w;
+					}
+				}
+				if (topWp != null) return topWp;
+			}
+			else if (nextMapId == 47)
+			{
+				// Tìm cổng dưới chân tháp
+				Waypoint bottomWp = null;
+				int maxBottomY = int.MinValue;
+				for (int k = 0; k < TileMap.vGo.size(); k++)
+				{
+					Waypoint w = (Waypoint)TileMap.vGo.elementAt(k);
+					if (w != null && w.maxY > maxBottomY)
+					{
+						maxBottomY = w.maxY;
+						bottomWp = w;
+					}
+				}
+				if (bottomWp != null) return bottomWp;
+			}
+		}
+
+		// 5. Tuyến đường thẳng nối tiếp: chọn cổng theo hướng tọa độ X
 		if (TileMap.vGo.size() == 1)
 		{
 			return (Waypoint)TileMap.vGo.elementAt(0);
@@ -283,8 +339,14 @@ public static class ModNextMap
 			bool sentRequest = ModWaypoint.StepToWaypoint(targetWp);
 			if (sentRequest)
 			{
+				// Giai đoạn 2: Lệnh qua map đã được gửi lên Server
 				lastChangeAttemptTime = mSystem.currentTimeMillis();
 				nextMapCooldown = 30;
+			}
+			else
+			{
+				// Giai đoạn 1: Nhân vật vừa dịch chuyển đến Waypoint, chờ 2 tick để Server cập nhật vị trí
+				nextMapCooldown = 2;
 			}
 		}
 		else

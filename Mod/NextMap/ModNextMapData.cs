@@ -118,10 +118,39 @@ public static class ModNextMapData
 		}
 	}
 
+	public static string RemoveAccents(string text)
+	{
+		if (string.IsNullOrEmpty(text)) return string.Empty;
+		string[] arr1 = new string[] {
+			"á","à","ả","ã","ạ","â","ấ","ầ","ẩ","ẫ","ậ","ă","ắ","ằ","ẳ","ẵ","ặ",
+			"đ",
+			"é","è","ẻ","ẽ","ẹ","ê","ế","ề","ể","ễ","ệ",
+			"í","ì","ỉ","ĩ","ị",
+			"ó","ò","ỏ","õ","ọ","ô","ố","ồ","ổ","ỗ","ộ","ơ","ớ","ờ","ở","ỡ","ợ",
+			"ú","ù","ủ","ũ","ụ","ư","ứ","ừ","ử","ữ","ự",
+			"ý","ỳ","ỷ","ỹ","ỵ"
+		};
+		string[] arr2 = new string[] {
+			"a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a",
+			"d",
+			"e","e","e","e","e","e","e","e","e","e","e",
+			"i","i","i","i","i",
+			"o","o","o","o","o","o","o","o","o","o","o","o","o","o","o","o","o",
+			"u","u","u","u","u","u","u","u","u","u","u",
+			"y","y","y","y","y"
+		};
+		text = text.ToLower().Trim();
+		for (int i = 0; i < arr1.Length; i++)
+		{
+			text = text.Replace(arr1[i], arr2[i]);
+		}
+		return text;
+	}
+
 	public static string CleanName(string s)
 	{
 		if (string.IsNullOrEmpty(s)) return string.Empty;
-		s = s.ToLower().Trim();
+		s = RemoveAccents(s);
 		string res = string.Empty;
 		for (int i = 0; i < s.Length; i++)
 		{
@@ -139,7 +168,21 @@ public static class ModNextMapData
 		if (string.IsNullOrEmpty(wpName) || string.IsNullOrEmpty(mapName)) return false;
 		string w = CleanName(wpName);
 		string m = CleanName(mapName);
-		return w.Contains(m) || m.Contains(w);
+		if (w.Contains(m) || m.Contains(w)) return true;
+
+		// Tách từ khóa quan trọng không dấu
+		string normW = RemoveAccents(wpName).ToLower();
+		string normM = RemoveAccents(mapName).ToLower();
+		string[] keywords = normM.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+		int matchCount = 0;
+		for (int i = 0; i < keywords.Length; i++)
+		{
+			if (keywords[i].Length >= 2 && normW.Contains(keywords[i]))
+			{
+				matchCount++;
+			}
+		}
+		return (keywords.Length > 0 && matchCount >= (keywords.Length > 2 ? 2 : 1));
 	}
 
 	public static int FindMapIdByName(string name)

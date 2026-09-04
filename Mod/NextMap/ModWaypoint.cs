@@ -19,15 +19,7 @@ public static class ModWaypoint
 					return y;
 				}
 			}
-			// Quét toàn bộ chiều cao map nếu waypoint bao trọn trục Y
-			for (int y = TileMap.pxh - 12; y >= 24; y -= 12)
-			{
-				if (TileMap.tileTypeAt(x, y, 2))
-				{
-					return y;
-				}
-			}
-			return (maxY > 24) ? (maxY - 12) : ((minY + maxY) / 2);
+			return (minY + maxY) / 2;
 		}
 		catch
 		{
@@ -49,33 +41,34 @@ public static class ModWaypoint
 			int targetX = (wp.minX + wp.maxX) / 2;
 			if (wp.minX <= 24)
 			{
-				targetX = wp.minX + 15;
+				targetX = wp.minX + 12;
 			}
 			else if (wp.maxX >= TileMap.pxw - 24)
 			{
-				targetX = wp.maxX - 15;
+				targetX = wp.maxX - 12;
 			}
 
-			// 2. Tính toạ độ Y an toàn (chân tiếp xúc mặt đất hoặc trung tâm cổng)
+			// 2. Tính toạ độ Y an toàn (giữ nguyên độ cao bay/đứng nếu đã nằm trong cổng, hoặc lấy trung tâm/mặt đất)
 			int targetY = me.cy;
-			if (wp.maxY - wp.minY <= 60)
+			if (TileMap.isInAirMap() || TileMap.mapID == 45 || TileMap.mapID == 46 || TileMap.mapID == 47 || TileMap.mapID == 48)
 			{
 				targetY = (wp.minY + wp.maxY) / 2;
 			}
-			else
+			else if (wp.isEnter || wp.isOffline)
 			{
 				int groundY = GetGroundY(targetX, wp.minY, wp.maxY);
-				if (groundY >= wp.minY && groundY <= wp.maxY)
-				{
-					targetY = groundY;
-				}
-				else if (me.cy >= wp.minY && me.cy <= wp.maxY)
+				targetY = (groundY >= wp.minY && groundY <= wp.maxY) ? groundY : ((wp.minY + wp.maxY) / 2);
+			}
+			else
+			{
+				if (me.cy >= wp.minY && me.cy <= wp.maxY)
 				{
 					targetY = me.cy;
 				}
 				else
 				{
-					targetY = (wp.minY + wp.maxY) / 2;
+					int groundY = GetGroundY(targetX, wp.minY, wp.maxY);
+					targetY = (groundY >= wp.minY && groundY <= wp.maxY) ? groundY : ((wp.minY + wp.maxY) / 2);
 				}
 			}
 
@@ -83,26 +76,53 @@ public static class ModWaypoint
 			if (targetY < wp.minY + 2) targetY = wp.minY + 2;
 			if (targetY > wp.maxY - 2) targetY = wp.maxY - 2;
 
-			// 3. Đặt nhân vật trực tiếp vào tâm cổng và đồng bộ với Server
-			me.vMovePoints.removeAllElements();
-			me.currentMovePoint = null;
+			// Tính khoảng cách từ vị trí hiện tại tới điểm đích Waypoint
+			int dist = Res.distance(me.cx, me.cy, targetX, targetY);
+
+			// GIAI ĐOẠN 1: Nếu nhân vật còn ở xa (> 30px), đồng bộ vị trí tới Waypoint trước
+			if (dist > 30)
+			{
+				me.vMovePoints.removeAllElements();
+				me.currentMovePoint = null;
+				me.cx = targetX;
+				me.cy = targetY;
+				me.cvx = 0;
+				me.cvy = 0;
+				me.statusMe = 1;
+				me.delayFall = 0;
+				me.cdir = (targetX > TileMap.pxw / 2) ? 1 : -1;
+
+				// Gửi gói tin cập nhật toạ độ nguyên tử lên server
+				Service.gI().charMoveTo(targetX, targetY);
+				return false; // Chờ tick tiếp theo để server ghi nhận vị trí trước khi gửi lệnh qua map
+			}
+
+			// GIAI ĐOẠN 2: Nhân vật đã đứng gọn trong Waypoint (dist <= 30px) -> Kích hoạt qua Map
 			me.cx = targetX;
 			me.cy = targetY;
 			me.cvx = 0;
 			me.cvy = 0;
 			me.statusMe = 1;
 			me.delayFall = 0;
-
-			int dx = targetX - me.cx;
 			me.cdir = (targetX > TileMap.pxw / 2) ? 1 : -1;
 
-			// Gửi gói tin cập nhật vị trí nguyên tử lên server
-			Service.gI().charMoveTo(targetX, targetY);
+			// Gửi gói tin di chuyển xác thực
+			Service.gI().charMove();
 
-			// 4. Gửi gói tin yêu cầu chuyển map thực
 			if (wp.isOffline || TileMap.isTrainingMap())
 			{
 				Service.gI().getMapOffline();
+			}
+			else if (wp.isEnter)
+			{
+				if (wp.popup != null && wp.popup.command != null)
+				{
+					wp.popup.command.performAction();
+				}
+				else
+				{
+					Service.gI().requestChangeMap();
+				}
 			}
 			else
 			{
@@ -133,16 +153,20 @@ public static class ModWaypoint
 				return;
 			}
 
-			me.vMovePoints.removeAllElements();
-			me.currentMovePoint = null;
-			me.cx = shipNpc.cx;
-			me.cy = shipNpc.cy;
-			me.cvx = 0;
-			me.cvy = 0;
-			me.statusMe = 1;
+			int dist = Res.distance(me.cx, me.cy, shipNpc.cx, shipNpc.cy);
+			if (dist > 30)
+			{
+				me.vMovePoints.removeAllElements();
+				me.currentMovePoint = null;
+				me.cx = shipNpc.cx;
+				me.cy = shipNpc.cy;
+				me.cvx = 0;
+				me.cvy = 0;
+				me.statusMe = 1;
 
-			Service.gI().charMoveTo(shipNpc.cx, shipNpc.cy);
-			Service.gI().openMenu(shipNpc.npcId);
+				Service.gI().charMoveTo(shipNpc.cx, shipNpc.cy);
+				return;
+			}
 
 			int menuIndex = 0;
 			if (TileMap.mapID == 24) // Trái Đất -> Namếc (25) = 0, Xayda (26) = 1
@@ -158,7 +182,12 @@ public static class ModWaypoint
 				menuIndex = (targetPlanetMapId == 25) ? 1 : 0;
 			}
 
-			Service.gI().confirmMenu((short)shipNpc.npcId, (sbyte)menuIndex);
+			// Mở menu NPC Tàu vũ trụ
+			Service.gI().openMenu(shipNpc.template.npcTemplateId);
+
+			// Xác nhận chọn menu tàu vũ trụ
+			Service.gI().confirmMenu((short)shipNpc.template.npcTemplateId, (sbyte)menuIndex);
+
 			Char.isLockKey = true;
 			Char.ischangingMap = true;
 			GameCanvas.clearKeyHold();
