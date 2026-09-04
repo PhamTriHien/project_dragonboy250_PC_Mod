@@ -73,8 +73,8 @@ public static class ModTanSat
 				return;
 			}
 
-			// Tự động tạm dừng khi mở giao diện game hoặc mod, hoặc khi đang Next Map
-			if (GameCanvas.menu.showMenu || (GameCanvas.panel != null && GameCanvas.panel.isShow) || GameCanvas.currentDialog != null || ModUI.uiCustomOpen || ModNextMap.isNextMapActive)
+			// Chỉ tạm dừng khi đang Next Map hoặc khi đang chuyển map
+			if (ModNextMap.isNextMapActive || Char.isLoadingMap || Char.ischangingMap)
 			{
 				return;
 			}
