@@ -2665,3 +2665,36 @@ Dự án Mod Ngọc Rồng Online PC phiên bản 2.5.0 đã hoàn thiện toàn
 3. **Kiểm Soát Chỉ Mục Máy Chủ An Toàn (`SetIpSelect`)**:
    - Ràng buộc an toàn theo cả `address.Length` và `nameServer.Length` để luôn đảm bảo $0 \le \text{ipSelect} < \text{length}$.
    - Chuẩn hóa `SplashScr.loadIP()` tự động nạp cấu hình hợp lệ khi khởi động.
+
+---
+
+## 47. Khắc Phục Triệt Để Lỗi Màn Hình Đen & Tràn Bộ Nhớ DirectX 11 (0x887A0005) Do Rò Rỉ Khởi Tạo Texture2D
+
+### 1. Phân Tích Hiện Tượng & Nhật Ký Lỗi (Log Analysis)
+- Khi mở game, nhật ký `output_log.txt` ghi nhận hàng loạt lỗi:
+  ```
+  d3d11: failed to create 2D texture id=112 width=1 height=1 mips=1 dxgifmt=28 [D3D error was 887a0005]
+  d3d11: failed to create 2D texture shader resource view id=112 [D3D error was 80070057]
+  ```
+- **Mã lỗi `887a0005`** (`DXGI_ERROR_DEVICE_REMOVED`): GPU DirectX 11 bị reset khẩn cấp do quá tải bộ mô tả (descriptor heap exhaustion) hoặc tạo đối tượng đồ họa không được quản lý trên luồng GC của Unity 5.6.7f1.
+- Khi D3D device bị removed, Unity không thể vẽ bất kỳ khung hình nào tiếp theo, dẫn đến **Màn hình đen toàn bộ (Black Screen)**.
+
+### 2. Nguyên Nhân Kỹ Thuật (Root Cause)
+- Trong lớp [`Graphics\Image\Image.cs`](file:///C:/ModNRO/ModNRO_Tools/Decompiled/Dragonboy250_PC_projectbuild/Graphics/Image/Image.cs), biến trường được khai báo:
+  ```csharp
+  public Texture2D texture = new Texture2D(1, 1);
+  ```
+- Mỗi khi `new Image()` được tạo ra (hàng trăm lần khi nạp icon, small image, UI sprite, font, item, effect, tile map), một đối tượng GPU Texture2D 1x1 mới được cấp phát trên VRAM.
+- Ngay sau đó, các hàm `createImage(filename)` hoặc `createImage(imageData)` gán lại `image.texture = ...`, làm thất thoát (leak) hàng trăm texture 1x1 trên bộ nhớ unmanaged của driver DirectX 11.
+- Các hàm truy xuất như `getColor()`, `getRGB()`, `getWidth()`, `getHeight()` và các hàm vẽ `drawRegion`, `drawImage` thiếu kiểm tra `texture != null`, tiềm ẩn nguy cơ crash null reference.
+
+### 3. Giải Pháp Kỹ Thuật Triệt Để
+1. **Loại Bỏ Khởi Tạo Texture2D 1x1 Thừa**:
+   - Đổi `public Texture2D texture = new Texture2D(1, 1);` thành `public Texture2D texture;`.
+   - Các phương thức nạp hình ảnh (`__createImage(filename)`, `__createImage(imageData)`, `__createImage(src, ...)`, `__createImage(w, h)`) chỉ cấp phát đúng duy nhất 1 Texture2D có kích thước thực tế khi cần thiết.
+2. **Bảo Vệ Kiểm Tra Null Toàn Diện (Zero-Crash Null Guards)**:
+   - Thêm `if (image == null || image.texture == null) return;` vào tất cả các hàm vẽ trong [`mGraphics\mGraphics.Image.cs`](file:///C:/ModNRO/ModNRO_Tools/Decompiled/Dragonboy250_PC_projectbuild/mGraphics/mGraphics.Image.cs): `__drawRegion`, `_drawRegion`, `drawImagaByDrawTexture`, `drawImage`, `drawImageFog`, `drawImageScale`, `drawImageSimple`.
+   - Các hàm getter `getWidth()`, `getHeight()`, `getRealImageWidth()`, `getRealImageHeight()`, `getColor()`, `getRGB()` trả về dữ liệu an toàn khi `texture == null`.
+3. **Kết Quả Thực Nghiệm**:
+   - Khởi động game kiểm tra thực tế: `output_log.txt` đạt **0 lỗi DirectX**, **0 cảnh báo `887a0005`**, engine khởi động sạch sẽ và ổn định 100%.
+
