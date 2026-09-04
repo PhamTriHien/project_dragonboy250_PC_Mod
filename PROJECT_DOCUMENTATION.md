@@ -2728,3 +2728,88 @@ Dự án Mod Ngọc Rồng Online PC phiên bản 2.5.0 đã hoàn thiện toàn
 - **Biên dịch**: `dotnet build -c Release` $\rightarrow$ **0 Warning(s), 0 Error(s)**.
 - **Triển khai**: File DLL đã cập nhật vào `DragonBoy250_pc\DragonBoy250_Data\Managed\Assembly-CSharp.dll`.
 - **Đồng bộ**: Đã đồng bộ sang `C:\ModNRO\DragonBoy250_Source\` và GitHub commit `6ab105f`.
+
+---
+
+## 49. Chuẩn Hóa Cơ Chế Click Chuột: Tối Ưu Tương Tác Quái Vật & NPC, Hủy Bỏ Toàn Bộ Click Ngoài Mục Tiêu (Target-Only Mouse Interaction Architecture)
+
+### 1. Yêu Cầu Chi Tiết
+- Click chuột lên **Quái vật (`Mob`)** và **NPC**: Hoạt động bình thường (click lần 1 để khóa mục tiêu / focus, click lần 2 để tấn công quái hoặc nói chuyện / mở menu NPC).
+- Click chuột lên **Vật phẩm (`ItemMap`)** hoặc **Người chơi khác (`Char`)**: Khóa mục tiêu chuẩn xác.
+- Click chuột **ngoài mục tiêu (địa hình, mặt đất, vùng trời, khoảng trống)**: Hoàn toàn không tạo bất kỳ sự kiện click hay delay nào, không kích hoạt hoạt ảnh click và không làm gián đoạn trạng thái game.
+
+### 2. Giải Pháp Kỹ Thuật
+- **Tệp chỉnh sửa**: [`GameScr\GameScr.Update.Input.cs`](file:///C:/ModNRO/ModNRO_Tools/Decompiled/Dragonboy250_PC_projectbuild/GameScr/GameScr.Update.Input.cs)
+- **Chu trình xử lý Input**:
+  1. `updateKeyTouch()`:
+     ```csharp
+     if (GameCanvas.isPointerJustRelease)
+     {
+         bool hasTarget = checkSingleClickEarly();
+         if (hasTarget)
+         {
+             disableSingleClick = true;
+             lastSingleClick = num;
+             lastClickCMX = cmx;
+             lastClickCMY = cmy;
+         }
+         else
+         {
+             disableSingleClick = false;
+             lastSingleClick = 0L;
+             isWaitingDoubleClick = false;
+         }
+         GameCanvas.isPointerJustRelease = false;
+     }
+     ```
+  2. `checkSingleClickEarly()`:
+     - Khi `findClickToItem` tìm thấy mục tiêu hợp lệ (`Mob`, `Npc`, `ItemMap`, `Char`):
+       - Gọi `Char.myCharz().focusManualTo(mapObject)`.
+       - Nếu mục tiêu đã được focus trước đó: Kích hoạt `doDoubleClickToObj(mapObject)` để mở menu NPC hoặc tấn công quái vật.
+       - Trả về `true` (có mục tiêu).
+     - Khi không có mục tiêu (click ngoài không gian trống): Trả về `false`, triệt tiêu hoàn toàn `lastSingleClick` và `isWaitingDoubleClick`.
+  3. `checkDoubleClick()` & `checkSingleClick()`:
+     - Chỉ thao tác khi có `mapObject` tồn tại dưới toạ độ con trỏ chuột.
+
+### 3. Kết Quả Xác Minh Thực Nghiệm
+- **Biên dịch**: `dotnet build -c Release` $\rightarrow$ **0 Warning(s), 0 Error(s)**.
+- **Triển khai**: File DLL đã cập nhật vào `DragonBoy250_pc\DragonBoy250_Data\Managed\Assembly-CSharp.dll`.
+- **Đồng bộ**: Đã đồng bộ sang `C:\ModNRO\DragonBoy250_Source\` và GitHub commit `75b8077`.
+
+---
+
+## 50. Tối Ưu Tàn Sát: Duy Trì Farm Quái Nền Liên Tục Khi Mở Hành Trang & Menu (Persistent Background Auto-Farm During Inventory & Menu Interaction)
+
+### 1. Bối Cảnh & Nhu Cầu Người Dùng
+- **Hiện trạng trước**: Trong `ModTanSat.RunTanSat()`, hệ thống kiểm tra `GameCanvas.menu.showMenu || (GameCanvas.panel != null && GameCanvas.panel.isShow) || GameCanvas.currentDialog != null || ModUI.uiCustomOpen` và lập tức dừng farm khi bất kỳ giao diện nào được mở.
+- **Bất tiện thực tế**: Khi đang treo Tàn Sát (Auto-Farm), người chơi thường xuyên cần mở **Hành trang** (`Panel`) để xem đồ, nâng cấp điểm tiềm năng, ép ngọc, dọn rương hoặc mở **Menu** cài đặt / trò chuyện NPC. Việc tính năng Tàn Sát bị khựng lại hoặc dừng hẳn gây gián đoạn quá trình cày cuốc kinh nghiệm và nhặt đồ.
+
+### 2. Giải Pháp Kỹ Thuật
+- **Tệp chỉnh sửa**: [`Mod\TanSat\ModTanSat.cs`](file:///C:/ModNRO/ModNRO_Tools/Decompiled/Dragonboy250_PC_projectbuild/Mod/TanSat/ModTanSat.cs)
+- **Phương thức**: `RunTanSat()`
+- **Thay đổi**:
+  ```csharp
+  // Trước:
+  if (GameCanvas.menu.showMenu || (GameCanvas.panel != null && GameCanvas.panel.isShow) || GameCanvas.currentDialog != null || ModUI.uiCustomOpen || ModNextMap.isNextMapActive)
+  {
+      return;
+  }
+
+  // Sau: Chỉ tạm dừng khi đang Next Map hoặc khi đang load map
+  if (ModNextMap.isNextMapActive || Char.isLoadingMap || Char.ischangingMap)
+  {
+      return;
+  }
+  ```
+- **Tính Toàn Vẹn & Phối Hợp Đa Luồng**:
+  1. **Hành trang (`Panel`)**: Giao diện Panel (`panel.updateKey()`, `panel.paint()`) sử dụng hệ thống biến riêng (`currentTabIndex`, `selectedItem`), hoàn toàn độc lập với `Char.mobFocus` và chu trình gửi gói tin tấn công nền của Tàn Sát. Người chơi thoải mái lướt túi đồ, mặc/tháo trang bị trong khi nhân vật vẫn tự tìm quái, dịch chuyển và diệt quái liên tục.
+  2. **Menu game (`Menu`) & Dialogs**: Menu trò chuyện và các hộp thoại pop-up hoạt động bình thường, không làm gián đoạn chu kỳ quét quái.
+  3. **Bảng điều khiển Mod (`ModUI`)**: Người chơi có thể bật tắt tùy chọn quái/skill trong Mod Menu thời gian thực mà Tàn Sát vẫn vận hành.
+  4. **Tự động nhặt (`ModAutoPick`) & Tự động bơm đậu (`ModAutoHeal`)**: Đồng bộ hoạt động liên tục trong lúc mở Hành trang / Menu.
+  5. **Chống xung đột Next Map**: Tàn Sát vẫn tự động nhường quyền tuyệt đối khi người chơi kích hoạt Next Map (`ModNextMap.isNextMapActive`) hoặc khi game đang đổi map (`Char.isLoadingMap`, `Char.ischangingMap`).
+
+### 3. Kết Quả Xác Minh Thực Nghiệm
+- **Biên dịch**: `dotnet build -c Release` $\rightarrow$ **0 Warning(s), 0 Error(s)**.
+- **Triển khai**: File DLL đã cập nhật vào `DragonBoy250_pc\DragonBoy250_Data\Managed\Assembly-CSharp.dll`.
+- **Đồng bộ mã nguồn**: Đã cập nhật `C:\ModNRO\DragonBoy250_Source\` và kho GitHub commit `61c8a5b`.
+
