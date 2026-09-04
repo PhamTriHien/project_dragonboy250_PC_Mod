@@ -601,7 +601,7 @@ public partial class GameScr : mScreen, IChatable
 
 	private int selectedIndexSkill = -1;
 
-	private Skill lastSkill;
+	public static Skill lastSkill;
 
 	private bool doSeleckSkillFlag;
 

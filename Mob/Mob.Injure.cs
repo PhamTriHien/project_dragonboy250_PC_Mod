@@ -14,10 +14,6 @@ public partial class Mob : IMapObject
 			{
 				timeStatus = 4;
 				status = 7;
-				if (getTemplate().type != 0 && Res.abs(x - xFirst) < 30)
-				{
-					x -= 10 * dir;
-				}
 			}
 		}
 

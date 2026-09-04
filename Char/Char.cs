@@ -950,7 +950,7 @@ public partial class Char : IMapObject
 
 	private int chargeCount;
 
-	private bool hasSendAttack;
+	public bool hasSendAttack;
 
 	public bool isMabuHold;
 

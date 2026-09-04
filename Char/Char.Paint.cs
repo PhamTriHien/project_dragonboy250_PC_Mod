@@ -35,6 +35,7 @@ public partial class Char : IMapObject
 					effPaints = null;
 					currentMovePoint = null;
 					arr = null;
+					hasSendAttack = false;
 					if ((TileMap.tileTypeAtPixel(cx, cy) & 2) != 2)
 					{
 						delayFall = 5;
@@ -61,6 +62,7 @@ public partial class Char : IMapObject
 					eff0 = (eff1 = (eff2 = null));
 					i0 = (i1 = (i2 = 0));
 					arr = null;
+					hasSendAttack = false;
 					if ((TileMap.tileTypeAtPixel(cx, cy) & 2) != 2)
 					{
 						delayFall = 5;
@@ -208,7 +210,11 @@ public partial class Char : IMapObject
 
 	public void setSkillPaint(SkillPaint skillPaint, int sType)
 			{
-				hasSendAttack = false;
+				bool alreadySent = hasSendAttack;
+				if (!alreadySent)
+				{
+					hasSendAttack = false;
+				}
 				if (stone || (me && myskill.template.id == 9 && cHP <= cHPFull / 10))
 				{
 					return;
@@ -244,12 +250,15 @@ public partial class Char : IMapObject
 					{
 						return;
 					}
-					if (num - myskill.lastTimeUseThisSkill < myskill.coolDown)
+					if (!alreadySent && num - myskill.lastTimeUseThisSkill < myskill.coolDown)
 					{
 						myskill.paintCanNotUseSkill = true;
 						return;
 					}
-					myskill.lastTimeUseThisSkill = num;
+					if (!alreadySent)
+					{
+						myskill.lastTimeUseThisSkill = num;
+					}
 					if (myskill.template.manaUseType == 2)
 					{
 						cMP = 1L;

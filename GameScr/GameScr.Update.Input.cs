@@ -1008,9 +1008,18 @@ public partial class GameScr : mScreen, IChatable
 				if ((obj.Equals(Char.myCharz().npcFocus) || mobCapcha == null) && !checkClickToBotton(obj))
 				{
 					checkEffToObj(obj, isnew: false);
-					Char.myCharz().cancelAttack();
-					Char.myCharz().currentMovePoint = null;
-					Char.myCharz().cvx = (Char.myCharz().cvy = 0);
+					Char me = Char.myCharz();
+					if (me != null)
+					{
+						me.currentMovePoint = null;
+						me.cvx = (me.cvy = 0);
+						me.cdir = (obj.getX() >= me.cx) ? 1 : -1;
+						if (obj is Mob)
+						{
+							me.mobFocus = (Mob)obj;
+							me.charFocus = null;
+						}
+					}
 					obj.stopMoving();
 					auto = 10;
 					doFire(isFireByShortCut: false, skipWaypoint: true);

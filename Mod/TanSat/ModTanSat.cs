@@ -189,19 +189,48 @@ public static class ModTanSat
 			me.delayFall = 30; // Giữ thăng bằng trên không
 			me.cdir = (currentFarmTarget.x >= me.cx) ? 1 : -1;
 			me.mobFocus = currentFarmTarget;
-			me.myskill = skillToUse;
+			me.charFocus = null;
 
-			// Gửi gói tin tấn công thật ngay lập tức để trừ máu quái không bị hụt
+			// Đồng bộ kỹ năng với Server nếu đổi chiêu
+			if (me.myskill != skillToUse)
+			{
+				me.myskill = skillToUse;
+				Service.gI().selectSkill(skillToUse.template.id);
+				GameScr.lastSkill = skillToUse;
+			}
+
+			// Tập hợp danh sách quái tấn công (hỗ trợ đánh lan đa mục tiêu nếu skill có maxFight > 1)
 			MyVector vMobAttack = new MyVector();
 			vMobAttack.addElement(currentFarmTarget);
-			Service.gI().sendPlayerAttack(vMobAttack, new MyVector(), 1);
+			if (skillToUse.maxFight > 1 && GameScr.vMob != null)
+			{
+				for (int mIdx = 0; mIdx < GameScr.vMob.size(); mIdx++)
+				{
+					Mob nearMob = (Mob)GameScr.vMob.elementAt(mIdx);
+					if (nearMob != null && nearMob != currentFarmTarget && nearMob.status != 0 && nearMob.status != 1 && nearMob.hp > 0)
+					{
+						if (Res.distance(me.cx, me.cy, nearMob.x, nearMob.y) <= skillToUse.dx + 20)
+						{
+							vMobAttack.addElement(nearMob);
+							if (vMobAttack.size() >= skillToUse.maxFight)
+							{
+								break;
+							}
+						}
+					}
+				}
+			}
+
+			// Cập nhật mốc thời gian hồi chiêu
 			skillToUse.lastTimeUseThisSkill = now;
 
-			// Kích hoạt animation hình ảnh
-			if (me.skillPaint == null && me.dart == null)
-			{
-				GameScr.gI().doFire(isFireByShortCut: true, skipWaypoint: true);
-			}
+			// Gửi gói tin tấn công thật lên server NGAY LẬP TỨC (Frame 0 - Zero Delay Damage)
+			Service.gI().sendPlayerAttack(vMobAttack, new MyVector(), 1);
+
+			// Kích hoạt hiệu ứng đánh và animation visual nguyên bản mà không bị gửi lặp gói tin
+			me.hasSendAttack = true;
+			bool isGrounded = TileMap.tileTypeAt(me.cx, me.cy, 2);
+			me.setSkillPaint(GameScr.sks[skillToUse.skillId], (!isGrounded) ? 1 : 0);
 		}
 		catch
 		{
