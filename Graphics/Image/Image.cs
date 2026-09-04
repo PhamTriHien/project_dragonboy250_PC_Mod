@@ -8,7 +8,7 @@ public class Image
 
 	private const int MAXTIME = 500;
 
-	public Texture2D texture = new Texture2D(1, 1);
+	public Texture2D texture;
 
 	public static Image imgTemp;
 
@@ -63,9 +63,12 @@ public class Image
 
 	public static Image createImage(Image img)
 	{
+		if (img == null || img.texture == null)
+		{
+			return null;
+		}
 		Image image = createImage(img.w, img.h);
 		image.texture = img.texture;
-		image.texture.Apply();
 		return image;
 	}
 
@@ -323,12 +326,12 @@ public class Image
 
 	private static Image __createImage(string filename)
 	{
-		Image image = new Image();
 		Texture2D texture2D = Resources.Load(filename) as Texture2D;
 		if (texture2D == null)
 		{
 			throw new Exception("NULL POINTER EXCEPTION AT Image __createImage " + filename);
 		}
+		Image image = new Image();
 		image.texture = texture2D;
 		image.w = image.texture.width;
 		image.h = image.texture.height;
@@ -346,6 +349,7 @@ public class Image
 		Image image = new Image();
 		try
 		{
+			image.texture = new Texture2D(1, 1, TextureFormat.RGBA32, false);
 			image.texture.LoadImage(imageData);
 			image.w = image.texture.width;
 			image.h = image.texture.height;
@@ -360,8 +364,12 @@ public class Image
 
 	private static Image __createImage(Image src, int x, int y, int w, int h, int transform)
 	{
+		if (src == null || src.texture == null)
+		{
+			return null;
+		}
 		Image image = new Image();
-		image.texture = new Texture2D(w, h);
+		image.texture = new Texture2D(w, h, TextureFormat.RGBA32, false);
 		y = src.texture.height - y - h;
 		for (int i = 0; i < w; i++)
 		{
@@ -401,31 +409,35 @@ public class Image
 
 	public static int getImageWidth(Image image)
 	{
-		return image.getWidth();
+		return (image != null) ? image.getWidth() : 0;
 	}
 
 	public static int getImageHeight(Image image)
 	{
-		return image.getHeight();
+		return (image != null) ? image.getHeight() : 0;
 	}
 
 	public int getWidth()
 	{
-		return w / mGraphics.zoomLevel;
+		return (texture != null ? w : 0) / mGraphics.zoomLevel;
 	}
 
 	public int getHeight()
 	{
-		return h / mGraphics.zoomLevel;
+		return (texture != null ? h : 0) / mGraphics.zoomLevel;
 	}
 
 	private static void setTextureQuality(Image img)
 	{
-		setTextureQuality(img.texture);
+		if (img != null && img.texture != null)
+		{
+			setTextureQuality(img.texture);
+		}
 	}
 
 	public static void setTextureQuality(Texture2D texture)
 	{
+		if (texture == null) return;
 		texture.anisoLevel = 0;
 		texture.filterMode = FilterMode.Point;
 		texture.mipMapBias = 0f;
@@ -434,21 +446,22 @@ public class Image
 
 	public Color[] getColor()
 	{
-		return texture.GetPixels();
+		return (texture != null) ? texture.GetPixels() : new Color[0];
 	}
 
 	public int getRealImageWidth()
 	{
-		return w;
+		return (texture != null) ? w : 0;
 	}
 
 	public int getRealImageHeight()
 	{
-		return h;
+		return (texture != null) ? h : 0;
 	}
 
 	public void getRGB(ref int[] data, int x1, int x2, int x, int y, int w, int h)
 	{
+		if (texture == null) return;
 		Color[] pixels = texture.GetPixels(x, this.h - 1 - y, w, h);
 		for (int i = 0; i < pixels.Length; i++)
 		{

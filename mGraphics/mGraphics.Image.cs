@@ -40,7 +40,7 @@ public partial class mGraphics
 
 	public void __drawRegion(Image image, int x0, int y0, int w, int h, int transform, float x, float y, int anchor)
 		{
-			if (image == null)
+			if (image == null || image.texture == null)
 			{
 				return;
 			}
@@ -190,7 +190,7 @@ public partial class mGraphics
 
 	public void _drawRegion(Image image, float x0, float y0, int w, int h, int transform, int x, int y, int anchor)
 		{
-			if (image == null)
+			if (image == null || image.texture == null)
 			{
 				return;
 			}
@@ -417,6 +417,7 @@ public partial class mGraphics
 
 	public void drawImagaByDrawTexture(Image image, float x, float y)
 		{
+			if (image == null || image.texture == null) return;
 			x *= (float)zoomLevel;
 			y *= (float)zoomLevel;
 			GUI.DrawTexture(new Rect(x + (float)translateX, y + (float)translateY, image.getRealImageWidth(), image.getRealImageHeight()), image.texture);
@@ -424,7 +425,7 @@ public partial class mGraphics
 
 	public void drawImage(Image image, int x, int y, int anchor)
 		{
-			if (image != null)
+			if (image != null && image.texture != null)
 			{
 				drawRegion(image, 0, 0, getImageWidth(image), getImageHeight(image), 0, x, y, anchor);
 			}
@@ -432,7 +433,7 @@ public partial class mGraphics
 
 	public void drawImageFog(Image image, int x, int y, int anchor)
 		{
-			if (image != null)
+			if (image != null && image.texture != null)
 			{
 				drawRegion(image, 0, 0, image.texture.width, image.texture.height, 0, x, y, anchor);
 			}
@@ -440,7 +441,7 @@ public partial class mGraphics
 
 	public void drawImage(Image image, int x, int y)
 		{
-			if (image != null)
+			if (image != null && image.texture != null)
 			{
 				drawRegion(image, 0, 0, getImageWidth(image), getImageHeight(image), 0, x, y, TOP | LEFT);
 			}
@@ -448,7 +449,7 @@ public partial class mGraphics
 
 	public void drawImage(Image image, float x, float y, int anchor)
 		{
-			if (image != null)
+			if (image != null && image.texture != null)
 			{
 				drawRegion(image, 0, 0, getImageWidth(image), getImageHeight(image), 0, x, y, anchor);
 			}
@@ -461,7 +462,7 @@ public partial class mGraphics
 			y *= zoomLevel;
 			w *= zoomLevel;
 			h *= zoomLevel;
-			if (image != null)
+			if (image != null && image.texture != null)
 			{
 				Graphics.DrawTexture(new Rect(x + translateX, y + translateY, (tranform != 0) ? (-w) : w, h), image.texture);
 			}
@@ -471,7 +472,7 @@ public partial class mGraphics
 		{
 			x *= zoomLevel;
 			y *= zoomLevel;
-			if (image != null)
+			if (image != null && image.texture != null)
 			{
 				Graphics.DrawTexture(new Rect(x, y, image.w, image.h), image.texture);
 			}
@@ -479,12 +480,12 @@ public partial class mGraphics
 
 	public static int getImageWidth(Image image)
 		{
-			return image.getWidth();
+			return (image != null) ? image.getWidth() : 0;
 		}
 
 	public static int getImageHeight(Image image)
 		{
-			return image.getHeight();
+			return (image != null) ? image.getHeight() : 0;
 		}
 
 	public static Image blend(Image img0, float level, int rgb)
