@@ -1,0 +1,13 @@
+# Build and Output directories
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store
