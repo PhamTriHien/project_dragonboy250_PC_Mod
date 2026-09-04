@@ -2846,4 +2846,66 @@ Dự án Mod Ngọc Rồng Online PC phiên bản 2.5.0 đã hoàn thiện toàn
 - **Triển khai**: File DLL đã cập nhật vào `DragonBoy250_pc\DragonBoy250_Data\Managed\Assembly-CSharp.dll`.
 - **Đồng bộ mã nguồn**: Đã cập nhật `C:\ModNRO\DragonBoy250_Source\` và kho GitHub commit `c44779f`.
 
+---
+
+## 52. Khắc Phục Triệt Để & Kích Hoạt Toàn Diện Hệ Thống Thông Báo Boss (Comprehensive Boss Notification Pipeline & Dynamic Parser)
+
+### 1. Bối Cảnh & Nguyên Nhân Gốc (Root Cause)
+- **Vấn đề**: Trước đây, tính năng `ModBossNotice` chỉ định nghĩa hàm xử lý `ProcessServerBossNotice` nhưng chưa được kết nối (hook) vào chuỗi tiếp nhận dữ liệu thông báo từ server trong trò chơi.
+- **Các luồng server gửi thông báo Boss trong Dragon Boy**:
+  1. `GameCanvas.startserverThongBao(string msgSv)`: Thanh chạy chữ vàng góc trên màn hình (`thongBaoTest`) — kênh thông báo Boss xuất hiện chính của server.
+  2. `Info.addInfo(string s, int Type, Char cInfo, bool isChatServer)` & `InfoMe.addInfo`: Thông báo HUD giữa màn hình.
+  3. `ChatPopup.addChatPopup(string chat, ...)` & `addBigMessage`: Thông báo qua avatar NPC hoặc hộp thoại toàn máy chủ.
+  4. `Controller.cs`: Các gói tin `cmd = -25` (Server Message), `cmd = 94`, `cmd = 44` (World Chat).
+
+### 2. Giải Pháp Kỹ Thuật
+- **Tệp chỉnh sửa**:
+  - [`Mod\Boss\ModBossNotice.cs`](file:///C:/ModNRO/ModNRO_Tools/Decompiled/Dragonboy250_PC_projectbuild/Mod/Boss/ModBossNotice.cs)
+  - [`GameCanvas\GameCanvas.cs`](file:///C:/ModNRO/ModNRO_Tools/Decompiled/Dragonboy250_PC_projectbuild/GameCanvas/GameCanvas.cs)
+  - [`UI\HUD\Info.cs`](file:///C:/ModNRO/ModNRO_Tools/Decompiled/Dragonboy250_PC_projectbuild/UI/HUD/Info.cs)
+  - [`ChatPopup\ChatPopup.cs`](file:///C:/ModNRO/ModNRO_Tools/Decompiled/Dragonboy250_PC_projectbuild/ChatPopup/ChatPopup.cs)
+- **Nâng cấp thuật toán bóc tách thông báo Boss**:
+  1. Mở rộng danh sách `KNOWN_BOSSES` đầy đủ mọi Boss Dragon Boy (Kuku, Mập Đầu Đinh, Rambo, Tiểu Đội Sát Thủ, Fide, Xên, Android 13-20, Broly, Black Goku, Zamasu, Moro, Cumber, Mabuu, Thần Rồng, v.v.).
+  2. Cơ chế nhận diện tự động từ khóa `BOSS ` cho các Boss tùy biến/mới của server.
+  3. Bóc tách linh hoạt trạng thái: **Xuất hiện tại bản đồ/khu vực** và **Đã bị tiêu diệt**.
+  4. Bộ lọc chống trùng lặp thông báo trong vòng 5 giây và lưu trữ tối đa 6 bản ghi thời gian thực.
+  5. HUD thông báo Boss tự động ẩn khi mở Hành trang/Menu để đảm bảo mỹ quan.
+
+---
+
+## 53. Tối Ưu Hóa Kích Thước & Mỹ Quan Nút Bấm Giao Diện Mod (Compact & Sleek Native Mod UI Buttons)
+
+### 1. Bối Cảnh & Nhu Cầu Tinh Gọn
+- **Hiện trạng trước**: Các nút bấm trong Bảng Điều Khiển Mod (7 Tab) sử dụng chiều cao cố định 22-24px và chiều rộng lớn (75-150px), chiếm quá nhiều không gian trong khung 340x250, khiến giao diện bị chật chội và các nhãn văn bản bị sát mép.
+- **Yêu cầu**: Tối ưu hóa kích thước tất cả các nút bấm nhỏ gọn, cân đối, sắc nét và hòa nhập 100% phong cách gốc.
+
+### 2. Giải Pháp Kỹ Thuật
+- **Tệp chỉnh sửa**:
+  - [`Mod\UI\ModUI.cs`](file:///C:/ModNRO/ModNRO_Tools/Decompiled/Dragonboy250_PC_projectbuild/Mod/UI/ModUI.cs)
+  - [`Mod\UI\ModUITanSat.cs`](file:///C:/ModNRO/ModNRO_Tools/Decompiled/Dragonboy250_PC_projectbuild/Mod/UI/ModUITanSat.cs)
+  - [`Mod\UI\ModUIAutoPick.cs`](file:///C:/ModNRO/ModNRO_Tools/Decompiled/Dragonboy250_PC_projectbuild/Mod/UI/ModUIAutoPick.cs)
+  - [`Mod\UI\ModUISpeed.cs`](file:///C:/ModNRO/ModNRO_Tools/Decompiled/Dragonboy250_PC_projectbuild/Mod/UI/ModUISpeed.cs)
+  - [`Mod\UI\ModUIAutoHeal.cs`](file:///C:/ModNRO/ModNRO_Tools/Decompiled/Dragonboy250_PC_projectbuild/Mod/UI/ModUIAutoHeal.cs)
+  - [`Mod\UI\ModUIGraphics.cs`](file:///C:/ModNRO/ModNRO_Tools/Decompiled/Dragonboy250_PC_projectbuild/Mod/UI/ModUIGraphics.cs)
+  - [`Mod\UI\ModUIBoss.cs`](file:///C:/ModNRO/ModNRO_Tools/Decompiled/Dragonboy250_PC_projectbuild/Mod/UI/ModUIBoss.cs)
+  - [`Mod\UI\ModUINextMap.cs`](file:///C:/ModNRO/ModNRO_Tools/Decompiled/Dragonboy250_PC_projectbuild/Mod/UI/ModUINextMap.cs)
+- **Quy chuẩn kích thước nút bấm tinh gọn mới**:
+  - `PaintNativeButton(int x, int y, int w, int h, string text, bool isFocus, mGraphics g)`: Khung viền kim loại 2 lớp sắc nét, tự động canh giữa phông chữ `tahoma_7b`.
+  - **Nút BẬT/TẮT**: Thu gọn từ `75-85px` $\rightarrow$ **`50-52px`**, chiều cao chuẩn **`18px`**.
+  - **Nút Dịch chuyển/Chạy bộ**: Thu gọn từ `98px` $\rightarrow$ **`80px`**, chiều cao **`18px`**.
+  - **7 Nút Tab Header**: Thu gọn chuẩn **`42px`** x **`19px`**.
+  - **Nút Tốc Độ Di Chuyển (x1.0 - x5.0)**: Thu gọn dạng pill nhỏ **`38px`** x **`18px`**.
+  - **Nút Mức Bơm Đậu (< 20% - < 70%)**: **`60px`** x **`18px`**.
+  - **Nút Chế Độ Đồ Họa**: **`66px`** x **`18px`**.
+  - **Nút Mốc Cố Định FPS**: **`62px`** x **`18px`**.
+  - **Nút Chọn Hành Tinh Next Map**: **`92px`** x **`19px`**.
+  - **Nút ĐÓNG**: Thu gọn **`75px`** x **`20px`**.
+  - Toàn bộ vùng chạm chuột / cảm ứng (`HandleTap`) được đồng bộ 100% với toạ độ mới.
+
+### 3. Kết Quả Xác Minh Thực Nghiệm
+- **Biên dịch**: `dotnet build -c Release` $\rightarrow$ **0 Warning(s), 0 Error(s)**.
+- **Triển khai**: File DLL đã cập nhật vào `DragonBoy250_pc\DragonBoy250_Data\Managed\Assembly-CSharp.dll`.
+- **Đồng bộ mã nguồn**: Đã cập nhật `C:\ModNRO\DragonBoy250_Source\` và kho GitHub commit `1c8a707`.
+
+
 
