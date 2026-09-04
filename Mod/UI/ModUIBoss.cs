@@ -4,13 +4,13 @@ public static class ModUIBoss
 {
 	public static void Paint(int uiX, int uiY, int uiW, int uiH, mGraphics g)
 	{
-		mFont.tahoma_7b_white.drawString(g, "Hiển thị HUD:", uiX + 20, uiY + 54, mFont.LEFT);
-		ModUI.PaintNativeButton(uiX + 96, uiY + 48, 85, ModBossNotice.isShowBossNotice ? "BẬT" : "TẮT", ModBossNotice.isShowBossNotice, g);
-		ModUI.PaintNativeButton(uiX + 190, uiY + 48, 120, "Xóa Danh Sách", false, g);
+		mFont.tahoma_7b_white.drawString(g, "Hiển thị HUD:", uiX + 20, uiY + 52, mFont.LEFT);
+		ModUI.PaintNativeButton(uiX + 96, uiY + 48, 52, 18, ModBossNotice.isShowBossNotice ? "BẬT" : "TẮT", ModBossNotice.isShowBossNotice, g);
+		ModUI.PaintNativeButton(uiX + 158, uiY + 48, 95, 18, "Xóa Danh Sách", false, g);
 
-		mFont.tahoma_7b_yellow.drawString(g, "Boss vừa xuất hiện từ Server (Tối đa 6):", uiX + 20, uiY + 76, mFont.LEFT);
+		mFont.tahoma_7b_yellow.drawString(g, "Boss vừa xuất hiện từ Server (Tối đa 6):", uiX + 20, uiY + 74, mFont.LEFT);
 
-		int listY = uiY + 92;
+		int listY = uiY + 90;
 		int listW = uiW - 36;
 		g.setColor(0x111111);
 		g.fillRect(uiX + 18, listY, listW, 122);
@@ -32,20 +32,20 @@ public static class ModUIBoss
 					if (entry == null) continue;
 					int rowY = listY + 4 + i * 19;
 
-					g.setColor(0xff3300);
+					g.setColor(entry.isDefeated ? 0x888888 : 0xff3300);
 					g.fillRect(uiX + 22, rowY + 3, 3, 11);
 
 					int curX = uiX + 30;
 					if (mFont.tahoma_7b_yellow != null)
 					{
-						mFont.tahoma_7b_yellow.drawString(g, entry.bossName, curX, rowY + 1, mFont.LEFT);
-						curX += mFont.tahoma_7b_yellow.getWidth(entry.bossName);
+						(entry.isDefeated ? mFont.tahoma_7_grey : mFont.tahoma_7b_yellow).drawString(g, entry.bossName, curX, rowY + 1, mFont.LEFT);
+						curX += (entry.isDefeated ? mFont.tahoma_7_grey : mFont.tahoma_7b_yellow).getWidth(entry.bossName);
 					}
 
 					if (mFont.tahoma_7_white != null)
 					{
-						mFont.tahoma_7_white.drawString(g, " - " + entry.mapName + " - ", curX, rowY + 1, mFont.LEFT);
-						curX += mFont.tahoma_7_white.getWidth(" - " + entry.mapName + " - ");
+						(entry.isDefeated ? mFont.tahoma_7_grey : mFont.tahoma_7_white).drawString(g, " - " + entry.mapName + " - ", curX, rowY + 1, mFont.LEFT);
+						curX += (entry.isDefeated ? mFont.tahoma_7_grey : mFont.tahoma_7_white).getWidth(" - " + entry.mapName + " - ");
 					}
 
 					if (mFont.tahoma_7_green2 != null)
@@ -59,7 +59,7 @@ public static class ModUIBoss
 
 	public static bool HandleTap(int px, int py, int uiX, int uiY, int uiW, int uiH)
 	{
-		if (px >= uiX + 96 && px <= uiX + 181 && py >= uiY + 48 && py <= uiY + 70)
+		if (px >= uiX + 96 && px <= uiX + 148 && py >= uiY + 48 && py <= uiY + 66)
 		{
 			ModBossNotice.isShowBossNotice = !ModBossNotice.isShowBossNotice;
 			ModConfig.SaveConfig();
@@ -67,7 +67,7 @@ public static class ModUIBoss
 			return true;
 		}
 
-		if (px >= uiX + 190 && px <= uiX + 310 && py >= uiY + 48 && py <= uiY + 70)
+		if (px >= uiX + 158 && px <= uiX + 253 && py >= uiY + 48 && py <= uiY + 66)
 		{
 			lock (ModBossNotice.listBossNotices)
 			{

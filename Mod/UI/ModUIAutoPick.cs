@@ -4,13 +4,13 @@ public static class ModUIAutoPick
 {
 	public static void Paint(int uiX, int uiY, int uiW, int uiH, mGraphics g)
 	{
-		mFont.tahoma_7b_white.drawString(g, "Tự nhặt đồ:", uiX + 20, uiY + 58, mFont.LEFT);
-		ModUI.PaintNativeButton(uiX + 100, uiY + 52, 85, ModAutoPick.autoPick ? "BẬT" : "TẮT", ModAutoPick.autoPick, g);
+		mFont.tahoma_7b_white.drawString(g, "Tự nhặt đồ:", uiX + 20, uiY + 55, mFont.LEFT);
+		ModUI.PaintNativeButton(uiX + 90, uiY + 51, 52, 18, ModAutoPick.autoPick ? "BẬT" : "TẮT", ModAutoPick.autoPick, g);
 
 		int boxX = uiX + 16;
-		int boxY = uiY + 80;
+		int boxY = uiY + 76;
+		int boxH = 110;
 		int boxW = uiW - 32;
-		int boxH = 105;
 		GameCanvas.paintz.paintFrameSimple(boxX, boxY, boxW, boxH, g);
 		g.setColor(0x181818);
 		g.fillRect(boxX + 2, boxY + 2, boxW - 4, boxH - 4);
@@ -32,7 +32,7 @@ public static class ModUIAutoPick
 
 	public static bool HandleTap(int px, int py, int uiX, int uiY, int uiW, int uiH)
 	{
-		if (px >= uiX + 100 && px <= uiX + 185 && py >= uiY + 52 && py <= uiY + 74)
+		if (px >= uiX + 90 && px <= uiX + 142 && py >= uiY + 50 && py <= uiY + 70)
 		{
 			ModAutoPick.autoPick = !ModAutoPick.autoPick;
 			ModConfig.SaveConfig();
@@ -41,7 +41,7 @@ public static class ModUIAutoPick
 		}
 
 		int boxX = uiX + 16;
-		int boxY = uiY + 80;
+		int boxY = uiY + 76;
 
 		if (px >= boxX + 10 && px <= boxX + 280)
 		{

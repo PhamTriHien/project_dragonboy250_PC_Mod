@@ -7,18 +7,18 @@ public static class ModUINextMap
 		if (ModNextMap.isNextMapActive)
 		{
 			mFont.tahoma_7b_green2.drawString(g, "Đang đến: " + ModNextMap.GetMapName(ModNextMap.nextMapTargetId) + " (" + ModNextMap.nextMapTargetId + ")", uiX + 18, uiY + 54, mFont.LEFT);
-			ModUI.PaintNativeButton(uiX + uiW - 85, uiY + 48, 70, "HỦY ĐI", false, g);
+			ModUI.PaintNativeButton(uiX + uiW - 75, uiY + 48, 56, 18, "HỦY ĐI", false, g);
 		}
 		else
 		{
 			mFont.tahoma_7_white.drawString(g, "Hiện tại: " + TileMap.mapName + " (" + TileMap.mapID + ") | Chọn map muốn đến:", uiX + 18, uiY + 54, mFont.LEFT);
 		}
 
-		// 3 Nút chọn hành tinh
-		int pBtnW = 96;
-		ModUI.PaintNativeButton(uiX + 18, uiY + 70, pBtnW, "Trái Đất (16)", ModNextMap.selectedPlanetTab == 0, g);
-		ModUI.PaintNativeButton(uiX + 120, uiY + 70, pBtnW, "Namếc (14)", ModNextMap.selectedPlanetTab == 1, g);
-		ModUI.PaintNativeButton(uiX + 222, uiY + 70, pBtnW, "Xayda (14)", ModNextMap.selectedPlanetTab == 2, g);
+		// 3 Nút chọn hành tinh (Nhỏ gọn)
+		int pBtnW = 92;
+		ModUI.PaintNativeButton(uiX + 18, uiY + 70, pBtnW, 19, "Trái Đất (16)", ModNextMap.selectedPlanetTab == 0, g);
+		ModUI.PaintNativeButton(uiX + 124, uiY + 70, pBtnW, 19, "Namếc (14)", ModNextMap.selectedPlanetTab == 1, g);
+		ModUI.PaintNativeButton(uiX + 230, uiY + 70, pBtnW, 19, "Xayda (14)", ModNextMap.selectedPlanetTab == 2, g);
 
 		// Khung danh sách các map
 		int listY = uiY + 95;
@@ -75,7 +75,7 @@ public static class ModUINextMap
 	{
 		if (ModNextMap.isNextMapActive)
 		{
-			if (px >= uiX + uiW - 85 && px <= uiX + uiW - 15 && py >= uiY + 48 && py <= uiY + 70)
+			if (px >= uiX + uiW - 75 && px <= uiX + uiW - 19 && py >= uiY + 48 && py <= uiY + 66)
 			{
 				ModNextMap.StopNextMap();
 				GameScr.info1.addInfo("Đã hủy Next Map!", 0);
@@ -84,20 +84,20 @@ public static class ModUINextMap
 			}
 		}
 
-		int pBtnW = 96;
-		if (px >= uiX + 18 && px <= uiX + 18 + pBtnW && py >= uiY + 70 && py <= uiY + 92)
+		int pBtnW = 92;
+		if (px >= uiX + 18 && px <= uiX + 18 + pBtnW && py >= uiY + 70 && py <= uiY + 89)
 		{
 			ModNextMap.selectedPlanetTab = 0;
 			SoundMn.gI().buttonClick();
 			return true;
 		}
-		if (px >= uiX + 120 && px <= uiX + 120 + pBtnW && py >= uiY + 70 && py <= uiY + 92)
+		if (px >= uiX + 124 && px <= uiX + 124 + pBtnW && py >= uiY + 70 && py <= uiY + 89)
 		{
 			ModNextMap.selectedPlanetTab = 1;
 			SoundMn.gI().buttonClick();
 			return true;
 		}
-		if (px >= uiX + 222 && px <= uiX + 222 + pBtnW && py >= uiY + 70 && py <= uiY + 92)
+		if (px >= uiX + 230 && px <= uiX + 230 + pBtnW && py >= uiY + 70 && py <= uiY + 89)
 		{
 			ModNextMap.selectedPlanetTab = 2;
 			SoundMn.gI().buttonClick();

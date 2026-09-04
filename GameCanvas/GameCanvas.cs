@@ -1000,6 +1000,7 @@ public partial class GameCanvas : IActionListener
 			thongBaoTest = msgSv;
 			xThongBaoTranslate = w - 60;
 			dir_ = -1;
+			ModBossNotice.ProcessServerBossNotice(msgSv);
 		}
 
 	public static string getMoneys(int m)

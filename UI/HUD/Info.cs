@@ -261,6 +261,7 @@ public class Info : IActionListener
 
 	public void addInfo(string s, int Type, Char cInfo, bool isChatServer)
 	{
+		ModBossNotice.ProcessServerBossNotice(s);
 		type = Type;
 		if (GameCanvas.w == 128)
 		{

@@ -5,14 +5,14 @@ public static class ModUITanSat
 {
 	public static void Paint(int uiX, int uiY, int uiW, int uiH, mGraphics g)
 	{
-		mFont.tahoma_7b_white.drawString(g, "Trạng thái:", uiX + 16, uiY + 56, mFont.LEFT);
-		ModUI.PaintNativeButton(uiX + 80, uiY + 52, 75, ModTanSat.autoTanSat ? "BẬT" : "TẮT", ModTanSat.autoTanSat, g);
+		mFont.tahoma_7b_white.drawString(g, "Trạng thái:", uiX + 16, uiY + 55, mFont.LEFT);
+		ModUI.PaintNativeButton(uiX + 80, uiY + 51, 52, 18, ModTanSat.autoTanSat ? "BẬT" : "TẮT", ModTanSat.autoTanSat, g);
 
-		mFont.tahoma_7b_white.drawString(g, "Tiếp cận:", uiX + 165, uiY + 56, mFont.LEFT);
-		ModUI.PaintNativeButton(uiX + 225, uiY + 52, 98, ModTanSat.useTeleport ? "Dịch chuyển" : "Chạy bộ", ModTanSat.useTeleport, g);
+		mFont.tahoma_7b_white.drawString(g, "Tiếp cận:", uiX + 150, uiY + 55, mFont.LEFT);
+		ModUI.PaintNativeButton(uiX + 205, uiY + 51, 80, 18, ModTanSat.useTeleport ? "Dịch chuyển" : "Chạy bộ", ModTanSat.useTeleport, g);
 
-		ModUI.PaintNativeButton(uiX + 14, uiY + 76, 150, "1. Chọn Quái", ModUI.tanSatTab == 0, g);
-		ModUI.PaintNativeButton(uiX + 176, uiY + 76, 150, "2. Chọn Kỹ Năng", ModUI.tanSatTab == 1, g);
+		ModUI.PaintNativeButton(uiX + 16, uiY + 74, 145, 19, "1. Chọn Quái", ModUI.tanSatTab == 0, g);
+		ModUI.PaintNativeButton(uiX + 178, uiY + 74, 145, 19, "2. Chọn Kỹ Năng", ModUI.tanSatTab == 1, g);
 
 		if (ModUI.tanSatTab == 0)
 		{
@@ -129,7 +129,7 @@ public static class ModUITanSat
 	public static bool HandleTap(int px, int py, int uiX, int uiY, int uiW, int uiH)
 	{
 		// Bật/Tắt Tàn sát
-		if (px >= uiX + 80 && px <= uiX + 155 && py >= uiY + 50 && py <= uiY + 74)
+		if (px >= uiX + 80 && px <= uiX + 132 && py >= uiY + 50 && py <= uiY + 70)
 		{
 			ModTanSat.autoTanSat = !ModTanSat.autoTanSat;
 			ModConfig.SaveConfig();
@@ -138,7 +138,7 @@ public static class ModUITanSat
 		}
 
 		// Bật/Tắt Dịch chuyển / Chạy bộ
-		if (px >= uiX + 225 && px <= uiX + 325 && py >= uiY + 50 && py <= uiY + 74)
+		if (px >= uiX + 205 && px <= uiX + 285 && py >= uiY + 50 && py <= uiY + 70)
 		{
 			ModTanSat.useTeleport = !ModTanSat.useTeleport;
 			ModConfig.SaveConfig();
@@ -147,15 +147,15 @@ public static class ModUITanSat
 		}
 
 		// Sub tabs (1. Chọn Quái / 2. Chọn Kỹ Năng)
-		if (py >= uiY + 74 && py <= uiY + 98)
+		if (py >= uiY + 73 && py <= uiY + 95)
 		{
-			if (px >= uiX + 14 && px <= uiX + 164)
+			if (px >= uiX + 16 && px <= uiX + 161)
 			{
 				ModUI.tanSatTab = 0;
 				SoundMn.gI().buttonClick();
 				return true;
 			}
-			if (px >= uiX + 176 && px <= uiX + 326)
+			if (px >= uiX + 178 && px <= uiX + 323)
 			{
 				ModUI.tanSatTab = 1;
 				SoundMn.gI().buttonClick();

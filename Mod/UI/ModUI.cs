@@ -66,39 +66,40 @@ public static class ModUI
 		}
 	}
 
-	public static void PaintNativeButton(int x, int y, int w, string text, bool isFocus, mGraphics g)
+	public static void PaintNativeButton(int x, int y, int w, int h, string text, bool isFocus, mGraphics g)
 	{
 		try
 		{
-			if (Command.btn1left == null)
+			if (isFocus)
 			{
-				Command.btn0left = GameCanvas.loadImage("/mainImage/btn0left.png");
-				Command.btn0mid = GameCanvas.loadImage("/mainImage/btn0mid.png");
-				Command.btn0right = GameCanvas.loadImage("/mainImage/btn0right.png");
-				Command.btn1left = GameCanvas.loadImage("/mainImage/btn1left.png");
-				Command.btn1mid = GameCanvas.loadImage("/mainImage/btn1mid.png");
-				Command.btn1right = GameCanvas.loadImage("/mainImage/btn1right.png");
-			}
-			Image b0 = isFocus ? Command.btn1left : Command.btn0left;
-			Image b1 = isFocus ? Command.btn1mid : Command.btn0mid;
-			Image b2 = isFocus ? Command.btn1right : Command.btn0right;
-
-			if (b0 != null && b1 != null && b2 != null)
-			{
-				Command.paintOngMau(b0, b1, b2, x, y, w, g);
+				g.setColor(0x13381b);
+				g.fillRect(x + 1, y + 1, w - 2, h - 2);
+				g.setColor(0x00e676);
+				g.drawRect(x, y, w - 1, h - 1);
+				g.setColor(0x00783e);
+				g.drawRect(x + 1, y + 1, w - 3, h - 3);
 			}
 			else
 			{
-				g.setColor(isFocus ? 0x1b5e20 : 0x212121);
-				g.fillRect(x, y, w, 22);
-				g.setColor(isFocus ? 0x00e676 : 0x757575);
-				g.drawRect(x, y, w, 22);
+				g.setColor(0x242424);
+				g.fillRect(x + 1, y + 1, w - 2, h - 2);
+				g.setColor(0x555555);
+				g.drawRect(x, y, w - 1, h - 1);
+				g.setColor(0x181818);
+				g.drawRect(x + 1, y + 1, w - 3, h - 3);
 			}
-			(isFocus ? mFont.tahoma_7b_green2 : mFont.tahoma_7b_white).drawString(g, text, x + w / 2, y + 5, mFont.CENTER);
+
+			int textY = y + (h - 10) / 2;
+			(isFocus ? mFont.tahoma_7b_green2 : mFont.tahoma_7b_white).drawString(g, text, x + w / 2, textY, mFont.CENTER);
 		}
 		catch
 		{
 		}
+	}
+
+	public static void PaintNativeButton(int x, int y, int w, string text, bool isFocus, mGraphics g)
+	{
+		PaintNativeButton(x, y, w, 20, text, isFocus, g);
 	}
 
 	public static void PaintTanSatUI(mGraphics g)
@@ -149,14 +150,15 @@ public static class ModUI
 				mFont.tahoma_7b_white.drawString(g, "X", uiX + uiW - 16, uiY + 9, mFont.CENTER);
 			}
 
-			// 7 Tab Buttons Header
+			// 7 Tab Buttons Header (Nhỏ gọn, tinh tế)
 			string[] tabNames = new string[7] { "Tàn Sát", "Tự Nhặt", "Tốc Độ", "Hồi Máu", "Đồ Họa", "Báo Boss", "Next Map" };
-			int tabW = 41;
+			int tabW = 42;
+			int tabH = 19;
 			int startTabX = uiX + 11;
 			for (int t = 0; t < 7; t++)
 			{
 				int tx = startTabX + t * 45;
-				PaintNativeButton(tx, uiY + 28, tabW, tabNames[t], selectedTab == t, g);
+				PaintNativeButton(tx, uiY + 28, tabW, tabH, tabNames[t], selectedTab == t, g);
 			}
 
 			// Render Tab tương ứng
@@ -185,11 +187,12 @@ public static class ModUI
 					break;
 			}
 
-			// Nút ĐÓNG ở đáy
-			int closeBtnW = 90;
+			// Nút ĐÓNG nhỏ gọn ở đáy
+			int closeBtnW = 75;
+			int closeBtnH = 20;
 			int closeBtnX = uiX + (uiW - closeBtnW) / 2;
-			int closeBtnY = uiY + 220;
-			PaintNativeButton(closeBtnX, closeBtnY, closeBtnW, "ĐÓNG", false, g);
+			int closeBtnY = uiY + 222;
+			PaintNativeButton(closeBtnX, closeBtnY, closeBtnW, closeBtnH, "ĐÓNG", false, g);
 		}
 		catch
 		{
@@ -287,10 +290,10 @@ public static class ModUI
 						}
 
 						// Nút ĐÓNG ở đáy
-						int closeBtnW = 90;
+						int closeBtnW = 75;
 						int closeBtnX = uiX + (uiW - closeBtnW) / 2;
-						int closeBtnY = uiY + 220;
-						if (px >= closeBtnX && px <= closeBtnX + closeBtnW && py >= closeBtnY && py <= closeBtnY + 24)
+						int closeBtnY = uiY + 222;
+						if (px >= closeBtnX && px <= closeBtnX + closeBtnW && py >= closeBtnY && py <= closeBtnY + 20)
 						{
 							uiCustomOpen = false;
 							ModConfig.SaveConfig();
