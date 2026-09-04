@@ -2698,3 +2698,33 @@ Dự án Mod Ngọc Rồng Online PC phiên bản 2.5.0 đã hoàn thiện toàn
 3. **Kết Quả Thực Nghiệm**:
    - Khởi động game kiểm tra thực tế: `output_log.txt` đạt **0 lỗi DirectX**, **0 cảnh báo `887a0005`**, engine khởi động sạch sẽ và ổn định 100%.
 
+---
+
+## 48. Vô Hiệu Hóa Di Chuyển Nhân Vật Theo Vị Trí Click Chuột Bên Ngoài Bản Đồ (Disable Mouse World-Click Movement)
+
+### 1. Bối Cảnh & Nhu Cầu Người Dùng
+- Trên nền tảng PC, cơ chế điều khiển di chuyển nhân vật chủ yếu qua bàn phím (`A/W/S/D`, phím mũi tên hoặc các phím Numpad) và các tính năng mod tự động hóa (Tàn Sát, Next Map, Waypoints).
+- Khi người dùng click chuột lên màn hình trò chơi (để chọn NPC, chọn quái vật, nhấp vào menu, chat popup hoặc lỡ tay click lên địa hình), cơ chế mặc định của Dragon Boy tự động kích hoạt `checkClickMoveTo()` tạo điểm đến `currentMovePoint` khiến nhân vật tự chạy/bay lung tung không theo ý muốn, làm gián đoạn vị trí treo máy hoặc chiến đấu.
+
+### 2. Giải Pháp Kỹ Thuật
+- **Tệp chỉnh sửa**: [`GameScr\GameScr.Update.Input.cs`](file:///C:/ModNRO/ModNRO_Tools/Decompiled/Dragonboy250_PC_projectbuild/GameScr/GameScr.Update.Input.cs)
+- **Phương thức**: `checkClickMoveTo(int xClick, int yClick, int index)`
+- **Xử lý**:
+  ```csharp
+  private void checkClickMoveTo(int xClick, int yClick, int index)
+  {
+      // Bỏ hoàn toàn việc nhân vật tự động di chuyển theo vị trí click chuột bên ngoài
+      return;
+  }
+  ```
+- **Tính Toàn Vẹn & Không Ảnh Hưởng Đến Các Tính Năng Khác**:
+  1. Click chuột lên NPC vẫn chọn mục tiêu và mở menu NPC bình thường (`findClickToItem`, `focusManualTo`).
+  2. Click chuột lên quái vật / vật phẩm vẫn chọn target bình thường.
+  3. Click chuột lên các nút bấm UI (Mod Menu, Dashboard 7 Tab, Quick Menu, Dialogs) hoạt động 100% bình thường.
+  4. Hệ thống phím di chuyển tay (`A/W/S/D`, Arrow keys) hoạt động mượt mà.
+  5. Hệ thống Tự Động Tàn Sát và Next Map Dijkstra điều hướng di chuyển chính xác và không bị xung đột.
+
+### 3. Kết Quả Xác Minh Thực Nghiệm
+- **Biên dịch**: `dotnet build -c Release` $\rightarrow$ **0 Warning(s), 0 Error(s)**.
+- **Triển khai**: File DLL đã cập nhật vào `DragonBoy250_pc\DragonBoy250_Data\Managed\Assembly-CSharp.dll`.
+- **Đồng bộ**: Đã đồng bộ sang `C:\ModNRO\DragonBoy250_Source\` và GitHub commit `6ab105f`.
