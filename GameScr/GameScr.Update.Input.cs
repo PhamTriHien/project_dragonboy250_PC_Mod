@@ -684,6 +684,14 @@ public partial class GameScr : mScreen, IChatable
 				{
 					return;
 				}
+				if (ModBossNotice.CheckHUDClick(GameCanvas.px, GameCanvas.py))
+				{
+					return;
+				}
+				if (ModNextMap.CheckHUDMapTagClick(GameCanvas.px, GameCanvas.py))
+				{
+					return;
+				}
 				if (cmdMenu != null)
 				{
 					int menuW = (cmdMenu.w > 0) ? cmdMenu.w : 64;
@@ -721,47 +729,82 @@ public partial class GameScr : mScreen, IChatable
 					{
 						return;
 					}
-					long num = mSystem.currentTimeMillis();
-					if (lastSingleClick != 0)
+					if (GameCanvas.isPointerJustRelease || GameCanvas.isPointerClick)
 					{
-						lastSingleClick = 0L;
-						GameCanvas.isPointerJustDown = false;
-						if (!disableSingleClick)
+						int worldX = GameCanvas.px + cmx;
+						int worldY = GameCanvas.py + cmy;
+
+						// 1. Kiểm tra click vào Waypoint (cổng chuyển map trên mặt đất)
+						Waypoint wp = findClickToWaypoint(worldX, worldY);
+						if (wp != null)
 						{
-							checkSingleClick();
-							GameCanvas.isPointerJustRelease = false;
-							isWaitingDoubleClick = true;
-							timeStartDblClick = mSystem.currentTimeMillis();
+							GameCanvas.clearAllPointerEvent();
+							ModWaypoint.StepToWaypoint(wp);
+							GameScr.info1.addInfo("Di chuyển qua cổng " + (wp.name ?? "kế tiếp"), 0);
+							return;
 						}
-					}
-					if (isWaitingDoubleClick)
-					{
-						timeEndDblClick = mSystem.currentTimeMillis();
-						if (timeEndDblClick - timeStartDblClick < 300 && GameCanvas.isPointerJustRelease)
+
+						// 2. Kiểm tra click vào PopUp trên bản đồ
+						if (checkClickToPopup(worldX, worldY) || checkClipTopChatPopUp(worldX, worldY))
 						{
-							isWaitingDoubleClick = false;
-							checkDoubleClick();
+							GameCanvas.clearAllPointerEvent();
+							return;
 						}
-					}
-					if (GameCanvas.isPointerJustRelease)
-					{
-						bool hasTarget = checkSingleClickEarly();
-						if (hasTarget)
+
+						// 3. Kiểm tra click vào thực thể trong game (Mob, NPC, Item, Nhân vật)
+						IMapObject mapObject = findClickToItem(worldX, worldY);
+						if (mapObject != null)
 						{
-							disableSingleClick = true;
-							lastSingleClick = num;
-							lastClickCMX = cmx;
-							lastClickCMY = cmy;
+							Char me = Char.myCharz();
+							if (me != null)
+							{
+								me.cancelAttack();
+								if (me.mobFocus == mapObject || me.itemFocus == mapObject || me.npcFocus == mapObject || me.charFocus == mapObject)
+								{
+									doDoubleClickToObj(mapObject);
+								}
+								else
+								{
+									me.focusManualTo(mapObject);
+									mapObject.stopMoving();
+								}
+							}
+							GameCanvas.clearAllPointerEvent();
+							return;
 						}
-						else
-						{
-							disableSingleClick = false;
-							lastSingleClick = 0L;
-							isWaitingDoubleClick = false;
-						}
-						GameCanvas.isPointerJustRelease = false;
+
+						// 4. Click chuột ra ngoài khoảng trống -> Không di chuyển nhân vật
+						GameCanvas.clearAllPointerEvent();
 					}
 				}
+			}
+
+	private Waypoint findClickToWaypoint(int px, int py)
+			{
+				if (TileMap.vGo == null || TileMap.vGo.size() == 0)
+				{
+					return null;
+				}
+				for (int i = 0; i < TileMap.vGo.size(); i++)
+				{
+					Waypoint waypoint = (Waypoint)TileMap.vGo.elementAt(i);
+					if (waypoint != null)
+					{
+						int diffW = waypoint.maxX - waypoint.minX;
+						int diffH = waypoint.maxY - waypoint.minY;
+						int w = (diffW > 40) ? diffW : 40;
+						int h = (diffH > 40) ? diffH : 40;
+						if (inRectangle(px, py, waypoint.minX - 25, waypoint.minY - 25, w + 50, h + 50))
+						{
+							return waypoint;
+						}
+						if (waypoint.popup != null && inRectangle(px, py, waypoint.popup.cx - 15, waypoint.popup.cy - 15, waypoint.popup.cw + 30, waypoint.popup.ch + 30))
+						{
+							return waypoint;
+						}
+					}
+				}
+				return null;
 			}
 
 	private IMapObject findClickToItem(int px, int py)
@@ -940,6 +983,28 @@ public partial class GameScr : mScreen, IChatable
 
 	private void doDoubleClickToObj(IMapObject obj)
 			{
+				if (obj == null)
+				{
+					return;
+				}
+				if (obj is Npc)
+				{
+					Npc npc = (Npc)obj;
+					Char.myCharz().focusManualTo(npc);
+					Char.myCharz().cancelAttack();
+					Char.myCharz().currentMovePoint = null;
+					auto = 0;
+					Service.gI().openMenu(npc.npcId);
+					return;
+				}
+				if (obj is ItemMap)
+				{
+					ItemMap item = (ItemMap)obj;
+					Char.myCharz().focusManualTo(item);
+					Char.myCharz().cancelAttack();
+					Service.gI().pickItem(item.itemMapID);
+					return;
+				}
 				if ((obj.Equals(Char.myCharz().npcFocus) || mobCapcha == null) && !checkClickToBotton(obj))
 				{
 					checkEffToObj(obj, isnew: false);

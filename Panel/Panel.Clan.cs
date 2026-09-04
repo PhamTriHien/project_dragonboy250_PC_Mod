@@ -298,6 +298,30 @@ public partial class Panel : IActionListener, IChatable
 				GameCanvas.pyLast = GameCanvas.py;
 				pX = GameCanvas.pxLast + cmxMap;
 				pY = GameCanvas.pyLast + cmyMap;
+
+				if (TileMap.planetID >= 0 && TileMap.planetID < mapX.Length)
+				{
+					for (int k = 0; k < mapX[TileMap.planetID].Length; k++)
+					{
+						int num4 = mapX[TileMap.planetID][k] + xScroll;
+						int num5 = mapY[TileMap.planetID][k] + yScroll;
+						if (Res.inRect(num4 - 20, num5 - 20, 40, 40, pX, pY))
+						{
+							int targetMapId = mapId[TileMap.planetID][k];
+							if (targetMapId == TileMap.mapID)
+							{
+								GameScr.info1.addInfo("Bạn đang ở map này!", 0);
+							}
+							else
+							{
+								hide();
+								ModNextMap.StartNextMap(targetMapId);
+							}
+							GameCanvas.clearAllPointerEvent();
+							break;
+						}
+					}
+				}
 			}
 			if (GameCanvas.isPointerClick)
 			{

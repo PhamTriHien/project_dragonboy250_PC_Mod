@@ -141,4 +141,55 @@ public static class ModNextMapData
 		string m = CleanName(mapName);
 		return w.Contains(m) || m.Contains(w);
 	}
+
+	public static int FindMapIdByName(string name)
+	{
+		if (string.IsNullOrEmpty(name)) return -1;
+		string cleanTarget = CleanName(name);
+
+		// 1. So khớp chính xác theo danh sách ID chuẩn
+		for (int id = 0; id <= 48; id++)
+		{
+			string mName = GetMapName(id);
+			if (CleanName(mName).Equals(cleanTarget))
+			{
+				return id;
+			}
+		}
+
+		// 2. So khớp với TileMap.mapNames
+		if (TileMap.mapNames != null)
+		{
+			for (int i = 0; i < TileMap.mapNames.Length; i++)
+			{
+				if (TileMap.mapNames[i] != null && CleanName(TileMap.mapNames[i]).Equals(cleanTarget))
+				{
+					return i;
+				}
+			}
+		}
+
+		// 3. So khớp gần đúng chứa từ khóa
+		for (int id = 0; id <= 48; id++)
+		{
+			string mName = GetMapName(id);
+			if (MatchMapName(mName, name))
+			{
+				return id;
+			}
+		}
+
+		if (TileMap.mapNames != null)
+		{
+			for (int i = 0; i < TileMap.mapNames.Length; i++)
+			{
+				if (TileMap.mapNames[i] != null && MatchMapName(TileMap.mapNames[i], name))
+				{
+					return i;
+				}
+			}
+		}
+
+		return -1;
+	}
 }

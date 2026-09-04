@@ -52,6 +52,12 @@ public static class ModUIBoss
 					{
 						mFont.tahoma_7_green2.drawString(g, entry.timeStr, curX, rowY + 1, mFont.LEFT);
 					}
+
+					// Nút "Đến" nhanh cho Boss đang còn sống
+					if (!entry.isDefeated)
+					{
+						ModUI.PaintNativeButton(uiX + listW - 32, rowY + 1, 28, 15, "Đến", false, g);
+					}
 				}
 			}
 		}
@@ -75,6 +81,44 @@ public static class ModUIBoss
 			}
 			SoundMn.gI().buttonClick();
 			return true;
+		}
+
+		int listY = uiY + 90;
+		int listW = uiW - 36;
+		lock (ModBossNotice.listBossNotices)
+		{
+			int displayCount = (ModBossNotice.listBossNotices.Count < ModBossNotice.MAX_BOSS_NOTICES) ? ModBossNotice.listBossNotices.Count : ModBossNotice.MAX_BOSS_NOTICES;
+			for (int i = 0; i < displayCount; i++)
+			{
+				ModBossNotice.BossNoticeEntry entry = ModBossNotice.listBossNotices[i];
+				if (entry == null) continue;
+				int rowY = listY + 4 + i * 19;
+
+				if (px >= uiX + 18 && px <= uiX + 18 + listW && py >= rowY && py <= rowY + 18)
+				{
+					if (!entry.isDefeated)
+					{
+						int targetMapId = ModNextMap.FindMapIdByName(entry.mapName);
+						if (targetMapId >= 0)
+						{
+							ModUI.uiCustomOpen = false;
+							ModNextMap.StartNextMap(targetMapId);
+							GameScr.info1.addInfo("Di chuyển đến " + entry.mapName + " săn " + entry.bossName, 0);
+							SoundMn.gI().buttonClick();
+							return true;
+						}
+						else
+						{
+							GameScr.info1.addInfo("Chưa xác định được map: " + entry.mapName, 0);
+						}
+					}
+					else
+					{
+						GameScr.info1.addInfo("Boss " + entry.bossName + " đã bị hạ gục!", 0);
+					}
+					return true;
+				}
+			}
 		}
 
 		return false;

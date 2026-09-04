@@ -431,10 +431,13 @@ public static class ModMenu
 			// 2. HUD Thông báo Boss (chỉ khi đã vào game)
 			ModBossNotice.PaintBossNotice(g);
 
-			// 3. Giao diện Modal Cài Đặt (7 Tab) (chỉ trong game)
+			// 3. HUD Tên Map & Khu vực (Click để chọn nhanh map chuyển)
+			ModNextMap.PaintHUDMapTag(g);
+
+			// 4. Giao diện Modal Cài Đặt (7 Tab) (chỉ trong game)
 			ModUI.PaintTanSatUI(g);
 
-			// 4. Hiển thị FPS & Ping (chỉ trong game)
+			// 5. Hiển thị FPS & Ping (chỉ trong game)
 			ModFps.PaintFPS(g);
 		}
 		catch

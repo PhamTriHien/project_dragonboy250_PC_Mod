@@ -27,6 +27,11 @@ public static class ModNextMap
 		return ModNextMapData.MatchMapName(wpName, mapName);
 	}
 
+	public static int FindMapIdByName(string name)
+	{
+		return ModNextMapData.FindMapIdByName(name);
+	}
+
 	public static List<int> FindPath(int startMapId, int targetMapId)
 	{
 		return ModNextMapPathFinder.FindPath(startMapId, targetMapId);
@@ -295,5 +300,110 @@ public static class ModNextMap
 				nextMapCooldown = 15;
 			}
 		}
+	}
+
+	public static void PaintHUDMapTag(mGraphics g)
+	{
+		try
+		{
+			if (g == null || !ModMenu.IsInGame())
+			{
+				return;
+			}
+
+			// Tự động ẩn khi đang mở Panel, Menu, Dialog hoặc Mod UI
+			if ((GameCanvas.panel != null && GameCanvas.panel.isShow) ||
+			    (GameCanvas.panel2 != null && GameCanvas.panel2.isShow) ||
+			    (GameCanvas.menu != null && GameCanvas.menu.showMenu) ||
+			    GameCanvas.currentDialog != null ||
+			    ModUI.uiCustomOpen)
+			{
+				return;
+			}
+
+			g.translate(-g.getTranslateX(), -g.getTranslateY());
+			g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
+
+			int drawX = 84;
+			int drawY = (Char.myCharz() != null && Char.myCharz().secondPower > 0) ? 55 : 40;
+
+			string mapTag = (isNextMapActive && nextMapTargetId >= 0)
+				? ("-> " + GetMapName(nextMapTargetId) + " [K." + TileMap.zoneID + "]")
+				: (TileMap.mapName + " [K." + TileMap.zoneID + "]");
+
+			if (mFont.tahoma_7_grey != null)
+			{
+				mFont.tahoma_7_grey.drawString(g, mapTag, drawX + 1, drawY + 1, mFont.LEFT);
+			}
+
+			if (isNextMapActive)
+			{
+				if (mFont.tahoma_7b_green2 != null)
+				{
+					mFont.tahoma_7b_green2.drawString(g, mapTag, drawX, drawY, mFont.LEFT);
+				}
+			}
+			else
+			{
+				if (mFont.tahoma_7b_yellow != null)
+				{
+					mFont.tahoma_7b_yellow.drawString(g, mapTag, drawX, drawY, mFont.LEFT);
+				}
+				else if (mFont.tahoma_7_white != null)
+				{
+					mFont.tahoma_7_white.drawString(g, mapTag, drawX, drawY, mFont.LEFT);
+				}
+			}
+		}
+		catch
+		{
+		}
+	}
+
+	public static bool CheckHUDMapTagClick(int px, int py)
+	{
+		try
+		{
+			if (!ModMenu.IsInGame())
+			{
+				return false;
+			}
+
+			if ((GameCanvas.panel != null && GameCanvas.panel.isShow) ||
+			    (GameCanvas.panel2 != null && GameCanvas.panel2.isShow) ||
+			    (GameCanvas.menu != null && GameCanvas.menu.showMenu) ||
+			    GameCanvas.currentDialog != null ||
+			    ModUI.uiCustomOpen)
+			{
+				return false;
+			}
+
+			int drawX = 84;
+			int drawY = (Char.myCharz() != null && Char.myCharz().secondPower > 0) ? 55 : 40;
+
+			string mapTag = (isNextMapActive && nextMapTargetId >= 0)
+				? ("-> " + GetMapName(nextMapTargetId) + " [K." + TileMap.zoneID + "]")
+				: (TileMap.mapName + " [K." + TileMap.zoneID + "]");
+
+			int tagW = (mFont.tahoma_7b_yellow != null) ? mFont.tahoma_7b_yellow.getWidth(mapTag) : 90;
+
+			if (Res.inRect(drawX - 2, drawY - 2, tagW + 6, 13, px, py))
+			{
+				if (GameCanvas.isPointerClick || GameCanvas.isPointerJustRelease)
+				{
+					ModUI.selectedTab = 6; // Tab Next Map (0-indexed: 6 = Tab 7)
+					ModUI.uiCustomOpen = true;
+					SoundMn.gI().buttonClick();
+					GameCanvas.clearAllPointerEvent();
+					return true;
+				}
+				return true;
+			}
+		}
+		catch
+		{
+		}
+
+		return false;
 	}
 }

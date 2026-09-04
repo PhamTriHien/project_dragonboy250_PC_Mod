@@ -271,4 +271,104 @@ public static class ModBossNotice
 			}
 		}
 	}
+
+	public static bool CheckHUDClick(int px, int py)
+	{
+		if (!isShowBossNotice)
+		{
+			return false;
+		}
+
+		// Không bắt sự kiện khi đang mở bảng khác
+		if ((GameCanvas.panel != null && GameCanvas.panel.isShow) ||
+		    (GameCanvas.panel2 != null && GameCanvas.panel2.isShow) ||
+		    (GameCanvas.menu != null && GameCanvas.menu.showMenu) ||
+		    GameCanvas.currentDialog != null ||
+		    ModUI.uiCustomOpen)
+		{
+			return false;
+		}
+
+		lock (listBossNotices)
+		{
+			if (listBossNotices.Count == 0)
+			{
+				return false;
+			}
+
+			try
+			{
+				int startY = 32;
+				int lineH = 14;
+				int padding = 5;
+
+				int maxTextW = 150;
+				for (int i = 0; i < listBossNotices.Count; i++)
+				{
+					BossNoticeEntry e = listBossNotices[i];
+					if (e != null)
+					{
+						string full = "[" + e.timeStr + "] " + e.bossName + " - " + e.mapName;
+						int w = (mFont.tahoma_7b_white != null) ? mFont.tahoma_7b_white.getWidth(full) : 150;
+						if (w > maxTextW)
+						{
+							maxTextW = w;
+						}
+					}
+				}
+
+				int hudW = maxTextW + padding * 2 + 6;
+				int hudH = listBossNotices.Count * lineH + padding * 2 + 13;
+				int hudX = GameCanvas.w - hudW - 4;
+
+				if (px >= hudX && px <= hudX + hudW && py >= startY && py <= startY + hudH)
+				{
+					if (GameCanvas.isPointerClick || GameCanvas.isPointerJustRelease)
+					{
+						int drawY = startY + 16;
+						for (int j = 0; j < listBossNotices.Count; j++)
+						{
+							BossNoticeEntry entry = listBossNotices[j];
+							if (entry != null)
+							{
+								if (py >= drawY && py <= drawY + lineH)
+								{
+									if (!entry.isDefeated)
+									{
+										int targetMapId = ModNextMap.FindMapIdByName(entry.mapName);
+										if (targetMapId >= 0)
+										{
+											ModNextMap.StartNextMap(targetMapId);
+											GameScr.info1.addInfo("Di chuyển đến " + entry.mapName + " săn " + entry.bossName, 0);
+											SoundMn.gI().buttonClick();
+											GameCanvas.clearAllPointerEvent();
+											return true;
+										}
+										else
+										{
+											GameScr.info1.addInfo("Chưa xác định được map: " + entry.mapName, 0);
+										}
+									}
+									else
+									{
+										GameScr.info1.addInfo("Boss " + entry.bossName + " đã bị hạ gục!", 0);
+									}
+									break;
+								}
+								drawY += lineH;
+							}
+						}
+						GameCanvas.clearAllPointerEvent();
+						return true;
+					}
+					return true;
+				}
+			}
+			catch
+			{
+			}
+		}
+
+		return false;
+	}
 }
