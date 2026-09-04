@@ -120,17 +120,6 @@ public partial class Service
 			try
 			{
 				Res.outz(">>SEND ATTACT  vMob=" + vMob.size() + "  vChar=" + vChar.size());
-				if (vMob != null)
-				{
-					for (int m = 0; m < vMob.size(); m++)
-					{
-						Mob mobInjure = (Mob)vMob.elementAt(m);
-						if (mobInjure != null && mobInjure.status != 0 && mobInjure.status != 1 && mobInjure.hp > 0)
-						{
-							mobInjure.setInjure();
-						}
-					}
-				}
 				Message message = null;
 				if (type == 0)
 				{

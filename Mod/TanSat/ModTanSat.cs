@@ -199,27 +199,9 @@ public static class ModTanSat
 				GameScr.lastSkill = skillToUse;
 			}
 
-			// Tập hợp danh sách quái tấn công (hỗ trợ đánh lan đa mục tiêu nếu skill có maxFight > 1)
+			// Tập hợp danh sách quái tấn công (gói tin 54 chuẩn server NRO)
 			MyVector vMobAttack = new MyVector();
 			vMobAttack.addElement(currentFarmTarget);
-			if (skillToUse.maxFight > 1 && GameScr.vMob != null)
-			{
-				for (int mIdx = 0; mIdx < GameScr.vMob.size(); mIdx++)
-				{
-					Mob nearMob = (Mob)GameScr.vMob.elementAt(mIdx);
-					if (nearMob != null && nearMob != currentFarmTarget && nearMob.status != 0 && nearMob.status != 1 && nearMob.hp > 0)
-					{
-						if (Res.distance(me.cx, me.cy, nearMob.x, nearMob.y) <= skillToUse.dx + 20)
-						{
-							vMobAttack.addElement(nearMob);
-							if (vMobAttack.size() >= skillToUse.maxFight)
-							{
-								break;
-							}
-						}
-					}
-				}
-			}
 
 			// Cập nhật mốc thời gian hồi chiêu
 			skillToUse.lastTimeUseThisSkill = now;
