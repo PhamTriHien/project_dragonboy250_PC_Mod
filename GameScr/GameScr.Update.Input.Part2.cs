@@ -4,7 +4,7 @@ public partial class GameScr : mScreen, IChatable
 {
 	public override void updateKey()
 			{
-				if (Controller.isStopReadMessage || Char.myCharz().isTeleport || Char.myCharz().isPaintNewSkill || InfoDlg.isLock)
+				if (Controller.isStopReadMessage || Char.myCharz().isTeleport || Char.myCharz().isPaintNewSkill || InfoDlg.isLock || ModMenu.uiCustomOpen)
 				{
 					return;
 				}

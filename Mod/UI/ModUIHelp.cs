@@ -60,7 +60,7 @@ public static class ModUIHelp
 	private static bool isDragging = false;
 	private static bool hasDragged = false;
 	private static int startDragY = 0;
-	private static int startScrollY = 0;
+	private static int lastDragY = 0;
 
 	public static void OnMouseScroll(float wheel)
 	{
@@ -95,34 +95,36 @@ public static class ModUIHelp
 		int maxScroll = (contentH > listH - 6) ? (contentH - (listH - 6)) : 0;
 
 		bool isDown = Input.GetMouseButton(0) || GameCanvas.isPointerDown;
-		bool isJustDown = Input.GetMouseButtonDown(0) || GameCanvas.isPointerJustDown;
-		bool isJustRelease = Input.GetMouseButtonUp(0) || GameCanvas.isPointerJustRelease;
 
-		if (isJustDown)
+		if (isDown)
 		{
-			if (px >= listX && px <= listX + listW && py >= listY && py <= listY + listH)
+			if (!isDragging)
 			{
-				isDragging = true;
-				hasDragged = false;
-				startDragY = py;
-				startScrollY = scrollY;
+				if (px >= listX && px <= listX + listW && py >= listY && py <= listY + listH)
+				{
+					isDragging = true;
+					hasDragged = false;
+					startDragY = py;
+					lastDragY = py;
+				}
+			}
+			else
+			{
+				int moveY = py - lastDragY;
+				lastDragY = py;
+				if (Res.abs(py - startDragY) > 5)
+				{
+					hasDragged = true;
+				}
+				if (hasDragged && maxScroll > 0)
+				{
+					scrollY -= moveY;
+					if (scrollY < 0) scrollY = 0;
+					if (scrollY > maxScroll) scrollY = maxScroll;
+				}
 			}
 		}
-		else if (isDown && isDragging)
-		{
-			int deltaY = py - startDragY;
-			if (Res.abs(deltaY) > 4)
-			{
-				hasDragged = true;
-			}
-			if (hasDragged && maxScroll > 0)
-			{
-				scrollY = startScrollY - deltaY;
-				if (scrollY < 0) scrollY = 0;
-				if (scrollY > maxScroll) scrollY = maxScroll;
-			}
-		}
-		else if (isJustRelease)
+		else
 		{
 			isDragging = false;
 		}

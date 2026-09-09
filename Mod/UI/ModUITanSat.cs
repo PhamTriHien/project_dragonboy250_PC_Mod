@@ -10,7 +10,7 @@ public static class ModUITanSat
 	private static bool isDragging = false;
 	private static bool hasDragged = false;
 	private static int startDragY = 0;
-	private static int startScrollY = 0;
+	private static int lastDragY = 0;
 
 	public static void OnMouseScroll(float wheel)
 	{
@@ -63,36 +63,44 @@ public static class ModUITanSat
 		}
 
 		bool isDown = Input.GetMouseButton(0) || GameCanvas.isPointerDown;
-		bool isJustDown = Input.GetMouseButtonDown(0) || GameCanvas.isPointerJustDown;
-		bool isJustRelease = Input.GetMouseButtonUp(0) || GameCanvas.isPointerJustRelease;
-
-		if (isJustDown)
+		if (isDown)
 		{
-			if (px >= listX && px <= listX + listW && py >= listY && py <= listY + listH)
+			if (!isDragging)
 			{
-				isDragging = true;
-				hasDragged = false;
-				startDragY = py;
-				startScrollY = (ModUI.tanSatTab == 0) ? scrollMobY : scrollSkillY;
+				if (px >= listX && px <= listX + listW && py >= listY && py <= listY + listH)
+				{
+					isDragging = true;
+					hasDragged = false;
+					startDragY = py;
+					lastDragY = py;
+				}
+			}
+			else
+			{
+				int moveY = py - lastDragY;
+				lastDragY = py;
+				if (Res.abs(py - startDragY) > 5)
+				{
+					hasDragged = true;
+				}
+				if (hasDragged && maxScroll > 0)
+				{
+					if (ModUI.tanSatTab == 0)
+					{
+						scrollMobY -= moveY;
+						if (scrollMobY < 0) scrollMobY = 0;
+						if (scrollMobY > maxScroll) scrollMobY = maxScroll;
+					}
+					else
+					{
+						scrollSkillY -= moveY;
+						if (scrollSkillY < 0) scrollSkillY = 0;
+						if (scrollSkillY > maxScroll) scrollSkillY = maxScroll;
+					}
+				}
 			}
 		}
-		else if (isDown && isDragging)
-		{
-			int deltaY = py - startDragY;
-			if (Res.abs(deltaY) > 4)
-			{
-				hasDragged = true;
-			}
-			if (hasDragged && maxScroll > 0)
-			{
-				int newScroll = startScrollY - deltaY;
-				if (newScroll < 0) newScroll = 0;
-				if (newScroll > maxScroll) newScroll = maxScroll;
-				if (ModUI.tanSatTab == 0) scrollMobY = newScroll;
-				else scrollSkillY = newScroll;
-			}
-		}
-		else if (isJustRelease)
+		else
 		{
 			isDragging = false;
 		}

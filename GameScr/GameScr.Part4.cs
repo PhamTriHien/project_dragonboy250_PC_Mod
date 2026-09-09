@@ -75,7 +75,7 @@ public partial class GameScr : mScreen, IChatable
 		}
 	private void checkDrag()
 		{
-			if (isAnalog == 1 || gamePad.disableCheckDrag())
+			if (ModMenu.uiCustomOpen || isAnalog == 1 || gamePad.disableCheckDrag())
 			{
 				return;
 			}

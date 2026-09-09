@@ -32,14 +32,14 @@ public static class ModUI
 	private static bool isColDragging = false;
 	private static bool hasColDragged = false;
 	private static int startColDragY = 0;
-	private static int startColScrollY = 0;
+	private static int lastColDragY = 0;
 
 	// Khung Nội Dung Phải (Right Detail Panel) - Chạm kéo trực tiếp, không thanh cuộn
 	public static int detailScrollY = 0;
 	private static bool isDetailDragging = false;
 	private static bool hasDetailDragged = false;
 	private static int startDetailDragY = 0;
-	private static int startDetailScrollY = 0;
+	private static int lastDetailDragY = 0;
 
 	private static Image imgBtX;
 
@@ -300,7 +300,7 @@ public static class ModUI
 
 			int itemH = 22;
 			int itemStep = 24;
-			int colContentH = tabNames.Length * itemStep + 4;
+			int colContentH = tabNames.Length * itemStep + 6;
 			int maxColScroll = (colContentH > colH - 4) ? (colContentH - (colH - 4)) : 0;
 			if (colScrollY > maxColScroll) colScrollY = maxColScroll;
 			if (colScrollY < 0) colScrollY = 0;
@@ -393,7 +393,7 @@ public static class ModUI
 
 	public static void HandleTap()
 	{
-		if (!ModMenu.IsInGame())
+		if (!ModMenu.IsInGame() && !uiCustomOpen)
 		{
 			return;
 		}
@@ -433,13 +433,12 @@ public static class ModUI
 				int detailH = uiH - 36;
 
 				int itemStep = 24;
-				int colContentH = tabNames.Length * itemStep + 4;
+				int colContentH = tabNames.Length * itemStep + 6;
 				int maxColScroll = (colContentH > colH - 4) ? (colContentH - (colH - 4)) : 0;
 				int maxDetailScroll = (275 - (detailH - 4) > 0) ? (275 - (detailH - 4)) : 0;
 
 				// Đọc trạng thái chuột & cảm ứng đáng tin cậy
 				bool isDown = Input.GetMouseButton(0) || GameCanvas.isPointerDown;
-				bool isJustDown = Input.GetMouseButtonDown(0) || GameCanvas.isPointerJustDown;
 				bool isJustRelease = Input.GetMouseButtonUp(0) || GameCanvas.isPointerJustRelease;
 
 				// 1. Xử lý con lăn chuột (Mouse ScrollWheel)
@@ -487,52 +486,55 @@ public static class ModUI
 				}
 
 				// 2. Chạm kéo trượt trực tiếp (Direct Touch/Drag)
-				if (isJustDown)
+				if (isDown)
 				{
-					if (px >= colX && px <= colX + colW && py >= colY && py <= colY + colH)
+					if (!isColDragging && !isDetailDragging)
 					{
-						isColDragging = true;
-						hasColDragged = false;
-						startColDragY = py;
-						startColScrollY = colScrollY;
-					}
-					else if (px >= detailX && px <= detailX + detailW && py >= detailY && py <= detailY + detailH)
-					{
-						if (selectedTab == 4 && !ModUIBackground.isOpen)
+						if (px >= colX && px <= colX + colW && py >= colY && py <= colY + colH)
 						{
-							isDetailDragging = true;
-							hasDetailDragged = false;
-							startDetailDragY = py;
-							startDetailScrollY = detailScrollY;
+							isColDragging = true;
+							hasColDragged = false;
+							startColDragY = py;
+							lastColDragY = py;
+						}
+						else if (px >= detailX && px <= detailX + detailW && py >= detailY && py <= detailY + detailH)
+						{
+							if (selectedTab == 4 && !ModUIBackground.isOpen)
+							{
+								isDetailDragging = true;
+								hasDetailDragged = false;
+								startDetailDragY = py;
+								lastDetailDragY = py;
+							}
 						}
 					}
-				}
-				else if (isDown)
-				{
+
 					if (isColDragging)
 					{
-						int deltaY = py - startColDragY;
-						if (Res.abs(deltaY) > 4)
+						int moveY = py - lastColDragY;
+						lastColDragY = py;
+						if (Res.abs(py - startColDragY) > 5)
 						{
 							hasColDragged = true;
 						}
 						if (hasColDragged && maxColScroll > 0)
 						{
-							colScrollY = startColScrollY - deltaY;
+							colScrollY -= moveY;
 							if (colScrollY < 0) colScrollY = 0;
 							if (colScrollY > maxColScroll) colScrollY = maxColScroll;
 						}
 					}
 					else if (isDetailDragging)
 					{
-						int deltaY = py - startDetailDragY;
-						if (Res.abs(deltaY) > 4)
+						int moveY = py - lastDetailDragY;
+						lastDetailDragY = py;
+						if (Res.abs(py - startDetailDragY) > 5)
 						{
 							hasDetailDragged = true;
 						}
 						if (hasDetailDragged && maxDetailScroll > 0)
 						{
-							detailScrollY = startDetailScrollY - deltaY;
+							detailScrollY -= moveY;
 							if (detailScrollY < 0) detailScrollY = 0;
 							if (detailScrollY > maxDetailScroll) detailScrollY = maxDetailScroll;
 						}
@@ -562,16 +564,20 @@ public static class ModUI
 						isColDragging = false;
 						if (!hasColDragged && px >= colX + 2 && px <= colX + colW - 2 && py >= colY + 2 && py <= colY + colH - 2)
 						{
-							int clickedIdx = (py - (colY + 3) + colScrollY) / itemStep;
-							if (clickedIdx >= 0 && clickedIdx < tabNames.Length)
+							int relY = py - (colY + 3) + colScrollY;
+							if (relY >= 0)
 							{
-								selectedTab = clickedIdx;
-								detailScrollY = 0;
-								ModUIBackground.isOpen = false;
-								ModConfig.SaveConfig();
-								SoundMn.gI().buttonClick();
-								GameCanvas.isPointerJustRelease = GameCanvas.isPointerClick = false;
-								return;
+								int clickedIdx = relY / itemStep;
+								if (clickedIdx >= 0 && clickedIdx < tabNames.Length)
+								{
+									selectedTab = clickedIdx;
+									detailScrollY = 0;
+									ModUIBackground.isOpen = false;
+									ModConfig.SaveConfig();
+									SoundMn.gI().buttonClick();
+									GameCanvas.isPointerJustRelease = GameCanvas.isPointerClick = false;
+									return;
+								}
 							}
 						}
 						hasColDragged = false;
@@ -666,6 +672,14 @@ public static class ModUI
 					{
 						GameCanvas.isPointerJustRelease = GameCanvas.isPointerClick = false;
 					}
+				}
+
+				if (!isDown)
+				{
+					isColDragging = false;
+					hasColDragged = false;
+					isDetailDragging = false;
+					hasDetailDragged = false;
 				}
 			}
 		}
