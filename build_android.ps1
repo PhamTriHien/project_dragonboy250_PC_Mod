@@ -4,11 +4,15 @@ $apktool = "C:\ModNRO\ModNRO_Tools\apktool.jar"
 $buildTools = "C:\Users\PhamTriHien\AppData\Local\Android\Sdk\build-tools\36.0.0"
 $zipalign = Join-Path $buildTools "zipalign.exe"
 $apksigner = Join-Path $buildTools "apksigner.bat"
-$keystore = "C:\ModNRO\debug.keystore"
+$keystore = "C:\ModNRO\01_Android_Builds\debug.keystore"
+if (-not (Test-Path $keystore)) { $keystore = "C:\ModNRO\debug.keystore" }
 $sourceDir = "C:\ModNRO\ModNRO_Tools\Decompiled\APK_apktool"
-$outputUnsigned = "C:\ModNRO\DragonBoy250_Unsigned.apk"
-$outputAligned = "C:\ModNRO\DragonBoy250_Aligned.apk"
-$outputSigned = "C:\ModNRO\DragonBoy250_Mod_Android.apk"
+$tempDir = "C:\ModNRO\01_Android_Builds\.temp"
+if (-not (Test-Path $tempDir)) { New-Item -ItemType Directory -Path $tempDir -Force | Out-Null }
+
+$outputUnsigned = Join-Path $tempDir "DragonBoy250_Unsigned.apk"
+$outputAligned = Join-Path $tempDir "DragonBoy250_Aligned.apk"
+$outputSigned = "C:\ModNRO\01_Android_Builds\DragonBoy250_Mod_Android.apk"
 $desktopApk = "C:\Users\PhamTriHien\Desktop\DragonBoy250_Mod_Android.apk"
 
 Write-Host "======================================================================" -ForegroundColor Cyan
@@ -55,5 +59,9 @@ Copy-Item $outputSigned $desktopApk -Force
 if (Test-Path $desktopApk) {
     Write-Host "  + Tep APK da san sang tai: $desktopApk" -ForegroundColor Green
 }
-Write-Host "  + Ban luu goc tai: $outputSigned" -ForegroundColor Green
-Write-Host "BUILD ANDROID THANH CONG 100%!" -ForegroundColor Green
+Write-Host "  + Ban luu tai pipeline: $outputSigned" -ForegroundColor Green
+
+# Don dep tep tam
+if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force }
+
+Write-Host "`nBUILD ANDROID THANH CONG 100%!" -ForegroundColor Green

@@ -10453,3 +10453,81 @@ Tệp: `https://raw.githubusercontent.com/PhamTriHien/project_dragonboy250_PC_Mo
 | **Quyền Toàn Bộ File** | `MANAGE_EXTERNAL_STORAGE` | **PASS (Đọc ghi toàn bộ thư mục /sdcard/)** |
 | **Cửa sổ nổi & Chạy ngầm** | `SYSTEM_ALERT_WINDOW` & `FOREGROUND_SERVICE` | **PASS (Không bị hệ điều hành tắt ngầm)** |
 | **Ký số APK (Apksigner)** | v2 scheme: true, v3 scheme: true | **PASS (0 Error, 0 Warning)** |
+
+---
+
+## 158. TÁI CẤU TRÚC, DỌN DẸP & PHÂN LUỒNG HỆ THỐNG THƯ MỤC TOÀN DIỆN (FOLDER PIPELINE ORGANIZATION)
+
+### 1. Bối Cảnh & Mục Tiêu
+- **Vấn đề tồn đọng**:
+  - Thư mục gốc `C:\ModNRO` tích tụ 38 file và 12 thư mục nằm lẫn lộn.
+  - Các bản build APK trung gian (`DragonBoy250_Aligned.apk`, `DragonBoy250_Unsigned.apk`, `test_build_android.apk`...), ảnh test debug (`ver_btn.png`, `ver_full.png`...) và log chiếm dụng tài nguyên.
+  - Các tệp tin giữa các nền tảng PC, Android, iOS và kho source tham chiếu nằm đan xen khó nhận biết.
+- **Yêu cầu**:
+  - Dọn dẹp 100% rác và các tệp build tạm.
+  - Phân chia luồng thư mục (Pipelines) rõ ràng, khoa học, phân định rõ ràng giữa Client PC, Android, iOS và Reference Sources.
+  - Bảo toàn 100% cấu trúc mã nguồn đang phát triển và các kịch bản build/deploy.
+
+---
+
+### 2. Kiến Trúc Cấu Trúc Sau Khi Phân Luồng
+
+```
+C:\ModNRO\
+│
+├── 📂 DragonBoy_Net8_Native\          [CORE] Dự án Native AOT (.NET 8 Native x64)
+│
+├── 📂 ModNRO_Tools\                  [CORE] Bộ công cụ & Mã nguồn Unity PC (Repo Git chính)
+│   ├── 📂 Decompiled\
+│   │   └── 📂 Dragonboy250_PC_projectbuild\  <-- Repo Git chính thức
+│   ├── 📂 dnSpy\
+│   ├── 📂 ghidra_11.4.2_PUBLIC\
+│   └── 📂 Il2CppDumper\
+│
+├── 📂 01_Android_Builds\             [PIPELINE ANDROID]
+│   ├── DragonBoy250_Mod_Android.apk  (Bản build mod Android mới nhất)
+│   ├── (Android) MOD_DP_246.apk      (Bản mod Android Unity 2.4.6)
+│   ├── DragonBoy250.apk              (Bản gốc Android 2.5.0)
+│   ├── DragonBoy1_Mod.apk            (Bản mod Android phụ)
+│   ├── debug.keystore                (Khóa ký số chuẩn Android)
+│   ├── build_android.bat             (Script build 1-click)
+│   ├── build_android.ps1             (Pipeline PowerShell)
+│   └── install_mod_android_bluestacks.bat (Cài nhanh vào BlueStacks)
+│
+├── 📂 02_iOS_Builds\                 [PIPELINE IOS]
+│   ├── (iPhone) MOD_DP_246.ipa
+│   ├── Ngoc_Rong_Online_1.ipa
+│   ├── RetroJar.ipa
+│   └── 📂 iOS_Java_Emulator\
+│
+├── 📂 03_Reference_Sources\          [KHO NGUỒN THAM CHIẾU & LƯU TRỮ]
+│   ├── 📂 DragonBoy250_250_Goc_FullSource\
+│   ├── 📂 DragonBoy250_Gameplay_Logic\
+│   ├── 📂 DragonBoy250_Assets\
+│   ├── 📂 DragonBoy250_Source\
+│   ├── 📂 MOD_DungPham_246\
+│   ├── 📂 MOD_DVK_246\
+│   ├── DragonBoy250_250_Goc_FullSource.zip
+│   └── DragonBoy250_pc.rar
+│
+├── 📜 build_mod.bat                  (Script 1-click build PC và deploy Desktop)
+├── 📜 build_android.bat              (Script 1-click gọi pipeline Android)
+├── 📜 push_to_github.bat             (Script 1-click commit & push repo Git)
+├── 📜 CHAY_APP_DIEN_THOAI_BLUESTACKS.bat (Mở nhanh giả lập BlueStacks)
+├── 📜 PROJECT_DOCUMENTATION.md       (Tài liệu kiến trúc & lịch sử toàn dự án)
+└── 📜 GEMINI.md                      (Quy tắc toàn hệ thống IDE)
+```
+
+---
+
+### 3. Kết Quả Thực Thi
+1. **Dọn Rác**: Đã xóa triệt để 14 tệp APK trung gian, ảnh chụp test và file log ở thư mục gốc.
+2. **Phân Luồng Thành Công**:
+   - `01_Android_Builds`: Tập trung toàn bộ APK, keystore và script build/install Android.
+   - `02_iOS_Builds`: Tập trung các file IPA và giả lập iOS.
+   - `03_Reference_Sources`: Tập trung toàn bộ source code tham chiếu và tệp nén lưu trữ.
+3. **Thư Mục Gốc Gọn Gàng Tuyệt Đối**: Thư mục `C:\ModNRO` từ 38 file giảm xuống chỉ còn 9 file cốt lõi gồm các script 1-click và tài liệu hệ thống.
+4. **Kiểm Tra Biên Dịch & Vận Hành**:
+   - `DragonBoy_Net8_Native`: 0 Warning, 0 Error.
+   - `Dragonboy250_PC_projectbuild`: 0 Warning, 0 Error.
+   - `build_android.bat`: Tự động đóng gói, tối ưu zipalign, ký số v2/v3 thành công 100%.
