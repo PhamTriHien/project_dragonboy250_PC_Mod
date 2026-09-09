@@ -62,6 +62,10 @@ public class Rms
 		{
 			string result = dataInputStream.readUTF();
 			dataInputStream.close();
+			if (fileName == RMS_pass && result != null && result.StartsWith("ENC_V1:"))
+			{
+				result = DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.DeobfuscatePassword(result);
+			}
 			return result;
 		}
 		catch (Exception ex)

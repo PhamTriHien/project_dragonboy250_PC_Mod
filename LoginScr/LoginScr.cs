@@ -448,8 +448,8 @@ public partial class LoginScr : mScreen, IActionListener
 
 	public void doLogin()
 		{
-			string text = Rms.loadRMSString(Rms.RMS_acc);
-			string text2 = Rms.loadRMSString(Rms.RMS_pass);
+			string text = (tfUser != null && !string.IsNullOrEmpty(tfUser.getText())) ? tfUser.getText().Trim() : Rms.loadRMSString(Rms.RMS_acc);
+			string text2 = (tfPass != null && !string.IsNullOrEmpty(tfPass.getText())) ? tfPass.getText() : DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.LoadSavedPassword();
 			if (text != null && !text.Equals(string.Empty))
 			{
 				isLogin2 = false;
@@ -481,6 +481,10 @@ public partial class LoginScr : mScreen, IActionListener
 				right = tfPass.cmdClear;
 			}
 			return;
+		}
+		if (isCheck && !string.IsNullOrEmpty(text) && !string.IsNullOrEmpty(text2) && !isLogin2)
+		{
+			savePass();
 		}
 		currTimeLogin = mSystem.currentTimeMillis();
 		if (!DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.CanAttemptLogin())

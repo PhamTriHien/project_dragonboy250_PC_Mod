@@ -114,8 +114,7 @@ namespace DragonBoy_Net8_Native.Src.Mod.Security
 				{
 					Rms.saveRMSInt(Rms.RMS_check, 1);
 					Rms.saveRMSString(Rms.RMS_acc, username != null ? username.Trim() : string.Empty);
-					string encPass = ObfuscatePassword(password != null ? password : string.Empty);
-					Rms.saveRMSString(Rms.RMS_pass, encPass);
+					Rms.saveRMSString(Rms.RMS_pass, password != null ? password : string.Empty);
 				}
 				else
 				{
