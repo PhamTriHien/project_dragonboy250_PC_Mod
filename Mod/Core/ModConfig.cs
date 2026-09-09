@@ -119,6 +119,9 @@ public static class ModConfig
 			sb.AppendLine("isCustomBGActive=" + ModBackground.isCustomBGActive);
 			sb.AppendLine("selectedBgId=" + ModBackground.selectedBgId);
 
+			// Auto Reconnect & Login khi mất mạng
+			sb.AppendLine("autoReconnect=" + ModAutoLogin.isEnabled);
+
 			File.WriteAllText(ConfigPath, sb.ToString());
 		}
 		catch
@@ -370,6 +373,9 @@ public static class ModConfig
 						break;
 					case "selectedBgId":
 						ModBackground.selectedBgId = val;
+						break;
+					case "autoReconnect":
+						bool.TryParse(val, out ModAutoLogin.isEnabled);
 						break;
 				}
 			}

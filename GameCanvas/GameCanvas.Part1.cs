@@ -168,6 +168,7 @@ public partial class GameCanvas : IActionListener
 				return;
 			}
 			Debug.LogError(">>>>onDisconnected");
+			ModAutoLogin.OnDisconnected();
 			if (currentScreen != serverScreen)
 			{
 				serverScreen.switchToMe();
@@ -203,6 +204,7 @@ public partial class GameCanvas : IActionListener
 				return;
 			}
 			isResume = true;
+			ModAutoLogin.OnDisconnected();
 			LoginScr.isContinueToLogin = false;
 			if (ServerListScreen.nameServer != null && ServerListScreen.ipSelect >= 0 && ServerListScreen.ipSelect < ServerListScreen.nameServer.Length)
 			{

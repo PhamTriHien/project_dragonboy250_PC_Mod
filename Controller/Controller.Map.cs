@@ -118,6 +118,11 @@ public partial class Controller : IMessageHandler
 				}
 			}
 			GameScr.gI().switchToMe();
+			if (ModAutoLogin.isReconnecting)
+			{
+				ModAutoLogin.RestoreAutoState();
+				ModAutoLogin.isReconnecting = false;
+			}
 			if (Char.myCharz().cy <= 10 && teleport3 != 0 && teleport3 != 2)
 			{
 				Teleport p = new Teleport(Char.myCharz().cx, Char.myCharz().cy, Char.myCharz().head, Char.myCharz().cdir, 1, isMe: true, (teleport3 != 1) ? teleport3 : Char.myCharz().cgender);

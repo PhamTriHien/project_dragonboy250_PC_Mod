@@ -335,6 +335,9 @@ public static class ModMenu
 				OpenMenu();
 			}
 
+			// Tự động kết nối lại & đăng nhập lại khi mất kết nối mạng
+			ModAutoLogin.Update();
+
 			if (!IsInGame())
 			{
 				GameScr.isAutoPlay = false;
@@ -343,6 +346,9 @@ public static class ModMenu
 				modMenuOpen = false;
 				return;
 			}
+
+			// Ghi nhận trạng thái Auto khi đang trong game ổn định
+			ModAutoLogin.SnapshotAutoState();
 
 			// Keep-Alive Heartbeat: Giữ kết nối socket liên tục
 			long now = mSystem.currentTimeMillis();
