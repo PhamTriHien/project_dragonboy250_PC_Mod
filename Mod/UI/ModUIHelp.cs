@@ -62,7 +62,7 @@ public static class ModUIHelp
 
 	public static void OnMouseScroll(float wheel)
 	{
-		int listH = 138;
+		int listH = 178;
 		int itemH = 22;
 		int contentH = commands.Length * itemH + 6;
 		int maxScroll = (contentH > listH - 6) ? (contentH - (listH - 6)) : 0;
@@ -83,10 +83,10 @@ public static class ModUIHelp
 
 	public static void UpdateDragScroll(int px, int py, int uiX, int uiY, int uiW, int uiH)
 	{
-		int listX = uiX + 14;
-		int listY = uiY + 70;
-		int listW = uiW - 28;
-		int listH = 138;
+		int listX = uiX + 8;
+		int listY = uiY + 24;
+		int listW = uiW - 16;
+		int listH = 178;
 
 		int itemH = 22;
 		int contentH = commands.Length * itemH + 6;
@@ -124,19 +124,19 @@ public static class ModUIHelp
 
 	public static void Paint(int uiX, int uiY, int uiW, int uiH, mGraphics g)
 	{
-		int listX = uiX + 14;
-		int listY = uiY + 70;
-		int listW = uiW - 28;
-		int listH = 138;
+		int listX = uiX + 8;
+		int listY = uiY + 24;
+		int listW = uiW - 16;
+		int listH = 178;
 
 		// Tiêu đề danh sách & Nút cuộn Lên / Xuống (Vector Triangle sắc nét)
-		mFont.tahoma_7b_white.drawString(g, "DANH SÁCH LỆNH CHAT & PHÍM TẮT (" + commands.Length + " mục):", listX, uiY + 54, mFont.LEFT);
-		ModUI.PaintArrowButton(uiX + uiW - 64, uiY + 49, 22, 18, true, false, g);
-		ModUI.PaintArrowButton(uiX + uiW - 38, uiY + 49, 22, 18, false, false, g);
+		mFont.tahoma_7b_dark.drawString(g, "LỆNH CHAT & PHÍM TẮT (" + commands.Length + " mục):", listX, uiY + 8, mFont.LEFT);
+		ModUI.PaintArrowButton(uiX + uiW - 52, uiY + 5, 20, 16, true, false, g);
+		ModUI.PaintArrowButton(uiX + uiW - 28, uiY + 5, 20, 16, false, false, g);
 
 		// Khung chứa danh sách
 		GameCanvas.paintz.paintFrameSimple(listX, listY, listW, listH, g);
-		g.setColor(0x161616);
+		g.setColor(15196114);
 		g.fillRect(listX + 2, listY + 2, listW - 4, listH - 4);
 
 		int itemH = 22;
@@ -155,46 +155,48 @@ public static class ModUIHelp
 				continue;
 			}
 
-			// Màu nền xen kẽ
-			g.setColor((i % 2 == 0) ? 0x222222 : 0x1a1a1a);
+			// Màu nền xen kẽ (tông ngà và be sáng NRO)
+			g.setColor((i % 2 == 0) ? 15196114 : 15787715);
 			g.fillRect(listX + 4, rowY, listW - 8, itemH - 2);
 
 			CommandInfo ci = commands[i];
 
 			// Tag loại lệnh: [Chat], [Phím], [Chuột]
-			g.setColor(ci.tagColor);
+			g.setColor(6702080);
 			g.drawRect(listX + 6, rowY + 3, 34, 13);
-			mFont.tahoma_7_white.drawString(g, ci.tag, listX + 23, rowY + 4, mFont.CENTER);
+			mFont.tahoma_7b_dark.drawString(g, ci.tag, listX + 23, rowY + 4, mFont.CENTER);
 
-			// Tên lệnh (màu vàng nổi bật)
-			mFont.tahoma_7b_yellow.drawString(g, ci.cmd, listX + 46, rowY + 4, mFont.LEFT);
+			// Tên lệnh (màu đậm nổi bật)
+			mFont.tahoma_7b_dark.drawString(g, ci.cmd, listX + 46, rowY + 4, mFont.LEFT);
 
 			// Dấu gạch nối và Mô tả chức năng
-			mFont.tahoma_7_white.drawString(g, "- " + ci.desc, listX + 115, rowY + 4, mFont.LEFT);
+			int descX = listX + 46 + mFont.tahoma_7b_dark.getWidth(ci.cmd) + 6;
+			if (descX < listX + 115) descX = listX + 115;
+			mFont.tahoma_7_grey.drawString(g, "- " + ci.desc, descX, rowY + 4, mFont.LEFT);
 		}
 
 		g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
 
-		// Thanh cuộn thanh mảnh (Scrollbar)
+		// Thanh cuộn thanh mảnh (Scrollbar NRO)
 		if (maxScroll > 0)
 		{
 			int barH = listH * (listH - 4) / contentH;
 			if (barH < 14) barH = 14;
 			int barY = listY + 2 + (listH - 4 - barH) * scrollY / maxScroll;
-			g.setColor(0x00e676);
+			g.setColor(3847752);
 			g.fillRect(listX + listW - 4, barY, 2, barH);
 		}
 
-		// Dòng hướng dẫn nhỏ căn giữa ở đáy trên nút Đóng, không bị đè chữ
-		mFont.tahoma_7_grey.drawString(g, "* Bấm vào từng dòng lệnh để kích hoạt nhanh", uiX + uiW / 2, uiY + 211, mFont.CENTER);
+		// Dòng hướng dẫn nhỏ căn giữa ở đáy
+		mFont.tahoma_7_grey.drawString(g, "* Bấm vào từng dòng lệnh để kích hoạt nhanh", uiX + uiW / 2, uiY + 208, mFont.CENTER);
 	}
 
 	public static bool HandleTap(int px, int py, int uiX, int uiY, int uiW, int uiH)
 	{
-		int listX = uiX + 14;
-		int listY = uiY + 70;
-		int listW = uiW - 28;
-		int listH = 138;
+		int listX = uiX + 8;
+		int listY = uiY + 24;
+		int listW = uiW - 16;
+		int listH = 178;
 
 		int itemH = 22;
 		int contentH = commands.Length * itemH + 6;
@@ -208,7 +210,7 @@ public static class ModUIHelp
 		}
 
 		// 1. Nút cuộn lên (Vector Up Triangle)
-		if (px >= uiX + uiW - 64 && px <= uiX + uiW - 42 && py >= uiY + 48 && py <= uiY + 68)
+		if (px >= uiX + uiW - 52 && px <= uiX + uiW - 32 && py >= uiY + 4 && py <= uiY + 22)
 		{
 			scrollY -= 44;
 			if (scrollY < 0) scrollY = 0;
@@ -217,7 +219,7 @@ public static class ModUIHelp
 		}
 
 		// 2. Nút cuộn xuống (Vector Down Triangle)
-		if (px >= uiX + uiW - 38 && px <= uiX + uiW - 16 && py >= uiY + 48 && py <= uiY + 68)
+		if (px >= uiX + uiW - 28 && px <= uiX + uiW - 8 && py >= uiY + 4 && py <= uiY + 22)
 		{
 			scrollY += 44;
 			if (scrollY > maxScroll) scrollY = maxScroll;

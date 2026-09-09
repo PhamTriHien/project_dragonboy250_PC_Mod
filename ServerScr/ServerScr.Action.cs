@@ -143,20 +143,10 @@ public partial class ServerScr
 			}
 			case 99:
 				Session_ME.gI().clearSendingMessage();
-				ServerListScreen.SetIpSelect(mainSelect, issave: false);
-				GameCanvas.serverScreen.selectServer();
-				GameCanvas.serverScreen.switchToMe();
+				DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.SwitchServerCleanly(mainSelect);
 				break;
 			default:
-				Session_ME.gI().close();
-				ServerListScreen.SetIpSelect(idAction - 100, issave: true);
-				ServerListScreen.ConnectIP();
-				if (GameCanvas.serverScreen == null)
-				{
-					GameCanvas.serverScreen = new ServerListScreen();
-				}
-				GameCanvas.serverScreen.selectServer();
-				GameCanvas.serverScreen.switchToMe();
+				DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.SwitchServerCleanly(idAction - 100);
 				break;
 			}
 		}

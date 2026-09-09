@@ -182,7 +182,7 @@ public partial class LoginScr : mScreen, IActionListener
 				break;
 			}
 			tfUser.setText(Rms.loadRMSString(Rms.RMS_acc));
-			tfPass.setText(Rms.loadRMSString(Rms.RMS_pass));
+			tfPass.setText(DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.LoadSavedPassword());
 			if (cmdCallHotline == null)
 			{
 				cmdCallHotline = new Command("Gọi hotline", this, 13, null);
@@ -293,7 +293,7 @@ public partial class LoginScr : mScreen, IActionListener
 			SoundMn.gI().stopAll();
 			tfUser.isFocus = true;
 			tfPass.isFocus = false;
-			if (GameCanvas.isTouch)
+			if (GameCanvas.isTouch && !Main.isPC)
 			{
 				tfUser.isFocus = false;
 			}
@@ -309,7 +309,7 @@ public partial class LoginScr : mScreen, IActionListener
 			{
 				tfUser.setText(text);
 			}
-			string text2 = Rms.loadRMSString(Rms.RMS_pass);
+			string text2 = DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.LoadSavedPassword();
 			if (text2 != null && !text2.Equals(string.Empty))
 			{
 				tfPass.setText(text2);
@@ -483,10 +483,11 @@ public partial class LoginScr : mScreen, IActionListener
 			return;
 		}
 		currTimeLogin = mSystem.currentTimeMillis();
-		if (currTimeLogin - lastTimeLogin < 3000)
+		if (!DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.CanAttemptLogin())
 		{
 			return;
 		}
+		DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.OnLoginStarted();
 		lastTimeLogin = currTimeLogin;
 		if (!Session_ME.gI().isConnected())
 			{
@@ -501,6 +502,7 @@ public partial class LoginScr : mScreen, IActionListener
 			}
 			else
 			{
+				DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.OnLoginFinished();
 				GameCanvas.startOK(mResources.maychutathoacmatsong + " [0]", 8884, null);
 			}
 			focus = 0;
@@ -508,23 +510,12 @@ public partial class LoginScr : mScreen, IActionListener
 			{
 				actRegisterLeft();
 			}
-			GameCanvas.timeBreakLoading = mSystem.currentTimeMillis() + 30000;
+			GameCanvas.timeBreakLoading = mSystem.currentTimeMillis() + 15000;
 		}
 
 	public void savePass()
 		{
-			if (isCheck)
-			{
-				Rms.saveRMSInt(Rms.RMS_check, 1);
-				Rms.saveRMSString(Rms.RMS_acc, tfUser.getText().ToLower().Trim());
-				Rms.saveRMSString(Rms.RMS_pass, tfPass.getText().ToLower().Trim());
-			}
-			else
-			{
-				Rms.saveRMSInt(Rms.RMS_check, 2);
-				Rms.saveRMSString(Rms.RMS_acc, string.Empty);
-				Rms.saveRMSString(Rms.RMS_pass, string.Empty);
-			}
+			DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.SaveCredentials(tfUser.getText(), tfPass.getText(), isCheck);
 		}
 
 	private void doChangeTip()
@@ -548,6 +539,126 @@ public partial class LoginScr : mScreen, IActionListener
 	public void resetLogo()
 		{
 			yL = -50;
+		}
+
+	public void updatePosition()
+		{
+			yLog = GameCanvas.hh - 30;
+			if (GameCanvas.h > 200)
+			{
+				defYL = GameCanvas.hh - 80;
+			}
+			else
+			{
+				defYL = GameCanvas.hh - 65;
+			}
+			resetLogo();
+			wC = ((GameCanvas.w < 200) ? 140 : 160);
+			yt = GameCanvas.hh - mScreen.ITEM_HEIGHT - 5;
+			if (GameCanvas.h <= 160)
+			{
+				yt = 20;
+			}
+			int num2 = 4;
+			int num3 = num2 * 32 + 23 + 33;
+			if (num3 >= GameCanvas.w)
+			{
+				num2--;
+				num3 = num2 * 32 + 23 + 33;
+			}
+			xLog = GameCanvas.w / 2 - num3 / 2;
+			wP = 170;
+			hP = ((!isRes) ? 100 : 110);
+			xP = GameCanvas.hw - wP / 2;
+			yP = yLog + 5;
+			lY = ((GameCanvas.w < 200) ? (yLog - 10) : (yLog - 30));
+			if (tfUser != null)
+			{
+				tfUser.x = xLog + 10;
+				tfUser.y = yLog + 20;
+				tfUser.width = wC;
+				tfUser.height = mScreen.ITEM_HEIGHT + 2;
+			}
+			if (tfPass != null)
+			{
+				tfPass.x = xLog + 10;
+				tfPass.y = yLog + 55;
+				tfPass.width = wC;
+				tfPass.height = mScreen.ITEM_HEIGHT + 2;
+			}
+			if (cmdCallHotline != null)
+			{
+				cmdCallHotline.x = GameCanvas.w - 75;
+				if (mSystem.clientType == 1 && !GameCanvas.isTouch)
+				{
+					cmdCallHotline.y = GameCanvas.h - 20;
+				}
+				else
+				{
+					cmdCallHotline.y = 8;
+				}
+			}
+			if (cmdLogin != null)
+			{
+				cmdLogin.caption = (GameCanvas.w <= 200) ? mResources.login2 : mResources.login;
+			}
+			if (GameCanvas.isTouch)
+			{
+				int btnY = (GameCanvas.h >= 200) ? (yLog + 110) : (GameCanvas.h - 26);
+				if (cmdLogin != null)
+				{
+					cmdLogin.x = GameCanvas.w / 2 + 8;
+					cmdLogin.y = btnY;
+				}
+				if (cmdMenu != null)
+				{
+					cmdMenu.x = GameCanvas.w / 2 - mScreen.cmdW - 8;
+					cmdMenu.y = btnY;
+				}
+				if (cmdBackFromRegister != null)
+				{
+					cmdBackFromRegister.x = GameCanvas.w / 2 + 3;
+					cmdBackFromRegister.y = btnY;
+				}
+			}
+			else
+			{
+				if (cmdLogin != null)
+				{
+					cmdLogin.x = GameCanvas.w / 2 - 84;
+					cmdLogin.y = GameCanvas.h - 26;
+				}
+				if (cmdMenu != null)
+				{
+					cmdMenu.x = GameCanvas.w / 2 + 3;
+					cmdMenu.y = GameCanvas.h - 26;
+				}
+				if (cmdBackFromRegister != null)
+				{
+					cmdBackFromRegister.x = GameCanvas.w / 2 + 3;
+					cmdBackFromRegister.y = GameCanvas.h - 26;
+				}
+			}
+			if (cmdRes != null && cmdMenu != null)
+			{
+				cmdRes.x = GameCanvas.w / 2 - 84;
+				cmdRes.y = cmdMenu.y;
+			}
+			if (cmdOK != null && cmdLogin != null)
+			{
+				cmdOK.x = GameCanvas.w / 2 - 84;
+				cmdOK.y = cmdLogin.y;
+			}
+			if (cmdFogetPass != null && cmdLogin != null)
+			{
+				cmdFogetPass.x = GameCanvas.w / 2 + 3;
+				cmdFogetPass.y = cmdLogin.y;
+			}
+			if (cmdBack != null)
+			{
+				cmdBack.x = 2;
+				cmdBack.y = GameCanvas.h - mScreen.cmdH;
+			}
 		}
 
 	public void actRegisterLeft()

@@ -11,6 +11,11 @@ public partial class Panel : IActionListener, IChatable
 			cmdClose.img = GameCanvas.loadImage("/mainImage/myTexture2dbtX.png");
 			cmdClose.cmdClosePanel = true;
 			currItem = null;
+			if (mainTabName == null)
+			{
+				mainTabName = mResources.mainTab1;
+			}
+			tabName[0] = mainTabName;
 		}
 	public static void loadBg()
 		{
@@ -128,6 +133,7 @@ public partial class Panel : IActionListener, IChatable
 						if (type == 3)
 						{
 							Service.gI().requestChangeZone(selected, -1);
+							DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.StartZoneChangeWatchdog(selected);
 						}
 						else if (type == 14)
 						{

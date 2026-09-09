@@ -24,8 +24,12 @@ public partial class Controller2
 					}
 					break;
 				case -116:
-					GameScr.canAutoPlay = msg.reader().readByte() == 1;
+				{
+					sbyte bAuto = msg.reader().readByte();
+					GameScr.canAutoPlay = (bAuto == 1);
+					ModTdltLogger.LogCanAutoPlay(bAuto, GameScr.canAutoPlay);
 					break;
+				}
 				case -115:
 					Char.myCharz().setPowerInfo(msg.reader().readUTF(), msg.reader().readShort(), msg.reader().readShort(), msg.reader().readShort());
 					break;
@@ -505,6 +509,7 @@ public partial class Controller2
 					GameCanvas.connect();
 					string text2 = msg.reader().readUTF();
 					Rms.saveRMSString(Rms.RMS_userAo + ServerListScreen.ipSelect, text2);
+					Rms.saveRMSString("passAo" + ServerListScreen.ipSelect, text2);
 					Service.gI().setClientType();
 					Service.gI().login(text2, string.Empty, GameMidlet.VERSION, 1);
 					break;

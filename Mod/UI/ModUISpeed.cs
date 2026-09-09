@@ -6,25 +6,34 @@ public static class ModUISpeed
 
 	public static void Paint(int uiX, int uiY, int uiW, int uiH, mGraphics g)
 	{
-		mFont.tahoma_7b_white.drawString(g, "Tốc độ chạy:", uiX + 20, uiY + 55, mFont.LEFT);
-		ModUI.PaintNativeButton(uiX + 95, uiY + 51, 52, 18, ModSpeed.speedHack ? "BẬT" : "TẮT", ModSpeed.speedHack, g);
+		mFont.tahoma_7b_dark.drawString(g, "Tốc độ chạy:", uiX + 12, uiY + 16, mFont.LEFT);
+		ModUI.PaintNativeButton(uiX + 90, uiY + 12, 52, 18, ModSpeed.speedHack ? "BẬT" : "TẮT", ModSpeed.speedHack, g);
 
-		mFont.tahoma_7b_yellow.drawString(g, "Chọn hệ số tốc độ di chuyển:", uiX + 20, uiY + 84, mFont.LEFT);
+		mFont.tahoma_7b_dark.drawString(g, "Chọn hệ số tốc độ di chuyển:", uiX + 12, uiY + 45, mFont.LEFT);
 
+		int btnW = (uiW - 24) / speeds.Length;
 		for (int s = 0; s < speeds.Length; s++)
 		{
-			int sx = uiX + 16 + s * 44;
+			int sx = uiX + 6 + s * (btnW + 2);
 			bool isSel = Res.abs((int)(ModSpeed.speedMult * 10) - (int)(speeds[s] * 10)) < 2;
-			ModUI.PaintNativeButton(sx, uiY + 104, 38, 18, "x" + speeds[s].ToString("0.0"), isSel, g);
+			ModUI.PaintNativeButton(sx, uiY + 68, btnW, 20, "x" + speeds[s].ToString("0.0"), isSel, g);
 		}
 
-		mFont.tahoma_7_yellow.drawString(g, "Tốc độ hiện tại: x" + ModSpeed.speedMult.ToString("0.0") + (ModSpeed.speedHack ? " (ĐANG BẬT)" : " (ĐANG TẮT)"), uiX + uiW / 2, uiY + 155, mFont.CENTER);
-		mFont.tahoma_7_grey.drawString(g, "* Tăng tốc di chuyển mượt mà, đồng bộ với tốc độ khung hình.", uiX + uiW / 2, uiY + 180, mFont.CENTER);
+		int boxX = uiX + 8;
+		int boxY = uiY + 105;
+		int boxW = uiW - 16;
+		int boxH = 95;
+		GameCanvas.paintz.paintFrameSimple(boxX, boxY, boxW, boxH, g);
+		g.setColor(15196114);
+		g.fillRect(boxX + 2, boxY + 2, boxW - 4, boxH - 4);
+
+		mFont.tahoma_7b_dark.drawString(g, "Tốc độ hiện tại: x" + ModSpeed.speedMult.ToString("0.0") + (ModSpeed.speedHack ? " (ĐANG BẬT)" : " (ĐANG TẮT)"), boxX + boxW / 2, boxY + 25, mFont.CENTER);
+		mFont.tahoma_7_grey.drawString(g, "* Tăng tốc di chuyển mượt mà, đồng bộ với tốc độ khung hình.", boxX + boxW / 2, boxY + 52, mFont.CENTER);
 	}
 
 	public static bool HandleTap(int px, int py, int uiX, int uiY, int uiW, int uiH)
 	{
-		if (px >= uiX + 95 && px <= uiX + 147 && py >= uiY + 50 && py <= uiY + 70)
+		if (px >= uiX + 90 && px <= uiX + 142 && py >= uiY + 10 && py <= uiY + 32)
 		{
 			ModSpeed.speedHack = !ModSpeed.speedHack;
 			ModConfig.SaveConfig();
@@ -32,10 +41,11 @@ public static class ModUISpeed
 			return true;
 		}
 
+		int btnW = (uiW - 24) / speeds.Length;
 		for (int s = 0; s < speeds.Length; s++)
 		{
-			int sx = uiX + 16 + s * 44;
-			if (px >= sx && px <= sx + 38 && py >= uiY + 104 && py <= uiY + 122)
+			int sx = uiX + 6 + s * (btnW + 2);
+			if (px >= sx && px <= sx + btnW && py >= uiY + 68 && py <= uiY + 90)
 			{
 				ModSpeed.speedMult = speeds[s];
 				ModConfig.SaveConfig();

@@ -13,6 +13,26 @@ public static class ModUI
 	public static int selectedTab = 0;
 	public static int tanSatTab = 0;
 
+	public static readonly string[] tabNames = new string[10]
+	{
+		"Tàn Sát",
+		"Tự Nhặt",
+		"Tốc Độ",
+		"Hồi Máu",
+		"Đồ Họa",
+		"Báo Boss",
+		"Qua Map",
+		"GoBack",
+		"Úp Set KH",
+		"Lệnh & Phím"
+	};
+
+	public static int colScrollY = 0;
+	private static bool isColDragging = false;
+	private static bool hasColDragged = false;
+	private static int startColDragY = 0;
+	private static int startColScrollY = 0;
+
 	private static Image imgBtX;
 
 	public static List<int> GetUniqueMobTemplateIds()
@@ -106,14 +126,17 @@ public static class ModUI
 
 	public static void DrawCheckbox(int bx, int by, bool isChecked, mGraphics g)
 	{
-		g.setColor(0x333333);
-		g.fillRect(bx, by, 14, 14);
-		g.setColor(0x888888);
-		g.drawRect(bx, by, 14, 14);
-		if (isChecked)
+		if (Paint.imgCheck == null)
 		{
-			g.setColor(0x00e676);
-			g.fillRect(bx + 2, by + 2, 10, 10);
+			try { Paint.imgCheck = GameCanvas.loadImage("/mainImage/myTexture2dcheck.png"); } catch { }
+		}
+		if (Paint.imgCheck != null)
+		{
+			g.drawRegion(Paint.imgCheck, 0, (isChecked ? 2 : 0) * 18, 20, 18, 0, bx, by, 0);
+		}
+		else
+		{
+			GameCanvas.paintz.paintCheckPass(g, bx, by, isChecked, false);
 		}
 	}
 
@@ -121,27 +144,58 @@ public static class ModUI
 	{
 		try
 		{
-			if (isFocus)
+			if (Command.btn0left == null)
 			{
-				g.setColor(0x13381b);
-				g.fillRect(x + 1, y + 1, w - 2, h - 2);
-				g.setColor(0x00e676);
-				g.drawRect(x, y, w - 1, h - 1);
-				g.setColor(0x00783e);
-				g.drawRect(x + 1, y + 1, w - 3, h - 3);
+				try
+				{
+					Command.btn0left = GameCanvas.loadImage("/mainImage/btn0left.png");
+					Command.btn0mid = GameCanvas.loadImage("/mainImage/btn0mid.png");
+					Command.btn0right = GameCanvas.loadImage("/mainImage/btn0right.png");
+					Command.btn1left = GameCanvas.loadImage("/mainImage/btn1left.png");
+					Command.btn1mid = GameCanvas.loadImage("/mainImage/btn1mid.png");
+					Command.btn1right = GameCanvas.loadImage("/mainImage/btn1right.png");
+				}
+				catch { }
+			}
+
+			if (Command.btn0left != null && Command.btn0mid != null && Command.btn0right != null)
+			{
+				Image bLeft = isFocus ? Command.btn1left : Command.btn0left;
+				Image bMid = isFocus ? Command.btn1mid : Command.btn0mid;
+				Image bRight = isFocus ? Command.btn1right : Command.btn0right;
+
+				bool needClip = (h < 24);
+				if (needClip)
+				{
+					g.setClip(x, y, w, h);
+				}
+
+				if (w >= 20)
+				{
+					Command.paintOngMau(bLeft, bMid, bRight, x, y, w, g);
+				}
+				else
+				{
+					g.drawRegion(bLeft, 0, 0, w / 2, 24, 0, x, y, 0);
+					g.drawRegion(bRight, 10 - (w - w / 2), 0, w - w / 2, 24, 0, x + w / 2, y, 0);
+				}
+
+				if (needClip)
+				{
+					g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
+				}
 			}
 			else
 			{
-				g.setColor(0x242424);
+				// Fallback dùng màu be/nâu truyền thống NRO
+				g.setColor(isFocus ? 16383818 : 14338484);
 				g.fillRect(x + 1, y + 1, w - 2, h - 2);
-				g.setColor(0x555555);
+				g.setColor(6702080);
 				g.drawRect(x, y, w - 1, h - 1);
-				g.setColor(0x181818);
-				g.drawRect(x + 1, y + 1, w - 3, h - 3);
 			}
 
 			int textY = y + (h - 10) / 2;
-			(isFocus ? mFont.tahoma_7b_green2 : mFont.tahoma_7b_white).drawString(g, text, x + w / 2, textY, mFont.CENTER);
+			(isFocus ? mFont.tahoma_7b_green2 : mFont.tahoma_7b_dark).drawString(g, text, x + w / 2, textY, mFont.CENTER);
 		}
 		catch
 		{
@@ -156,21 +210,30 @@ public static class ModUI
 	public static void PaintArrowButton(int x, int y, int w, int h, bool isUp, bool isFocus, mGraphics g)
 	{
 		PaintNativeButton(x, y, w, h, string.Empty, isFocus, g);
-		int cx = x + w / 2;
-		int cy = y + h / 2;
-		g.setColor(isFocus ? 0x00e676 : 0xffffff);
-		if (isUp)
+		if (Mob.imgHP != null)
 		{
-			for (int r = 0; r < 4; r++)
-			{
-				g.fillRect(cx - r, cy - 2 + r, r * 2 + 1, 1);
-			}
+			int arrowX = x + (w - 9) / 2;
+			int arrowY = y + (h - 6) / 2;
+			g.drawRegion(Mob.imgHP, 0, 0, 9, 6, isUp ? 1 : 0, arrowX, arrowY, 0);
 		}
 		else
 		{
-			for (int r = 0; r < 4; r++)
+			int cx = x + w / 2;
+			int cy = y + h / 2;
+			g.setColor(isFocus ? 0x00783e : 0x3c1400);
+			if (isUp)
 			{
-				g.fillRect(cx - (3 - r), cy - 1 + r, (3 - r) * 2 + 1, 1);
+				for (int r = 0; r < 4; r++)
+				{
+					g.fillRect(cx - r, cy - 2 + r, r * 2 + 1, 1);
+				}
+			}
+			else
+			{
+				for (int r = 0; r < 4; r++)
+				{
+					g.fillRect(cx - (3 - r), cy - 1 + r, (3 - r) * 2 + 1, 1);
+				}
 			}
 		}
 	}
@@ -183,26 +246,21 @@ public static class ModUI
 		}
 		try
 		{
-			int uiW = 340;
-			int uiH = 250;
+			int uiW = 440;
+			int uiH = 260;
 			int uiX = (GameCanvas.w - uiW) / 2;
 			int uiY = (GameCanvas.h - uiH) / 2;
 
+			// 1. Khung Dialog chính: Dùng asset viền chuẩn NRO + nền giấy ngà truyền thống
 			GameCanvas.paintz.paintFrame(uiX, uiY, uiW, uiH, g);
+			GameCanvas.paintz.paintFrameInside(uiX + 6, uiY + 6, uiW - 12, uiH - 12, g);
 
-			string title = "CÀI ĐẶT TÀN SÁT";
-			if (selectedTab == 1) title = "CÀI ĐẶT TỰ NHẶT";
-			else if (selectedTab == 2) title = "CÀI ĐẶT TỐC ĐỘ CHẠY";
-			else if (selectedTab == 3) title = "CÀI ĐẶT BƠM ĐẬU & HP";
-			else if (selectedTab == 4) title = "CÀI ĐẶT ĐỒ HỌA & FPS";
-			else if (selectedTab == 5) title = "CÀI ĐẶT THÔNG BÁO BOSS";
-			else if (selectedTab == 6) title = "TỰ ĐỘNG QUA MAP (NEXT MAP)";
-			else if (selectedTab == 7) title = "TỰ ĐỘNG VỀ CHỖ CŨ (GOBACK MAP)";
-			else if (selectedTab == 8) title = "CÀI ĐẶT ÚP SET KÍCH HOẠT";
-			else if (selectedTab == 9) title = "HƯỚNG DẪN LỆNH & PHÍM TẮT";
+			// Tiêu đề
+			string currentTabName = (selectedTab >= 0 && selectedTab < tabNames.Length) ? tabNames[selectedTab] : "CÀI ĐẶT";
+			string title = "MENU MOD - " + currentTabName.ToUpper();
+			mFont.tahoma_7b_dark.drawString(g, title, uiX + uiW / 2, uiY + 9, mFont.CENTER);
 
-			mFont.tahoma_7b_yellow.drawString(g, title, uiX + uiW / 2, uiY + 10, mFont.CENTER);
-
+			// Nút [X] đóng ở góc phải
 			if (imgBtX == null)
 			{
 				try
@@ -226,58 +284,91 @@ public static class ModUI
 				mFont.tahoma_7b_white.drawString(g, "X", uiX + uiW - 16, uiY + 9, mFont.CENTER);
 			}
 
-			// 10 Tab Buttons Header (Nhỏ gọn, tinh tế, vừa vặn không tràn chữ)
-			string[] tabNames = new string[10] { "T.Sát", "Nhặt", "T.Độ", "H.Máu", "Đ.Họa", "Boss", "Q.Map", "G.Back", "ÚpSet", "Lệnh" };
-			int tabW = 31;
-			int tabH = 19;
-			int startTabX = uiX + 10;
-			for (int t = 0; t < 10; t++)
+			// 2. Cột Danh Mục Bên Trái (Master Navigation Sidebar - Cuộn Dọc Không Giới Hạn)
+			int colX = uiX + 8;
+			int colY = uiY + 28;
+			int colW = 98;
+			int colH = 196;
+
+			GameCanvas.paintz.paintFrameSimple(colX, colY, colW, colH, g);
+			g.setColor(15196114);
+			g.fillRect(colX + 2, colY + 2, colW - 4, colH - 4);
+
+			int itemH = 22;
+			int itemStep = 24;
+			int contentH = tabNames.Length * itemStep + 4;
+			int maxScroll = (contentH > colH - 4) ? (contentH - (colH - 4)) : 0;
+			if (colScrollY > maxScroll) colScrollY = maxScroll;
+			if (colScrollY < 0) colScrollY = 0;
+
+			g.setClip(colX + 2, colY + 2, colW - 4, colH - 4);
+			for (int t = 0; t < tabNames.Length; t++)
 			{
-				int tx = startTabX + t * 32;
-				PaintNativeButton(tx, uiY + 28, tabW, tabH, tabNames[t], selectedTab == t, g);
+				int btnY = colY + 3 + t * itemStep - colScrollY;
+				if (btnY + itemH < colY || btnY > colY + colH) continue;
+				bool isSel = (selectedTab == t);
+				PaintNativeButton(colX + 4, btnY, colW - 8, itemH, tabNames[t], isSel, g);
+			}
+			g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
+
+			// Thanh cuộn NRO thanh mảnh ở mép phải Cột Danh Mục
+			if (maxScroll > 0)
+			{
+				int barH = colH * (colH - 4) / contentH;
+				if (barH < 14) barH = 14;
+				int barY = colY + 2 + (colH - 4 - barH) * colScrollY / maxScroll;
+				g.setColor(3847752);
+				g.fillRect(colX + colW - 4, barY, 2, barH);
 			}
 
-			// Render Tab tương ứng
+			// Nút ĐÓNG ống màu cố định ở đáy Cột Trái
+			int closeBtnY = uiY + 228;
+			PaintNativeButton(colX, closeBtnY, colW, 22, "ĐÓNG", false, g);
+
+			// 3. Vùng Nội Dung Chi Tiết Bên Phải (Detail Panel)
+			int detailX = uiX + 112;
+			int detailY = uiY + 28;
+			int detailW = 320;
+			int detailH = 222;
+
+			GameCanvas.paintz.paintFrameSimple(detailX, detailY, detailW, detailH, g);
+			g.setColor(15787715);
+			g.fillRect(detailX + 2, detailY + 2, detailW - 4, detailH - 4);
+
+			// Render Sub-Panel tương ứng
 			switch (selectedTab)
 			{
 				case 0:
-					ModUITanSat.Paint(uiX, uiY, uiW, uiH, g);
+					ModUITanSat.Paint(detailX, detailY, detailW, detailH, g);
 					break;
 				case 1:
-					ModUIAutoPick.Paint(uiX, uiY, uiW, uiH, g);
+					ModUIAutoPick.Paint(detailX, detailY, detailW, detailH, g);
 					break;
 				case 2:
-					ModUISpeed.Paint(uiX, uiY, uiW, uiH, g);
+					ModUISpeed.Paint(detailX, detailY, detailW, detailH, g);
 					break;
 				case 3:
-					ModUIAutoHeal.Paint(uiX, uiY, uiW, uiH, g);
+					ModUIAutoHeal.Paint(detailX, detailY, detailW, detailH, g);
 					break;
 				case 4:
-					ModUIGraphics.Paint(uiX, uiY, uiW, uiH, g);
+					ModUIGraphics.Paint(detailX, detailY, detailW, detailH, g);
 					break;
 				case 5:
-					ModUIBoss.Paint(uiX, uiY, uiW, uiH, g);
+					ModUIBoss.Paint(detailX, detailY, detailW, detailH, g);
 					break;
 				case 6:
-					ModUINextMap.Paint(uiX, uiY, uiW, uiH, g);
+					ModUINextMap.Paint(detailX, detailY, detailW, detailH, g);
 					break;
 				case 7:
-					ModUIGoBack.Paint(uiX, uiY, uiW, uiH, g);
+					ModUIGoBack.Paint(detailX, detailY, detailW, detailH, g);
 					break;
 				case 8:
-					ModUISetActivator.Paint(uiX, uiY, uiW, uiH, g);
+					ModUISetActivator.Paint(detailX, detailY, detailW, detailH, g);
 					break;
 				case 9:
-					ModUIHelp.Paint(uiX, uiY, uiW, uiH, g);
+					ModUIHelp.Paint(detailX, detailY, detailW, detailH, g);
 					break;
 			}
-
-			// Nút ĐÓNG nhỏ gọn ở đáy
-			int closeBtnW = 75;
-			int closeBtnH = 20;
-			int closeBtnX = uiX + (uiW - closeBtnW) / 2;
-			int closeBtnY = uiY + 224;
-			PaintNativeButton(closeBtnX, closeBtnY, closeBtnW, closeBtnH, "ĐÓNG", false, g);
 		}
 		catch
 		{
@@ -298,8 +389,8 @@ public static class ModUI
 				return;
 			}
 
-			int uiW = 340;
-			int uiH = 250;
+			int uiW = 440;
+			int uiH = 260;
 			int uiX = (GameCanvas.w - uiW) / 2;
 			int uiY = (GameCanvas.h - uiH) / 2;
 
@@ -308,33 +399,96 @@ public static class ModUI
 				int px = GameCanvas.px;
 				int py = GameCanvas.py;
 
-				// 1. Xử lý con lăn chuột (Mouse ScrollWheel) mượt mà liên tục mỗi frame
+				int colX = uiX + 8;
+				int colY = uiY + 28;
+				int colW = 98;
+				int colH = 196;
+
+				int detailX = uiX + 112;
+				int detailY = uiY + 28;
+				int detailW = 320;
+				int detailH = 222;
+
+				int itemStep = 24;
+				int contentH = tabNames.Length * itemStep + 4;
+				int maxScroll = (contentH > colH - 4) ? (contentH - (colH - 4)) : 0;
+
+				// 1. Xử lý con lăn chuột (Mouse ScrollWheel)
 				float wheel = Input.GetAxis("Mouse ScrollWheel");
 				if (wheel == 0 && GameCanvas.pXYScrollMouse != 0)
 				{
 					wheel = GameCanvas.pXYScrollMouse;
 					GameCanvas.pXYScrollMouse = 0;
 				}
-				if (wheel != 0 && px >= uiX && px <= uiX + uiW && py >= uiY && py <= uiY + uiH)
+				if (wheel != 0)
 				{
-					if (selectedTab == 9)
+					// Nếu con trỏ chuột ở Cột Danh Mục bên trái
+					if (px >= colX && px <= colX + colW && py >= colY && py <= colY + colH)
 					{
-						ModUIHelp.OnMouseScroll(wheel);
+						int step = 28;
+						if (wheel > 0)
+						{
+							colScrollY -= step;
+							if (colScrollY < 0) colScrollY = 0;
+						}
+						else if (wheel < 0)
+						{
+							colScrollY += step;
+							if (colScrollY > maxScroll) colScrollY = maxScroll;
+						}
 					}
-					else if (selectedTab == 0)
+					// Nếu con trỏ chuột ở Vùng Chi Tiết bên phải
+					else if (px >= detailX && px <= detailX + detailW && py >= detailY && py <= detailY + detailH)
 					{
-						ModUITanSat.OnMouseScroll(wheel);
+						if (selectedTab == 9)
+						{
+							ModUIHelp.OnMouseScroll(wheel);
+						}
+						else if (selectedTab == 0)
+						{
+							ModUITanSat.OnMouseScroll(wheel);
+						}
 					}
 				}
 
-				// 2. Xử lý kéo thả chuột (Drag to Scroll)
+				// 2. Xử lý kéo thả cuộn Cột Danh Mục (Drag Scroll Left Sidebar)
+				if (GameCanvas.isPointerJustDown)
+				{
+					if (px >= colX && px <= colX + colW && py >= colY && py <= colY + colH)
+					{
+						isColDragging = true;
+						hasColDragged = false;
+						startColDragY = py;
+						startColScrollY = colScrollY;
+					}
+				}
+				else if (GameCanvas.isPointerDown && isColDragging)
+				{
+					int deltaY = py - startColDragY;
+					if (Res.abs(deltaY) > 4)
+					{
+						hasColDragged = true;
+					}
+					if (hasColDragged && maxScroll > 0)
+					{
+						colScrollY = startColScrollY - deltaY;
+						if (colScrollY < 0) colScrollY = 0;
+						if (colScrollY > maxScroll) colScrollY = maxScroll;
+					}
+				}
+				else if (GameCanvas.isPointerJustRelease)
+				{
+					isColDragging = false;
+				}
+
+				// Xử lý kéo thả cuộn trong Sub-Panel
 				if (selectedTab == 9)
 				{
-					ModUIHelp.UpdateDragScroll(px, py, uiX, uiY, uiW, uiH);
+					ModUIHelp.UpdateDragScroll(px, py, detailX, detailY, detailW, detailH);
 				}
 				else if (selectedTab == 0)
 				{
-					ModUITanSat.UpdateDragScroll(px, py, uiX, uiY, uiW, uiH);
+					ModUITanSat.UpdateDragScroll(px, py, detailX, detailY, detailW, detailH);
 				}
 
 				bool isClick = GameCanvas.isPointerClick || GameCanvas.isPointerJustRelease;
@@ -346,7 +500,7 @@ public static class ModUI
 
 					if (isClick)
 					{
-						// Nút [X] đóng ở góc phải
+						// Nút [X] đóng ở góc phải trên cùng
 						if (px >= uiX + uiW - 32 && px <= uiX + uiW - 4 && py >= uiY + 4 && py <= uiY + 28)
 						{
 							uiCustomOpen = false;
@@ -355,74 +509,73 @@ public static class ModUI
 							return;
 						}
 
-						// Chuyển 10 Tab chính
-						if (py >= uiY + 26 && py <= uiY + 50)
-						{
-							int startTabX = uiX + 10;
-							int tabW = 31;
-							for (int t = 0; t < 10; t++)
-							{
-								int tx = startTabX + t * 32;
-								if (px >= tx && px <= tx + tabW)
-								{
-									selectedTab = t;
-									ModConfig.SaveConfig();
-									SoundMn.gI().buttonClick();
-									return;
-								}
-							}
-						}
-
-						// Xử lý click theo Tab hiện tại
-						bool handled = false;
-						switch (selectedTab)
-						{
-							case 0:
-								handled = ModUITanSat.HandleTap(px, py, uiX, uiY, uiW, uiH);
-								break;
-							case 1:
-								handled = ModUIAutoPick.HandleTap(px, py, uiX, uiY, uiW, uiH);
-								break;
-							case 2:
-								handled = ModUISpeed.HandleTap(px, py, uiX, uiY, uiW, uiH);
-								break;
-							case 3:
-								handled = ModUIAutoHeal.HandleTap(px, py, uiX, uiY, uiW, uiH);
-								break;
-							case 4:
-								handled = ModUIGraphics.HandleTap(px, py, uiX, uiY, uiW, uiH);
-								break;
-							case 5:
-								handled = ModUIBoss.HandleTap(px, py, uiX, uiY, uiW, uiH);
-								break;
-							case 6:
-								handled = ModUINextMap.HandleTap(px, py, uiX, uiY, uiW, uiH);
-								break;
-							case 7:
-								handled = ModUIGoBack.HandleTap(px, py, uiX, uiY, uiW, uiH);
-								break;
-							case 8:
-								handled = ModUISetActivator.HandleTap(px, py, uiX, uiY, uiW, uiH);
-								break;
-							case 9:
-								handled = ModUIHelp.HandleTap(px, py, uiX, uiY, uiW, uiH);
-								break;
-						}
-						if (handled)
-						{
-							return;
-						}
-
-						// Nút ĐÓNG ở đáy
-						int closeBtnW = 75;
-						int closeBtnX = uiX + (uiW - closeBtnW) / 2;
-						int closeBtnY = uiY + 224;
-						if (px >= closeBtnX && px <= closeBtnX + closeBtnW && py >= closeBtnY && py <= closeBtnY + 20)
+						// Nút [ĐÓNG] ở đáy Cột Trái
+						if (px >= colX && px <= colX + colW && py >= uiY + 228 && py <= uiY + 252)
 						{
 							uiCustomOpen = false;
 							ModConfig.SaveConfig();
 							SoundMn.gI().buttonClose();
 							return;
+						}
+
+						// Bấm chọn danh mục ở Cột Trái
+						if (!hasColDragged && px >= colX + 4 && px <= colX + colW - 4 && py >= colY + 2 && py <= colY + colH - 2)
+						{
+							int clickedIdx = (py - (colY + 3) + colScrollY) / itemStep;
+							if (clickedIdx >= 0 && clickedIdx < tabNames.Length)
+							{
+								selectedTab = clickedIdx;
+								ModConfig.SaveConfig();
+								SoundMn.gI().buttonClick();
+								return;
+							}
+						}
+						if (hasColDragged)
+						{
+							hasColDragged = false;
+						}
+
+						// Xử lý click trong Vùng Chi Tiết bên phải
+						if (px >= detailX && px <= detailX + detailW && py >= detailY && py <= detailY + detailH)
+						{
+							bool handled = false;
+							switch (selectedTab)
+							{
+								case 0:
+									handled = ModUITanSat.HandleTap(px, py, detailX, detailY, detailW, detailH);
+									break;
+								case 1:
+									handled = ModUIAutoPick.HandleTap(px, py, detailX, detailY, detailW, detailH);
+									break;
+								case 2:
+									handled = ModUISpeed.HandleTap(px, py, detailX, detailY, detailW, detailH);
+									break;
+								case 3:
+									handled = ModUIAutoHeal.HandleTap(px, py, detailX, detailY, detailW, detailH);
+									break;
+								case 4:
+									handled = ModUIGraphics.HandleTap(px, py, detailX, detailY, detailW, detailH);
+									break;
+								case 5:
+									handled = ModUIBoss.HandleTap(px, py, detailX, detailY, detailW, detailH);
+									break;
+								case 6:
+									handled = ModUINextMap.HandleTap(px, py, detailX, detailY, detailW, detailH);
+									break;
+								case 7:
+									handled = ModUIGoBack.HandleTap(px, py, detailX, detailY, detailW, detailH);
+									break;
+								case 8:
+									handled = ModUISetActivator.HandleTap(px, py, detailX, detailY, detailW, detailH);
+									break;
+								case 9:
+									handled = ModUIHelp.HandleTap(px, py, detailX, detailY, detailW, detailH);
+									break;
+							}
+							if (handled)
+							{
+								return;
+							}
 						}
 					}
 				}

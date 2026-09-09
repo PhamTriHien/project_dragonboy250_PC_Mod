@@ -122,14 +122,15 @@ public partial class LoginScr : mScreen, IActionListener
 			}
 			if (!Main.isPC && !TouchScreenKeyboard.visible && !Main.isMiniApp && !Main.isWindowsPhone)
 			{
-				string text = tfUser.getText().ToLower().Trim();
-				string text2 = tfPass.getText().ToLower().Trim();
+				string text = tfUser.getText().Trim();
+				string text2 = tfPass.getText();
 				if (!text.Equals(string.Empty) && !text2.Equals(string.Empty))
 				{
 					doLogin();
 				}
 				Main.isMiniApp = true;
 			}
+			DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.UpdateLoginWatchdog();
 			updateTfWhenOpenKb();
 		}
 
@@ -249,10 +250,14 @@ public partial class LoginScr : mScreen, IActionListener
 				if (GameCanvas.isPointerHoldIn(tfUser.x, tfUser.y, tfUser.width, tfUser.height))
 				{
 					focus = 0;
+					tfUser.isFocus = true;
+					tfPass.isFocus = false;
 				}
 				else if (GameCanvas.isPointerHoldIn(tfPass.x, tfPass.y, tfPass.width, tfPass.height))
 				{
 					focus = 1;
+					tfUser.isFocus = false;
+					tfPass.isFocus = true;
 				}
 			}
 			if (Main.isPC && GameCanvas.keyPressed[(!Main.isPC) ? 5 : 25] && right != null)
@@ -368,8 +373,7 @@ public partial class LoginScr : mScreen, IActionListener
 				actRegister();
 				break;
 			case 2008:
-				Rms.saveRMSString(Rms.RMS_acc, tfUser.getText().Trim());
-				Rms.saveRMSString(Rms.RMS_pass, tfPass.getText().Trim());
+				DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.SaveCredentials(tfUser.getText(), tfPass.getText(), isCheck);
 				if (ServerListScreen.isNewUI)
 				{
 					Controller.isEXTRA_LINK = false;

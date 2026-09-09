@@ -32,6 +32,7 @@ public partial class GameScr : mScreen, IChatable
 
 	public override void update()
 			{
+				DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.UpdateZoneWatchdog();
 				if (GameCanvas.keyPressed[16])
 				{
 					GameCanvas.keyPressed[16] = false;

@@ -256,7 +256,6 @@ public partial class CreateCharScr
 				if (GameCanvas.isPointerHoldIn(GameCanvas.w / 2 - 3 * num3 / 2, num - 30 + num2 + 5, num3 * 3, 65))
 				{
 					selected = 2;
-					int num5 = indexHair;
 					indexHair = (GameCanvas.px - (GameCanvas.w / 2 - 3 * num3 / 2)) / num3;
 					if (indexHair < 0)
 					{
@@ -265,10 +264,6 @@ public partial class CreateCharScr
 					if (indexHair > mResources.hairStyleName[0].Length - 1)
 					{
 						indexHair = mResources.hairStyleName[0].Length - 1;
-					}
-					if (num5 != selected)
-					{
-						doChangeMap();
 					}
 				}
 			}

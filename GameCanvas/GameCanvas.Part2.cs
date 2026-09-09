@@ -249,6 +249,7 @@ public partial class GameCanvas : IActionListener
 		}
 	public static void startOKDlg(string info)
 		{
+			DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.OnLoginFinished();
 			info = Res.changeString(info);
 			closeKeyBoard();
 			msgdlg.setInfo(info, null, new Command(mResources.OK, instance, 8882, null), null);
@@ -264,6 +265,7 @@ public partial class GameCanvas : IActionListener
 		}
 	public static void startOKDlg(string info, bool isError)
 		{
+			DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.OnLoginFinished();
 			info = Res.changeString(info);
 			closeKeyBoard();
 			msgdlg.setInfo(info, null, new Command(mResources.CANCEL, instance, 8882, null), null);
@@ -273,7 +275,9 @@ public partial class GameCanvas : IActionListener
 	public static void startWaitDlg()
 		{
 			closeKeyBoard();
-			Char.isLoadingMap = true;
+			msgdlg.setInfo(mResources.PLEASEWAIT, null, new Command(mResources.CANCEL, instance, 8882, null), null);
+			currentDialog = msgdlg;
+			msgdlg.isWait = true;
 		}
 	public void openWeb(string strLeft, string strRight, string url, string str)
 		{
@@ -283,6 +287,7 @@ public partial class GameCanvas : IActionListener
 		}
 	public static void startOK(string info, int actionID, object p)
 		{
+			DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.OnLoginFinished();
 			info = Res.changeString(info);
 			closeKeyBoard();
 			msgdlg.setInfo(info, null, new Command(mResources.OK, instance, actionID, p), null);
@@ -291,11 +296,11 @@ public partial class GameCanvas : IActionListener
 	public static void startserverThongBao(string msgSv)
 		{
 			msgSv = Res.changeString(msgSv);
-		thongBaoTest = msgSv;
-		xThongBaoTranslate = w - 60;
-		dir_ = -1;
-		ModBossNotice.LogBossDebug("RAW-TICKER", msgSv);
-		ModBossNotice.ProcessServerBossNotice(msgSv);
+			thongBaoTest = msgSv;
+			xThongBaoTranslate = w - 60;
+			dir_ = -1;
+			ModBossNotice.LogBossDebug("RAW-TICKER", msgSv);
+			ModBossNotice.ProcessServerBossNotice(msgSv);
 		}
 	public static string getMoneys(int m)
 		{

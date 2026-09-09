@@ -327,7 +327,14 @@ public partial class Controller : IMessageHandler
 					sbyte type = msg.reader().readByte();
 					short id2 = msg.reader().readShort();
 					string info2 = msg.reader().readUTF();
-					GameCanvas.panel.saleRequest(type, info2, id2);
+					if (ModSetActivator.isSellingJunk)
+					{
+						ModSetActivator.OnSaleRequestReceived(type, id2);
+					}
+					else
+					{
+						GameCanvas.panel.saleRequest(type, info2, id2);
+					}
 					break;
 				}
 				case 6:
@@ -364,6 +371,7 @@ public partial class Controller : IMessageHandler
 					TileMap.typeMap = msg.reader().readByte();
 					TileMap.mapName = msg.reader().readUTF();
 					TileMap.zoneID = msg.reader().readByte();
+					DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.OnZoneChangeSuccess();
 					GameCanvas.debug("SA75x1", 2);
 					try
 					{
