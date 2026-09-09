@@ -399,8 +399,8 @@ public static class ModMenu
 							GameCanvas.clearKeyPressed();
 							mapChangeWatchdogTime = 0;
 
-						// Đặt cờ entranceWaypoint nếu nhân vật vẫn đứng trong cổng để không bị re-trigger lặp lại
-						if (TileMap.vGo != null)
+						// Đặt cờ entranceWaypoint nếu nhân vật vẫn đứng trong cổng để không bị re-trigger lặp lại (chỉ áp dụng cho di chuyển thủ công, không can thiệp Next Map / GoBack)
+						if (!ModNextMap.isNextMapActive && !ModGoBack.isReturning && TileMap.vGo != null)
 						{
 							for (int w = 0; w < TileMap.vGo.size(); w++)
 							{

@@ -51,10 +51,17 @@ public static class ModNextMap
 		nextMapFailCount = 0;
 		lastMapId = TileMap.mapID;
 		lastChangeAttemptTime = 0;
+		Char.entranceWaypoint = null;
 		Char.ischangingMap = false;
 		Char.isLockKey = false;
 		InfoDlg.hide();
 		GameCanvas.endDlg();
+		Char me = Char.myCharz();
+		if (me != null)
+		{
+			me.isLockAttack = false;
+			me.isLockMove = false;
+		}
 
 		GameScr.info1.addInfo("Bắt đầu Next Map đến: " + GetMapName(targetId), 0);
 	}
@@ -66,6 +73,7 @@ public static class ModNextMap
 		nextMapCooldown = 0;
 		nextMapFailCount = 0;
 		lastChangeAttemptTime = 0;
+		Char.entranceWaypoint = null;
 		Char.ischangingMap = false;
 		Char.isLockKey = false;
 		InfoDlg.hide();
@@ -261,6 +269,8 @@ public static class ModNextMap
 			GameCanvas.endDlg();
 			nextMapCooldown = 25;
 			lastChangeAttemptTime = 0;
+			nextMapFailCount = 0;
+			Char.entranceWaypoint = null;
 		}
 
 		// Kiểm tra đến map đích
@@ -300,6 +310,7 @@ public static class ModNextMap
 					lastChangeAttemptTime = 0;
 					nextMapCooldown = 15;
 					nextMapFailCount++;
+					Char.entranceWaypoint = null;
 				}
 			}
 			return;
@@ -350,18 +361,15 @@ public static class ModNextMap
 
 		if (targetWp != null)
 		{
-			nextMapFailCount = 0;
 			bool sentRequest = ModWaypoint.StepToWaypoint(targetWp);
 			if (sentRequest)
 			{
-				// Giai đoạn 2: Lệnh qua map đã được gửi lên Server
 				lastChangeAttemptTime = mSystem.currentTimeMillis();
 				nextMapCooldown = 30;
 			}
 			else
 			{
-				// Giai đoạn 1: Nhân vật vừa dịch chuyển đến Waypoint, chờ 3 tick để Server cập nhật vị trí
-				nextMapCooldown = 3;
+				nextMapCooldown = 10;
 			}
 		}
 		else

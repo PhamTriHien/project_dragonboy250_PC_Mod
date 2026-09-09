@@ -11,14 +11,57 @@ public static class ModWaypoint
 				return (minY + maxY) / 2;
 			}
 
-			// Quét từ maxY lên minY tìm vị trí đất va chạm
+			// 1. Quét tìm mặt đất trong phạm vi waypoint [minY, maxY]
 			for (int y = maxY; y >= minY; y -= 4)
 			{
 				if (TileMap.tileTypeAt(x, y, 2))
 				{
-					return y;
+					int gy = TileMap.tileYofPixel(y);
+					if (gy >= minY && gy <= maxY)
+					{
+						return gy;
+					}
+					return (y <= maxY) ? y : maxY;
 				}
 			}
+
+			// 2. Nếu tại x chưa thấy đất, thử quét các điểm x lân cận trong cùng waypoint
+			int[] xOffsets = new int[] { 8, -8, 16, -16 };
+			for (int i = 0; i < xOffsets.Length; i++)
+			{
+				int testX = x + xOffsets[i];
+				for (int y = maxY; y >= minY; y -= 4)
+				{
+					if (TileMap.tileTypeAt(testX, y, 2))
+					{
+						int gy = TileMap.tileYofPixel(y);
+						if (gy >= minY && gy <= maxY)
+						{
+							return gy;
+						}
+						return (y <= maxY) ? y : maxY;
+					}
+				}
+			}
+
+			// 3. Quét toàn bộ chiều cao map từ dưới lên để tìm mặt đất chuẩn của cột X
+			for (int y = TileMap.pxh - 12; y >= 24; y -= 12)
+			{
+				if (TileMap.tileTypeAt(x, y, 2))
+				{
+					int gy = TileMap.tileYofPixel(y);
+					if (gy >= minY && gy <= maxY)
+					{
+						return gy;
+					}
+					if (gy >= maxY && gy <= maxY + 24)
+					{
+						return maxY;
+					}
+					break;
+				}
+			}
+
 			return (minY + maxY) / 2;
 		}
 		catch
@@ -37,95 +80,84 @@ public static class ModWaypoint
 				return false;
 			}
 
+			// Luôn xóa cờ entranceWaypoint để không bị vô hiệu hóa cổng đích
+			Char.entranceWaypoint = null;
+
 			// 1. Tính toạ độ X an toàn tuyệt đối nằm gọn trong vùng Waypoint
 			int targetX = (wp.minX + wp.maxX) / 2;
 			if (wp.minX <= 24)
 			{
-				targetX = wp.minX + 12;
+				if (wp.maxX >= 48)
+				{
+					if (targetX < 24) targetX = 24;
+					if (targetX > wp.maxX - 8) targetX = wp.maxX - 8;
+				}
+				else
+				{
+					if (targetX < wp.minX + 4) targetX = wp.minX + 4;
+					if (targetX > wp.maxX - 4) targetX = wp.maxX - 4;
+				}
 			}
 			else if (wp.maxX >= TileMap.pxw - 24)
 			{
-				targetX = wp.maxX - 12;
+				if (wp.minX <= TileMap.pxw - 48)
+				{
+					if (targetX > TileMap.pxw - 24) targetX = TileMap.pxw - 24;
+					if (targetX < wp.minX + 8) targetX = wp.minX + 8;
+				}
+				else
+				{
+					if (targetX < wp.minX + 4) targetX = wp.minX + 4;
+					if (targetX > wp.maxX - 4) targetX = wp.maxX - 4;
+				}
+			}
+			else
+			{
+				if (targetX < wp.minX + 4) targetX = wp.minX + 4;
+				if (targetX > wp.maxX - 4) targetX = wp.maxX - 4;
 			}
 
-			// 2. Tính toạ độ Y an toàn (giữ nguyên độ cao bay/đứng nếu đã nằm trong cổng, hoặc lấy trung tâm/mặt đất)
-			int targetY = me.cy;
+			// 2. Tính toạ độ Y an toàn (chạm sàn đất T_TOP hoặc trung tâm cổng)
+			int targetY;
 			if (TileMap.isInAirMap() || TileMap.mapID == 45 || TileMap.mapID == 46 || TileMap.mapID == 47 || TileMap.mapID == 48)
 			{
 				targetY = (wp.minY + wp.maxY) / 2;
 			}
-			else if (wp.isEnter || wp.isOffline)
+			else
 			{
 				int groundY = GetGroundY(targetX, wp.minY, wp.maxY);
 				targetY = (groundY >= wp.minY && groundY <= wp.maxY) ? groundY : ((wp.minY + wp.maxY) / 2);
 			}
-			else
-			{
-				if (me.cy >= wp.minY && me.cy <= wp.maxY)
-				{
-					targetY = me.cy;
-				}
-				else
-				{
-					int groundY = GetGroundY(targetX, wp.minY, wp.maxY);
-					targetY = (groundY >= wp.minY && groundY <= wp.maxY) ? groundY : ((wp.minY + wp.maxY) / 2);
-				}
-			}
 
-			// Ràng buộc Y không bị lọt ra ngoài hitbox của cổng
-			if (targetY < wp.minY + 2) targetY = wp.minY + 2;
-			if (targetY > wp.maxY - 2) targetY = wp.maxY - 2;
+			// Ràng buộc Y nằm gọn trong hitbox của cổng, TUYỆT ĐỐI KHÔNG trừ 2px làm rơi vào không trung
+			if (targetY < wp.minY) targetY = wp.minY;
+			if (targetY > wp.maxY) targetY = wp.maxY;
 
-			// Tính khoảng cách từ vị trí hiện tại tới điểm đích Waypoint
-			int dist = Res.distance(me.cx, me.cy, targetX, targetY);
+			// Xóa sạch trạng thái di chuyển cũ
+			me.vMovePoints.removeAllElements();
+			me.currentMovePoint = null;
+			me.endMovePointCommand = null;
 
-			// GIAI ĐOẠN 1: Nếu nhân vật còn ở xa (> 30px), đồng bộ vị trí tới Waypoint trước
-			if (dist > 30)
-			{
-				me.vMovePoints.removeAllElements();
-				me.currentMovePoint = null;
-				me.cx = targetX;
-				me.cy = targetY;
-				me.cvx = 0;
-				me.cvy = 0;
-				me.statusMe = 1;
-				me.delayFall = 0;
-				me.cdir = (targetX > TileMap.pxw / 2) ? 1 : -1;
-
-				// Gửi gói tin cập nhật toạ độ nguyên tử lên server
-				Service.gI().charMoveTo(targetX, targetY);
-				return false; // Nhường tick cho server cập nhật vị trí trước khi gửi requestChangeMap
-			}
-
-			// GIAI ĐOẠN 2: Nhân vật đã đứng gọn trong Waypoint (dist <= 30px) -> Kích hoạt qua Map
+			// Đặt nhân vật trực tiếp vào tâm cổng và đồng bộ với Server
 			me.cx = targetX;
 			me.cy = targetY;
 			me.cvx = 0;
 			me.cvy = 0;
-			me.statusMe = 1;
+			me.statusMe = 1; // Đứng yên vững chắc trên mặt đất
 			me.delayFall = 0;
 			me.cdir = (targetX > TileMap.pxw / 2) ? 1 : -1;
 
-			// Gửi gói tin di chuyển xác thực
-			Service.gI().charMove();
+			// Gửi gói tin cập nhật toạ độ nguyên tử lên server
+			Service.gI().charMoveTo(targetX, targetY);
 
+			// Gửi gói tin yêu cầu chuyển map thực
 			if (wp.isOffline || TileMap.isTrainingMap())
 			{
 				Service.gI().getMapOffline();
 			}
-			else if (wp.isEnter)
-			{
-				if (wp.popup != null && wp.popup.command != null)
-				{
-					wp.popup.command.performAction();
-				}
-				else
-				{
-					Service.gI().requestChangeMap();
-				}
-			}
 			else
 			{
+				// Cả cổng thông thường và cổng isEnter đều gửi requestChangeMap
 				Service.gI().requestChangeMap();
 			}
 
