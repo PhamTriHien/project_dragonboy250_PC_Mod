@@ -10054,3 +10054,130 @@ Tệp: `https://raw.githubusercontent.com/PhamTriHien/project_dragonboy250_PC_Mo
 | **Giao thức Packet Mạng** | **Cmd -89 đọc đủ byte, không gây desync stream, open3Hour = false** |
 | **Biên dịch Native AOT (.NET 8)** | **Build succeeded: 0 Warning, 0 Error** |
 | **Biên dịch Standalone C# (.NET 3.5)** | **Build succeeded: 0 Warning, 0 Error** |
+
+
+---
+
+## 155. KHẮC PHỤC TRIỆT ĐỂ LỖI NÚT BUTTON BỊ ĐÈ LÊN NHAU, CHUẨN HÓA TAB HEADER & TRIỂN KHAI CƠ CHẾ CUỘN MƯỢT MÀ ĐA NỀN TẢNG (MOUSE WHEEL, DRAG SCROLL & VECTOR ARROWS)
+
+### 1. Bối Cảnh & Yêu Cầu Người Dùng
+- **Người dùng yêu cầu**:
+  1. Kiểm tra và sửa triệt để lỗi các nút bấm bị đè chồng lấn lên nhau trong giao diện Modal Mod.
+  2. Khắc phục lỗi phần danh sách lệnh trong tab Hướng Dẫn không scroll lên xuống được để xem các lệnh còn lại.
+  3. Khắc phục nút cuộn hiển thị lỗi ký tự `[ ? ]` `[ ? ]`.
+- **Tiêu chuẩn thực thi**:
+  - Tuân thủ Điều Lệ Tối Thượng Số 0: Code thực chiến, không code ảo, biên dịch đạt 0 Error, 0 Warning.
+  - Toàn bộ file source <= 1000 dòng.
+  - Đảm bảo tương thích hoàn hảo trên cả .NET 8 Native AOT và .NET 3.5 Standalone.
+
+---
+
+### 2. Phân Tích Nguyên Nhân Kỹ Thuật
+
+| Lỗi Giao Diện / Vận Hành | Vị Trí Phát Sinh | Nguyên Nhân Cốt Lõi | Giải Pháp Khắc Phục |
+| :--- | :--- | :--- | :--- |
+| **Nút [ĐÓNG] đè lên [Nhập Tên]** | Tab 1 (Tự nhặt) | `ModUI.cs` vẽ `[ĐÓNG]` tại `uiY + 224` trùng hàng với 3 nút `uiY + 216` của `ModUIAutoPick.cs`. | Thu gọn `boxH = 120`, dời 3 nút chức năng lên `uiY + 198`, `[ĐÓNG]` ở `uiY + 224`. |
+| **Nút [ĐÓNG] đè lên ghi chú đáy** | Tab 9 (Lệnh) | Dòng text `*Bấm vào từng lệnh...` ở `uiY + 227` chạy ngang qua nút `[ĐÓNG]` ở giữa. | Đặt `listH = 138`, dòng text căn giữa tại `uiY + 211` nằm ngay ngắn phía trên nút `[ĐÓNG]`. |
+| **Chữ Tab Header bị tràn & cọ xát** | Thanh 10 Tab | `"GoBack"` (38px) và `"Úp Set"` (35px) vượt quá bề ngang button 30px. | Chuẩn hóa thành `"G.Back"` và `"ÚpSet"`, tăng `tabW = 31`, `startTabX = uiX + 10`. |
+| **Nút cuộn hiện ký tự `[ ? ]`** | Tab 9 & Tab 0 | Dùng ký tự Unicode `"▲"` và `"▼"` không có trong font bitmap `mFont`. | Thay bằng `ModUI.PaintArrowButton(...)` vẽ mũi tên vector tam giác toán học chuẩn xác. |
+| **Không scroll được danh sách lệnh** | Tab 9 (Lệnh) | `HandleTap` chỉ chạy khi `isClick` là `true`; lăn chuột thì `isClick` là `false` nên bị bỏ qua. | Kiểm tra Mouse Wheel liên tục mỗi frame + thêm cơ chế kéo thả chuột (Drag-to-Scroll). |
+
+---
+
+### 3. Chi Tiết Thay Đổi Mã Nguồn
+
+#### A. Nút Mũi Tên Vector Toán Học ([`ModUI.cs`](file:///c:/ModNRO/DragonBoy_Net8_Native/Src/Mod/UI/ModUI.cs) - 439 dòng)
+```csharp
+	public static void PaintArrowButton(int x, int y, int w, int h, bool isUp, bool isFocus, mGraphics g)
+	{
+		PaintNativeButton(x, y, w, h, string.Empty, isFocus, g);
+		int cx = x + w / 2;
+		int cy = y + h / 2;
+		g.setColor(isFocus ? 0x00e676 : 0xffffff);
+		if (isUp)
+		{
+			for (int r = 0; r < 4; r++)
+			{
+				g.fillRect(cx - r, cy - 2 + r, r * 2 + 1, 1);
+			}
+		}
+		else
+		{
+			for (int r = 0; r < 4; r++)
+			{
+				g.fillRect(cx - (3 - r), cy - 1 + r, (3 - r) * 2 + 1, 1);
+			}
+		}
+	}
+```
+
+#### B. Cơ Chế Cuộn Liên Tục Đa Chế Độ ([`ModUI.cs`](file:///c:/ModNRO/DragonBoy_Net8_Native/Src/Mod/UI/ModUI.cs) & [`ModUIHelp.cs`](file:///c:/ModNRO/DragonBoy_Net8_Native/Src/Mod/UI/ModUIHelp.cs))
+- **Continuous Mouse Wheel (Lăn Chuột)**:
+```csharp
+	float wheel = Input.GetAxis("Mouse ScrollWheel");
+	if (wheel == 0 && GameCanvas.pXYScrollMouse != 0)
+	{
+		wheel = GameCanvas.pXYScrollMouse;
+		GameCanvas.pXYScrollMouse = 0;
+	}
+	if (wheel != 0 && px >= uiX && px <= uiX + uiW && py >= uiY && py <= uiY + uiH)
+	{
+		if (selectedTab == 9) ModUIHelp.OnMouseScroll(wheel);
+		else if (selectedTab == 0) ModUITanSat.OnMouseScroll(wheel);
+	}
+```
+- **Drag-to-Scroll (Kéo Thả Chuột)**:
+```csharp
+	if (GameCanvas.isPointerJustDown)
+	{
+		if (px >= listX && px <= listX + listW && py >= listY && py <= listY + listH)
+		{
+			isDragging = true;
+			hasDragged = false;
+			startDragY = py;
+			startScrollY = scrollY;
+		}
+	}
+	else if (GameCanvas.isPointerDown && isDragging)
+	{
+		int deltaY = py - startDragY;
+		if (Res.abs(deltaY) > 4) hasDragged = true;
+		if (hasDragged && maxScroll > 0)
+		{
+			scrollY = startScrollY - deltaY;
+			if (scrollY < 0) scrollY = 0;
+			if (scrollY > maxScroll) scrollY = maxScroll;
+		}
+	}
+	else if (GameCanvas.isPointerJustRelease)
+	{
+		isDragging = false;
+	}
+```
+
+#### C. Bố Cục Độc Lập Tab 1 ([`ModUIAutoPick.cs`](file:///c:/ModNRO/DragonBoy_Net8_Native/Src/Mod/UI/ModUIAutoPick.cs) - 167 dòng)
+```csharp
+	int boxH = 120; // Khung checkbox thu gọn, vừa vặn 6 mục
+...
+	// 3 Nút Bấm Thao Tác Nhanh ở hàng riêng biệt (uiY + 198)
+	int actionBtnY = uiY + 198;
+	ModUI.PaintNativeButton(uiX + 20, actionBtnY, 90, 19, "Nhập ID", false, g);
+	ModUI.PaintNativeButton(uiX + 125, actionBtnY, 90, 19, "Nhập Tên", false, g);
+	ModUI.PaintNativeButton(uiX + 230, actionBtnY, 90, 19, "Xóa Lọc", false, g);
+	// Nút [ĐÓNG] nằm độc lập ở hàng dưới tại uiY + 224 (h = 20)
+```
+
+---
+
+### 4. Kết Quả Đo Đạc & Kiểm Thử Thực Nghiệm
+
+| Tiêu Chí Đánh Giá | Trước Khi Sửa | Sau Khi Hoàn Thiện |
+| :--- | :--- | :--- |
+| **Bố cục Tab Tự Nhặt** | `[ĐÓNG]` đè mất nút `[Nhập Tên]` | Hàng 1: `[Nhập ID]` `[Nhập Tên]` `[Xóa Lọc]` (y=198)<br>Hàng 2: `[ĐÓNG]` (y=224) - **Tách biệt 100%** |
+| **Bố cục Tab Hướng Dẫn** | Chữ ghi chú bị `[ĐÓNG]` cắt ngang | Ghi chú căn giữa (y=211), `[ĐÓNG]` (y=224) - **Gọn gàng, thoáng đãng** |
+| **Thanh Tab Tiêu Đề** | Chữ `"GoBack"` và `"Úp Set"` tràn viền | Chuẩn hóa `"G.Back"`, `"ÚpSet"` (w=31) - **Vừa khít, sắc nét** |
+| **Biểu tượng nút cuộn** | Hiển thị lỗi `[ ? ]` `[ ? ]` | Tam giác vector `[ ▲ ]` `[ ▼ ]` - **Sắc nét, không phụ thuộc font** |
+| **Cuộn chuột (Mouse Wheel)** | Bị tê liệt hoàn toàn | Lăn chuột cuộn cực mượt trên toàn bộ khung danh sách |
+| **Kéo thả chuột (Drag Scroll)** | Không hỗ trợ | Kéo thả vuốt nhẹ nhàng, tự động chặn click nhầm lệnh |
+| **Biên dịch Native AOT (.NET 8)** | 0 Warning, 0 Error | **0 Warning, 0 Error** |
+| **Biên dịch Standalone (.NET 3.5)** | 0 Warning, 0 Error | **0 Warning, 0 Error** |

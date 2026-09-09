@@ -505,4 +505,21 @@ public static class ModBossNotice
 		// Thông báo boss trên HUD chỉ để hiển thị thông tin, không nhận tương tác click
 		return false;
 	}
+
+	public static int GetBottomY()
+	{
+		if (!isShowBossNotice)
+		{
+			return hudStartY;
+		}
+		lock (listBossNotices)
+		{
+			if (listBossNotices.Count == 0)
+			{
+				return hudStartY;
+			}
+			int count = (listBossNotices.Count < MAX_BOSS_NOTICES) ? listBossNotices.Count : MAX_BOSS_NOTICES;
+			return hudStartY + count * 11 + 4;
+		}
+	}
 }

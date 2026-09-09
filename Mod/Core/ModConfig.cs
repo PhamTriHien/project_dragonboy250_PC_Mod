@@ -5,6 +5,8 @@ using UnityEngine;
 
 public static class ModConfig
 {
+	public static bool isTranslate = true;
+
 	private static string ConfigPath
 	{
 		get
@@ -33,6 +35,7 @@ public static class ModConfig
 			sb.AppendLine("tickedMobTemplateIds=" + string.Join(",", ModTanSat.tickedMobTemplateIds.ConvertAll(i => i.ToString()).ToArray()));
 			sb.AppendLine("selectAllSkills=" + ModTanSat.selectAllSkills);
 			sb.AppendLine("tickedSkillTemplateIds=" + string.Join(",", ModTanSat.tickedSkillTemplateIds.ConvertAll(i => i.ToString()).ToArray()));
+			sb.AppendLine("timeAttack=" + ModTanSat.timeAttack);
 
 			// Tự Nhặt
 			sb.AppendLine("autoPick=" + ModAutoPick.autoPick);
@@ -40,6 +43,10 @@ public static class ModConfig
 			sb.AppendLine("pickGold=" + ModAutoPick.pickGold);
 			sb.AppendLine("pickEquip=" + ModAutoPick.pickEquip);
 			sb.AppendLine("pickGem=" + ModAutoPick.pickGem);
+			sb.AppendLine("filterById=" + ModAutoPick.filterById);
+			sb.AppendLine("filterIds=" + ModAutoPick.filterIdsRaw);
+			sb.AppendLine("filterByName=" + ModAutoPick.filterByName);
+			sb.AppendLine("filterName=" + ModAutoPick.filterNameRaw);
 
 			// Tốc Chạy
 			sb.AppendLine("speedHack=" + ModSpeed.speedHack);
@@ -49,6 +56,9 @@ public static class ModConfig
 			sb.AppendLine("autoPean=" + ModAutoHeal.autoPean);
 			sb.AppendLine("autoPeanHpPercent=" + ModAutoHeal.autoPeanHpPercent);
 			sb.AppendLine("lockHPMP=" + ModAutoHeal.lockHPMP);
+			sb.AppendLine("autoHarvestPea=" + ModAutoHeal.autoHarvestPea);
+			sb.AppendLine("autoDonateClan=" + ModAutoHeal.autoDonateClan);
+			sb.AppendLine("autoFeedPetOnAsk=" + ModAutoHeal.autoFeedPetOnAsk);
 
 			// Đồ Họa & FPS
 			sb.AppendLine("graphicsQuality=" + ModGraphics.graphicsQuality);
@@ -59,6 +69,50 @@ public static class ModConfig
 
 			// Thông Báo Boss
 			sb.AppendLine("isShowBossNotice=" + ModBossNotice.isShowBossNotice);
+
+			// Logo TriHienKun
+			sb.AppendLine("isShowLogoInGame=" + ModLogo.isShowLogoInGame);
+			sb.AppendLine("logoPosition=" + ModLogo.logoPosition);
+
+			// HUD Player & Boss trong map
+			sb.AppendLine("isShowMapEntityHUD=" + ModMapEntityHUD.isShowMapEntityHUD);
+
+			// GoBack Map
+			sb.AppendLine("isGoBackActive=" + ModGoBack.isGoBackActive);
+			sb.AppendLine("isAutoRecordOnDeath=" + ModGoBack.isAutoRecordOnDeath);
+			sb.AppendLine("savedMapId=" + ModGoBack.savedMapId);
+			sb.AppendLine("savedZoneId=" + ModGoBack.savedZoneId);
+			sb.AppendLine("savedX=" + ModGoBack.savedX);
+			sb.AppendLine("savedY=" + ModGoBack.savedY);
+
+			// Úp Set Kích Hoạt & Lọc Đồ
+			sb.AppendLine("autoSetKHActive=" + ModSetActivator.isActive);
+			sb.AppendLine("autoSellJunkFullBag=" + ModSetActivator.autoSellJunk);
+			sb.AppendLine("minStarToKeep=" + ModSetActivator.minStarToKeep);
+			sb.AppendLine("showItemId=" + ModSetActivator.showItemId);
+			sb.AppendLine("savedFarmMapId=" + ModSetActivator.savedFarmMapId);
+			sb.AppendLine("savedFarmZoneId=" + ModSetActivator.savedFarmZoneId);
+			sb.AppendLine("savedFarmX=" + ModSetActivator.savedFarmX);
+			sb.AppendLine("savedFarmY=" + ModSetActivator.savedFarmY);
+
+			// Né Broly & Khinh Công
+			sb.AppendLine("isAutoKiteBroly=" + ModKiteBroly.isAutoKite);
+			sb.AppendLine("isKhinhCongBroly=" + ModKiteBroly.isKhinhCong);
+			sb.AppendLine("safeDistanceBroly=" + ModKiteBroly.safeDistance);
+			sb.AppendLine("autoAttackBroly=" + ModKiteBroly.autoAttackBroly);
+
+			// Tối ưu Tỉ Lệ Rơi Đồ (Trick Drop Rate)
+			sb.AppendLine("isInstantPick=" + ModDropRate.isInstantPick);
+			sb.AppendLine("isInstantRespawnAttack=" + ModDropRate.isInstantRespawnAttack);
+			sb.AppendLine("isLastHitLock=" + ModDropRate.isLastHitLock);
+
+			// Auto Mua Bùa Bà Hạt Mít
+			sb.AppendLine("isAutoRebuyBua=" + ModAutoBuyBua.isAutoRebuy);
+			sb.AppendLine("selectedBuaType=" + ModAutoBuyBua.selectedBuaType);
+			sb.AppendLine("selectedBuaPackage=" + ModAutoBuyBua.selectedPackage);
+
+			// Việt Hoá Data Server
+			sb.AppendLine("isTranslate=" + isTranslate);
 
 			File.WriteAllText(ConfigPath, sb.ToString());
 		}
@@ -139,6 +193,14 @@ public static class ModConfig
 							}
 						}
 						break;
+					case "timeAttack":
+						if (int.TryParse(val, out int ta))
+						{
+							if (ta < 50) ta = 50;
+							if (ta > 3000) ta = 3000;
+							ModTanSat.timeAttack = ta;
+						}
+						break;
 					case "autoPick":
 						bool.TryParse(val, out ModAutoPick.autoPick);
 						break;
@@ -154,6 +216,18 @@ public static class ModConfig
 					case "pickGem":
 						bool.TryParse(val, out ModAutoPick.pickGem);
 						break;
+					case "filterById":
+						bool.TryParse(val, out ModAutoPick.filterById);
+						break;
+					case "filterIds":
+						ModAutoPick.LoadFilterIds(val);
+						break;
+					case "filterByName":
+						bool.TryParse(val, out ModAutoPick.filterByName);
+						break;
+					case "filterName":
+						ModAutoPick.LoadFilterNames(val);
+						break;
 					case "speedHack":
 						bool.TryParse(val, out ModSpeed.speedHack);
 						break;
@@ -168,6 +242,15 @@ public static class ModConfig
 						break;
 					case "lockHPMP":
 						bool.TryParse(val, out ModAutoHeal.lockHPMP);
+						break;
+					case "autoHarvestPea":
+						bool.TryParse(val, out ModAutoHeal.autoHarvestPea);
+						break;
+					case "autoDonateClan":
+						bool.TryParse(val, out ModAutoHeal.autoDonateClan);
+						break;
+					case "autoFeedPetOnAsk":
+						bool.TryParse(val, out ModAutoHeal.autoFeedPetOnAsk);
 						break;
 					case "graphicsQuality":
 						int.TryParse(val, out ModGraphics.graphicsQuality);
@@ -186,6 +269,90 @@ public static class ModConfig
 						break;
 					case "isShowBossNotice":
 						bool.TryParse(val, out ModBossNotice.isShowBossNotice);
+						break;
+					case "isShowLogoInGame":
+						bool.TryParse(val, out ModLogo.isShowLogoInGame);
+						break;
+					case "logoPosition":
+						int.TryParse(val, out ModLogo.logoPosition);
+						break;
+					case "isShowMapEntityHUD":
+						bool.TryParse(val, out ModMapEntityHUD.isShowMapEntityHUD);
+						break;
+					case "isGoBackActive":
+						bool.TryParse(val, out ModGoBack.isGoBackActive);
+						break;
+					case "isAutoRecordOnDeath":
+						bool.TryParse(val, out ModGoBack.isAutoRecordOnDeath);
+						break;
+					case "savedMapId":
+						int.TryParse(val, out ModGoBack.savedMapId);
+						break;
+					case "savedZoneId":
+						int.TryParse(val, out ModGoBack.savedZoneId);
+						break;
+					case "savedX":
+						int.TryParse(val, out ModGoBack.savedX);
+						break;
+					case "savedY":
+						int.TryParse(val, out ModGoBack.savedY);
+						break;
+					case "autoSetKHActive":
+						bool.TryParse(val, out ModSetActivator.isActive);
+						break;
+					case "autoSellJunkFullBag":
+						bool.TryParse(val, out ModSetActivator.autoSellJunk);
+						break;
+					case "minStarToKeep":
+						int.TryParse(val, out ModSetActivator.minStarToKeep);
+						break;
+					case "showItemId":
+						bool.TryParse(val, out ModSetActivator.showItemId);
+						break;
+					case "savedFarmMapId":
+						int.TryParse(val, out ModSetActivator.savedFarmMapId);
+						break;
+					case "savedFarmZoneId":
+						int.TryParse(val, out ModSetActivator.savedFarmZoneId);
+						break;
+					case "savedFarmX":
+						int.TryParse(val, out ModSetActivator.savedFarmX);
+						break;
+					case "savedFarmY":
+						int.TryParse(val, out ModSetActivator.savedFarmY);
+						break;
+					case "isAutoKiteBroly":
+						bool.TryParse(val, out ModKiteBroly.isAutoKite);
+						break;
+					case "isKhinhCongBroly":
+						bool.TryParse(val, out ModKiteBroly.isKhinhCong);
+						break;
+					case "safeDistanceBroly":
+						int.TryParse(val, out ModKiteBroly.safeDistance);
+						break;
+					case "autoAttackBroly":
+						bool.TryParse(val, out ModKiteBroly.autoAttackBroly);
+						break;
+					case "isInstantPick":
+						bool.TryParse(val, out ModDropRate.isInstantPick);
+						break;
+					case "isInstantRespawnAttack":
+						bool.TryParse(val, out ModDropRate.isInstantRespawnAttack);
+						break;
+					case "isLastHitLock":
+						bool.TryParse(val, out ModDropRate.isLastHitLock);
+						break;
+					case "isAutoRebuyBua":
+						bool.TryParse(val, out ModAutoBuyBua.isAutoRebuy);
+						break;
+					case "selectedBuaType":
+						int.TryParse(val, out ModAutoBuyBua.selectedBuaType);
+						break;
+					case "selectedBuaPackage":
+						int.TryParse(val, out ModAutoBuyBua.selectedPackage);
+						break;
+					case "isTranslate":
+						bool.TryParse(val, out isTranslate);
 						break;
 				}
 			}

@@ -65,7 +65,15 @@ public static class ModUIGraphics
 			ModUI.PaintNativeButton(fx, fy, fw, 15, fpsOptions[f] + " FPS", isSel, g);
 		}
 
-		mFont.tahoma_7_green2.drawString(g, "FPS: " + Main.realFPS + " | Màn: " + ModFps.GetDeviceMaxRefreshRate() + "Hz | Cửa sổ: " + Screen.width + "x" + Screen.height, uiX + uiW / 2, uiY + 195, mFont.CENTER);
+		mFont.tahoma_7_green2.drawString(g, "FPS: " + Main.realFPS + " | Màn: " + ModFps.GetDeviceMaxRefreshRate() + "Hz | Cửa sổ: " + Screen.width + "x" + Screen.height, uiX + uiW / 2, uiY + 191, mFont.CENTER);
+
+		// 5. Việt Hoá Server Data & Logo TriHienKun
+		mFont.tahoma_7b_white.drawString(g, "Việt Hoá:", uiX + 18, uiY + 207, mFont.LEFT);
+		ModUI.PaintNativeButton(uiX + 72, uiY + 204, 42, 16, ModConfig.isTranslate ? "BẬT" : "TẮT", ModConfig.isTranslate, g);
+
+		mFont.tahoma_7b_white.drawString(g, "Logo:", uiX + 125, uiY + 207, mFont.LEFT);
+		ModUI.PaintNativeButton(uiX + 160, uiY + 204, 42, 16, ModLogo.isShowLogoInGame ? "BẬT" : "TẮT", ModLogo.isShowLogoInGame, g);
+		mFont.tahoma_7_yellow.drawString(g, "(Logo mở menu nhanh)", uiX + 208, uiY + 207, mFont.LEFT);
 	}
 
 	public static bool HandleTap(int px, int py, int uiX, int uiY, int uiW, int uiH)
@@ -133,6 +141,26 @@ public static class ModUIGraphics
 				SoundMn.gI().buttonClick();
 				return true;
 			}
+		}
+
+		// 6. Bật / Tắt Việt Hoá Server Data
+		if (px >= uiX + 72 && px <= uiX + 114 && py >= uiY + 204 && py <= uiY + 220)
+		{
+			ModConfig.isTranslate = !ModConfig.isTranslate;
+			ModConfig.SaveConfig();
+			ModTranslate.ApplyAllTranslations();
+			GameScr.info1.addInfo("Dịch Việt Hoá: " + (ModConfig.isTranslate ? "BẬT" : "TẮT (Gốc Server)"), 0);
+			SoundMn.gI().buttonClick();
+			return true;
+		}
+
+		// 7. Bật / Tắt Logo TriHienKun trong game
+		if (px >= uiX + 160 && px <= uiX + 202 && py >= uiY + 204 && py <= uiY + 220)
+		{
+			ModLogo.isShowLogoInGame = !ModLogo.isShowLogoInGame;
+			ModConfig.SaveConfig();
+			SoundMn.gI().buttonClick();
+			return true;
 		}
 
 		return false;

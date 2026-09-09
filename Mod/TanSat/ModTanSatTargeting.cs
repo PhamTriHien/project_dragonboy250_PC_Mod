@@ -12,8 +12,19 @@ public static class ModTanSatTargeting
 		{
 			return true;
 		}
-		int t = TileMap.tileTypeAtPixel(px, py - 12);
-		return (t & (1 | 4 | 8 | 4096 | 8192 | 16384)) != 0;
+		// Kiem tra va cham o muc ngang hong (py - 12)
+		int tWaist = TileMap.tileTypeAtPixel(px, py - 12);
+		if ((tWaist & (1 | 4 | 8 | 4096 | 8192 | 16384)) != 0)
+		{
+			return true;
+		}
+		// Kiem tra va cham o muc dau (py - 22) de tranh bi ket vao tran/vach da
+		int tHead = TileMap.tileTypeAtPixel(px, py - 22);
+		if ((tHead & (1 | 4 | 8 | 4096 | 8192 | 16384)) != 0)
+		{
+			return true;
+		}
+		return false;
 	}
 
 	public static void GetSafeAttackPosition(Mob target, bool isRanged, out int outX, out int outY)
@@ -25,42 +36,75 @@ public static class ModTanSatTargeting
 			return;
 		}
 
-		// 1. Luôn sử dụng toạ độ thực tế thời gian thực của quái
+		// 1. Luon su dung toa do thuc te thoi gian thuc cua quai
 		int mobX = target.x;
 		int mobY = target.y;
 
-		// 2. Khoang cach tiep can toi uu: 24px cho can chien (> 20px tranh vung repel cua quai, < 40px trong hitbox danh), 45px cho chuong xa
+		// Xac dinh quai bay hay quai di bo tren dat theo dac ta chuan cua game (type == 4 hoac 5 la quai bay)
+		bool isFlying = (Mob.arrMobTemplate != null && target.templateId >= 0 && target.templateId < Mob.arrMobTemplate.Length && Mob.arrMobTemplate[target.templateId] != null && (Mob.arrMobTemplate[target.templateId].type == 4 || Mob.arrMobTemplate[target.templateId].type == 5));
+
+		// 2. Khoang cach tiep can toi uu: 24px cho can chien (> 20px tranh repel, < 40px trong hitbox), 45px cho chuong xa
 		int offset = isRanged ? 45 : 24;
 		Char me = Char.myCharz();
-
 		int preferredDir = (me != null && me.cx > mobX) ? 1 : -1;
 
-		int x1 = mobX + preferredDir * offset;
-		int y1 = mobY;
+		int[] dirMultipliers = { preferredDir, -preferredDir };
+		int[] distOffsets = isRanged ? new int[] { 45, 35, 25 } : new int[] { 24, 20, 16, 12 };
 
-		int x2 = mobX - preferredDir * offset;
-		int y2 = mobY;
+		int bestX = mobX + preferredDir * offset;
+		int bestY = mobY;
+		bool found = false;
 
-		bool b1 = IsTileBlocked(x1, y1);
-		bool b2 = IsTileBlocked(x2, y2);
-
-		if (!b1)
+		foreach (int dist in distOffsets)
 		{
-			outX = x1;
-			outY = y1;
-		}
-		else if (!b2)
-		{
-			outX = x2;
-			outY = y2;
-		}
-		else
-		{
-			outX = mobX + preferredDir * (isRanged ? 35 : 20);
-			outY = mobY;
+			foreach (int dir in dirMultipliers)
+			{
+				int candX = mobX + dir * dist;
+				int candY = mobY;
+
+				if (!isFlying)
+				{
+					// Quai tren dat: Quet tim be mat dat chuan ((tileTypeAtPixel & 2) == 2) uu tien ngang tam quai
+					int baseTileY = TileMap.tileYofPixel(mobY);
+					int foundGroundY = -1;
+
+					// Quet tim be mat dat uu tien tu vi tri gan mobY nhat ra xa dan
+					int[] yDeltas = { 0, 24, -24, 48, -48, 72 };
+					for (int yd = 0; yd < yDeltas.Length; yd++)
+					{
+						int testY = baseTileY + yDeltas[yd];
+						if ((TileMap.tileTypeAtPixel(candX, testY) & 2) == 2)
+						{
+							foundGroundY = testY;
+							break;
+						}
+					}
+
+					if (foundGroundY != -1)
+					{
+						candY = foundGroundY;
+					}
+					else
+					{
+						candY = baseTileY;
+					}
+				}
+
+				if (!IsTileBlocked(candX, candY))
+				{
+					bestX = candX;
+					bestY = candY;
+					found = true;
+					break;
+				}
+			}
+			if (found) break;
 		}
 
-		// 4. Ràng buộc toạ độ không vượt quá mép bản đồ
+		outX = bestX;
+		outY = bestY;
+
+		// 4. Rang buoc toa do khong vuot qua mep ban do
 		if (TileMap.pxw > 0)
 		{
 			if (outX < 24) outX = 24;

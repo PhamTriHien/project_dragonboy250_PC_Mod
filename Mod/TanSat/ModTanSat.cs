@@ -7,7 +7,15 @@ public static class ModTanSat
 	public static bool autoAttack
 	{
 		get { return autoTanSat; }
-		set { autoTanSat = value; }
+		set
+		{
+			autoTanSat = value;
+			if (!value)
+			{
+				currentFarmTarget = null;
+				lastTeleportTargetMobId = -1;
+			}
+		}
 	}
 
 	public static bool useTeleport = true;
@@ -15,6 +23,29 @@ public static class ModTanSat
 	public static long targetLockTime = 0;
 	public static long targetLastHp = 0;
 	public static int lastSentSkillTemplateId = -1;
+	public static long lastManualMoveTime = 0;
+	public static long lastAttackTime = 0;
+	public static int timeAttack = 300;
+	public static int lastTeleportTargetMobId = -1;
+	public static long lastTeleportTime = 0;
+
+	public static bool IsManualMoving()
+	{
+		Char me = Char.myCharz();
+		if (me == null) return false;
+
+		bool keyMove = false;
+		if (GameCanvas.keyHold != null)
+		{
+			keyMove = GameCanvas.keyHold[21] || GameCanvas.keyHold[22] || GameCanvas.keyHold[23] || GameCanvas.keyHold[24] ||
+			          GameCanvas.keyHold[2] || GameCanvas.keyHold[8] || GameCanvas.keyHold[4] || GameCanvas.keyHold[6] ||
+			          GameCanvas.keyHold[1] || GameCanvas.keyHold[3];
+		}
+
+		bool pointMove = (me.currentMovePoint != null || (me.vMovePoints != null && me.vMovePoints.size() > 0));
+
+		return keyMove || pointMove;
+	}
 
 	// Backward-compatible delegates to ModTanSatFilter
 	public static int selectedMobTemplateId
@@ -61,11 +92,24 @@ public static class ModTanSat
 		{
 			if (!autoTanSat) return;
 
-			// Tam dung khi dang Next Map hoac chuyen map
-			if (ModNextMap.isNextMapActive || Char.isLoadingMap || Char.ischangingMap) return;
+			// Tam dung khi dang Next Map, GoBack hoac chuyen map
+			if (ModNextMap.isNextMapActive || ModGoBack.isReturning || ModSetActivator.isBusy || ModAutoBuyBua.isBusy || Char.isLoadingMap || Char.ischangingMap) return;
 
 			Char me = Char.myCharz();
 			if (me == null || me.cHP <= 0 || me.statusMe == 14 || me.statusMe == 5) return;
+
+			long now = mSystem.currentTimeMillis();
+
+			// 0. Uu tien tuyet doi cho thao tac di chuyen thu cong cua nguoi choi (Phim mui ten / WASD / click chuot)
+			if (IsManualMoving())
+			{
+				lastManualMoveTime = now;
+				return;
+			}
+			if (now - lastManualMoveTime < 350)
+			{
+				return;
+			}
 
 			// 1. Xac dinh ky nang tan cong (CHI DUNG DUY NHAT KY NANG CHI DINH / TICK CHON)
 			Skill skillToUse = GetBestSkillToUse();
@@ -80,14 +124,13 @@ public static class ModTanSat
 				lastSentSkillTemplateId = skillToUse.template.id;
 			}
 
-			long now = mSystem.currentTimeMillis();
-
 			// 2. Watchdog chong ket quai ma / quai da chet / khong giam HP
+			bool targetDiedOrInvalid = false;
 			if (currentFarmTarget != null)
 			{
 				if (currentFarmTarget.status == 0 || currentFarmTarget.status == 1 || currentFarmTarget.hp <= 0)
 				{
-					currentFarmTarget = null;
+					targetDiedOrInvalid = true;
 				}
 				else if (currentFarmTarget.hp < targetLastHp)
 				{
@@ -95,10 +138,27 @@ public static class ModTanSat
 					targetLastHp = currentFarmTarget.hp;
 					targetLockTime = now;
 				}
-				else if (currentFarmTarget.templateId != 0 && now - targetLockTime > 5000)
+				else if (currentFarmTarget.templateId != 0 && now - targetLockTime > 4000)
 				{
-					// Qua 5 giay khong the gay sat thuong: Chuyen muc tieu khac tranh ket
-					currentFarmTarget = null;
+					// Qua 4 giay khong the gay sat thuong: Chuyen muc tieu khac tranh ket
+					targetDiedOrInvalid = true;
+				}
+			}
+
+			if (targetDiedOrInvalid)
+			{
+				currentFarmTarget = null;
+				lastTeleportTargetMobId = -1;
+				// Giai phong ngay lap tuc tat ca cac khoa hoat anh / phi tieu cua quai cu de dich chuyen tuc thi
+				if (me.mobFocus == null || me.mobFocus.status == 0 || me.mobFocus.status == 1 || me.mobFocus.hp <= 0)
+				{
+					me.skillPaint = null;
+					me.skillPaintRandomPaint = null;
+					me.dart = null;
+					me.arr = null;
+					me.indexSkill = 0;
+					me.effPaints = null;
+					me.mobFocus = null;
 				}
 			}
 
@@ -121,6 +181,19 @@ public static class ModTanSat
 					if (!selectAllMobs && tickedMobTemplateIds.Count > 0 && !tickedMobTemplateIds.Contains(m.templateId)) continue;
 
 					int dist = Res.distance(me.cx, me.cy, m.x, m.y);
+
+					// Trick Tăng Tỉ Lệ Rơi Đồ: Ưu tiên quái sắp chết (Last-Hit Lock) để chiếm quyền rớt item
+					if (ModDropRate.isLastHitLock && m.hp < (m.maxHp / 3) && dist < 150)
+					{
+						dist -= 50;
+					}
+
+					// Trick Instant Respawn Attack: Ưu tiên quái vừa xuất hiện để triệt tiêu quái nhanh nhất
+					if (ModDropRate.isInstantRespawnAttack && m.hp >= m.maxHp && dist < 120)
+					{
+						dist -= 30;
+					}
+
 					if (dist < minDistance)
 					{
 						minDistance = dist;
@@ -150,49 +223,64 @@ public static class ModTanSat
 			int deltaY = Res.abs(me.cy - anchorY);
 			bool isRanged = (skillToUse.dx > 40);
 
-			int maxRangeX = (skillToUse.dx > 40) ? (skillToUse.dx + 20) : 60;
-			int maxRangeY = (skillToUse.dy > 40) ? (skillToUse.dy + 20) : 60;
+			int maxRangeX = (skillToUse.dx > 40) ? (skillToUse.dx + 20) : 55;
+			int maxRangeY = (skillToUse.dy > 40) ? (skillToUse.dy + 20) : 75;
 
-			// Chi tiep can lai khi muc tieu thuc su nam ngoai tam danh (deadzone/hysteresis)
-			// Tuyet doi khong ghi de vi tri theo tung frame chuyen dong nho cua quai
-			if (deltaX > maxRangeX || deltaY > maxRangeY)
+			bool isNewTarget = (lastTeleportTargetMobId != currentFarmTarget.mobId);
+			bool isOutOfRange = (deltaX > maxRangeX || deltaY > maxRangeY);
+
+			if (isNewTarget || isOutOfRange)
 			{
-				// Neu dang giua chu ky xuat chieu, de don danh hien tai hoan tat truoc khi dich chuyen
-				if (me.skillPaint != null || me.dart != null || me.arr != null)
-				{
-					return;
-				}
-
-				int safeX, safeY;
-				GetSafeAttackPosition(currentFarmTarget, isRanged, out safeX, out safeY);
-
 				if (useTeleport)
 				{
-					ModTeleport.TeleportTo(safeX, safeY);
-					me.cx = safeX;
-					me.cy = safeY;
-					me.cxSend = safeX;
-					me.cySend = safeY;
-					me.cdir = (anchorX >= me.cx) ? 1 : -1;
-					me.cvx = 0;
-					me.cvy = 0;
-					me.delayFall = 0;
+					// Neu la cung mot muc tieu dang danh ma chi bi out-of-range, gioi han toi thieu 600ms moi dich chuyen tiep tranh loop giat hinh
+					if (!isNewTarget && now - lastTeleportTime < 600)
+					{
+						// Tam thoi khong dich chuyen lai ngay tren cung 1 quai
+					}
+					else
+					{
+						// Voi chieu ban xa, doi phi tieu cu bay xong truoc khi dich chuyen
+						if (isRanged && (me.dart != null || me.arr != null))
+						{
+							return;
+						}
 
-					bool isMobFlying = (Mob.arrMobTemplate != null && currentFarmTarget.templateId >= 0 && currentFarmTarget.templateId < Mob.arrMobTemplate.Length && Mob.arrMobTemplate[currentFarmTarget.templateId] != null && (Mob.arrMobTemplate[currentFarmTarget.templateId].type == 4 || Mob.arrMobTemplate[currentFarmTarget.templateId].type == 5));
-					me.statusMe = isMobFlying ? 10 : 1;
-					return;
+						int safeX, safeY;
+						GetSafeAttackPosition(currentFarmTarget, isRanged, out safeX, out safeY);
+
+						ModTeleport.TeleportTo(safeX, safeY);
+						lastTeleportTargetMobId = currentFarmTarget.mobId;
+						lastTeleportTime = now;
+
+						me.cdir = (anchorX >= me.cx) ? 1 : -1;
+						me.cvx = 0;
+						me.cvy = 0;
+
+						bool isMobFlying = (Mob.arrMobTemplate != null && currentFarmTarget.templateId >= 0 && currentFarmTarget.templateId < Mob.arrMobTemplate.Length && Mob.arrMobTemplate[currentFarmTarget.templateId] != null && (Mob.arrMobTemplate[currentFarmTarget.templateId].type == 4 || Mob.arrMobTemplate[currentFarmTarget.templateId].type == 5));
+						if (isMobFlying)
+						{
+							me.statusMe = 10;
+							me.delayFall = 30;
+						}
+						else
+						{
+							me.statusMe = 1;
+							me.delayFall = 0;
+						}
+						return;
+					}
 				}
-				else
+				else if (isOutOfRange)
 				{
+					int safeX, safeY;
+					GetSafeAttackPosition(currentFarmTarget, isRanged, out safeX, out safeY);
 					me.moveTo(safeX, safeY, 0);
 					return;
 				}
 			}
 
 			// 5. Da o trong tam danh quai: Khoa huong mat va muc tieu
-			me.cvx = 0;
-			me.cvy = 0;
-			me.currentMovePoint = null;
 			me.cdir = (anchorX >= me.cx) ? 1 : -1;
 			me.mobFocus = currentFarmTarget;
 			me.charFocus = null;
@@ -203,7 +291,19 @@ public static class ModTanSat
 				Service.gI().charMove();
 			}
 
-			// 6. Neu hoat anh danh truoc do dang thuc thi (skillPaint / dart), bao toan hoat anh, khong ngat nhip
+			// 6. Kiem tra Cooldown thuc te & KI cua game cho ky nang nay (BAT BUOC PHAI CO COOLDOWN TRANH LOI)
+			int effectiveCooldown = (skillToUse.coolDown < timeAttack) ? timeAttack : skillToUse.coolDown;
+
+			if (now - skillToUse.lastTimeUseThisSkill < effectiveCooldown || now - lastAttackTime < timeAttack)
+			{
+				return;
+			}
+			if (!ModTanSatFilter.HasEnoughMp(me, skillToUse))
+			{
+				return;
+			}
+
+			// 7. Neu hoat anh danh truoc do dang thuc thi (skillPaint / dart / arr), bao toan hoat anh va cho ket thuc
 			if (me.skillPaint != null || (me.skillInfoPaint() != null && me.indexSkill < me.skillInfoPaint().Length))
 			{
 				return;
@@ -213,17 +313,11 @@ public static class ModTanSat
 				return;
 			}
 
-			// 7. Kiem tra Cooldown thuc te & KI cua game cho ky nang nay
-			if (now - skillToUse.lastTimeUseThisSkill < skillToUse.coolDown)
-			{
-				return;
-			}
-			if (!ModTanSatFilter.HasEnoughMp(me, skillToUse))
-			{
-				return;
-			}
+			// 8. Thuc thi xuat chieu truc tiep qua Game Engine chuan (100% theo dac ta cooldown thuc cua game)
+			lastAttackTime = now;
+			skillToUse.lastTimeUseThisSkill = now;
+			me.myskill.lastTimeUseThisSkill = now;
 
-			// 8. Thuc thi xuat chieu truc tiep qua Game Engine chuan (100% dua theo gia tri thuc cua game)
 			if (me.isUseChargeSkill())
 			{
 				me.currentFireByShortcut = true;

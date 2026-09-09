@@ -286,7 +286,8 @@ public static class ModTanSatFilter
 				Skill s = FindSkillByTemplateId(tplId);
 				if (s != null && s.template != null)
 				{
-					if (now - s.lastTimeUseThisSkill >= s.coolDown && HasEnoughMp(me, s))
+					int effCd = (s.coolDown < 300) ? 300 : s.coolDown;
+					if (now - s.lastTimeUseThisSkill >= effCd && HasEnoughMp(me, s))
 					{
 						return s;
 					}

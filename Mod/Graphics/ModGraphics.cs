@@ -8,7 +8,7 @@ public static class ModGraphics
 	public static readonly string[] graphicsNames = new string[4] { "Ultra", "Medium", "Low", "Super Low" };
 
 	// 0: 1024x600 (Gốc), 1: 1280x720 (HD 16:9), 2: 1600x900 (HD+), 3: 1920x1080 (Full HD)
-	public static int resolutionIndex = 1;
+	public static int resolutionIndex = 0;
 	public static readonly int[,] resolutionList = new int[4, 2]
 	{
 		{ 1024, 600 },
@@ -33,15 +33,13 @@ public static class ModGraphics
 			QualitySettings.masterTextureLimit = 0;
 			QualitySettings.vSyncCount = 0;
 
-			if (isFullscreen)
+			// Mặc định game luôn mở ở dạng cửa sổ nhỏ hiển thị giữa màn hình desktop
+			isFullscreen = false;
+			if (resolutionIndex < 0 || resolutionIndex >= resolutionNames.Length)
 			{
-				Resolution maxRes = Screen.currentResolution;
-				Screen.SetResolution(maxRes.width, maxRes.height, true);
+				resolutionIndex = 0;
 			}
-			else
-			{
-				ApplyResolution(resolutionIndex);
-			}
+			ApplyResolution(resolutionIndex);
 		}
 		catch
 		{
@@ -75,7 +73,7 @@ public static class ModGraphics
 	{
 		try
 		{
-			if (index < 0 || index >= resolutionNames.Length) index = 1;
+			if (index < 0 || index >= resolutionNames.Length) index = 0;
 			resolutionIndex = index;
 			int w = resolutionList[index, 0];
 			int h = resolutionList[index, 1];

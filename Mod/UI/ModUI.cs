@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 public static class ModUI
 {
@@ -152,6 +153,28 @@ public static class ModUI
 		PaintNativeButton(x, y, w, 20, text, isFocus, g);
 	}
 
+	public static void PaintArrowButton(int x, int y, int w, int h, bool isUp, bool isFocus, mGraphics g)
+	{
+		PaintNativeButton(x, y, w, h, string.Empty, isFocus, g);
+		int cx = x + w / 2;
+		int cy = y + h / 2;
+		g.setColor(isFocus ? 0x00e676 : 0xffffff);
+		if (isUp)
+		{
+			for (int r = 0; r < 4; r++)
+			{
+				g.fillRect(cx - r, cy - 2 + r, r * 2 + 1, 1);
+			}
+		}
+		else
+		{
+			for (int r = 0; r < 4; r++)
+			{
+				g.fillRect(cx - (3 - r), cy - 1 + r, (3 - r) * 2 + 1, 1);
+			}
+		}
+	}
+
 	public static void PaintTanSatUI(mGraphics g)
 	{
 		if (!uiCustomOpen)
@@ -174,6 +197,9 @@ public static class ModUI
 			else if (selectedTab == 4) title = "CÀI ĐẶT ĐỒ HỌA & FPS";
 			else if (selectedTab == 5) title = "CÀI ĐẶT THÔNG BÁO BOSS";
 			else if (selectedTab == 6) title = "TỰ ĐỘNG QUA MAP (NEXT MAP)";
+			else if (selectedTab == 7) title = "TỰ ĐỘNG VỀ CHỖ CŨ (GOBACK MAP)";
+			else if (selectedTab == 8) title = "CÀI ĐẶT ÚP SET KÍCH HOẠT";
+			else if (selectedTab == 9) title = "HƯỚNG DẪN LỆNH & PHÍM TẮT";
 
 			mFont.tahoma_7b_yellow.drawString(g, title, uiX + uiW / 2, uiY + 10, mFont.CENTER);
 
@@ -200,14 +226,14 @@ public static class ModUI
 				mFont.tahoma_7b_white.drawString(g, "X", uiX + uiW - 16, uiY + 9, mFont.CENTER);
 			}
 
-			// 7 Tab Buttons Header (Nhỏ gọn, tinh tế)
-			string[] tabNames = new string[7] { "Tàn Sát", "Tự Nhặt", "Tốc Độ", "Hồi Máu", "Đồ Họa", "Báo Boss", "Next Map" };
-			int tabW = 42;
+			// 10 Tab Buttons Header (Nhỏ gọn, tinh tế, vừa vặn không tràn chữ)
+			string[] tabNames = new string[10] { "T.Sát", "Nhặt", "T.Độ", "H.Máu", "Đ.Họa", "Boss", "Q.Map", "G.Back", "ÚpSet", "Lệnh" };
+			int tabW = 31;
 			int tabH = 19;
-			int startTabX = uiX + 11;
-			for (int t = 0; t < 7; t++)
+			int startTabX = uiX + 10;
+			for (int t = 0; t < 10; t++)
 			{
-				int tx = startTabX + t * 45;
+				int tx = startTabX + t * 32;
 				PaintNativeButton(tx, uiY + 28, tabW, tabH, tabNames[t], selectedTab == t, g);
 			}
 
@@ -235,13 +261,22 @@ public static class ModUI
 				case 6:
 					ModUINextMap.Paint(uiX, uiY, uiW, uiH, g);
 					break;
+				case 7:
+					ModUIGoBack.Paint(uiX, uiY, uiW, uiH, g);
+					break;
+				case 8:
+					ModUISetActivator.Paint(uiX, uiY, uiW, uiH, g);
+					break;
+				case 9:
+					ModUIHelp.Paint(uiX, uiY, uiW, uiH, g);
+					break;
 			}
 
 			// Nút ĐÓNG nhỏ gọn ở đáy
 			int closeBtnW = 75;
 			int closeBtnH = 20;
 			int closeBtnX = uiX + (uiW - closeBtnW) / 2;
-			int closeBtnY = uiY + 222;
+			int closeBtnY = uiY + 224;
 			PaintNativeButton(closeBtnX, closeBtnY, closeBtnW, closeBtnH, "ĐÓNG", false, g);
 		}
 		catch
@@ -272,6 +307,36 @@ public static class ModUI
 			{
 				int px = GameCanvas.px;
 				int py = GameCanvas.py;
+
+				// 1. Xử lý con lăn chuột (Mouse ScrollWheel) mượt mà liên tục mỗi frame
+				float wheel = Input.GetAxis("Mouse ScrollWheel");
+				if (wheel == 0 && GameCanvas.pXYScrollMouse != 0)
+				{
+					wheel = GameCanvas.pXYScrollMouse;
+					GameCanvas.pXYScrollMouse = 0;
+				}
+				if (wheel != 0 && px >= uiX && px <= uiX + uiW && py >= uiY && py <= uiY + uiH)
+				{
+					if (selectedTab == 9)
+					{
+						ModUIHelp.OnMouseScroll(wheel);
+					}
+					else if (selectedTab == 0)
+					{
+						ModUITanSat.OnMouseScroll(wheel);
+					}
+				}
+
+				// 2. Xử lý kéo thả chuột (Drag to Scroll)
+				if (selectedTab == 9)
+				{
+					ModUIHelp.UpdateDragScroll(px, py, uiX, uiY, uiW, uiH);
+				}
+				else if (selectedTab == 0)
+				{
+					ModUITanSat.UpdateDragScroll(px, py, uiX, uiY, uiW, uiH);
+				}
+
 				bool isClick = GameCanvas.isPointerClick || GameCanvas.isPointerJustRelease;
 
 				if (px >= uiX && px <= uiX + uiW && py >= uiY && py <= uiY + uiH)
@@ -290,14 +355,14 @@ public static class ModUI
 							return;
 						}
 
-						// Chuyển 7 Tab chính
+						// Chuyển 10 Tab chính
 						if (py >= uiY + 26 && py <= uiY + 50)
 						{
-							int startTabX = uiX + 11;
-							int tabW = 41;
-							for (int t = 0; t < 7; t++)
+							int startTabX = uiX + 10;
+							int tabW = 31;
+							for (int t = 0; t < 10; t++)
 							{
-								int tx = startTabX + t * 45;
+								int tx = startTabX + t * 32;
 								if (px >= tx && px <= tx + tabW)
 								{
 									selectedTab = t;
@@ -333,6 +398,15 @@ public static class ModUI
 							case 6:
 								handled = ModUINextMap.HandleTap(px, py, uiX, uiY, uiW, uiH);
 								break;
+							case 7:
+								handled = ModUIGoBack.HandleTap(px, py, uiX, uiY, uiW, uiH);
+								break;
+							case 8:
+								handled = ModUISetActivator.HandleTap(px, py, uiX, uiY, uiW, uiH);
+								break;
+							case 9:
+								handled = ModUIHelp.HandleTap(px, py, uiX, uiY, uiW, uiH);
+								break;
 						}
 						if (handled)
 						{
@@ -342,7 +416,7 @@ public static class ModUI
 						// Nút ĐÓNG ở đáy
 						int closeBtnW = 75;
 						int closeBtnX = uiX + (uiW - closeBtnW) / 2;
-						int closeBtnY = uiY + 222;
+						int closeBtnY = uiY + 224;
 						if (px >= closeBtnX && px <= closeBtnX + closeBtnW && py >= closeBtnY && py <= closeBtnY + 20)
 						{
 							uiCustomOpen = false;

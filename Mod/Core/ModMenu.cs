@@ -329,6 +329,12 @@ public static class ModMenu
 			// Tương tác giao diện Modal
 			ModUI.HandleTap();
 
+			// Click logo trên màn hình để mở Mod UI
+			if (GameCanvas.isPointerJustRelease && ModLogo.IsPointerInsideLogo(GameCanvas.px, GameCanvas.py))
+			{
+				OpenMenu();
+			}
+
 			if (!IsInGame())
 			{
 				GameScr.isAutoPlay = false;
@@ -436,6 +442,21 @@ public static class ModMenu
 			// Tự động chuyển map
 			ModNextMap.UpdateNextMap();
 
+			// Tự động về chỗ cũ khi chết (GoBack)
+			ModGoBack.Update();
+
+			// Tự động úp set kích hoạt & bán đồ rác
+			ModSetActivator.Update();
+
+			// Tự động né Broly & khinh công
+			ModKiteBroly.Update();
+
+			// Tối ưu hóa tỉ lệ rơi đồ
+			ModDropRate.Update();
+
+			// Tự động mua bùa Bà Hạt Mít
+			ModAutoBuyBua.Update();
+
 			// Tự động nhặt đồ
 			ModAutoPick.RunRealAutoPick();
 
@@ -449,7 +470,7 @@ public static class ModMenu
 
 	public static void Paint(mGraphics g)
 	{
-		if (!IsInGame())
+		if (!IsInGame() && !ModUI.uiCustomOpen)
 		{
 			return;
 		}
@@ -461,6 +482,9 @@ public static class ModMenu
 			// 2. HUD Thông báo Boss (chỉ khi đã vào game)
 			ModBossNotice.PaintBossNotice(g);
 
+			// 2b. HUD Thông tin Player & Boss trong map (ngay dưới Thông báo Boss)
+			ModMapEntityHUD.Paint(g);
+
 			// 3. HUD Tên Map & Khu vực (Click để chọn nhanh map chuyển)
 			ModNextMap.PaintHUDMapTag(g);
 
@@ -469,6 +493,9 @@ public static class ModMenu
 
 			// 5. Hiển thị FPS & Ping (chỉ trong game)
 			ModFps.PaintFPS(g);
+
+			// 6. Hiển thị Logo TriHienKun (chỉ trong game)
+			ModLogo.Paint(g);
 		}
 		catch
 		{

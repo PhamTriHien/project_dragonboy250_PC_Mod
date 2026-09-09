@@ -26,12 +26,18 @@ public class ItemTemplate
 
 	public int strRequire;
 
+	public string rawName;
+
+	public string rawDescription;
+
 	public ItemTemplate(short templateID, sbyte type, sbyte gender, string name, string description, sbyte level, int strRequire, short iconID, short part, bool isUpToUp)
 	{
 		id = templateID;
 		this.type = type;
 		this.gender = gender;
 		this.name = name;
+		this.rawName = name;
+		this.rawDescription = description;
 		this.name = Res.changeString(this.name);
 		this.description = description;
 		this.description = Res.changeString(this.description);
