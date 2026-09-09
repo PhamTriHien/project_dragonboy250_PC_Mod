@@ -103,8 +103,10 @@ public static class ModUITanSat
 		mFont.tahoma_7b_dark.drawString(g, "Trạng thái:", uiX + 8, uiY + 10, mFont.LEFT);
 		ModUI.PaintNativeButton(uiX + 68, uiY + 6, 52, 18, ModTanSat.autoTanSat ? "BẬT" : "TẮT", ModTanSat.autoTanSat, g);
 
-		mFont.tahoma_7b_dark.drawString(g, "Tiếp cận:", uiX + 128, uiY + 10, mFont.LEFT);
-		ModUI.PaintNativeButton(uiX + 180, uiY + 6, 80, 18, ModTanSat.useTeleport ? "Dịch chuyển" : "Chạy bộ", ModTanSat.useTeleport, g);
+		int tpBtnW = 80;
+		int tpBtnX = uiX + uiW - tpBtnW - 6;
+		mFont.tahoma_7b_dark.drawString(g, "Tiếp cận:", tpBtnX - 52, uiY + 10, mFont.LEFT);
+		ModUI.PaintNativeButton(tpBtnX, uiY + 6, tpBtnW, 18, ModTanSat.useTeleport ? "Dịch chuyển" : "Chạy bộ", ModTanSat.useTeleport, g);
 
 		int tabBtnW = (uiW - 16) / 2;
 		ModUI.PaintNativeButton(uiX + 6, uiY + 28, tabBtnW, 19, "1. Chọn Quái", ModUI.tanSatTab == 0, g);
@@ -114,15 +116,15 @@ public static class ModUITanSat
 		int listY = uiY + 70;
 		int listW = uiW - 12;
 		int listH = 124;
+		int colW = (listW - 12) / 2;
+		int allBtnW = 82;
+		int allBtnX = uiX + uiW - allBtnW - 6;
 
 		if (ModUI.tanSatTab == 0)
 		{
 			mFont.tahoma_7b_dark.drawString(g, "Quái map (Tick để đánh):", uiX + 6, uiY + 54, mFont.LEFT);
 
-			ModUI.PaintNativeButton(uiX + uiW - 138, uiY + 49, 80, 18, ModTanSat.selectAllMobs ? "Bỏ chọn hết" : "Chọn tất cả", ModTanSat.selectAllMobs, g);
-
-			ModUI.PaintArrowButton(uiX + uiW - 54, uiY + 49, 22, 18, true, false, g);
-			ModUI.PaintArrowButton(uiX + uiW - 28, uiY + 49, 22, 18, false, false, g);
+			ModUI.PaintNativeButton(allBtnX, uiY + 49, allBtnW, 18, ModTanSat.selectAllMobs ? "Bỏ chọn hết" : "Chọn tất cả", ModTanSat.selectAllMobs, g);
 
 			GameCanvas.paintz.paintFrameSimple(listX, listY, listW, listH, g);
 			g.setColor(15196114);
@@ -146,7 +148,7 @@ public static class ModUITanSat
 				{
 					int col = idx % 2;
 					int row = idx / 2;
-					int itemX = (col == 0) ? (listX + 4) : (listX + 154);
+					int itemX = listX + 4 + col * (colW + 4);
 					int itemY = listY + 4 + row * 20 - scrollMobY;
 
 					if (itemY + 20 < listY || itemY > listY + listH) continue;
@@ -179,10 +181,7 @@ public static class ModUITanSat
 		{
 			mFont.tahoma_7b_dark.drawString(g, "Kỹ năng nhân vật (Tick để dùng):", uiX + 6, uiY + 54, mFont.LEFT);
 
-			ModUI.PaintNativeButton(uiX + uiW - 138, uiY + 49, 80, 18, ModTanSat.selectAllSkills ? "Tự động chiêu" : "Tất cả chiêu", ModTanSat.selectAllSkills, g);
-
-			ModUI.PaintArrowButton(uiX + uiW - 54, uiY + 49, 22, 18, true, false, g);
-			ModUI.PaintArrowButton(uiX + uiW - 28, uiY + 49, 22, 18, false, false, g);
+			ModUI.PaintNativeButton(allBtnX, uiY + 49, allBtnW, 18, ModTanSat.selectAllSkills ? "Tự động chiêu" : "Tất cả chiêu", ModTanSat.selectAllSkills, g);
 
 			GameCanvas.paintz.paintFrameSimple(listX, listY, listW, listH, g);
 			g.setColor(15196114);
@@ -206,7 +205,7 @@ public static class ModUITanSat
 				{
 					int col = idx % 2;
 					int row = idx / 2;
-					int itemX = (col == 0) ? (listX + 4) : (listX + 154);
+					int itemX = listX + 4 + col * (colW + 4);
 					int itemY = listY + 4 + row * 20 - scrollSkillY;
 
 					if (itemY + 20 < listY || itemY > listY + listH) continue;
@@ -269,7 +268,9 @@ public static class ModUITanSat
 		}
 
 		// Bat/Tat Dich chuyen / Chay bo
-		if (px >= uiX + 180 && px <= uiX + 260 && py >= uiY + 5 && py <= uiY + 25)
+		int tpBtnW = 80;
+		int tpBtnX = uiX + uiW - tpBtnW - 6;
+		if (px >= tpBtnX && px <= tpBtnX + tpBtnW && py >= uiY + 5 && py <= uiY + 25)
 		{
 			ModTanSat.useTeleport = !ModTanSat.useTeleport;
 			ModConfig.SaveConfig();
@@ -296,7 +297,9 @@ public static class ModUITanSat
 		}
 
 		// Nut Chon tat ca / Bo chon het
-		if (px >= uiX + uiW - 138 && px <= uiX + uiW - 58 && py >= uiY + 47 && py <= uiY + 68)
+		int allBtnW = 82;
+		int allBtnX = uiX + uiW - allBtnW - 6;
+		if (px >= allBtnX && px <= allBtnX + allBtnW && py >= uiY + 47 && py <= uiY + 68)
 		{
 			if (ModUI.tanSatTab == 0)
 			{
@@ -311,42 +314,11 @@ public static class ModUITanSat
 			return true;
 		}
 
-		// Nut Cuon len (▲)
-		if (px >= uiX + uiW - 54 && px <= uiX + uiW - 32 && py >= uiY + 47 && py <= uiY + 68)
-		{
-			if (ModUI.tanSatTab == 0)
-			{
-				scrollMobY -= 40;
-				if (scrollMobY < 0) scrollMobY = 0;
-			}
-			else
-			{
-				scrollSkillY -= 40;
-				if (scrollSkillY < 0) scrollSkillY = 0;
-			}
-			SoundMn.gI().buttonClick();
-			return true;
-		}
-
-		// Nut Cuon xuong (▼)
-		if (px >= uiX + uiW - 28 && px <= uiX + uiW - 6 && py >= uiY + 47 && py <= uiY + 68)
-		{
-			if (ModUI.tanSatTab == 0)
-			{
-				scrollMobY += 40;
-			}
-			else
-			{
-				scrollSkillY += 40;
-			}
-			SoundMn.gI().buttonClick();
-			return true;
-		}
-
 		int listX = uiX + 6;
 		int listY = uiY + 70;
 		int listW = uiW - 12;
 		int listH = 124;
+		int colW = (listW - 12) / 2;
 
 		// Con lan chuot (Mouse Scroll Wheel)
 		if (px >= listX && px <= listX + listW && py >= listY && py <= listY + listH)
@@ -376,12 +348,12 @@ public static class ModUITanSat
 				{
 					int col = idx % 2;
 					int row = idx / 2;
-					int itemX = (col == 0) ? (listX + 4) : (listX + 154);
+					int itemX = listX + 4 + col * (colW + 4);
 					int itemY = listY + 4 + row * 20 - scrollMobY;
 
 					if (itemY + 20 < listY || itemY > listY + listH) continue;
 
-					if (px >= itemX && px <= itemX + 146 && py >= itemY && py <= itemY + 20)
+					if (px >= itemX && px <= itemX + colW && py >= itemY && py <= itemY + 20)
 					{
 						if (idx == 0)
 						{
@@ -403,12 +375,12 @@ public static class ModUITanSat
 				{
 					int col = idx % 2;
 					int row = idx / 2;
-					int itemX = (col == 0) ? (listX + 4) : (listX + 154);
+					int itemX = listX + 4 + col * (colW + 4);
 					int itemY = listY + 4 + row * 20 - scrollSkillY;
 
 					if (itemY + 20 < listY || itemY > listY + listH) continue;
 
-					if (px >= itemX && px <= itemX + 146 && py >= itemY && py <= itemY + 20)
+					if (px >= itemX && px <= itemX + colW && py >= itemY && py <= itemY + 20)
 					{
 						if (idx == 0)
 						{

@@ -5,20 +5,26 @@ public static class ModUIBoss
 	public static void Paint(int uiX, int uiY, int uiW, int uiH, mGraphics g)
 	{
 		mFont.tahoma_7b_dark.drawString(g, "Báo Boss:", uiX + 8, uiY + 12, mFont.LEFT);
-		ModUI.PaintNativeButton(uiX + 68, uiY + 8, 42, 18, ModBossNotice.isShowBossNotice ? "BẬT" : "TẮT", ModBossNotice.isShowBossNotice, g);
-		ModUI.PaintNativeButton(uiX + 114, uiY + 8, 56, 18, "Xóa List", false, g);
+		ModUI.PaintNativeButton(uiX + 66, uiY + 8, 42, 18, ModBossNotice.isShowBossNotice ? "BẬT" : "TẮT", ModBossNotice.isShowBossNotice, g);
+		ModUI.PaintNativeButton(uiX + 112, uiY + 8, 56, 18, "Xóa List", false, g);
 
-		mFont.tahoma_7b_dark.drawString(g, "HUD Map:", uiX + 180, uiY + 12, mFont.LEFT);
-		ModUI.PaintNativeButton(uiX + 236, uiY + 8, 42, 18, ModMapEntityHUD.isShowMapEntityHUD ? "BẬT" : "TẮT", ModMapEntityHUD.isShowMapEntityHUD, g);
+		int hudBtnW = 42;
+		int hudBtnX = uiX + uiW - hudBtnW - 6;
+		mFont.tahoma_7b_dark.drawString(g, "HUD Map:", hudBtnX - 58, uiY + 12, mFont.LEFT);
+		ModUI.PaintNativeButton(hudBtnX, uiY + 8, hudBtnW, 18, ModMapEntityHUD.isShowMapEntityHUD ? "BẬT" : "TẮT", ModMapEntityHUD.isShowMapEntityHUD, g);
 
 		// Hàng 2: Auto Né Broly, Khinh Công, Khoảng cách an toàn
 		mFont.tahoma_7b_dark.drawString(g, "Né Broly:", uiX + 8, uiY + 34, mFont.LEFT);
-		ModUI.PaintNativeButton(uiX + 68, uiY + 30, 42, 18, ModKiteBroly.isAutoKite ? "BẬT" : "TẮT", ModKiteBroly.isAutoKite, g);
+		ModUI.PaintNativeButton(uiX + 66, uiY + 30, 42, 18, ModKiteBroly.isAutoKite ? "BẬT" : "TẮT", ModKiteBroly.isAutoKite, g);
 
-		mFont.tahoma_7b_dark.drawString(g, "Khinh Công:", uiX + 118, uiY + 34, mFont.LEFT);
-		ModUI.PaintNativeButton(uiX + 182, uiY + 30, 42, 18, ModKiteBroly.isKhinhCong ? "BẬT" : "TẮT", ModKiteBroly.isKhinhCong, g);
+		int kcBtnW = 76;
+		int kcBtnX = uiX + uiW - kcBtnW - 6;
+		ModUI.PaintNativeButton(kcBtnX, uiY + 30, kcBtnW, 18, "KC: " + ModKiteBroly.safeDistance + "px", ModKiteBroly.safeDistance > 120, g);
 
-		ModUI.PaintNativeButton(uiX + 230, uiY + 30, 80, 18, "KC: " + ModKiteBroly.safeDistance + "px", ModKiteBroly.safeDistance > 120, g);
+		int kcBtn2W = 42;
+		int kcBtn2X = kcBtnX - kcBtn2W - 8;
+		mFont.tahoma_7b_dark.drawString(g, "Khinh Công:", kcBtn2X - 68, uiY + 34, mFont.LEFT);
+		ModUI.PaintNativeButton(kcBtn2X, uiY + 30, kcBtn2W, 18, ModKiteBroly.isKhinhCong ? "BẬT" : "TẮT", ModKiteBroly.isKhinhCong, g);
 
 		// Dòng trạng thái Broly thời gian thực
 		(ModKiteBroly.currentBrolyDist >= 0 ? mFont.tahoma_7b_green2 : mFont.tahoma_7_grey).drawString(g, "Broly: " + ModKiteBroly.brolyStatusText, uiX + 8, uiY + 54, mFont.LEFT);
@@ -82,7 +88,7 @@ public static class ModUIBoss
 	public static bool HandleTap(int px, int py, int uiX, int uiY, int uiW, int uiH)
 	{
 		// 1. Nút Bật/Tắt HUD Báo Boss
-		if (px >= uiX + 68 && px <= uiX + 110 && py >= uiY + 6 && py <= uiY + 28)
+		if (px >= uiX + 66 && px <= uiX + 108 && py >= uiY + 6 && py <= uiY + 28)
 		{
 			ModBossNotice.isShowBossNotice = !ModBossNotice.isShowBossNotice;
 			ModConfig.SaveConfig();
@@ -91,7 +97,7 @@ public static class ModUIBoss
 		}
 
 		// 2. Nút Xóa List
-		if (px >= uiX + 114 && px <= uiX + 170 && py >= uiY + 6 && py <= uiY + 28)
+		if (px >= uiX + 112 && px <= uiX + 168 && py >= uiY + 6 && py <= uiY + 28)
 		{
 			lock (ModBossNotice.listBossNotices)
 			{
@@ -102,7 +108,9 @@ public static class ModUIBoss
 		}
 
 		// 3. Nút Bật/Tắt HUD Map
-		if (px >= uiX + 236 && px <= uiX + 278 && py >= uiY + 6 && py <= uiY + 28)
+		int hudBtnW = 42;
+		int hudBtnX = uiX + uiW - hudBtnW - 6;
+		if (px >= hudBtnX && px <= hudBtnX + hudBtnW && py >= uiY + 6 && py <= uiY + 28)
 		{
 			ModMapEntityHUD.isShowMapEntityHUD = !ModMapEntityHUD.isShowMapEntityHUD;
 			ModConfig.SaveConfig();
@@ -111,21 +119,25 @@ public static class ModUIBoss
 		}
 
 		// 4. Nút Bật/Tắt Né Broly
-		if (px >= uiX + 68 && px <= uiX + 110 && py >= uiY + 28 && py <= uiY + 50)
+		if (px >= uiX + 66 && px <= uiX + 108 && py >= uiY + 28 && py <= uiY + 50)
 		{
 			ModKiteBroly.ToggleAutoKite();
 			return true;
 		}
 
 		// 5. Nút Bật/Tắt Khinh Công
-		if (px >= uiX + 182 && px <= uiX + 224 && py >= uiY + 28 && py <= uiY + 50)
+		int kcBtnW = 76;
+		int kcBtnX = uiX + uiW - kcBtnW - 6;
+		int kcBtn2W = 42;
+		int kcBtn2X = kcBtnX - kcBtn2W - 8;
+		if (px >= kcBtn2X && px <= kcBtn2X + kcBtn2W && py >= uiY + 28 && py <= uiY + 50)
 		{
 			ModKiteBroly.ToggleKhinhCong();
 			return true;
 		}
 
 		// 6. Nút Đổi Khoảng Cách An Toàn
-		if (px >= uiX + 230 && px <= uiX + 310 && py >= uiY + 28 && py <= uiY + 50)
+		if (px >= kcBtnX && px <= kcBtnX + kcBtnW && py >= uiY + 28 && py <= uiY + 50)
 		{
 			ModKiteBroly.CycleSafeDistance();
 			return true;

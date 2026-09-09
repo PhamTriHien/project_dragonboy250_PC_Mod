@@ -8,10 +8,12 @@ public static class ModUIAutoHeal
 	{
 		// Hàng 1: Tự dùng đậu & Khóa HP/MP
 		mFont.tahoma_7b_dark.drawString(g, "Tự dùng đậu:", uiX + 8, uiY + 12, mFont.LEFT);
-		ModUI.PaintNativeButton(uiX + 86, uiY + 8, 52, 18, ModAutoHeal.autoPean ? "BẬT" : "TẮT", ModAutoHeal.autoPean, g);
+		ModUI.PaintNativeButton(uiX + 82, uiY + 8, 48, 18, ModAutoHeal.autoPean ? "BẬT" : "TẮT", ModAutoHeal.autoPean, g);
 
-		mFont.tahoma_7b_dark.drawString(g, "Khóa HP/MP:", uiX + 160, uiY + 12, mFont.LEFT);
-		ModUI.PaintNativeButton(uiX + 246, uiY + 8, 52, 18, ModAutoHeal.lockHPMP ? "BẬT" : "TẮT", ModAutoHeal.lockHPMP, g);
+		int rBtn1W = 48;
+		int rBtn1X = uiX + uiW - rBtn1W - 6;
+		mFont.tahoma_7b_dark.drawString(g, "Khóa HP/MP:", rBtn1X - 74, uiY + 12, mFont.LEFT);
+		ModUI.PaintNativeButton(rBtn1X, uiY + 8, rBtn1W, 18, ModAutoHeal.lockHPMP ? "BẬT" : "TẮT", ModAutoHeal.lockHPMP, g);
 
 		// Hàng 2: Ngưỡng tự ăn đậu
 		mFont.tahoma_7b_dark.drawString(g, "Ngưỡng ăn đậu khi HP/KI dưới:", uiX + 8, uiY + 34, mFont.LEFT);
@@ -25,18 +27,21 @@ public static class ModUIAutoHeal
 
 		// Hàng 3: Tự thu đậu & Cho đậu bang hội
 		mFont.tahoma_7b_dark.drawString(g, "Tự thu đậu:", uiX + 8, uiY + 80, mFont.LEFT);
-		ModUI.PaintNativeButton(uiX + 86, uiY + 76, 52, 18, ModAutoHeal.autoHarvestPea ? "BẬT" : "TẮT", ModAutoHeal.autoHarvestPea, g);
+		ModUI.PaintNativeButton(uiX + 82, uiY + 76, 48, 18, ModAutoHeal.autoHarvestPea ? "BẬT" : "TẮT", ModAutoHeal.autoHarvestPea, g);
 
-		mFont.tahoma_7b_dark.drawString(g, "Cho đậu bang:", uiX + 160, uiY + 80, mFont.LEFT);
-		ModUI.PaintNativeButton(uiX + 246, uiY + 76, 52, 18, ModAutoHeal.autoDonateClan ? "BẬT" : "TẮT", ModAutoHeal.autoDonateClan, g);
+		int rBtn3W = 48;
+		int rBtn3X = uiX + uiW - rBtn3W - 6;
+		mFont.tahoma_7b_dark.drawString(g, "Cho đậu bang:", rBtn3X - 82, uiY + 80, mFont.LEFT);
+		ModUI.PaintNativeButton(rBtn3X, uiY + 76, rBtn3W, 18, ModAutoHeal.autoDonateClan ? "BẬT" : "TẮT", ModAutoHeal.autoDonateClan, g);
 
 		// Hàng 4: Ăn đậu khi đệ tử xin & Số lượng đậu hiện có
 		mFont.tahoma_7b_dark.drawString(g, "Cho đệ khi xin:", uiX + 8, uiY + 108, mFont.LEFT);
-		ModUI.PaintNativeButton(uiX + 96, uiY + 104, 52, 18, ModAutoHeal.autoFeedPetOnAsk ? "BẬT" : "TẮT", ModAutoHeal.autoFeedPetOnAsk, g);
+		ModUI.PaintNativeButton(uiX + 90, uiY + 104, 48, 18, ModAutoHeal.autoFeedPetOnAsk ? "BẬT" : "TẮT", ModAutoHeal.autoFeedPetOnAsk, g);
 
 		int beanCount = ModAutoHeal.GetBeanCount();
-		mFont.tahoma_7_grey.drawString(g, "Đậu túi: ", uiX + 170, uiY + 108, mFont.LEFT);
-		(beanCount > 0 ? mFont.tahoma_7b_green2 : mFont.tahoma_7b_red).drawString(g, beanCount + " hạt", uiX + 220, uiY + 108, mFont.LEFT);
+		int rBeanX = uiX + uiW - 88;
+		mFont.tahoma_7_grey.drawString(g, "Đậu túi: ", rBeanX, uiY + 108, mFont.LEFT);
+		(beanCount > 0 ? mFont.tahoma_7b_green2 : mFont.tahoma_7b_red).drawString(g, beanCount + " hạt", rBeanX + 44, uiY + 108, mFont.LEFT);
 
 		// Hàng 5: Nút thao tác nhanh
 		int actBtnW = (uiW - 16) / 2;
@@ -58,7 +63,7 @@ public static class ModUIAutoHeal
 	public static bool HandleTap(int px, int py, int uiX, int uiY, int uiW, int uiH)
 	{
 		// 1. Tự dùng đậu
-		if (px >= uiX + 86 && px <= uiX + 138 && py >= uiY + 6 && py <= uiY + 28)
+		if (px >= uiX + 82 && px <= uiX + 130 && py >= uiY + 6 && py <= uiY + 28)
 		{
 			ModAutoHeal.autoPean = !ModAutoHeal.autoPean;
 			ModConfig.SaveConfig();
@@ -67,7 +72,9 @@ public static class ModUIAutoHeal
 		}
 
 		// 2. Khóa HP/MP
-		if (px >= uiX + 246 && px <= uiX + 298 && py >= uiY + 6 && py <= uiY + 28)
+		int rBtn1W = 48;
+		int rBtn1X = uiX + uiW - rBtn1W - 6;
+		if (px >= rBtn1X && px <= rBtn1X + rBtn1W && py >= uiY + 6 && py <= uiY + 28)
 		{
 			ModAutoHeal.lockHPMP = !ModAutoHeal.lockHPMP;
 			ModConfig.SaveConfig();
@@ -90,7 +97,7 @@ public static class ModUIAutoHeal
 		}
 
 		// 4. Tự thu đậu
-		if (px >= uiX + 86 && px <= uiX + 138 && py >= uiY + 74 && py <= uiY + 96)
+		if (px >= uiX + 82 && px <= uiX + 130 && py >= uiY + 74 && py <= uiY + 96)
 		{
 			ModAutoHeal.autoHarvestPea = !ModAutoHeal.autoHarvestPea;
 			ModConfig.SaveConfig();
@@ -100,7 +107,9 @@ public static class ModUIAutoHeal
 		}
 
 		// 5. Cho đậu bang
-		if (px >= uiX + 246 && px <= uiX + 298 && py >= uiY + 74 && py <= uiY + 96)
+		int rBtn3W = 48;
+		int rBtn3X = uiX + uiW - rBtn3W - 6;
+		if (px >= rBtn3X && px <= rBtn3X + rBtn3W && py >= uiY + 74 && py <= uiY + 96)
 		{
 			ModAutoHeal.autoDonateClan = !ModAutoHeal.autoDonateClan;
 			ModConfig.SaveConfig();
@@ -110,7 +119,7 @@ public static class ModUIAutoHeal
 		}
 
 		// 6. Cho đệ khi xin
-		if (px >= uiX + 96 && px <= uiX + 148 && py >= uiY + 102 && py <= uiY + 124)
+		if (px >= uiX + 90 && px <= uiX + 138 && py >= uiY + 102 && py <= uiY + 124)
 		{
 			ModAutoHeal.autoFeedPetOnAsk = !ModAutoHeal.autoFeedPetOnAsk;
 			ModConfig.SaveConfig();

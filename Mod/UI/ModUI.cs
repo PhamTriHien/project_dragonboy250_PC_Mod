@@ -172,32 +172,15 @@ public static class ModUI
 				Image bMid = isFocus ? Command.btn1mid : Command.btn0mid;
 				Image bRight = isFocus ? Command.btn1right : Command.btn0right;
 
-				int oldClipX = g.getClipX();
-				int oldClipY = g.getClipY();
-				int oldClipW = g.getClipWidth();
-				int oldClipH = g.getClipHeight();
-
-				int cx1 = (x > oldClipX) ? x : oldClipX;
-				int cy1 = (y > oldClipY) ? y : oldClipY;
-				int cx2 = (x + w < oldClipX + oldClipW) ? (x + w) : (oldClipX + oldClipW);
-				int cy2 = (y + h < oldClipY + oldClipH) ? (y + h) : (oldClipY + oldClipH);
-
-				if (cx2 > cx1 && cy2 > cy1)
+				if (w >= 20)
 				{
-					g.setClip(cx1, cy1, cx2 - cx1, cy2 - cy1);
-
-					if (w >= 20)
-					{
-						Command.paintOngMau(bLeft, bMid, bRight, x, y, w, g);
-					}
-					else
-					{
-						g.drawRegion(bLeft, 0, 0, w / 2, 24, 0, x, y, 0);
-						g.drawRegion(bRight, 10 - (w - w / 2), 0, w - w / 2, 24, 0, x + w / 2, y, 0);
-					}
+					Command.paintOngMau(bLeft, bMid, bRight, x, y, w, g);
 				}
-
-				g.setClip(oldClipX, oldClipY, oldClipW, oldClipH);
+				else
+				{
+					g.drawRegion(bLeft, 0, 0, w / 2, 24, 0, x, y, 0);
+					g.drawRegion(bRight, 10 - (w - w / 2), 0, w - w / 2, 24, 0, x + w / 2, y, 0);
+				}
 			}
 			else
 			{

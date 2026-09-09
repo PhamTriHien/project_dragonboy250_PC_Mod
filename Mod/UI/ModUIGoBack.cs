@@ -5,11 +5,13 @@ public static class ModUIGoBack
 	public static void Paint(int uiX, int uiY, int uiW, int uiH, mGraphics g)
 	{
 		// Hàng 1: Công tắc Bật/Tắt GoBack & Tự định toạ độ khi chết
-		mFont.tahoma_7b_dark.drawString(g, "GoBack Map:", uiX + 10, uiY + 12, mFont.LEFT);
-		ModUI.PaintNativeButton(uiX + 88, uiY + 8, 50, 18, ModGoBack.isGoBackActive ? "BẬT" : "TẮT", ModGoBack.isGoBackActive, g);
+		mFont.tahoma_7b_dark.drawString(g, "GoBack Map:", uiX + 8, uiY + 12, mFont.LEFT);
+		ModUI.PaintNativeButton(uiX + 84, uiY + 8, 48, 18, ModGoBack.isGoBackActive ? "BẬT" : "TẮT", ModGoBack.isGoBackActive, g);
 
-		mFont.tahoma_7b_dark.drawString(g, "Tự định khi chết:", uiX + 150, uiY + 12, mFont.LEFT);
-		ModUI.PaintNativeButton(uiX + 252, uiY + 8, 50, 18, ModGoBack.isAutoRecordOnDeath ? "BẬT" : "TẮT", ModGoBack.isAutoRecordOnDeath, g);
+		int rBtnW = 48;
+		int rBtnX = uiX + uiW - rBtnW - 6;
+		mFont.tahoma_7b_dark.drawString(g, "Tự định khi chết:", rBtnX - 98, uiY + 12, mFont.LEFT);
+		ModUI.PaintNativeButton(rBtnX, uiY + 8, rBtnW, 18, ModGoBack.isAutoRecordOnDeath ? "BẬT" : "TẮT", ModGoBack.isAutoRecordOnDeath, g);
 
 		// Khung hiển thị thông tin toạ độ đã lưu
 		int listY = uiY + 32;
@@ -59,24 +61,32 @@ public static class ModUIGoBack
 
 		// Hàng 3 nút chức năng ở đáy
 		int btnY = uiY + 190;
-		ModUI.PaintNativeButton(uiX + 8, btnY, 96, 22, "Lưu Vị Trí", false, g);
-		ModUI.PaintNativeButton(uiX + 110, btnY, 84, 22, "Xóa Vị Trí", false, g);
-		ModUI.PaintNativeButton(uiX + 200, btnY, 112, 22, "Về Chỗ Này Ngay", false, g);
+		int b1W = (uiW - 24) * 30 / 100;
+		int b2W = (uiW - 24) * 30 / 100;
+		int b3W = uiW - 24 - b1W - b2W;
+		int b1X = uiX + 8;
+		int b2X = b1X + b1W + 4;
+		int b3X = b2X + b2W + 4;
+		ModUI.PaintNativeButton(b1X, btnY, b1W, 22, "Lưu Vị Trí", false, g);
+		ModUI.PaintNativeButton(b2X, btnY, b2W, 22, "Xóa Vị Trí", false, g);
+		ModUI.PaintNativeButton(b3X, btnY, b3W, 22, "Về Ngay", false, g);
 	}
 
 	public static bool HandleTap(int px, int py, int uiX, int uiY, int uiW, int uiH)
 	{
 		int btnY = uiY + 190;
+		int rBtnW = 48;
+		int rBtnX = uiX + uiW - rBtnW - 6;
 
 		// 1. Nút Bật/Tắt GoBack Map
-		if (px >= uiX + 88 && px <= uiX + 138 && py >= uiY + 8 && py <= uiY + 26)
+		if (px >= uiX + 84 && px <= uiX + 132 && py >= uiY + 8 && py <= uiY + 26)
 		{
 			ModGoBack.ToggleGoBack();
 			return true;
 		}
 
 		// 2. Nút Bật/Tắt Tự định khi chết
-		if (px >= uiX + 252 && px <= uiX + 302 && py >= uiY + 8 && py <= uiY + 26)
+		if (px >= rBtnX && px <= rBtnX + rBtnW && py >= uiY + 8 && py <= uiY + 26)
 		{
 			ModGoBack.isAutoRecordOnDeath = !ModGoBack.isAutoRecordOnDeath;
 			ModConfig.SaveConfig();
@@ -85,22 +95,29 @@ public static class ModUIGoBack
 			return true;
 		}
 
+		int b1W = (uiW - 24) * 30 / 100;
+		int b2W = (uiW - 24) * 30 / 100;
+		int b3W = uiW - 24 - b1W - b2W;
+		int b1X = uiX + 8;
+		int b2X = b1X + b1W + 4;
+		int b3X = b2X + b2W + 4;
+
 		// 3. Nút "Lưu Vị Trí"
-		if (px >= uiX + 8 && px <= uiX + 104 && py >= btnY && py <= btnY + 22)
+		if (px >= b1X && px <= b1X + b1W && py >= btnY && py <= btnY + 22)
 		{
 			ModGoBack.SaveCurrentPosition();
 			return true;
 		}
 
 		// 4. Nút "Xóa Vị Trí"
-		if (px >= uiX + 110 && px <= uiX + 194 && py >= btnY && py <= btnY + 22)
+		if (px >= b2X && px <= b2X + b2W && py >= btnY && py <= btnY + 22)
 		{
 			ModGoBack.ResetPosition();
 			return true;
 		}
 
 		// 5. Nút "Về Chỗ Này Ngay"
-		if (px >= uiX + 200 && px <= uiX + 312 && py >= btnY && py <= btnY + 22)
+		if (px >= b3X && px <= b3X + b3W && py >= btnY && py <= btnY + 22)
 		{
 			ModGoBack.StartGoBackNow();
 			return true;
