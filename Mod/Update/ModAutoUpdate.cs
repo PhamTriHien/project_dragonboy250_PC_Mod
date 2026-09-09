@@ -88,13 +88,14 @@ public static class ModAutoUpdate
 		string json = null;
 		try
 		{
+				string manifestUrlWithCacheBust = ManifestUrl + "?t=" + mSystem.currentTimeMillis();
 #if NET8_0_OR_GREATER
 			using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3)))
 			using (var client = new HttpClient())
 			{
 				client.Timeout = TimeSpan.FromSeconds(3);
 				client.DefaultRequestHeaders.Add("User-Agent", "DragonBoy-AutoUpdater/" + CurrentVersion);
-				var resp = client.GetAsync(ManifestUrl, cts.Token).GetAwaiter().GetResult();
+				var resp = client.GetAsync(manifestUrlWithCacheBust, cts.Token).GetAwaiter().GetResult();
 				if (resp.IsSuccessStatusCode)
 				{
 					json = resp.Content.ReadAsStringAsync(cts.Token).GetAwaiter().GetResult();
@@ -104,7 +105,7 @@ public static class ModAutoUpdate
 			using (var wc = new WebClient())
 			{
 				wc.Headers.Add("User-Agent", "DragonBoy-AutoUpdater/" + CurrentVersion);
-				json = wc.DownloadString(ManifestUrl);
+				json = wc.DownloadString(manifestUrlWithCacheBust);
 			}
 #endif
 		}
