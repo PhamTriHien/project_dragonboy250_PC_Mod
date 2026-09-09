@@ -401,8 +401,8 @@ public static class ModNextMap
 			g.translate(-g.getTranslateX(), -g.getTranslateY());
 			g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
 
-			int drawX = 84;
-			int drawY = (Char.myCharz() != null && Char.myCharz().secondPower > 0) ? 55 : 40;
+			int drawX = 160;
+			int drawY = 16;
 
 			string mapTag = (isNextMapActive && nextMapTargetId >= 0)
 				? ("-> " + GetMapName(nextMapTargetId) + " [K." + TileMap.zoneID + "]")
@@ -455,8 +455,8 @@ public static class ModNextMap
 				return false;
 			}
 
-			int drawX = 84;
-			int drawY = (Char.myCharz() != null && Char.myCharz().secondPower > 0) ? 55 : 40;
+			int drawX = 160;
+			int drawY = 16;
 
 			string mapTag = (isNextMapActive && nextMapTargetId >= 0)
 				? ("-> " + GetMapName(nextMapTargetId) + " [K." + TileMap.zoneID + "]")

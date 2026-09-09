@@ -99,17 +99,7 @@ public partial class GameCanvas : IActionListener
 				debug("PE", 1);
 				resetTrans(g);
 				EffecMn.paintLayer4(g);
-				if (open3Hour && !isLoading)
-				{
-					if (currentScreen == loginScr || currentScreen == serverScreen || currentScreen == serverScr)
-					{
-						g.drawImage(img18, 5, 5, 0);
-					}
-					if (currentScreen == CreateCharScr.instance)
-					{
-						g.drawImage(img18, hw, 5, 0);
-					}
-				}
+				// Da xoa hoan toan logic ve img18 theo yeu cau nguoi dung
 				resetTrans(g);
 				int num = h / 4;
 				if (currentScreen != null && currentScreen is GameScr && thongBaoTest != null)

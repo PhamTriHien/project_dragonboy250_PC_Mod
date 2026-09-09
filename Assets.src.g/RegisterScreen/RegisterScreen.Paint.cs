@@ -57,9 +57,7 @@ public partial class RegisterScreen
 			GameCanvas.resetTrans(g);
 			string vERSION = GameMidlet.VERSION;
 			g.setColor(GameCanvas.skyColor);
-			g.fillRect(GameCanvas.w - 40, 4, 36, 11);
 			mFont.tahoma_7_grey.drawString(g, vERSION, GameCanvas.w - 22, 4, mFont.CENTER);
-			g.drawImage(GameCanvas.img18, 10, 10, 0);
 			base.paint(g);
 		}
 

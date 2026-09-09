@@ -9969,3 +9969,88 @@ Tệp: `https://raw.githubusercontent.com/PhamTriHien/project_dragonboy250_PC_Mo
 | **Trạng thái biên dịch Native AOT** | **0 Warning, 0 Error** |
 | **Dung lượng nhị phân UPX** | **2.85 MB (`2,995,712` bytes)** |
 | **Kiểm soát giới hạn số dòng** | [`ModAutoUpdate.cs`](file:///c:/ModNRO/DragonBoy_Net8_Native/Src/Mod/Update/ModAutoUpdate.cs): **257 dòng**, [`Program.cs`](file:///c:/ModNRO/DragonBoy_Net8_Native/Program.cs): **184 dòng** |
+
+
+---
+
+## 154. TÁI ĐỊNH VỊ CỤM HUD THÔNG TIN (FPS/PING & MAP/KHU VỰC) BÊN PHẢI THANH MÁU & XÓA BỎ HOÀN TOÀN LOGIC CẢNH BÁO 18+
+
+### 1. Bối Cảnh Kỹ Thuật & Yêu Cầu Người Dùng
+- **Người dùng yêu cầu**:
+  1. Di chuyển toàn bộ cụm hiển thị thông tin FPS/Ping và Tên Map/Khu vực (`Kakalot village [K.0]`) sang bên phải thanh máu HP/MP của nhân vật thay vì đặt bên dưới (vị trí cũ đè lên banner chat/thông báo hệ thống).
+  2. Xóa bỏ hoàn toàn và triệt để logic hiển thị cảnh báo 18+ ("Chơi quá 180 phút một ngày sẽ ảnh hưởng xấu đến sức khỏe." cùng biểu tượng `18+.png`) trên toàn bộ client game.
+- **Tiêu chuẩn thực thi**:
+  - Tuân thủ Điều Lệ Tối Thượng Số 0: Code thực chiến, không code ảo, biên dịch đạt 0 Error, 0 Warning.
+  - Toàn bộ file source <= 1000 dòng.
+  - Đảm bảo tính toàn vẹn của luồng packet mạng từ máy chủ.
+
+---
+
+### 2. Phân Tích Kiến Trúc Giao Diện & Tọa Độ HUD
+
+| Thành Phần Giao Diện | Tọa Độ Cũ | Tọa Độ Mới (Chuẩn Hóa) | Ý Nghĩa / Tác Động |
+| :--- | :--- | :--- | :--- |
+| **Thanh Máu HP/MP/Avatar** | `(0, 0)` -> `(155, 26)` | Giữ nguyên gốc | Thanh HP/MP và khung thông tin nhân vật chính. |
+| **Cảnh Báo 18+ (Gốc)** | `x = 160, y = 6` (Icon) / `x = 180, y = 2/12` (Text) | **ĐÃ XÓA VĨNH VIỄN** | Giải phóng hoàn toàn khoảng trống `x = 160` bên phải thanh máu. |
+| **FPS & Ping (`ModFps`)** | `x = 84, y = 28` | **`x = 160, y = 4`** | Nằm thẳng hàng bên phải mép trên thanh HP, màu xanh lá sắc nét. |
+| **Tên Map & Khu (`ModNextMap`)** | `x = 84, y = 40` | **`x = 160, y = 16`** | Nằm ngay dưới FPS/Ping, vừa khít chiều cao thanh máu (`y = 0` đến `y = 26`). |
+| **Click Box NextMap** | `[84, 38, w, h]` | **`[160, 14, w, h]`** | Nhấp chuột vào tag Map bên phải thanh máu kích hoạt ngay popup NextMap. |
+
+---
+
+### 3. Chi Tiết Thay Đổi Mã Nguồn
+
+#### A. Định Vị Lại FPS/Ping ([`ModFps.cs`](file:///c:/ModNRO/DragonBoy_Net8_Native/Src/Mod/Graphics/ModFps.cs) - 177 dòng)
+```csharp
+			if (ModMenu.IsInGame())
+			{
+				drawX = 160;
+				drawY = 4;
+			}
+			else
+			{
+				drawX = GameCanvas.w - 10;
+				drawY = 5;
+			}
+```
+
+#### B. Định Vị Lại Map Tag & Vùng Bắt Chuột ([`ModNextMap.cs`](file:///c:/ModNRO/DragonBoy_Net8_Native/Src/Mod/NextMap/ModNextMap.cs) - 487 dòng)
+```csharp
+			// Tọa độ vẽ HUD Map Tag bên phải thanh máu
+			int drawX = 160;
+			int drawY = 16;
+...
+			// Bắt sự kiện click chuột mở menu NextMap
+			int drawX = 160;
+			int drawY = 16;
+			int boxW = tagW + 12;
+			int boxH = 14;
+			if (GameCanvas.isPointerHoldIn(drawX, drawY - 2, boxW, boxH))
+			{
+				ModMenu.ShowMenuNextMap();
+			}
+```
+
+#### C. Xóa Bỏ Toàn Diện Logic Cảnh Báo 18+
+1. **Trong In-Game Screen** ([`GameScr.Paint.Part2.cs`](file:///c:/ModNRO/DragonBoy_Net8_Native/Src/GameScr/GameScr.Paint.Part2.cs) - 566 dòng):
+   - Loại bỏ hoàn toàn khối `if (GameCanvas.open3Hour && TileMap.mapID != 170)` chứa lệnh vẽ `GameCanvas.img18` và hai dòng chuỗi thông báo 180 phút. Bảo toàn cấu trúc khối `{ ... }` của `if (!isPaintOther)`.
+2. **Trong Màn Hình Đăng Nhập / Menu Gốc** ([`GameCanvas.Paint.Part4.cs`](file:///c:/ModNRO/DragonBoy_Net8_Native/Src/GameCanvas/GameCanvas.Paint.Part4.cs) - 139 dòng):
+   - Xóa bỏ logic vẽ `img18` khi ở `loginScr`, `serverScreen`, `registerScr`.
+3. **Trong Màn Hình Đăng Ký Tài Khoản** ([`RegisterScreen.Paint.cs`](file:///c:/ModNRO/DragonBoy_Net8_Native/Src/Assets.src.g/RegisterScreen/RegisterScreen.Paint.cs) - 65 dòng):
+   - Xóa bỏ lệnh `g.drawImage(GameCanvas.img18, ...)`.
+4. **Bảo Toàn Toàn Vẹn Gói Tin Mạng Socket** ([`Controller2.Msg.Part1.cs`](file:///c:/ModNRO/DragonBoy_Net8_Native/Src/Assets.src.f/Controller2/Controller2.Msg.Part1.cs) - 474 dòng):
+   - Xử lý gói tin cmd `-89` (`OPEN3HOUR`): Đọc và tiêu thụ 1 byte dữ liệu từ reader để con trỏ packet không bị lệch, đồng thời gán cứng `GameCanvas.open3Hour = false;` nhằm vô hiệu hóa vĩnh viễn cờ 18+ từ server.
+
+---
+
+### 4. Kết Quả Đo Đạc & Kiểm Thử Thực Nghiệm
+
+| Chỉ Số Đánh Giá | Kết Quả Thực Nghiệm Thực Tế |
+| :--- | :--- |
+| **Vị trí FPS / Ping** | **(160, 4) - Ngay bên phải thanh máu, không che khuất chat** |
+| **Vị trí Tên Map / Khu** | **(160, 16) - Dưới FPS/Ping, thẳng hàng với thanh HP/MP** |
+| **Tương tác Chuột HUD Map** | **Nhấp chuột tại (160, 16) mở Menu NextMap tức thì (100% chuẩn)** |
+| **Biểu tượng & Cảnh báo 18+** | **Biến mất 100% trên toàn bộ các màn hình game** |
+| **Giao thức Packet Mạng** | **Cmd -89 đọc đủ byte, không gây desync stream, open3Hour = false** |
+| **Biên dịch Native AOT (.NET 8)** | **Build succeeded: 0 Warning, 0 Error** |
+| **Biên dịch Standalone C# (.NET 3.5)** | **Build succeeded: 0 Warning, 0 Error** |

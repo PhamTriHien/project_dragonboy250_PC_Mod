@@ -146,8 +146,8 @@ public static class ModFps
 			int drawY;
 			if (ModMenu.IsInGame())
 			{
-				drawX = 84;
-				drawY = (Char.myCharz() != null && Char.myCharz().secondPower > 0) ? 43 : 28;
+				drawX = 160;
+				drawY = 4;
 			}
 			else
 			{

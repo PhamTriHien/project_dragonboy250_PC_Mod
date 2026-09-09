@@ -123,7 +123,8 @@ public partial class Controller2
 					break;
 				}
 				case -89:
-					GameCanvas.open3Hour = msg.reader().readByte() == 1;
+					msg.reader().readByte();
+					GameCanvas.open3Hour = false;
 					break;
 				case 42:
 				{
