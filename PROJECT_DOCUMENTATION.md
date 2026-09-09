@@ -9825,3 +9825,48 @@ drawY += lineH + 2;
 | Tệp Mã Nguồn | Số Dòng Thực Tế | Giới Hạn Cho Phép | Trạng Thái |
 | :--- | :---: | :---: | :---: |
 | `DragonBoy_Net8_Native/Src/Mod/UI/ModMapEntityHUD.cs` | 343 dòng | 1000 dòng | **ĐẠT (Thỏa mãn)** |
+
+
+---
+
+## 152. TRIỂN KHAI, ĐÓNG GÓI VÀ PUSH MÃ NGUỒN LÊN GITHUB REPOSITORY (PROJECT_DRAGONBOY250_PC_MOD)
+
+### 1. Bối Cảnh & Yêu Cầu
+- **Yêu cầu của người dùng**: *"deloy commit repo lên git https://github.com/PhamTriHien/project_dragonboy250_PC_Mod.git"*.
+- **Mục tiêu**:
+  1. Đồng bộ toàn bộ tài liệu kiến trúc kỹ thuật mới nhất (`PROJECT_DOCUMENTATION.md` đầy đủ 151 mục, dung lượng ~852 KB) vào kho lưu trữ.
+  2. Gom nhóm toàn bộ 75 tệp tin mã nguồn (bao gồm các module phân rã partial class $\le 1000$ dòng của `Char`, `GameScr`, `Panel`, `Controller`, `TField`, hệ thống gõ Telex, bộ tính năng Mod Tàn Sát, NextMap, Auto Heal, ModGraphics, ModBossNotice, ModUI).
+  3. Tạo commit chuẩn mực và đẩy toàn bộ lên nhánh `main` của remote `origin` trên GitHub: `https://github.com/PhamTriHien/project_dragonboy250_PC_Mod.git`.
+  4. Đảm bảo trạng thái working tree hoàn toàn sạch sẽ (`clean`), không sót tệp rác.
+
+---
+
+### 2. Chi Tiết Thực Thi Git Commit & Push
+
+- **Đồng bộ tài liệu**: Sao chép tệp `PROJECT_DOCUMENTATION.md` từ thư mục gốc vào repository.
+- **Kiểm tra biên dịch**:
+  `dotnet build Dragonboy250_PC_projectbuild.csproj -c Release` $\rightarrow$ **0 Warning, 0 Error**.
+- **Stage & Commit**:
+  - Mã commit: `f141e38`
+  - Tiêu đề commit: `feat: complete DragonBoy 2.5.0 PC Mod architecture, modularization & full mod suite`
+  - Thống kê thay đổi: **75 files changed, 13,001 insertions(+), 3,187 deletions(-)**.
+  - Các tệp untracked mới được tạo:
+    + `Char/Char.Data.cs`
+    + `Char/Char.Fields.Part2.cs`
+    + `Char/Char.Update.Me.cs`
+    + `Char/Char.Update.Other.cs`
+    + `Controller/Controller.Msg.Part3b.cs`
+    + `GameScr/GameScr.Fields.Part2.cs`
+    + `Panel/Panel.Inventory.Split.cs`
+    + `Panel/Panel.PetTab.cs`
+    + `TField/TField.Telex.cs`
+- **Đẩy lên GitHub**:
+  `git push -u origin main`
+  Output: `cb44391..f141e38 main -> main` $\rightarrow$ Thành công 100%.
+
+---
+
+### 3. Trạng Thái Kho Lưu Trữ Hiện Tại
+- **Repository URL**: `https://github.com/PhamTriHien/project_dragonboy250_PC_Mod.git`
+- **Branch**: `main` (Up to date with `origin/main`)
+- **Working Tree**: Clean 100%, 0 uncommitted changes.
