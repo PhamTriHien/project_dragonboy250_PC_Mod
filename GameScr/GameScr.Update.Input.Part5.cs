@@ -130,12 +130,6 @@ public partial class GameScr : mScreen, IChatable
 					// Nút Ăn Đậu Thần (Pea) nằm kế nút đấm, dịch sang trái
 					xHP = xF - 56;
 					yHP = yF + 4;
-
-					if (gamePad.isLargeGamePad)
-					{
-						xSkill = gamePad.wZone + 20;
-						wSkill = 35;
-					}
 				}
 			}
 

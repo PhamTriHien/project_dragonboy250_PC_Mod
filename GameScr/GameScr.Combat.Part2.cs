@@ -13,34 +13,60 @@ public partial class GameScr : mScreen, IChatable
 			yS = new int[array.Length];
 
 			wSkill = 30;
-			xSkill = 10;
 			ySkill = GameCanvas.h - wSkill - 6;
+
+			int totalSkillW = array.Length * wSkill;
+
+			if (isAnalog == 0)
+			{
+				// Chế độ PC / Analog Tắt: Thanh skill tự động CĂN CHÍNH GIỮA đáy màn hình
+				xSkill = (GameCanvas.w - totalSkillW) / 2;
+				if (xSkill < 10)
+				{
+					xSkill = 10;
+				}
+
+				// Nút Đậu Thần đặt ở góc dưới bên phải
+				xHP = GameCanvas.w - 45;
+				yHP = GameCanvas.h - 45;
+			}
+			else
+			{
+				// Chế độ Analog Bật: Cập nhật cụm nút cảm ứng công thái học bên phải
+				setTouchBtn();
+
+				// Cập nhật vùng cảm ứng Analog bên trái
+				if (gamePad != null)
+				{
+					gamePad.updateZone();
+				}
+
+				// Khoảng trống giữa Cụm Analog bên trái và Cụm Nút bên phải
+				int leftBoundary = 95; // Sau tâm Analog (xC=54 + R=28 + margin)
+				int rightBoundary = xHP - 6; // Trước nút Ăn Đậu (xHP)
+				int space = rightBoundary - leftBoundary;
+
+				if (space >= totalSkillW)
+				{
+					// Căn chính giữa khoảng trống giữa 2 cụm nút
+					xSkill = leftBoundary + (space - totalSkillW) / 2;
+				}
+				else
+				{
+					// Màn hình hẹp: Căn giữa màn hình để không bị vỡ bố cục
+					xSkill = (GameCanvas.w - totalSkillW) / 2;
+					if (xSkill < 10)
+					{
+						xSkill = 10;
+					}
+				}
+			}
 
 			for (int i = 0; i < xS.Length; i++)
 			{
 				xS[i] = i * wSkill;
 				yS[i] = ySkill;
 			}
-
-			xHP = xSkill + array.Length * wSkill + 6;
-			yHP = ySkill;
-
-			if (!GameCanvas.isTouch)
-			{
-				return;
-			}
-
-			if (gamePad.isSmallGamePad && isAnalog == 1)
-			{
-				xHP = xSkill + array.Length * wSkill + 6;
-				yHP = ySkill;
-			}
-			else
-			{
-				xHP = GameCanvas.w - 45;
-				yHP = GameCanvas.h - 45;
-			}
-			setTouchBtn();
 		}
 	private bool checkSkillValid()
 		{

@@ -169,6 +169,7 @@ public static class ModUIGraphics
 		if (px >= uiX + 238 && px <= uiX + 276 && py >= uiY + 204 && py <= uiY + 220)
 		{
 			GameScr.isAnalog = (GameScr.isAnalog == 1) ? 0 : 1;
+			GameScr.setSkillBarPosition();
 			Rms.saveRMSInt("analog", GameScr.isAnalog);
 			ModConfig.SaveConfig();
 			GameScr.info1.addInfo("Bàn phím ảo & Analog: " + ((GameScr.isAnalog == 1) ? "BẬT" : "TẮT"), 0);

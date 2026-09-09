@@ -106,6 +106,11 @@ public static class ModGraphics
 				{
 					GameMidlet.gameCanvas.initGameCanvas();
 				}
+				if (GameScr.gamePad != null)
+				{
+					GameScr.gamePad.updateZone();
+				}
+				GameScr.setSkillBarPosition();
 			}
 		}
 		catch

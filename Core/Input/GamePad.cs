@@ -50,6 +50,11 @@ public class GamePad
 
 	public GamePad()
 	{
+		updateZone();
+	}
+
+	public void updateZone()
+	{
 		R = 28;
 		if (GameCanvas.w < 300)
 		{
@@ -57,36 +62,45 @@ public class GamePad
 			isMediumGamePad = false;
 			isLargeGamePad = false;
 		}
-		if (GameCanvas.w >= 300 && GameCanvas.w <= 380)
+		else if (GameCanvas.w >= 300 && GameCanvas.w <= 380)
 		{
 			isSmallGamePad = false;
 			isMediumGamePad = true;
 			isLargeGamePad = false;
 		}
-		if (GameCanvas.w > 380)
+		else
 		{
 			isSmallGamePad = false;
 			isMediumGamePad = false;
 			isLargeGamePad = true;
 		}
+
 		if (!isLargeGamePad)
 		{
 			xZone = 0;
 			wZone = GameCanvas.hw;
 			yZone = GameCanvas.hh >> 1;
 			hZone = GameCanvas.h - 80;
-			return;
 		}
-		xZone = 0;
-		wZone = GameCanvas.hw / 4 * 3 - 20;
-		yZone = GameCanvas.hh >> 1;
-		hZone = GameCanvas.h;
-		if (mSystem.clientType == 2)
+		else
 		{
 			xZone = 0;
-			yZone = (GameCanvas.h >> 1) + 40;
-			wZone = GameCanvas.hw / 4 * 3 - 40;
+			wZone = GameCanvas.hw / 4 * 3 - 20;
+			yZone = GameCanvas.hh >> 1;
 			hZone = GameCanvas.h;
+			if (mSystem.clientType == 2)
+			{
+				xZone = 0;
+				yZone = (GameCanvas.h >> 1) + 40;
+				wZone = GameCanvas.hw / 4 * 3 - 40;
+				hZone = GameCanvas.h;
+			}
+		}
+
+		if (!isGamePad)
+		{
+			xM = (xC = 54);
+			yM = (yC = GameCanvas.h - 54);
 		}
 	}
 
