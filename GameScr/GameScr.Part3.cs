@@ -92,7 +92,14 @@ public partial class GameScr : mScreen, IChatable
 				{
 					return false;
 				}
-				if (Char.myCharz().cx < Char.myCharz().mobFocus.getX())
+				if (Char.myCharz().mobFocus.status == 0 || Char.myCharz().mobFocus.status == 1 || Char.myCharz().mobFocus.hp <= 0)
+				{
+					Char.myCharz().mobFocus = null;
+					return false;
+				}
+				int mTargetX = Char.myCharz().mobFocus.getX();
+				int mTargetY = Char.myCharz().mobFocus.getY();
+				if (Char.myCharz().cx < mTargetX)
 				{
 					Char.myCharz().cdir = 1;
 				}
@@ -100,8 +107,8 @@ public partial class GameScr : mScreen, IChatable
 				{
 					Char.myCharz().cdir = -1;
 				}
-				int num3 = Math.abs(Char.myCharz().cx - Char.myCharz().mobFocus.getX());
-				int num4 = Math.abs(Char.myCharz().cy - Char.myCharz().mobFocus.getY());
+				int num3 = Math.abs(Char.myCharz().cx - mTargetX);
+				int num4 = Math.abs(Char.myCharz().cy - mTargetY);
 				Char.myCharz().cvx = 0;
 				if (num3 <= Char.myCharz().myskill.dx && num4 <= Char.myCharz().myskill.dy)
 				{
@@ -109,9 +116,9 @@ public partial class GameScr : mScreen, IChatable
 					{
 						return true;
 					}
-					if (num4 > num3 && Res.abs(Char.myCharz().cy - Char.myCharz().mobFocus.getY()) > 30 && Char.myCharz().mobFocus.getTemplate().type == 4)
+					if (num4 > num3 && Res.abs(Char.myCharz().cy - mTargetY) > 30 && Char.myCharz().mobFocus.getTemplate().type == 4)
 					{
-						Char.myCharz().currentMovePoint = new MovePoint(Char.myCharz().cx + Char.myCharz().cdir, Char.myCharz().mobFocus.getY());
+						Char.myCharz().currentMovePoint = new MovePoint(Char.myCharz().cx + Char.myCharz().cdir, mTargetY);
 						Char.myCharz().endMovePointCommand = new Command(null, null, 8002, null);
 						GameCanvas.clearKeyHold();
 						GameCanvas.clearKeyPressed();
@@ -134,18 +141,18 @@ public partial class GameScr : mScreen, IChatable
 					bool flag2 = false;
 					if ((TileMap.tileTypeAtPixel(Char.myCharz().cx, Char.myCharz().cy + 3) & 2) == 2)
 					{
-						int num6 = ((Char.myCharz().cx > Char.myCharz().mobFocus.getX()) ? 1 : (-1));
-						if ((TileMap.tileTypeAtPixel(Char.myCharz().mobFocus.getX() + num5 * num6, Char.myCharz().cy + 3) & 2) != 2)
+						int num6 = ((Char.myCharz().cx > mTargetX) ? 1 : (-1));
+						if ((TileMap.tileTypeAtPixel(mTargetX + num5 * num6, Char.myCharz().cy + 3) & 2) != 2)
 						{
 							flag2 = true;
 						}
 					}
 					if (num3 <= num5 && !flag2)
 					{
-						if (Char.myCharz().cx > Char.myCharz().mobFocus.getX())
+						if (Char.myCharz().cx > mTargetX)
 						{
-							int num7 = Char.myCharz().mobFocus.getX() + num5 + (flag ? 30 : 0);
-							int i = Char.myCharz().mobFocus.getX();
+							int num7 = mTargetX + num5 + (flag ? 30 : 0);
+							int i = mTargetX;
 							bool flag3 = false;
 							for (; i < num7; i += 24)
 							{
@@ -167,8 +174,8 @@ public partial class GameScr : mScreen, IChatable
 						}
 						else
 						{
-							int num8 = Char.myCharz().mobFocus.getX() - num5 - (flag ? 30 : 0);
-							int num9 = Char.myCharz().mobFocus.getX();
+							int num8 = mTargetX - num5 - (flag ? 30 : 0);
+							int num9 = mTargetX;
 							bool flag4 = false;
 							while (num9 > num8)
 							{
@@ -189,6 +196,10 @@ public partial class GameScr : mScreen, IChatable
 							}
 							Char.myCharz().cdir = 1;
 						}
+						Service.gI().charMove();
+					}
+					if (Char.myCharz().cx != Char.myCharz().cxSend || Char.myCharz().cy != Char.myCharz().cySend)
+					{
 						Service.gI().charMove();
 					}
 					GameCanvas.clearKeyHold();

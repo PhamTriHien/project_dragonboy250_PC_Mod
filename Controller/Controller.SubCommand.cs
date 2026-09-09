@@ -650,6 +650,20 @@ public partial class Controller : IMessageHandler
 				{
 					string o = msg.reader().readUTF();
 					GameCanvas.messageServer.addElement(o);
+					try
+					{
+						ModBossNotice.LogBossDebug("RAW-TICKERQ", o);
+					}
+					catch
+					{
+					}
+					try
+					{
+						ModMenu.ProcessServerBossNotice(o);
+					}
+					catch
+					{
+					}
 				}
 				else if (b == 5)
 				{

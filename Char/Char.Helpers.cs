@@ -36,6 +36,10 @@ public partial class Char : IMapObject
 
 	public bool isInWaypoint()
 			{
+				if (isLoadingMap)
+				{
+					return false;
+				}
 				if (TileMap.isInAirMap() && cy >= TileMap.pxh - 48)
 				{
 					return true;
@@ -44,10 +48,18 @@ public partial class Char : IMapObject
 				{
 					return false;
 				}
+				if (TileMap.vGo == null)
+				{
+					return false;
+				}
 				int num = TileMap.vGo.size();
 				for (sbyte b = 0; b < num; b++)
 				{
 					Waypoint waypoint = (Waypoint)TileMap.vGo.elementAt(b);
+					if (waypoint == null)
+					{
+						continue;
+					}
 					if ((TileMap.mapID == 47 || TileMap.isInAirMap()) && cy <= waypoint.minY + waypoint.maxY && cx > waypoint.minX && cx < waypoint.maxX)
 					{
 						if (TileMap.isInAirMap() && cTypePk != 0)
@@ -58,7 +70,18 @@ public partial class Char : IMapObject
 					}
 					if (cx >= waypoint.minX && cx <= waypoint.maxX && cy >= waypoint.minY && cy <= waypoint.maxY && !waypoint.isEnter)
 					{
+						if (entranceWaypoint != null && waypoint == entranceWaypoint)
+						{
+							return false;
+						}
 						return true;
+					}
+				}
+				if (entranceWaypoint != null)
+				{
+					if (cx < entranceWaypoint.minX || cx > entranceWaypoint.maxX || cy < entranceWaypoint.minY || cy > entranceWaypoint.maxY)
+					{
+						entranceWaypoint = null;
 					}
 				}
 				return false;

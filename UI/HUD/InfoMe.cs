@@ -169,6 +169,10 @@ public class InfoMe
 				{
 					GameCanvas.panel.setTypeMessage();
 					GameCanvas.panel.show();
+					if (info != null && info.info != null && info.info.charInfo != null)
+					{
+						GameCanvas.panel.addLogMessage(info.info);
+					}
 				}
 			}
 			if (GameCanvas.gameTick % 3 == 0)
@@ -194,23 +198,14 @@ public class InfoMe
 				{
 					cmtoY = (info.says.Length + 1) * 12 + 10;
 				}
-				if (info.info.charInfo != null)
+				if (info.info != null && info.info.charInfo != null)
 				{
-					if (GameCanvas.w - 50 > 155 + info.W)
+					cmtoX = GameCanvas.w - info.W - 36;
+					if (cmtoX < 5)
 					{
-						cmtoX = GameCanvas.w - 60 - info.W / 2;
-						cmtoY = info.H + 10;
+						cmtoX = 5;
 					}
-					else
-					{
-						cmtoX = GameCanvas.w - 20 - info.W / 2;
-						cmtoY = 45 + info.H;
-						if (GameCanvas.w > GameCanvas.h || GameCanvas.w < 220)
-						{
-							cmtoX = GameCanvas.w - 20 - info.W / 2;
-							cmtoY = info.H + 10;
-						}
-					}
+					cmtoY = 5;
 				}
 			}
 			if (cmx > Char.myCharz().cx - GameScr.cmx)
@@ -311,6 +306,15 @@ public class InfoMe
 		playerID = c.charID;
 		info.addInfo(s, 3, c, isChatServer);
 		isDone = false;
+		if (info.infoWaitToShow.size() == 1)
+		{
+			cmx = GameCanvas.w - info.W - 36;
+			if (cmx < 5)
+			{
+				cmx = 5;
+			}
+			cmy = -25;
+		}
 		ModMenu.ProcessServerBossNotice(s);
 	}
 

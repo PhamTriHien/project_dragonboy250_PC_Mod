@@ -26,8 +26,8 @@ public static class ModConfig
 		{
 			StringBuilder sb = new StringBuilder();
 
-			// Tàn Sát
-			sb.AppendLine("autoTanSat=" + ModTanSat.autoTanSat);
+			// Tàn Sát: Luôn lưu false để khi thoát game/khởi động lại Tàn Sát luôn TẮT
+			sb.AppendLine("autoTanSat=False");
 			sb.AppendLine("useTeleport=" + ModTanSat.useTeleport);
 			sb.AppendLine("selectAllMobs=" + ModTanSat.selectAllMobs);
 			sb.AppendLine("tickedMobTemplateIds=" + string.Join(",", ModTanSat.tickedMobTemplateIds.ConvertAll(i => i.ToString()).ToArray()));
@@ -52,6 +52,8 @@ public static class ModConfig
 
 			// Đồ Họa & FPS
 			sb.AppendLine("graphicsQuality=" + ModGraphics.graphicsQuality);
+			sb.AppendLine("resolutionIndex=" + ModGraphics.resolutionIndex);
+			sb.AppendLine("isFullscreen=" + ModGraphics.isFullscreen);
 			sb.AppendLine("targetFps=" + ModFps.targetFps);
 			sb.AppendLine("isAutoFps=" + ModFps.isAutoFps);
 
@@ -96,7 +98,7 @@ public static class ModConfig
 				switch (key)
 				{
 					case "autoTanSat":
-						bool.TryParse(val, out ModTanSat.autoTanSat);
+						ModTanSat.autoTanSat = false;
 						break;
 					case "useTeleport":
 						bool.TryParse(val, out ModTanSat.useTeleport);
@@ -169,6 +171,12 @@ public static class ModConfig
 						break;
 					case "graphicsQuality":
 						int.TryParse(val, out ModGraphics.graphicsQuality);
+						break;
+					case "resolutionIndex":
+						int.TryParse(val, out ModGraphics.resolutionIndex);
+						break;
+					case "isFullscreen":
+						bool.TryParse(val, out ModGraphics.isFullscreen);
 						break;
 					case "targetFps":
 						int.TryParse(val, out ModFps.targetFps);

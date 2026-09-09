@@ -175,19 +175,63 @@ public partial class Panel : IActionListener, IChatable
 						GameCanvas.panel.hide();
 					}
 				}
-				if (idAction == 2000)
+			if (idAction == 2000)
+			{
+				if (IsInventorySplit())
 				{
-					Item[] arrItemBody = Char.myCharz().arrItemBody;
-					sbyte id2 = (sbyte)GetInventorySelect_bag(selected, newSelected, arrItemBody);
-					if (isnewInventory)
+					if (!invSplitIsBody)
 					{
-						id2 = (sbyte)currItem.indexUI;
+						Char meS = Char.myCharz();
+						if (meS != null && meS.arrItemBag != null && invSplitBagSel >= 0 && invSplitBagSel < meS.arrItemBag.Length)
+						{
+							Service.gI().getItem(BAG_BODY, (sbyte)invSplitBagSel);
+						}
 					}
-					Service.gI().getItem(BAG_BODY, id2);
+					return;
 				}
-				if (idAction == 2001)
+				Item[] arrItemBody = Char.myCharz().arrItemBody;
+				sbyte id2 = (sbyte)GetInventorySelect_bag(selected, newSelected, arrItemBody);
+				if (isnewInventory)
 				{
-					Res.outz("use item");
+					id2 = (sbyte)currItem.indexUI;
+				}
+				Service.gI().getItem(BAG_BODY, id2);
+			}
+			if (idAction == 2001)
+			{
+				if (IsInventorySplit())
+				{
+					Item itemS = (Item)p;
+					if (itemS == null)
+					{
+						itemS = GetInventorySplitCurrItem();
+					}
+					if (itemS == null)
+					{
+						return;
+					}
+					sbyte wS = (sbyte)(invSplitIsBody ? 0 : 1);
+					sbyte bS = (sbyte)(invSplitIsBody ? invSplitBodySel : invSplitBagSel);
+					Char meS2 = Char.myCharz();
+					if (meS2 != null)
+					{
+						if (wS == 0 && (meS2.arrItemBody == null || bS < 0 || bS >= meS2.arrItemBody.Length))
+						{
+							return;
+						}
+						if (wS == 1 && (meS2.arrItemBag == null || bS < 0 || bS >= meS2.arrItemBag.Length))
+						{
+							return;
+						}
+					}
+					Service.gI().useItem(0, wS, bS, -1);
+					if (itemS.template.id == 193 || itemS.template.id == 194)
+					{
+						GameCanvas.panel.hide();
+					}
+					return;
+				}
+				Res.outz("use item");
 					Item item9 = (Item)p;
 					bool inventorySelect_isbody = GetInventorySelect_isbody(selected, newSelected, Char.myCharz().arrItemBody);
 					sbyte b = 0;
@@ -211,20 +255,39 @@ public partial class Panel : IActionListener, IChatable
 						GameCanvas.panel.hide();
 					}
 				}
-				if (idAction == 2002)
+			if (idAction == 2002)
+			{
+				if (IsInventorySplit())
 				{
-					if (isnewInventory)
+					if (invSplitIsBody)
 					{
-						Service.gI().getItem(BODY_BAG, (sbyte)sellectInventory);
+						Char meS = Char.myCharz();
+						if (meS != null && meS.arrItemBody != null && invSplitBodySel >= 0 && invSplitBodySel < meS.arrItemBody.Length)
+						{
+							Service.gI().getItem(BODY_BAG, (sbyte)invSplitBodySel);
+						}
 					}
-					else
-					{
-						Service.gI().getItem(BODY_BAG, (sbyte)GetInventorySelect_body(selected, newSelected));
-					}
+					return;
 				}
-				if (idAction == 2003)
+				if (isnewInventory)
 				{
-					Res.outz("remove item");
+					Service.gI().getItem(BODY_BAG, (sbyte)sellectInventory);
+				}
+				else
+				{
+					Service.gI().getItem(BODY_BAG, (sbyte)GetInventorySelect_body(selected, newSelected));
+				}
+			}
+			if (idAction == 2003)
+			{
+				if (IsInventorySplit())
+				{
+					sbyte wS = (sbyte)(invSplitIsBody ? 0 : 1);
+					sbyte bS = (sbyte)(invSplitIsBody ? invSplitBodySel : invSplitBagSel);
+					Service.gI().useItem(1, wS, bS, -1);
+					return;
+				}
+				Res.outz("remove item");
 					bool inventorySelect_isbody2 = GetInventorySelect_isbody(selected, newSelected, Char.myCharz().arrItemBody);
 					sbyte b2 = 0;
 					b2 = (inventorySelect_isbody2 ? ((sbyte)GetInventorySelect_body(selected, newSelected)) : ((sbyte)GetInventorySelect_bag(selected, newSelected, Char.myCharz().arrItemBody)));
@@ -238,11 +301,23 @@ public partial class Panel : IActionListener, IChatable
 					sbyte index = (sbyte)itemObject.id;
 					Service.gI().useItem((sbyte)((itemObject.type != 0) ? 2 : 3), where2, index, -1);
 				}
-				if (idAction == 2005)
+			if (idAction == 2005)
+			{
+				if (IsInventorySplit())
 				{
-					sbyte id3 = (sbyte)GetInventorySelect_bag(selected, newSelected, Char.myCharz().arrItemBody);
-					Service.gI().getItem(BAG_PET, id3);
+					if (!invSplitIsBody)
+					{
+						Char meS = Char.myCharz();
+						if (meS != null && meS.arrItemBag != null && invSplitBagSel >= 0 && invSplitBagSel < meS.arrItemBag.Length)
+						{
+							Service.gI().getItem(BAG_PET, (sbyte)invSplitBagSel);
+						}
+					}
+					return;
 				}
+				sbyte id3 = (sbyte)GetInventorySelect_bag(selected, newSelected, Char.myCharz().arrItemBody);
+				Service.gI().getItem(BAG_PET, id3);
+			}
 				if (idAction == 2006)
 				{
 					Item[] arrItemBody2 = Char.myPetz().arrItemBody;
@@ -276,9 +351,17 @@ public partial class Panel : IActionListener, IChatable
 					GameCanvas.msgdlg.pleasewait();
 					Service.gI().buyItem(1, item11.template.id, 0);
 				}
-				if (idAction == 3002)
+			if (idAction == 3002)
+			{
+				if (IsInventorySplit())
 				{
 					GameCanvas.endDlg();
+					sbyte wS = (sbyte)(invSplitIsBody ? 0 : 1);
+					sbyte bS = (sbyte)(invSplitIsBody ? invSplitBodySel : invSplitBagSel);
+					Service.gI().saleItem(0, wS, bS);
+					return;
+				}
+				GameCanvas.endDlg();
 					bool inventorySelect_isbody3 = GetInventorySelect_isbody(selected, newSelected, Char.myCharz().arrItemBody);
 					sbyte b3 = 0;
 					b3 = (inventorySelect_isbody3 ? ((sbyte)GetInventorySelect_body(selected, newSelected)) : ((sbyte)GetInventorySelect_bag(selected, newSelected, Char.myCharz().arrItemBody)));

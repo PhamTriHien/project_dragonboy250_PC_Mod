@@ -41,11 +41,6 @@ public static class ModMenu
 	{
 		get { return ModTanSat.tickedMobTemplateIds; }
 	}
-	public static int selectedSkillTemplateId
-	{
-		get { return ModTanSat.selectedSkillTemplateId; }
-		set { ModTanSat.selectedSkillTemplateId = value; }
-	}
 	public static bool selectAllSkills
 	{
 		get { return ModTanSat.selectAllSkills; }
@@ -328,6 +323,9 @@ public static class ModMenu
 			// Phím tắt bàn phím PC
 			ModHotkey.UpdateHotkeys();
 
+			// Đồng bộ độ phân giải màn hình khi thay đổi kích thước cửa sổ / toàn màn hình
+			ModGraphics.UpdateResolutionWatcher();
+
 			// Tương tác giao diện Modal
 			ModUI.HandleTap();
 
@@ -355,29 +353,61 @@ public static class ModMenu
 			}
 
 			// Universal Map-Change Watchdog: Tự động chống kẹt map / kẹt khóa phím khi chuyển map
-			if (Char.ischangingMap || Char.isLockKey)
+			if (Char.ischangingMap || (Char.isLockKey && !GameCanvas.panel.isShow && GameCanvas.currentScreen == GameScr.gI()) || Controller.isStopReadMessage)
 			{
-				if (mapChangeWatchdogTime == 0)
+				if (Char.isLoadingMap)
 				{
-					mapChangeWatchdogTime = now;
-				}
-				else if (now - mapChangeWatchdogTime > 1800)
-				{
-					Char.ischangingMap = false;
-					Char.isLockKey = false;
-					me.isLockAttack = false;
-					me.isLockMove = false;
-					InfoDlg.hide();
-					GameCanvas.endDlg();
-					GameCanvas.clearKeyHold();
-					GameCanvas.clearKeyPressed();
 					mapChangeWatchdogTime = 0;
 				}
+				else
+				{
+					if (mapChangeWatchdogTime == 0)
+					{
+						mapChangeWatchdogTime = now;
+					}
+					else
+					{
+						int timeout = (Teleport.vTeleport != null && Teleport.vTeleport.size() > 0) ? 5500 : 3000;
+						if (now - mapChangeWatchdogTime > timeout)
+						{
+							Char.ischangingMap = false;
+							Char.isLockKey = false;
+							me.isLockAttack = false;
+							me.isLockMove = false;
+							me.isTeleport = false;
+							Controller.isStopReadMessage = false;
+							GameScr.lockTick = 0;
+							if (Teleport.vTeleport != null)
+							{
+								Teleport.vTeleport.removeAllElements();
+							}
+							InfoDlg.hide();
+							GameCanvas.endDlg();
+							GameCanvas.clearKeyHold();
+							GameCanvas.clearKeyPressed();
+							mapChangeWatchdogTime = 0;
+
+						// Đặt cờ entranceWaypoint nếu nhân vật vẫn đứng trong cổng để không bị re-trigger lặp lại
+						if (TileMap.vGo != null)
+						{
+							for (int w = 0; w < TileMap.vGo.size(); w++)
+							{
+								Waypoint wp = (Waypoint)TileMap.vGo.elementAt(w);
+								if (wp != null && !wp.isEnter && me.cx >= wp.minX && me.cx <= wp.maxX && me.cy >= wp.minY && me.cy <= wp.maxY)
+								{
+									Char.entranceWaypoint = wp;
+									break;
+								}
+							}
+						}
+					}
+				}
 			}
-			else
-			{
-				mapChangeWatchdogTime = 0;
-			}
+		}
+		else
+		{
+			mapChangeWatchdogTime = 0;
+		}
 
 			if (me.charID != ModSpeed.lastCharId)
 			{

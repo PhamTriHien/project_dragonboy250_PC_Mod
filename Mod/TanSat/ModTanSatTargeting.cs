@@ -29,47 +29,17 @@ public static class ModTanSatTargeting
 		int mobX = target.x;
 		int mobY = target.y;
 
-		// Xác định cao độ mặt đất chuẩn (ground level) cho quái đất để tránh rơi tự do gây lệch tầm
-		int groundY = mobY;
-		if (target.getTemplate() != null && target.getTemplate().type != 4)
-		{
-			// Quét tìm nền đất vững chắc tại vị trí quái
-			int checkY = mobY;
-			bool foundGround = false;
-			for (int dy = 0; dy <= 48; dy += 2)
-			{
-				if ((TileMap.tileTypeAtPixel(mobX, checkY + dy) & 2) == 2)
-				{
-					groundY = checkY + dy;
-					foundGround = true;
-					break;
-				}
-			}
-			if (!foundGround)
-			{
-				for (int dy = -2; dy >= -48; dy -= 2)
-				{
-					if ((TileMap.tileTypeAtPixel(mobX, checkY + dy) & 2) == 2)
-					{
-						groundY = checkY + dy;
-						foundGround = true;
-						break;
-					}
-				}
-			}
-		}
-
-		// 2. Khoảng cách tiếp cận tối ưu: 20px cho cận chiến, 45px cho chưởng xa
-		int offset = isRanged ? 45 : 20;
+		// 2. Khoang cach tiep can toi uu: 24px cho can chien (> 20px tranh vung repel cua quai, < 40px trong hitbox danh), 45px cho chuong xa
+		int offset = isRanged ? 45 : 24;
 		Char me = Char.myCharz();
 
 		int preferredDir = (me != null && me.cx > mobX) ? 1 : -1;
 
 		int x1 = mobX + preferredDir * offset;
-		int y1 = groundY;
+		int y1 = mobY;
 
 		int x2 = mobX - preferredDir * offset;
-		int y2 = groundY;
+		int y2 = mobY;
 
 		bool b1 = IsTileBlocked(x1, y1);
 		bool b2 = IsTileBlocked(x2, y2);
@@ -86,11 +56,11 @@ public static class ModTanSatTargeting
 		}
 		else
 		{
-			outX = mobX;
-			outY = groundY;
+			outX = mobX + preferredDir * (isRanged ? 35 : 20);
+			outY = mobY;
 		}
 
-		// 3. Ràng buộc toạ độ không vượt quá mép bản đồ
+		// 4. Ràng buộc toạ độ không vượt quá mép bản đồ
 		if (TileMap.pxw > 0)
 		{
 			if (outX < 24) outX = 24;

@@ -275,6 +275,10 @@ public partial class Panel : IActionListener, IChatable
 				{
 					g.translate(-cmx, 0);
 				}
+				if (type == 0)
+				{
+					EnsurePetTabLayout();
+				}
 				for (int i = 0; i < currentTabName.Length; i++)
 				{
 					g.setColor((i != currentTabIndex) ? 16773296 : 6805896);
@@ -297,6 +301,10 @@ public partial class Panel : IActionListener, IChatable
 					{
 						g.drawImage(ItemMap.imageFlare, startTabPos + 3 * TAB_W + TAB_W / 2, 77, mGraphics.BOTTOM | mGraphics.HCENTER);
 					}
+				}
+				if (type == 0)
+				{
+					PaintPetTabButton(g);
 				}
 				g.setColor(13524492);
 				g.fillRect(1, 78, W - 2, 1);

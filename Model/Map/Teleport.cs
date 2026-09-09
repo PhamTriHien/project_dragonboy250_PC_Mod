@@ -46,6 +46,8 @@ public class Teleport
 
 	private bool isShock;
 
+	public int lifeTicks;
+
 	public Teleport(int x, int y, int headId, int dir, int type, bool isMe, int planet)
 	{
 		this.x = x;
@@ -57,7 +59,9 @@ public class Teleport
 		this.dir = dir;
 		this.planet = planet;
 		tPrepare = 0;
+		int originalY2 = y;
 		int num = 0;
+		bool foundGround = false;
 		while (num < 100)
 		{
 			num++;
@@ -68,8 +72,13 @@ public class Teleport
 				{
 					y2 -= y2 % 24;
 				}
+				foundGround = true;
 				break;
 			}
+		}
+		if (!foundGround)
+		{
+			y2 = originalY2;
 		}
 		isDown = true;
 		isUp = false;
@@ -172,6 +181,21 @@ public class Teleport
 
 	public void update()
 	{
+		lifeTicks++;
+		if (isMe && lifeTicks > 120)
+		{
+			if (type == 0)
+			{
+				Controller.isStopReadMessage = false;
+				Char.ischangingMap = true;
+			}
+			else
+			{
+				Char.myCharz().isTeleport = false;
+			}
+			vTeleport.removeElement(this);
+			return;
+		}
 		if (planet > 2 && paintFire && y != -80)
 		{
 			if (isDown && tPrepare == 0)
@@ -236,8 +260,9 @@ public class Teleport
 				GameScr.findCharInMap(id).cy = y - 30;
 				GameScr.findCharInMap(id).statusMe = 4;
 			}
-			if (Res.abs(y - y2) < 50 && TileMap.tileTypeAt(x, y, 2))
+			if (y >= y2 || (Res.abs(y - y2) < 50 && TileMap.tileTypeAt(x, y, 2)))
 			{
+				y = y2;
 				tHole = true;
 				if (planet < 3)
 				{
@@ -308,6 +333,10 @@ public class Teleport
 				if (num2 > 30)
 				{
 					num2 = 30;
+				}
+				if (num2 < 1)
+				{
+					num2 = 1;
 				}
 				y -= num2;
 				paintFire = true;

@@ -219,8 +219,14 @@ public partial class Panel : IActionListener, IChatable
 		}
 
 	private void setTabInventory(bool resetSelect)
+	{
+		if (IsInventorySplit())
 		{
-			if (isnewInventory)
+			ITEM_HEIGHT = 24;
+			InitInventorySplit(resetSelect);
+			return;
+		}
+		if (isnewInventory)
 			{
 				int num = Char.myCharz().arrItemBody.Length + Char.myCharz().arrItemBag.Length;
 				currentListLength = checkCurrentListLength(num);
@@ -655,12 +661,17 @@ public partial class Panel : IActionListener, IChatable
 		}
 
 	private void updateKeyInventory()
+	{
+		if (IsInventorySplit())
 		{
-			updateKeyScrollView();
-			if (selected == 0)
-			{
-				updateKeyInvenTab();
-			}
+			UpdateInventorySplit();
+			return;
 		}
+		updateKeyScrollView();
+		if (selected == 0)
+		{
+			updateKeyInvenTab();
+		}
+	}
 
 }

@@ -10,7 +10,7 @@ public partial class Char : IMapObject
 				{
 					return;
 				}
-				if (skillPaint != null && ((charFocus != null && isMeCanAttackOtherPlayer(charFocus) && charFocus.statusMe == 14) || (mobFocus != null && mobFocus.status == 0)))
+				if (skillPaint != null && ((charFocus != null && isMeCanAttackOtherPlayer(charFocus) && (charFocus.statusMe == 14 || charFocus.statusMe == 5 || charFocus.cHP <= 0)) || (mobFocus != null && (mobFocus.status == 0 || mobFocus.status == 1 || mobFocus.hp <= 0))))
 				{
 					if (!me)
 					{
@@ -34,13 +34,12 @@ public partial class Char : IMapObject
 					effPaints = null;
 					currentMovePoint = null;
 					arr = null;
-					hasSendAttack = false;
 					if ((TileMap.tileTypeAtPixel(cx, cy) & 2) != 2)
 					{
 						delayFall = 5;
 					}
 				}
-				if (skillPaint != null && arr == null && skillInfoPaint() != null && indexSkill >= skillInfoPaint().Length)
+				if (skillPaint != null && arr == null && dart == null && (skillInfoPaint() == null || indexSkill >= skillInfoPaint().Length || indexSkill >= 30))
 				{
 					if (!me)
 					{
@@ -61,37 +60,43 @@ public partial class Char : IMapObject
 					eff0 = (eff1 = (eff2 = null));
 					i0 = (i1 = (i2 = 0));
 					arr = null;
-					hasSendAttack = false;
 					if ((TileMap.tileTypeAtPixel(cx, cy) & 2) != 2)
 					{
 						delayFall = 5;
 					}
-				}
-				SkillInfoPaint[] array = skillInfoPaint();
-				if (array == null || indexSkill < 0 || indexSkill > array.Length - 1)
-				{
 					return;
 				}
-				if (array[indexSkill].effS0Id != 0)
+				SkillInfoPaint[] array = skillInfoPaint();
+				if (array == null || array.Length == 0)
 				{
-					eff0 = GameScr.efs[array[indexSkill].effS0Id - 1];
+					indexSkill = 0;
+					skillPaint = null;
+					skillPaintRandomPaint = null;
+					return;
+				}
+				if (indexSkill < 0)
+				{
+					indexSkill = 0;
+				}
+				int num = (indexSkill < array.Length) ? indexSkill : (array.Length - 1);
+				if (array[num].effS0Id != 0 && array[num].effS0Id - 1 >= 0 && array[num].effS0Id - 1 < GameScr.efs.Length)
+				{
+					eff0 = GameScr.efs[array[num].effS0Id - 1];
 					i0 = (dx0 = (dy0 = 0));
 				}
-				if (array[indexSkill].effS1Id != 0)
+				if (array[num].effS1Id != 0 && array[num].effS1Id - 1 >= 0 && array[num].effS1Id - 1 < GameScr.efs.Length)
 				{
-					eff1 = GameScr.efs[array[indexSkill].effS1Id - 1];
+					eff1 = GameScr.efs[array[num].effS1Id - 1];
 					i1 = (dx1 = (dy1 = 0));
 				}
-				if (array[indexSkill].effS2Id != 0)
+				if (array[num].effS2Id != 0 && array[num].effS2Id - 1 >= 0 && array[num].effS2Id - 1 < GameScr.efs.Length)
 				{
-					eff2 = GameScr.efs[array[indexSkill].effS2Id - 1];
+					eff2 = GameScr.efs[array[num].effS2Id - 1];
 					i2 = (dx2 = (dy2 = 0));
 				}
-				SkillInfoPaint[] array2 = array;
-				int num = indexSkill;
-				if (array2 != null && array2[num] != null && num >= 0 && num <= array2.Length - 1 && array2[num].arrowId != 0)
+				if (array != null && array[num] != null && array[num].arrowId != 0 && dart == null && arr == null)
 				{
-					int arrowId = array2[num].arrowId;
+					int arrowId = array[num].arrowId;
 					if (arrowId >= 100)
 					{
 						object obj;
@@ -126,7 +131,10 @@ public partial class Char : IMapObject
 									}
 								}
 							}
-							dart = new PlayerDart(this, arrowId - 100, skillPaintRandomPaint, cx + (array2[num].adx - 10) * cdir, cy + array2[num].ady + num2);
+							if (arrowId - 100 >= 0 && arrowId - 100 < GameScr.darts.Length && GameScr.darts[arrowId - 100] != null)
+							{
+								dart = new PlayerDart(this, arrowId - 100, skillPaintRandomPaint, cx + (array[num].adx - 10) * cdir, cy + array[num].ady + num2);
+							}
 							if (myskill != null)
 							{
 								if (myskill.template.id == 1)
@@ -152,23 +160,24 @@ public partial class Char : IMapObject
 							stopUseChargeSkill();
 						}
 					}
-					else
+					else if (arrowId - 1 >= 0 && arrowId - 1 < GameScr.arrs.Length && GameScr.arrs[arrowId - 1] != null)
 					{
 						Res.outz("g");
 						arr = new Arrow(this, GameScr.arrs[arrowId - 1]);
 						arr.life = 10;
-						arr.ax = cx + array2[num].adx;
-						arr.ay = cy + array2[num].ady;
+						arr.ax = cx + array[num].adx;
+						arr.ay = cy + array[num].ady;
 					}
 				}
-				if ((mobFocus != null || (!me && charFocus != null) || (me && charFocus != null && (isMeCanAttackOtherPlayer(charFocus) || isSelectingSkillBuffToPlayer()) && arr == null && dart == null)) && indexSkill == array.Length - 1)
+				if ((mobFocus != null || (!me && charFocus != null) || (me && charFocus != null && (isMeCanAttackOtherPlayer(charFocus) || isSelectingSkillBuffToPlayer()))) && arr == null && dart == null && num >= array.Length - 1 && !hasSendAttack)
 				{
 					setAttack();
-					if (me && myskill.template.isAttackSkill())
+					if (me && myskill != null && myskill.template != null && myskill.template.isAttackSkill())
 					{
 						saveLoadPreviousSkill();
 					}
 				}
+				indexSkill++;
 				if (me)
 				{
 					return;

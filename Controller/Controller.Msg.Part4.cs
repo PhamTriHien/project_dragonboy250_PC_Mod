@@ -121,6 +121,18 @@ public partial class Controller : IMessageHandler
 					}
 					empty += str2;
 					InfoDlg.hide();
+					try
+					{
+						ModBossNotice.LogBossDebug("RAW-92", str2);
+						ModMenu.ProcessServerBossNotice(str2);
+						if (!string.IsNullOrEmpty(text6))
+						{
+							ModMenu.ProcessServerBossNotice(text6 + ": " + str2);
+						}
+					}
+					catch
+					{
+					}
 					if (text6.Equals(string.Empty))
 					{
 						GameScr.info1.addInfo(empty, 0);
@@ -140,6 +152,15 @@ public partial class Controller : IMessageHandler
 					InfoDlg.hide();
 					LoginScr.isContinueToLogin = false;
 					Char.isLoadingMap = false;
+					Char.ischangingMap = false;
+					Char.isLockKey = false;
+					Controller.isStopReadMessage = false;
+					GameScr.lockTick = 0;
+					ModWaypoint.isWaitingShipMenu = false;
+					if (Teleport.vTeleport != null)
+					{
+						Teleport.vTeleport.removeAllElements();
+					}
 					if (GameCanvas.currentScreen == GameCanvas.loginScr)
 					{
 						GameCanvas.serverScreen.switchToMe();

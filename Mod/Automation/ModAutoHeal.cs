@@ -17,13 +17,26 @@ public static class ModAutoHeal
 				return;
 			}
 
+			bool needHeal = false;
 			if (lockHPMP)
 			{
-				me.cHP = me.cHPFull;
-				me.cMP = me.cMPFull;
+				if (me.cHP < me.cHPFull || me.cMP < me.cMPFull)
+				{
+					needHeal = true;
+				}
+			}
+			else if (autoPean)
+			{
+				long curHpPercent = (me.cHPFull > 0) ? (me.cHP * 100L / me.cHPFull) : 100;
+				long curMpPercent = (me.cMPFull > 0) ? (me.cMP * 100L / me.cMPFull) : 100;
+
+				if (curHpPercent < autoPeanHpPercent || curMpPercent < autoPeanHpPercent)
+				{
+					needHeal = true;
+				}
 			}
 
-			if (autoPean)
+			if (needHeal)
 			{
 				long now = mSystem.currentTimeMillis();
 				if (now - lastPeanTime < 1500)
@@ -31,26 +44,9 @@ public static class ModAutoHeal
 					return;
 				}
 
-				long curHpPercent = (me.cHPFull > 0) ? (me.cHP * 100L / me.cHPFull) : 100;
-				long curMpPercent = (me.cMPFull > 0) ? (me.cMP * 100L / me.cMPFull) : 100;
-
-				if (curHpPercent < autoPeanHpPercent || curMpPercent < autoPeanHpPercent)
+				lastPeanTime = now;
+				if (!me.doUsePotion())
 				{
-					lastPeanTime = now;
-					// Ưu tiên đậu thần trong túi đồ (Item type = 6: Đậu thần)
-					if (me.arrItemBag != null)
-					{
-						for (int i = 0; i < me.arrItemBag.Length; i++)
-						{
-							Item it = me.arrItemBag[i];
-							if (it != null && it.template != null && it.template.type == 6)
-							{
-								Service.gI().useItem(0, 1, (sbyte)i, it.template.id);
-								return;
-							}
-						}
-					}
-					// Nếu không có đậu trong túi, dùng hàm doUseHP mặc định của game
 					GameScr.gI().doUseHP();
 				}
 			}

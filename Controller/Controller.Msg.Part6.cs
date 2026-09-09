@@ -204,6 +204,14 @@ public partial class Controller : IMessageHandler
 					GameCanvas.endDlg();
 					int avatar2 = msg.reader().readShort();
 					string chat3 = msg.reader().readUTF();
+					try
+					{
+						ModBossNotice.LogBossDebug("RAW-70", chat3);
+						ModMenu.ProcessServerBossNotice(chat3);
+					}
+					catch
+					{
+					}
 					Npc npc5 = new Npc(-1, 0, 0, 0, 0, 0);
 					npc5.avatar = avatar2;
 					ChatPopup.addBigMessage(chat3, 100000, npc5);
@@ -279,6 +287,10 @@ public partial class Controller : IMessageHandler
 							}
 							GameScr.gI().createMenu(array7, npc);
 							ChatPopup.addChatPopup(chat, 100000, npc);
+							if (ModWaypoint.isWaitingShipMenu && (num76 == 10 || num76 == 11 || num76 == 12))
+							{
+								ModWaypoint.OnReceiveShipMenu(array7, npc);
+							}
 							return true;
 						}
 					}
@@ -301,6 +313,10 @@ public partial class Controller : IMessageHandler
 					Res.outz((Char.myCharz().npcFocus == null) ? "null" : "!null");
 					GameScr.gI().createMenu(array8, npc2);
 					ChatPopup.addChatPopup(chat2, 100000, npc2);
+					if (ModWaypoint.isWaitingShipMenu && (num76 == 10 || num76 == 11 || num76 == 12))
+					{
+						ModWaypoint.OnReceiveShipMenu(array8, npc2);
+					}
 					break;
 				}
 				case 7:
@@ -322,6 +338,8 @@ public partial class Controller : IMessageHandler
 					GameCanvas.endDlg();
 					break;
 				case -24:
+					Controller.isStopReadMessage = false;
+					GameScr.lockTick = 0;
 					Res.outz("***************MAP_INFO**************");
 					GameScr.isPickNgocRong = false;
 					Char.isLoadingMap = true;

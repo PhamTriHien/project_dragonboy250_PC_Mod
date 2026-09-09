@@ -103,7 +103,9 @@ public partial class Panel : IActionListener, IChatable
 					sellectInventory = 0;
 				}
 			}
-			else if (!IsTabOption())
+		else if (!IsTabOption())
+		{
+			if (!IsInventorySplit())
 			{
 				if (GameCanvas.keyPressed[(!Main.isPC) ? 6 : 24])
 				{
@@ -162,11 +164,16 @@ public partial class Panel : IActionListener, IChatable
 					{
 						GameCanvas.isFocusPanel2 = false;
 					}
-					selected = lastSelect[currentTabIndex];
-					lastTabIndex[type] = currentTabIndex;
-				}
+				selected = lastSelect[currentTabIndex];
+				lastTabIndex[type] = currentTabIndex;
 			}
-			keyTouchTab = -1;
+		}
+		}
+		keyTouchTab = -1;
+			if (type == 0)
+			{
+				EnsurePetTabLayout();
+			}
 			for (int i = 0; i < currentTabName.Length; i++)
 			{
 				if (!GameCanvas.isPointer(startTabPos + i * TAB_W, 52, TAB_W - 1, 25))
@@ -187,6 +194,10 @@ public partial class Panel : IActionListener, IChatable
 					}
 					break;
 				}
+			}
+			if (type == 0 && HandlePetTabClick())
+			{
+				return;
 			}
 			if (num == currentTabIndex)
 			{

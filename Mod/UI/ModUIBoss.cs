@@ -36,21 +36,23 @@ public static class ModUIBoss
 					g.fillRect(uiX + 22, rowY + 3, 3, 11);
 
 					int curX = uiX + 30;
-					if (mFont.tahoma_7b_yellow != null)
+					if (mFont.tahoma_7_yellow != null)
 					{
-						(entry.isDefeated ? mFont.tahoma_7_grey : mFont.tahoma_7b_yellow).drawString(g, entry.bossName, curX, rowY + 1, mFont.LEFT);
-						curX += (entry.isDefeated ? mFont.tahoma_7_grey : mFont.tahoma_7b_yellow).getWidth(entry.bossName);
+						(entry.isDefeated ? mFont.tahoma_7_grey : mFont.tahoma_7_yellow).drawString(g, entry.bossName, curX, rowY + 1, mFont.LEFT);
+						curX += (entry.isDefeated ? mFont.tahoma_7_grey : mFont.tahoma_7_yellow).getWidth(entry.bossName);
 					}
 
-					if (mFont.tahoma_7_white != null)
+					mFont mapFont = entry.isDefeated ? mFont.tahoma_7_grey : (mFont.tahoma_7_blue ?? mFont.tahoma_7b_blue ?? mFont.tahoma_7_white);
+					if (mapFont != null)
 					{
-						(entry.isDefeated ? mFont.tahoma_7_grey : mFont.tahoma_7_white).drawString(g, " - " + entry.mapName + " - ", curX, rowY + 1, mFont.LEFT);
-						curX += (entry.isDefeated ? mFont.tahoma_7_grey : mFont.tahoma_7_white).getWidth(" - " + entry.mapName + " - ");
+						mapFont.drawString(g, " - " + entry.mapName + " - ", curX, rowY + 1, mFont.LEFT);
+						curX += mapFont.getWidth(" - " + entry.mapName + " - ");
 					}
 
 					if (mFont.tahoma_7_green2 != null)
 					{
-						mFont.tahoma_7_green2.drawString(g, entry.timeStr, curX, rowY + 1, mFont.LEFT);
+						string timeAgo = ModBossNotice.GetTimeAgoString(entry.timestamp);
+						(entry.isDefeated ? mFont.tahoma_7_grey : mFont.tahoma_7_green2).drawString(g, timeAgo, curX, rowY + 1, mFont.LEFT);
 					}
 
 					// Nút "Đến" nhanh cho Boss đang còn sống
@@ -94,27 +96,21 @@ public static class ModUIBoss
 				if (entry == null) continue;
 				int rowY = listY + 4 + i * 19;
 
-				if (px >= uiX + 18 && px <= uiX + 18 + listW && py >= rowY && py <= rowY + 18)
+				// Chỉ nhấn vào nút "Đến" cụ thể, thông báo chữ chỉ dùng để hiển thị không nhận click
+				if (!entry.isDefeated && px >= uiX + listW - 35 && px <= uiX + listW - 2 && py >= rowY && py <= rowY + 18)
 				{
-					if (!entry.isDefeated)
+					int targetMapId = ModNextMap.FindMapIdByName(entry.mapName);
+					if (targetMapId >= 0)
 					{
-						int targetMapId = ModNextMap.FindMapIdByName(entry.mapName);
-						if (targetMapId >= 0)
-						{
-							ModUI.uiCustomOpen = false;
-							ModNextMap.StartNextMap(targetMapId);
-							GameScr.info1.addInfo("Di chuyển đến " + entry.mapName + " săn " + entry.bossName, 0);
-							SoundMn.gI().buttonClick();
-							return true;
-						}
-						else
-						{
-							GameScr.info1.addInfo("Chưa xác định được map: " + entry.mapName, 0);
-						}
+						ModUI.uiCustomOpen = false;
+						ModNextMap.StartNextMap(targetMapId);
+						GameScr.info1.addInfo("Di chuyển đến " + entry.mapName + " săn " + entry.bossName, 0);
+						SoundMn.gI().buttonClick();
+						return true;
 					}
 					else
 					{
-						GameScr.info1.addInfo("Boss " + entry.bossName + " đã bị hạ gục!", 0);
+						GameScr.info1.addInfo("Chưa xác định được map: " + entry.mapName, 0);
 					}
 					return true;
 				}

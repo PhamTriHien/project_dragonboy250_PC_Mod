@@ -16,10 +16,6 @@ public partial class GameScr : mScreen, IChatable
 				{
 					return;
 				}
-				if (ModBossNotice.CheckHUDClick(GameCanvas.px, GameCanvas.py))
-				{
-					return;
-				}
 				if (ModNextMap.CheckHUDMapTagClick(GameCanvas.px, GameCanvas.py))
 				{
 					return;
@@ -319,7 +315,8 @@ public partial class GameScr : mScreen, IChatable
 					Char.myCharz().cancelAttack();
 					Char.myCharz().currentMovePoint = null;
 					auto = 0;
-					Service.gI().openMenu(npc.npcId);
+					int templateId = (npc.template != null) ? npc.template.npcTemplateId : npc.npcId;
+					Service.gI().openMenu(templateId);
 					return;
 				}
 				if (obj is ItemMap)

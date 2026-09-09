@@ -73,6 +73,12 @@ public class Info : IActionListener
 		g.translate(x, y);
 		if (says != null && says.Length != 0 && type != 1)
 		{
+			if (info != null && info.charInfo != null)
+			{
+				paintWorldChatBar(g);
+				g.translate(-x, -y);
+				return;
+			}
 			if (outSide)
 			{
 				cx -= GameScr.cmx;
@@ -234,18 +240,16 @@ public class Info : IActionListener
 			sayWidth = 128;
 		}
 		int num;
-		if (info.charInfo != null)
+		if (info != null && info.charInfo != null)
 		{
 			says = new string[1] { info.s };
-			if (mGraphics.zoomLevel == 1)
-			{
-				num = says.Length;
-			}
-			else
-			{
-				string[] array = mFont.tahoma_7_whiteSmall.splitFontArray(info.s, 120);
-				num = array.Length;
-			}
+			num = 1;
+			sayRun = 0;
+			X = 0;
+			Y = 0;
+			W = 200;
+			H = 18;
+			return;
 		}
 		else
 		{
@@ -255,8 +259,98 @@ public class Info : IActionListener
 		sayRun = 7;
 		X = cx - sayWidth / 2 - 1;
 		Y = cy - ch - 15 + sayRun - num * 12 - 15;
-		W = sayWidth + 2 + ((info.charInfo != null) ? 30 : 0);
-		H = (num + 1) * 12 + 1 + ((info.charInfo != null) ? 5 : 0);
+		W = sayWidth + 2;
+		H = (num + 1) * 12 + 1;
+	}
+
+	private void paintWorldChatBar(mGraphics g)
+	{
+		if (info == null || info.charInfo == null)
+		{
+			return;
+		}
+
+		int boxX = 0;
+		int boxY = 0;
+		int boxW = W;
+		int boxH = H;
+
+		// 1. Khung popup nền bán trong suốt / style native gốc
+		mSystem.paintPopUp2(g, boxX, boxY, boxW, boxH);
+
+		// 2. Thanh tiến trình thời gian mỏng (2px) ở viền dưới
+		int barY = boxY + boxH - 2;
+		g.setColor(4465169);
+		g.fillRect(boxX + 2, barY, boxW - 4, 2);
+		if (info.maxTime > 0 && info.timeCount > 0)
+		{
+			int progW = info.timeCount * (boxW - 4) / info.maxTime;
+			if (progW > 0)
+			{
+				g.setColor(43758);
+				g.fillRect(boxX + 2, barY, progW, 2);
+			}
+		}
+
+		if (info.timeCount == 0)
+		{
+			return;
+		}
+
+		// 3. Avatar đầu nhân vật bên trái (nhỏ gọn trong khung 18px)
+		info.charInfo.paintHead(g, boxX + 18, boxY + boxH / 2, 0);
+
+		// 4. Nội dung text 1 hàng ngang (Tên nhân vật + xem trước tin nhắn + ...)
+		int textX = boxX + 22;
+		int textY = boxY + 3;
+
+		mFont nameFont = (!info.isChatServer) ? mFont.tahoma_7b_greenSmall : mFont.tahoma_7b_yellowSmall2;
+		if (nameFont == null)
+		{
+			nameFont = mFont.tahoma_7b_yellow;
+		}
+		string nameStr = info.charInfo.cName + ": ";
+		nameFont.drawString(g, nameStr, textX, textY, 0);
+		int nameW = nameFont.getWidth(nameStr);
+
+		// Bóc tách text thuần, xóa bỏ tag pipe màu và ngắt dòng
+		string raw = info.s;
+		if (!string.IsNullOrEmpty(raw))
+		{
+			if (raw.StartsWith("|"))
+			{
+				string[] parts = Res.split(raw, "|", 0);
+				if (parts != null && parts.Length >= 3)
+				{
+					raw = parts[2];
+				}
+				else if (parts != null && parts.Length >= 2)
+				{
+					raw = parts[1];
+				}
+			}
+			raw = raw.Replace('\r', ' ').Replace('\n', ' ').Trim();
+		}
+		else
+		{
+			raw = string.Empty;
+		}
+
+		mFont msgFont = mFont.tahoma_7_whiteSmall ?? mFont.tahoma_7_white;
+		int maxMsgW = boxW - (textX - boxX) - nameW - 6;
+		if (maxMsgW > 10 && !string.IsNullOrEmpty(raw))
+		{
+			string display = raw;
+			if (msgFont.getWidth(display) > maxMsgW)
+			{
+				while (display.Length > 0 && msgFont.getWidth(display + "...") > maxMsgW)
+				{
+					display = display.Substring(0, display.Length - 1);
+				}
+				display += "...";
+			}
+			msgFont.drawString(g, display, textX + nameW, textY, 0);
+		}
 	}
 
 	public void addInfo(string s, int Type, Char cInfo, bool isChatServer)

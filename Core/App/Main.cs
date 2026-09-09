@@ -76,6 +76,7 @@ public class Main : MonoBehaviour
 	private void Start()
 	{
 		Debug.LogWarning("MAIN.START CALLED");
+		mSystem.isTest = true; // Kích hoạt log Engine & Network gốc vào output_log.txt
 		Application.runInBackground = true; // DUY TRÌ GAME CHẠY LIÊN TỤC 24/7 KHI THU NHỎ HOẶC CHẠY DƯỚI NỀN
 		ModConfig.LoadConfig();
 		ModFps.LoadFPS();
@@ -100,19 +101,11 @@ public class Main : MonoBehaviour
 		{
 			try
 			{
-				level = Rms.loadRMSInt("levelScreenKN");
-				if (level == 1)
-				{
-					Screen.SetResolution(720, 320, fullscreen: false);
-				}
-				else
-				{
-					Screen.SetResolution(1024, 600, fullscreen: false);
-				}
+				ModGraphics.InitGraphics();
 			}
 			catch (System.Exception ex)
 			{
-				Debug.LogWarning("SetResolution error: " + ex.Message);
+				Debug.LogWarning("ModGraphics.InitGraphics error: " + ex.Message);
 			}
 		}
 		Debug.LogWarning("MAIN.START FINISHED");
@@ -208,7 +201,7 @@ public class Main : MonoBehaviour
 			isPC = true;
 			if (isPC)
 			{
-				Screen.fullScreen = false;
+				Screen.fullScreen = ModGraphics.isFullscreen;
 			}
 			if (iPhoneSettings.generation == iPhoneGeneration.iPodTouch4Gen)
 			{
@@ -346,20 +339,108 @@ public class Main : MonoBehaviour
 			lastMousePos.y = mousePosition3.y / (float)mGraphics.zoomLevel + (float)mGraphics.addYWhenOpenKeyBoard;
 			GameMidlet.gameCanvas.pointerReleased((int)(mousePosition3.x / (float)mGraphics.zoomLevel), (int)(((float)Screen.height - mousePosition3.y) / (float)mGraphics.zoomLevel) + mGraphics.addYWhenOpenKeyBoard);
 		}
-		if (Input.anyKeyDown && Event.current.type == EventType.KeyDown)
+		if (Event.current.type == EventType.KeyDown)
 		{
-			int num = MyKeyMap.map(Event.current.keyCode);
-			if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+			char character = Event.current.character;
+			int num = 0;
+			if (ChatTextField.gI().isShow)
 			{
-				switch (Event.current.keyCode)
+				if (Event.current.control)
 				{
-				case KeyCode.Alpha2:
-					num = 64;
-					break;
-				case KeyCode.Minus:
-					num = 95;
-					break;
+					if (Event.current.keyCode == KeyCode.V || character == 22)
+					{
+						try
+						{
+							string clip = GUIUtility.systemCopyBuffer;
+							if (!string.IsNullOrEmpty(clip))
+							{
+								ChatTextField.gI().pasteText(clip);
+							}
+						}
+						catch
+						{
+						}
+						return;
+					}
+					if (Event.current.keyCode == KeyCode.C || character == 3)
+					{
+						try
+						{
+							GUIUtility.systemCopyBuffer = ChatTextField.gI().tfChat.getText();
+						}
+						catch
+						{
+						}
+						return;
+					}
+					if (Event.current.keyCode == KeyCode.A || character == 1)
+					{
+						return;
+					}
 				}
+				if (character == 27 || Event.current.keyCode == KeyCode.Escape)
+				{
+					ChatTextField.gI().close();
+					return;
+				}
+				if (character == '\n' || character == '\r' || Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter)
+				{
+					ChatTextField.gI().sendChat();
+					return;
+				}
+				if (character == '\b' || Event.current.keyCode == KeyCode.Backspace)
+				{
+					ChatTextField.gI().keyPressed(-8);
+					return;
+				}
+				if (character == 127 || Event.current.keyCode == KeyCode.Delete)
+				{
+					ChatTextField.gI().keyPressed(-9);
+					return;
+				}
+				if (Event.current.keyCode == KeyCode.LeftArrow)
+				{
+					ChatTextField.gI().keyPressed(-3);
+					return;
+				}
+				if (Event.current.keyCode == KeyCode.RightArrow)
+				{
+					ChatTextField.gI().keyPressed(-4);
+					return;
+				}
+				if (character >= ' ' && character != 127)
+				{
+					ChatTextField.gI().keyPressed((int)character);
+					return;
+				}
+			}
+			if (character >= ' ' && character != 127)
+			{
+				num = (int)character;
+			}
+			else if (character == '\b' || Event.current.keyCode == KeyCode.Backspace)
+			{
+				num = -8;
+			}
+			else if (character == 127 || Event.current.keyCode == KeyCode.Delete)
+			{
+				num = -9;
+			}
+			else if (character == '\n' || character == '\r' || Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter)
+			{
+				num = -5;
+			}
+			else if (character == 27 || Event.current.keyCode == KeyCode.Escape)
+			{
+				num = -7;
+			}
+			else if (character == '\t' || Event.current.keyCode == KeyCode.Tab)
+			{
+				num = -26;
+			}
+			else
+			{
+				num = MyKeyMap.map(Event.current.keyCode);
 			}
 			if (num != 0)
 			{

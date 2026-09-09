@@ -111,7 +111,22 @@ public partial class Panel : IActionListener, IChatable
 								}
 							}
 						}
-						mFont2.drawString(g, item.template.name + text, num3 + 5, num4 + 1, 0);
+						string petRowName = item.template.name + text;
+					try
+					{
+						if (mFont2.getWidth(petRowName) > num5 - 8)
+						{
+							string[] arrN = mFont2.splitFontArray(petRowName, num5 - 8);
+							if (arrN != null && arrN.Length > 0)
+							{
+								petRowName = arrN[0];
+							}
+						}
+					}
+					catch
+					{
+					}
+					mFont2.drawString(g, petRowName, num3 + 5, num4 + 1, 0);
 						string text2 = string.Empty;
 						if (item.itemOption != null)
 						{
@@ -124,17 +139,21 @@ public partial class Panel : IActionListener, IChatable
 							{
 								mFont3 = mFont.tahoma_7_red;
 							}
-							if (item.itemOption.Length > 1)
+						try
+						{
+							if (mFont3.getWidth(text2) > num5 - 8)
 							{
-								for (int l = 1; l < 2; l++)
+								string[] arrO = mFont3.splitFontArray(text2, num5 - 8);
+								if (arrO != null && arrO.Length > 0)
 								{
-									if (item.itemOption[l] != null && item.itemOption[l].optionTemplate.id != 102 && item.itemOption[l].optionTemplate.id != 107)
-									{
-										text2 = text2 + "," + item.itemOption[l].getOptionString();
-									}
+									text2 = arrO[0];
 								}
 							}
-							mFont3.drawString(g, text2, num3 + 5, num4 + 11, mFont.LEFT);
+						}
+						catch
+						{
+						}
+						mFont3.drawString(g, text2, num3 + 5, num4 + 11, mFont.LEFT);
 						}
 						SmallImage.drawSmallImage(g, item.template.iconID, num6 + num8 / 2, num7 + num9 / 2, 0, 3);
 						if (item.itemOption != null)
@@ -163,9 +182,24 @@ public partial class Panel : IActionListener, IChatable
 							mFont.tahoma_7_green2.drawString(g, mResources.level + ": " + skill.point + string.Empty, num3 + 5, num4 + 11, 0);
 							SmallImage.drawSmallImage(g, skill.template.iconId, num6 + num8 / 2, num7 + num9 / 2, 0, 3);
 						}
-						else
+					else
+					{
+						string petSkillInfo = skill.moreInfo;
+						try
 						{
-							mFont.tahoma_7_green2.drawString(g, skill.moreInfo, num3 + 5, num4 + 5, 0);
+							if (mFont.tahoma_7_green2.getWidth(petSkillInfo) > num5 - 8)
+							{
+								string[] arrS = mFont.tahoma_7_green2.splitFontArray(petSkillInfo, num5 - 8);
+								if (arrS != null && arrS.Length > 0)
+								{
+									petSkillInfo = arrS[0];
+								}
+							}
+						}
+						catch
+						{
+						}
+						mFont.tahoma_7_green2.drawString(g, petSkillInfo, num3 + 5, num4 + 5, 0);
 							SmallImage.drawSmallImage(g, GameScr.efs[98].arrEfInfo[0].idImg, num6 + num8 / 2, num7 + num9 / 2, 0, 3);
 						}
 					}

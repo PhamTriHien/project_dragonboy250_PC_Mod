@@ -124,6 +124,10 @@ public partial class Session_ME
 		{
 			while (true)
 			{
+				if (Controller.isStopReadMessage)
+				{
+					break;
+				}
 				Message message = null;
 				lock (recieveMsg)
 				{
@@ -133,7 +137,7 @@ public partial class Session_ME
 						recieveMsg.removeElementAt(0);
 					}
 				}
-				if (message == null || Controller.isStopReadMessage)
+				if (message == null)
 				{
 					break;
 				}

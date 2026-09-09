@@ -15,7 +15,7 @@ public partial class GameCanvas : IActionListener
 	public void keyPressedz(int keyCode)
 		{
 			lastTimePress = mSystem.currentTimeMillis();
-			if ((keyCode >= 48 && keyCode <= 57) || (keyCode >= 65 && keyCode <= 122) || keyCode == 10 || keyCode == 8 || keyCode == 13 || keyCode == 32 || keyCode == 31)
+			if (keyCode >= 32 || keyCode == 10 || keyCode == 8 || keyCode == 13 || keyCode == -8 || keyCode == -9 || (ChatTextField.gI().isShow && (keyCode == -3 || keyCode == -4)))
 			{
 				keyAsciiPress = keyCode;
 			}
@@ -107,6 +107,10 @@ public partial class GameCanvas : IActionListener
 				break;
 			case -38:
 			case -1:
+				if (ChatTextField.gI().isShow)
+				{
+					break;
+				}
 				if ((currentScreen is GameScr || currentScreen is CrackBallScr) && Char.myCharz().isAttack)
 				{
 					clearKeyHold();
@@ -120,6 +124,10 @@ public partial class GameCanvas : IActionListener
 				break;
 			case -39:
 			case -2:
+				if (ChatTextField.gI().isShow)
+				{
+					break;
+				}
 				if ((currentScreen is GameScr || currentScreen is CrackBallScr) && Char.myCharz().isAttack)
 				{
 					clearKeyHold();
@@ -132,6 +140,10 @@ public partial class GameCanvas : IActionListener
 				}
 				break;
 			case -3:
+				if (ChatTextField.gI().isShow)
+				{
+					break;
+				}
 				if ((currentScreen is GameScr || currentScreen is CrackBallScr) && Char.myCharz().isAttack)
 				{
 					clearKeyHold();
@@ -144,6 +156,10 @@ public partial class GameCanvas : IActionListener
 				}
 				break;
 			case -4:
+				if (ChatTextField.gI().isShow)
+				{
+					break;
+				}
 				if ((currentScreen is GameScr || currentScreen is CrackBallScr) && Char.myCharz().isAttack)
 				{
 					clearKeyHold();

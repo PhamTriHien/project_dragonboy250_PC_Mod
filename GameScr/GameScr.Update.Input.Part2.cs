@@ -141,6 +141,7 @@ public partial class GameScr : mScreen, IChatable
 						{
 							GameCanvas.panel.setTypeMessage();
 							GameCanvas.panel.show();
+							GameCanvas.panel.addLogMessage(info2.info.info);
 						}
 						GameCanvas.keyPressed[11] = false;
 						GameCanvas.clearKeyPressed();
@@ -163,6 +164,7 @@ public partial class GameScr : mScreen, IChatable
 						{
 							GameCanvas.panel.setTypeMessage();
 							GameCanvas.panel.show();
+							GameCanvas.panel.addLogMessage(info2.info.info);
 							GameCanvas.keyAsciiPress = 0;
 							GameCanvas.clearKeyPressed();
 						}

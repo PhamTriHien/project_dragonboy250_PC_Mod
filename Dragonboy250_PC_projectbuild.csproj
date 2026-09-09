@@ -16,4 +16,7 @@
       <HintPath>..\DragonBoy250_pc\DragonBoy250_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
   </ItemGroup>
+  <Target Name="PostBuild" AfterTargets="Build">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="..\DragonBoy250_pc\DragonBoy250_Data\Managed\" ContinueOnError="true" />
+  </Target>
 </Project>

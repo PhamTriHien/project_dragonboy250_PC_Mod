@@ -291,10 +291,11 @@ public partial class GameCanvas : IActionListener
 	public static void startserverThongBao(string msgSv)
 		{
 			msgSv = Res.changeString(msgSv);
-			thongBaoTest = msgSv;
-			xThongBaoTranslate = w - 60;
-			dir_ = -1;
-			ModBossNotice.ProcessServerBossNotice(msgSv);
+		thongBaoTest = msgSv;
+		xThongBaoTranslate = w - 60;
+		dir_ = -1;
+		ModBossNotice.LogBossDebug("RAW-TICKER", msgSv);
+		ModBossNotice.ProcessServerBossNotice(msgSv);
 		}
 	public static string getMoneys(int m)
 		{

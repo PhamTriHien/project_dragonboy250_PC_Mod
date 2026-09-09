@@ -57,14 +57,14 @@ public class ChatTextField : IActionListener
 			tfChat.strInfo = tfChat.name;
 		}
 		tfChat.width = GameCanvas.w - 6;
-		if (Main.isPC && tfChat.width > 250)
+		if (Main.isPC && tfChat.width > 300)
 		{
-			tfChat.width = 250;
+			tfChat.width = 300;
 		}
 		tfChat.height = mScreen.ITEM_HEIGHT + 2;
 		tfChat.x = GameCanvas.w / 2 - tfChat.width / 2;
 		tfChat.isFocus = true;
-		tfChat.setMaxTextLenght(80);
+		tfChat.setMaxTextLenght(250);
 	}
 
 	public void initChatTextField()
@@ -76,9 +76,9 @@ public class ChatTextField : IActionListener
 		h = tfChat.height + 26;
 		x = GameCanvas.w / 2 - w / 2;
 		y = tfChat.y - 18;
-		if (Main.isPC && w > 320)
+		if (Main.isPC && w > 340)
 		{
-			w = 320;
+			w = 340;
 		}
 		left.x = x;
 		right.x = x + w - 68;
@@ -279,6 +279,50 @@ public class ChatTextField : IActionListener
 	{
 		tfChat.setText(string.Empty);
 		isShow = false;
+		if (parentScreen != null)
+		{
+			parentScreen.onCancelChat();
+		}
+	}
+
+	public void sendChat()
+	{
+		if (left != null && !tfChat.getText().Equals(string.Empty))
+		{
+			left.performAction();
+		}
+	}
+
+	public void pasteText(string clip)
+	{
+		if (string.IsNullOrEmpty(clip))
+		{
+			return;
+		}
+		tfChat.suspendTelex = true;
+		try
+		{
+			for (int i = 0; i < clip.Length; i++)
+			{
+				char c = clip[i];
+				if (c >= ' ' && c != 127)
+				{
+					tfChat.keyPressed((int)c);
+				}
+			}
+		}
+		finally
+		{
+			tfChat.suspendTelex = false;
+		}
+		if (tfChat.getText().Equals(string.Empty))
+		{
+			right.caption = mResources.CLOSE;
+		}
+		else
+		{
+			right.caption = mResources.DELETE;
+		}
 	}
 
 	public void paint(mGraphics g)

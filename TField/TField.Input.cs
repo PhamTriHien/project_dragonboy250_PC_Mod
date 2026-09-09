@@ -79,8 +79,12 @@ public partial class TField
 		}
 
 	private void keyPressedAscii(int keyCode)
+	{
+		if (Main.isPC && inputType == INPUT_TYPE_ANY && tryTelexCompose(keyCode))
 		{
-			if ((inputType == INPUT_TYPE_PASSWORD || inputType == INPUT_ALPHA_NUMBER_ONLY) && (keyCode < 48 || keyCode > 57) && (keyCode < 65 || keyCode > 90) && (keyCode < 97 || keyCode > 122))
+			return;
+		}
+		if ((inputType == INPUT_TYPE_PASSWORD || inputType == INPUT_ALPHA_NUMBER_ONLY) && (keyCode < 48 || keyCode > 57) && (keyCode < 65 || keyCode > 90) && (keyCode < 97 || keyCode > 122))
 			{
 				return;
 			}
@@ -151,14 +155,36 @@ public partial class TField
 
 	public bool keyPressed(int keyCode)
 		{
-			if (Main.isPC && keyCode == -8)
-			{
-				clearKeyWhenPutText(-8);
-				return true;
-			}
 			if (keyCode == 8 || keyCode == -8 || keyCode == 204)
 			{
 				clear();
+				return true;
+			}
+			if (keyCode == -9)
+			{
+				deleteForward();
+				return true;
+			}
+			if (keyCode == 14 || keyCode == -3)
+			{
+				if (!lockArrow && caretPos > 0)
+				{
+					caretPos--;
+					setOffset(0);
+					showCaretCounter = MAX_SHOW_CARET_COUNER;
+					return false;
+				}
+				return true;
+			}
+			if (keyCode == 15 || keyCode == -4)
+			{
+				if (!lockArrow && caretPos < text.Length)
+				{
+					caretPos++;
+					setOffset(0);
+					showCaretCounter = MAX_SHOW_CARET_COUNER;
+					return false;
+				}
 				return true;
 			}
 			if (isQwerty && keyCode >= 32)
@@ -195,7 +221,7 @@ public partial class TField
 			{
 				indexOfActiveChar = 0;
 				lastKey = -1984;
-				if (keyCode == 14 && !lockArrow)
+				if ((keyCode == 14 || keyCode == -3) && !lockArrow)
 				{
 					if (caretPos > 0)
 					{
@@ -205,7 +231,7 @@ public partial class TField
 						return false;
 					}
 				}
-				else if (keyCode == 15 && !lockArrow)
+				else if ((keyCode == 15 || keyCode == -4) && !lockArrow)
 				{
 					if (caretPos < text.Length)
 					{

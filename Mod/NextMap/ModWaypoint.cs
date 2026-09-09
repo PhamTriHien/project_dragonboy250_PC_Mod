@@ -94,7 +94,7 @@ public static class ModWaypoint
 
 				// Gửi gói tin cập nhật toạ độ nguyên tử lên server
 				Service.gI().charMoveTo(targetX, targetY);
-				return false; // Chờ tick tiếp theo để server ghi nhận vị trí trước khi gửi lệnh qua map
+				return false; // Nhường tick cho server cập nhật vị trí trước khi gửi requestChangeMap
 			}
 
 			// GIAI ĐOẠN 2: Nhân vật đã đứng gọn trong Waypoint (dist <= 30px) -> Kích hoạt qua Map
@@ -143,6 +143,10 @@ public static class ModWaypoint
 		}
 	}
 
+	public static bool isWaitingShipMenu;
+	public static int pendingTargetPlanetMapId = -1;
+	public static long lastShipOpenMenuTime;
+
 	public static void UseSpaceShip(Npc shipNpc, int targetPlanetMapId = -1)
 	{
 		try
@@ -168,26 +172,91 @@ public static class ModWaypoint
 				return;
 			}
 
-			int menuIndex = 0;
-			if (TileMap.mapID == 24) // Trái Đất -> Namếc (25) = 0, Xayda (26) = 1
+			me.focusManualTo(shipNpc);
+			int npcTemplateId = (shipNpc.template != null) ? shipNpc.template.npcTemplateId : shipNpc.npcId;
+
+			long now = mSystem.currentTimeMillis();
+			if (isWaitingShipMenu && now - lastShipOpenMenuTime < 2500)
 			{
-				menuIndex = (targetPlanetMapId == 26) ? 1 : 0;
-			}
-			else if (TileMap.mapID == 25) // Namếc -> Trái Đất (24) = 0, Xayda (26) = 1
-			{
-				menuIndex = (targetPlanetMapId == 26) ? 1 : 0;
-			}
-			else if (TileMap.mapID == 26) // Xayda -> Trái Đất (24) = 0, Namếc (25) = 1
-			{
-				menuIndex = (targetPlanetMapId == 25) ? 1 : 0;
+				return;
 			}
 
-			// Mở menu NPC Tàu vũ trụ
-			Service.gI().openMenu(shipNpc.template.npcTemplateId);
+			isWaitingShipMenu = true;
+			pendingTargetPlanetMapId = targetPlanetMapId;
+			lastShipOpenMenuTime = now;
 
-			// Xác nhận chọn menu tàu vũ trụ
-			Service.gI().confirmMenu((short)shipNpc.template.npcTemplateId, (sbyte)menuIndex);
+			// Mở menu NPC Tàu vũ trụ, chờ server gửi danh sách menu
+			Service.gI().openMenu(npcTemplateId);
+		}
+		catch
+		{
+		}
+	}
 
+	public static void OnReceiveShipMenu(string[] menuItems, Npc npc)
+	{
+		try
+		{
+			if (!isWaitingShipMenu || menuItems == null || menuItems.Length == 0)
+			{
+				return;
+			}
+
+			isWaitingShipMenu = false;
+			int targetPlanet = pendingTargetPlanetMapId;
+			int selectedIndex = -1;
+
+			// Tìm option dựa trên tên hành tinh trong menu thực tế trả về từ server
+			for (int i = 0; i < menuItems.Length; i++)
+			{
+				string text = menuItems[i].ToLower();
+				if (targetPlanet == 25 && (text.Contains("nam") || text.Contains("namec")))
+				{
+					selectedIndex = i;
+					break;
+				}
+				if (targetPlanet == 26 && (text.Contains("xay") || text.Contains("say") || text.Contains("sai")))
+				{
+					selectedIndex = i;
+					break;
+				}
+				if (targetPlanet == 24 && (text.Contains("trái") || text.Contains("trai") || text.Contains("earth") || text.Contains("đất")))
+				{
+					selectedIndex = i;
+					break;
+				}
+			}
+
+			// Fallback theo chỉ mục mặc định nếu không tìm thấy theo keyword
+			if (selectedIndex == -1)
+			{
+				if (TileMap.mapID == 24)
+				{
+					selectedIndex = (targetPlanet == 26) ? 1 : 0;
+				}
+				else if (TileMap.mapID == 25)
+				{
+					selectedIndex = (targetPlanet == 26) ? 1 : 0;
+				}
+				else if (TileMap.mapID == 26)
+				{
+					selectedIndex = (targetPlanet == 25) ? 1 : 0;
+				}
+				else
+				{
+					selectedIndex = 0;
+				}
+			}
+
+			if (selectedIndex >= menuItems.Length)
+			{
+				selectedIndex = 0;
+			}
+
+			int npcTemplateId = (npc != null && npc.template != null) ? npc.template.npcTemplateId : ((npc != null) ? npc.npcId : 10);
+			Service.gI().confirmMenu((short)npcTemplateId, (sbyte)selectedIndex);
+
+			GameCanvas.menu.showMenu = false;
 			Char.isLockKey = true;
 			Char.ischangingMap = true;
 			GameCanvas.clearKeyHold();
@@ -196,6 +265,7 @@ public static class ModWaypoint
 		}
 		catch
 		{
+			isWaitingShipMenu = false;
 		}
 	}
 }

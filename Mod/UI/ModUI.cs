@@ -34,22 +34,72 @@ public static class ModUI
 	public static List<Skill> GetPlayerAttackSkills()
 	{
 		List<Skill> list = new List<Skill>();
+		List<int> addedIds = new List<int>();
 		Char me = Char.myCharz();
-		if (me != null && me.vSkill != null)
+
+		// 1. Quet toan bo ky nang dang trang bi tren phim tat PC (GameScr.keySkill)
+		if (GameScr.keySkill != null)
 		{
-			for (int i = 0; i < me.vSkill.size(); i++)
+			for (int i = 0; i < GameScr.keySkill.Length; i++)
 			{
-				Skill s = (Skill)me.vSkill.elementAt(i);
-				if (s != null && s.template != null)
+				Skill s = GameScr.keySkill[i];
+				if (s != null && s.template != null && !addedIds.Contains(s.template.id))
 				{
-					int tId = s.template.id;
-					if (tId != 7 && tId != 8 && tId != 9 && tId != 10 && tId != 14 && tId != 19 && tId != 21 && tId != 22 && tId != 23)
-					{
-						list.Add(s);
-					}
+					list.Add(s);
+					addedIds.Add(s.template.id);
 				}
 			}
 		}
+
+		// 2. Quet tiep toan bo ky nang dang trang bi tren o man hinh / cam ung (GameScr.onScreenSkill)
+		if (GameScr.onScreenSkill != null)
+		{
+			for (int j = 0; j < GameScr.onScreenSkill.Length; j++)
+			{
+				Skill s2 = GameScr.onScreenSkill[j];
+				if (s2 != null && s2.template != null && !addedIds.Contains(s2.template.id))
+				{
+					list.Add(s2);
+					addedIds.Add(s2.template.id);
+				}
+			}
+		}
+
+		// 3. Quet ky nang dang duoc chon hien tai (Char.myCharz().myskill)
+		if (me != null && me.myskill != null && me.myskill.template != null && !addedIds.Contains(me.myskill.template.id))
+		{
+			list.Add(me.myskill);
+			addedIds.Add(me.myskill.template.id);
+		}
+
+		// 4. Quet danh sach ky nang chien dau cua nhan vat (Char.myCharz().vSkillFight)
+		if (me != null && me.vSkillFight != null)
+		{
+			for (int k = 0; k < me.vSkillFight.size(); k++)
+			{
+				Skill s3 = (Skill)me.vSkillFight.elementAt(k);
+				if (s3 != null && s3.template != null && !addedIds.Contains(s3.template.id))
+				{
+					list.Add(s3);
+					addedIds.Add(s3.template.id);
+				}
+			}
+		}
+
+		// 5. Quet toan bo danh sach ky nang da hoc (Char.myCharz().vSkill)
+		if (me != null && me.vSkill != null)
+		{
+			for (int m = 0; m < me.vSkill.size(); m++)
+			{
+				Skill s4 = (Skill)me.vSkill.elementAt(m);
+				if (s4 != null && s4.template != null && (s4.template.maxPoint == 0 || s4.point > 0) && !addedIds.Contains(s4.template.id))
+				{
+					list.Add(s4);
+					addedIds.Add(s4.template.id);
+				}
+			}
+		}
+
 		return list;
 	}
 

@@ -195,7 +195,7 @@ public partial class Char : IMapObject
 					setCharFallFromJump();
 				}
 			}
-			if (me && !ischangingMap && isInWaypoint())
+			if (me && !ischangingMap && !isLoadingMap && isInWaypoint())
 			{
 				Service.gI().charMove();
 				if (TileMap.isTrainingMap())

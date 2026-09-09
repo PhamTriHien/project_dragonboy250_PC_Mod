@@ -6,11 +6,7 @@ public partial class Char : IMapObject
 {
 	public void setSkillPaint(SkillPaint skillPaint, int sType)
 			{
-				bool alreadySent = hasSendAttack;
-				if (!alreadySent)
-				{
-					hasSendAttack = false;
-				}
+				hasSendAttack = false;
 				if (stone || (me && myskill.template.id == 9 && cHP <= cHPFull / 10))
 				{
 					return;
@@ -46,15 +42,12 @@ public partial class Char : IMapObject
 					{
 						return;
 					}
-					if (!alreadySent && num - myskill.lastTimeUseThisSkill < myskill.coolDown)
+					if (num - myskill.lastTimeUseThisSkill < myskill.coolDown)
 					{
 						myskill.paintCanNotUseSkill = true;
 						return;
 					}
-					if (!alreadySent)
-					{
-						myskill.lastTimeUseThisSkill = num;
-					}
+					myskill.lastTimeUseThisSkill = num;
 					if (myskill.template.manaUseType == 2)
 					{
 						cMP = 1L;

@@ -24,16 +24,25 @@ public partial class Panel : IActionListener
 				cmtoX = 0;
 				X = 0;
 				break;
-			case 1:
-				wScroll = W - 4;
-				xScroll = GameCanvas.w - wScroll;
-				yScroll = 80;
-				hScroll = H - 96;
-				X = xScroll - 2;
-				cmx = -(GameCanvas.w + W);
-				cmtoX = GameCanvas.w - W;
-				break;
-			}
+		case 1:
+			wScroll = W - 4;
+			xScroll = GameCanvas.w - wScroll;
+			yScroll = 80;
+			hScroll = H - 96;
+			X = xScroll - 2;
+			cmx = -(GameCanvas.w + W);
+			cmtoX = GameCanvas.w - W;
+			break;
+		default:
+			xScroll = 2;
+			yScroll = 80;
+			wScroll = W - 4;
+			hScroll = H - 96;
+			cmx = wScroll;
+			cmtoX = 0;
+			X = 0;
+			break;
+		}
 			TAB_W = W / 5 - 1;
 			currentTabIndex = 0;
 			currentTabName = tabName[type];
@@ -61,6 +70,10 @@ public partial class Panel : IActionListener
 				currentTabIndex = currentTabName.Length - 1;
 			}
 			scroll = null;
+			if (type == 0)
+			{
+				EnsurePetTabLayout();
+			}
 		}
 
 	public void setTypeInfomatioin()

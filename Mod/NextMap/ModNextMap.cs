@@ -259,7 +259,7 @@ public static class ModNextMap
 			me.isLockMove = false;
 			InfoDlg.hide();
 			GameCanvas.endDlg();
-			nextMapCooldown = 15;
+			nextMapCooldown = 25;
 			lastChangeAttemptTime = 0;
 		}
 
@@ -275,17 +275,32 @@ public static class ModNextMap
 		// Watchdog chống kẹt trạng thái ischangingMap khi server rớt gói tin hoặc phản hồi chậm
 		if (Char.ischangingMap)
 		{
-			if (lastChangeAttemptTime > 0 && mSystem.currentTimeMillis() - lastChangeAttemptTime > 1800)
+			if (lastChangeAttemptTime == 0)
 			{
-				Char.ischangingMap = false;
-				Char.isLockKey = false;
-				me.isLockAttack = false;
-				me.isLockMove = false;
-				InfoDlg.hide();
-				GameCanvas.endDlg();
-				lastChangeAttemptTime = 0;
-				nextMapCooldown = 10;
-				nextMapFailCount++;
+				lastChangeAttemptTime = mSystem.currentTimeMillis();
+			}
+			else
+			{
+				long timeout = (Teleport.vTeleport != null && Teleport.vTeleport.size() > 0) ? 6000 : 3000;
+				if (mSystem.currentTimeMillis() - lastChangeAttemptTime > timeout)
+				{
+					Char.ischangingMap = false;
+					Char.isLockKey = false;
+					me.isLockAttack = false;
+					me.isLockMove = false;
+					me.isTeleport = false;
+					Controller.isStopReadMessage = false;
+					GameScr.lockTick = 0;
+					if (Teleport.vTeleport != null)
+					{
+						Teleport.vTeleport.removeAllElements();
+					}
+					InfoDlg.hide();
+					GameCanvas.endDlg();
+					lastChangeAttemptTime = 0;
+					nextMapCooldown = 15;
+					nextMapFailCount++;
+				}
 			}
 			return;
 		}
@@ -325,7 +340,7 @@ public static class ModNextMap
 				nextMapFailCount = 0;
 				ModWaypoint.UseSpaceShip(shipNpc, nextMapId);
 				lastChangeAttemptTime = mSystem.currentTimeMillis();
-				nextMapCooldown = 50;
+				nextMapCooldown = 100;
 				return;
 			}
 		}
@@ -345,8 +360,8 @@ public static class ModNextMap
 			}
 			else
 			{
-				// Giai đoạn 1: Nhân vật vừa dịch chuyển đến Waypoint, chờ 2 tick để Server cập nhật vị trí
-				nextMapCooldown = 2;
+				// Giai đoạn 1: Nhân vật vừa dịch chuyển đến Waypoint, chờ 3 tick để Server cập nhật vị trí
+				nextMapCooldown = 3;
 			}
 		}
 		else

@@ -101,6 +101,22 @@ public partial class Controller : IMessageHandler
 			GameScr.gI().dHP = Char.myCharz().cHP;
 			GameScr.gI().dMP = Char.myCharz().cMP;
 			Char.ischangingMap = false;
+			Char.isLockKey = false;
+			Char.lastMapChangeTime = mSystem.currentTimeMillis();
+			Char.entranceWaypoint = null;
+			Char meChar = Char.myCharz();
+			if (meChar != null && TileMap.vGo != null)
+			{
+				for (int w = 0; w < TileMap.vGo.size(); w++)
+				{
+					Waypoint wp = (Waypoint)TileMap.vGo.elementAt(w);
+					if (wp != null && !wp.isEnter && meChar.cx >= wp.minX && meChar.cx <= wp.maxX && meChar.cy >= wp.minY && meChar.cy <= wp.maxY)
+					{
+						Char.entranceWaypoint = wp;
+						break;
+					}
+				}
+			}
 			GameScr.gI().switchToMe();
 			if (Char.myCharz().cy <= 10 && teleport3 != 0 && teleport3 != 2)
 			{
@@ -505,10 +521,21 @@ public partial class Controller : IMessageHandler
 					GameScr.info1.addInfo(mResources.PK_NOW + " " + Char.myCharz().cPk, 0);
 					break;
 				case 35:
+				{
 					GameCanvas.endDlg();
 					GameScr.gI().resetButton();
-					GameScr.info1.addInfo(msg.reader().readUTF(), 0);
+					string text35 = msg.reader().readUTF();
+					try
+					{
+						ModBossNotice.LogBossDebug("RAW-35", text35);
+						ModMenu.ProcessServerBossNotice(text35);
+					}
+					catch
+					{
+					}
+					GameScr.info1.addInfo(text35, 0);
 					break;
+				}
 				case 36:
 					GameScr.typeActive = msg.reader().readByte();
 					Res.outz("load Me Active: " + GameScr.typeActive);

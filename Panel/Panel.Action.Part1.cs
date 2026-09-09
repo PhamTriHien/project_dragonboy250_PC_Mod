@@ -181,8 +181,13 @@ public partial class Panel : IActionListener, IChatable
 				}
 			}
 	private void doFireInventory()
+		{
+			if (IsInventorySplit())
 			{
-				Res.outz("fire inventory");
+				DoFireInventorySplit();
+				return;
+			}
+			Res.outz("fire inventory");
 				if (Char.myCharz().statusMe == 14)
 				{
 					GameCanvas.startOKDlg(mResources.can_not_do_when_die);

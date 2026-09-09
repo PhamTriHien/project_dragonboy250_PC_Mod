@@ -38,6 +38,13 @@ public class MsgDlg : Dialog
 
 	public void setInfo(string info)
 	{
+		try
+		{
+			ModBossNotice.ProcessServerBossNotice(info);
+		}
+		catch
+		{
+		}
 		this.info = mFont.tahoma_8b.splitFontArray(info, GameCanvas.w - (padLeft * 2 + 20));
 		h = 80;
 		if (this.info.Length >= 5)
@@ -48,6 +55,13 @@ public class MsgDlg : Dialog
 
 	public void setInfo(string info, Command left, Command center, Command right)
 	{
+		try
+		{
+			ModBossNotice.ProcessServerBossNotice(info);
+		}
+		catch
+		{
+		}
 		this.info = mFont.tahoma_8b.splitFontArray(info, GameCanvas.w - (padLeft * 2 + 20));
 		base.left = left;
 		base.center = center;

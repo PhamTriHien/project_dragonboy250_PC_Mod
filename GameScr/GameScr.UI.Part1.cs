@@ -90,15 +90,21 @@ public partial class GameScr : mScreen, IChatable
 			{
 				return false;
 			}
-			if (info2.info.info != null && info2.info.info.charInfo != null)
+			if (info2 != null && info2.info != null && info2.info.info != null && info2.info.info.charInfo != null)
 			{
-				int num = 0;
-				int num2 = 0;
-				num = Res.abs(info2.cmx) + info2.info.X - 40;
-				num2 = Res.abs(info2.cmy) + info2.info.Y;
-				if (inRectangle(xClick - cmx, yClick - cmy, num, num2, 200, info2.info.H))
+				int px = xClick - cmx;
+				int py = yClick - cmy;
+				int boxX = info2.cmx;
+				int boxY = info2.cmy;
+				int boxW = info2.info.W;
+				int boxH = info2.info.H;
+				if (px >= boxX && px <= boxX + boxW && py >= boxY && py <= boxY + boxH)
 				{
-					info2.doClick(10);
+					SoundMn.gI().buttonClick();
+					GameCanvas.panel.setTypeMessage();
+					GameCanvas.panel.show();
+					GameCanvas.panel.addLogMessage(info2.info.info);
+					GameCanvas.clearAllPointerEvent();
 					return true;
 				}
 			}

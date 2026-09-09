@@ -159,8 +159,11 @@ public partial class GameScr : mScreen, IChatable
 				resetButton();
 				lastSkill = skill;
 				selectedIndexSkill = -1;
-				gI().auto = 0;
-				return;
+				if (!isShortcut)
+				{
+					gI().auto = 0;
+					return;
+				}
 			}
 			if (Char.myCharz().isUseSkillSpec())
 			{

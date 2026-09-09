@@ -564,18 +564,24 @@ public partial class Controller : IMessageHandler
 					}
 					if (Char.myCharz().charID == num67)
 					{
-						isStopReadMessage = true;
-						GameScr.lockTick = 500;
 						GameScr.gI().center = null;
 						if (b29 == 0 || b29 == 1 || b29 == 3)
 						{
+							isStopReadMessage = true;
+							GameScr.lockTick = 150;
 							Teleport p = new Teleport(Char.myCharz().cx, Char.myCharz().cy, Char.myCharz().head, Char.myCharz().cdir, 0, isMe: true, (b29 != 1) ? b29 : Char.myCharz().cgender);
 							Teleport.addTeleport(p);
 						}
-						if (b29 == 2)
+						else if (b29 == 2)
 						{
-							GameScr.lockTick = 50;
+							isStopReadMessage = false;
+							GameScr.lockTick = 0;
 							Char.myCharz().hide();
+						}
+						else
+						{
+							isStopReadMessage = false;
+							GameScr.lockTick = 0;
 						}
 					}
 					else

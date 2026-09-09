@@ -189,11 +189,15 @@ public partial class Panel : IActionListener, IChatable
 			updateKeyScrollView();
 		}
 	private void updateKeyInvenTab()
+	{
+		if (IsInventorySplit())
 		{
-			if (selected < 0)
-			{
-				return;
-			}
+			return;
+		}
+		if (selected < 0)
+		{
+			return;
+		}
 			if (GameCanvas.keyPressed[(!Main.isPC) ? 4 : 23])
 			{
 				newSelected--;

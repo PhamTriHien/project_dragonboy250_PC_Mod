@@ -64,8 +64,13 @@ public partial class Panel : IActionListener, IChatable
 			}
 
 	private void paintInventory(mGraphics g)
+		{
+			if (IsInventorySplit())
 			{
-				bool flag = true;
+				paintInventorySplit(g);
+				return;
+			}
+			bool flag = true;
 				if (flag && isnewInventory)
 				{
 					Item[] arrItemBody = Char.myCharz().arrItemBody;

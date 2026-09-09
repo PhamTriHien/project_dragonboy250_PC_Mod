@@ -511,6 +511,10 @@ public class Session_ME2 : ISession
 	{
 		while (true)
 		{
+			if (Controller.isStopReadMessage)
+			{
+				break;
+			}
 			Message message = null;
 			lock (recieveMsg)
 			{
@@ -520,7 +524,7 @@ public class Session_ME2 : ISession
 					recieveMsg.removeElementAt(0);
 				}
 			}
-			if (message == null || Controller.isStopReadMessage)
+			if (message == null)
 			{
 				break;
 			}

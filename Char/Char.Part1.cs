@@ -261,19 +261,15 @@ public partial class Char : IMapObject
 			}
 	public SkillInfoPaint[] skillInfoPaint()
 			{
-				if (skillPaint == null)
+				if (skillPaint == null || skillPaintRandomPaint == null)
 				{
 					return null;
 				}
-				if (skillPaintRandomPaint == null)
+				if (sType == 1 && skillPaintRandomPaint.skillfly != null && skillPaintRandomPaint.skillfly.Length > 0)
 				{
-					return null;
+					return skillPaintRandomPaint.skillfly;
 				}
-				if (sType == 0)
-				{
-					return skillPaintRandomPaint.skillStand;
-				}
-				return skillPaintRandomPaint.skillfly;
+				return skillPaintRandomPaint.skillStand;
 			}
 
 }

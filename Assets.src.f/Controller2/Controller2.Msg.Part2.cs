@@ -377,6 +377,14 @@ public partial class Controller2
 				{
 					string str = msg.reader().readUTF();
 					str = Res.changeString(str);
+					try
+					{
+						ModBossNotice.LogBossDebug("RAW-93", str);
+						ModMenu.ProcessServerBossNotice(str);
+					}
+					catch
+					{
+					}
 					GameScr.gI().chatVip(str);
 					break;
 				}

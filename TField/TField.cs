@@ -259,8 +259,23 @@ public partial class TField : IActionListener
 		{
 			if (caretPos > 0 && text.Length > 0)
 			{
-				text = text.Substring(0, caretPos - 1);
+				string textAfter = (caretPos < text.Length) ? text.Substring(caretPos) : string.Empty;
+				text = text.Substring(0, caretPos - 1) + textAfter;
 				caretPos--;
+				setOffset(0);
+				setPasswordTest();
+				if (kb != null)
+				{
+					kb.text = text;
+				}
+			}
+		}
+
+	public void deleteForward()
+		{
+			if (caretPos < text.Length && text.Length > 0)
+			{
+				text = text.Substring(0, caretPos) + text.Substring(caretPos + 1);
 				setOffset(0);
 				setPasswordTest();
 				if (kb != null)

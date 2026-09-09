@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using UnityEngine;
 
 public static class ModBossNotice
 {
@@ -13,20 +15,23 @@ public static class ModBossNotice
 	}
 
 	public static bool isShowBossNotice = true;
+	public static int hudStartY = 70;
 	public static readonly List<BossNoticeEntry> listBossNotices = new List<BossNoticeEntry>();
 	public const int MAX_BOSS_NOTICES = 6;
 
 	public static readonly string[] KNOWN_BOSSES = new string[]
 	{
 		"Kuku", "Mập Đầu Đinh", "Rambo", "Tiểu Đội Sát Thủ", "Số 4", "Số 3", "Số 2", "Số 1", "Tiểu Đội Trưởng",
-		"Fide Đại Ca", "Fide", "Xên Bọ Hung", "Xên Hoàn Thiện", "Siêu Bọ Hung", "Xên",
+		"Fide Đại Ca", "Fide", "Frieza", "Super Frieza", "Xên Bọ Hung", "Xên Hoàn Thiện", "Siêu Bọ Hung", "Xên",
 		"Android 19", "Android 20", "Android 13", "Android 14", "Android 15", "Android 16", "Android 17", "Android 18",
 		"Poc", "Pic", "King Kong", "Broly", "Super Broly",
 		"Black Goku", "Zamasu", "Cooler", "Chilled", "Bojack", "Hatchiyack", "Cumber", "Moro", "Granola", "Gas",
+		"Cell", "Super Cell", "Perfect Cell", "Majin Buu", "Kid Buu", "Evil Buu",
 		"Birus", "Whis", "Tập Trận", "Dơi Thủ Lĩnh", "Thần Rồng", "Bong Bóng",
 		"Mabuu", "Bui Bui", "Yacon", "Dabura", "Dr Lychee", "Cyborg 8",
 		"Ninja Áo Tím", "Trung Úy Trắng", "Trung Úy Xanh Lơ", "Đại Úy Sắt", "Trung Úy Thép", "Robot Vệ Sĩ",
-		"Chichi", "Bulma", "Videl", "Goku", "Vegeta", "Cadich", "Ma Trơi", "Thỏ Đại Ca", "Pilaf", "Mai", "Shu"
+		"Chichi", "Bulma", "Videl", "Goku", "Vegeta", "Cadich", "Ma Trơi", "Thỏ Đại Ca", "Pilaf", "Mai", "Shu",
+		"Số 4 Thần Nami", "Số 3 Thần Lam", "Số 2 Tầm Trụ", "Super Baby", "Baby", "Janemba", "Hildegarn", "Cui", "Dodoria", "Zarbon"
 	};
 
 	public static bool IsBossName(string name)
@@ -48,13 +53,30 @@ public static class ModBossNotice
 		{
 			long now = mSystem.currentTimeMillis();
 
-			// Chống trùng lặp thông báo trong 5 giây
-			if (listBossNotices.Count > 0)
+			// Kiểm tra trùng lặp và cập nhật trạng thái tức thời 0ms
+			for (int d = 0; d < listBossNotices.Count; d++)
 			{
-				BossNoticeEntry latest = listBossNotices[0];
-				if (latest != null && latest.bossName.Equals(bossName, StringComparison.OrdinalIgnoreCase) && (now - latest.timestamp < 5000))
+				BossNoticeEntry old = listBossNotices[d];
+				if (old != null && old.bossName.Equals(bossName, StringComparison.OrdinalIgnoreCase))
 				{
-					return;
+					// Nếu boss chuyển trạng thái (xuất hiện -> bị tiêu diệt): Cập nhật tức thời không delay
+					if (old.isDefeated != isDefeated)
+					{
+						old.isDefeated = isDefeated;
+						old.timestamp = now;
+						old.timeStr = timeStr;
+						if (!string.IsNullOrEmpty(mapName) && !mapName.Equals("Không rõ map"))
+						{
+							old.mapName = mapName;
+						}
+						return;
+					}
+
+					// Bỏ qua gói tin trùng lặp cùng trạng thái gửi dồn từ nhiều kênh trong 3 giây
+					if (now - old.timestamp < 3000)
+					{
+						return;
+					}
 				}
 			}
 
@@ -75,6 +97,54 @@ public static class ModBossNotice
 		}
 	}
 
+	public static void LogBossDebug(string verdict, string raw)
+	{
+		try
+		{
+			string path;
+			try
+			{
+				path = Path.Combine(Application.dataPath, "../boss_debug.log");
+			}
+			catch
+			{
+				path = "boss_debug.log";
+			}
+			try
+			{
+				if (File.Exists(path) && new FileInfo(path).Length > 30720)
+				{
+					File.Delete(path);
+				}
+			}
+			catch
+			{
+			}
+			File.AppendAllText(path, DateTime.Now.ToString("HH:mm:ss") + " [" + verdict + "] " + raw + "\r\n");
+		}
+		catch
+		{
+		}
+	}
+
+	private static bool IsBossCandidate(string lower)
+	{
+		try
+		{
+			return lower.Contains("boss") || lower.Contains("bos ") || lower.Contains("muncul")
+				|| lower.Contains("mati") || lower.Contains("kalah") || lower.Contains("bunuh")
+				|| lower.Contains("appear") || lower.Contains("spawn") || lower.Contains("defeat")
+				|| lower.Contains("slain") || lower.Contains("kill") || lower.Contains("xuat")
+				|| lower.Contains("hien") || lower.Contains("tieu") || lower.Contains("diet")
+				|| lower.Contains("tiêu") || lower.Contains("diệt") || lower.Contains("xuất")
+				|| lower.Contains("hiện") || lower.Contains("hạ") || lower.Contains("gục");
+		}
+		catch
+		{
+			return false;
+		}
+	}
+
 	public static void ProcessServerBossNotice(string raw)
 	{
 		try
@@ -85,91 +155,212 @@ public static class ModBossNotice
 			}
 			string text = raw.Trim();
 
-			// Loại bỏ các tiền tố thông báo máy chủ
-			string[] cleanPrefixes = new string[] { "[Thông Báo]", "[Thế Giới]", "[Server]", "[Boss]", "Thông Báo:", "Thế Giới:", "Server:" };
-			for (int p = 0; p < cleanPrefixes.Length; p++)
+			// 1. Vòng lặp bóc sạch tiền tố: dấu "!", mã màu |0|-|9| hoặc |...|, và các tag vuông [...]
+			string[] cleanPrefixes = new string[] 
+			{ 
+				"[Thông Báo]", "[Thế Giới]", "[Server]", "[Boss]", "Thông Báo:", "Thế Giới:", "Server:", 
+				"[Pemberitahuan]", "[Pengumuman]", "[Dunia]", "[Announcement]", "[World]", 
+				"Pemberitahuan:", "Pengumuman:", "Announcement:", "Notice:", "[Notice]", "[SYSTEM]", "[Hệ Thống]" 
+			};
+			bool cleaned = true;
+			while (cleaned)
 			{
-				if (text.StartsWith(cleanPrefixes[p], StringComparison.OrdinalIgnoreCase))
+				cleaned = false;
+				text = text.Trim();
+				if (text.StartsWith("!"))
 				{
-					text = text.Substring(cleanPrefixes[p].Length).Trim();
+					text = text.Substring(1).Trim();
+					cleaned = true;
+				}
+				if (text.StartsWith("|"))
+				{
+					int pipeIdx = text.IndexOf('|', 1);
+					if (pipeIdx > 0 && pipeIdx <= 6)
+					{
+						text = text.Substring(pipeIdx + 1).Trim();
+						cleaned = true;
+					}
+				}
+				for (int p = 0; p < cleanPrefixes.Length; p++)
+				{
+					if (text.StartsWith(cleanPrefixes[p], StringComparison.OrdinalIgnoreCase))
+					{
+						text = text.Substring(cleanPrefixes[p].Length).Trim();
+						cleaned = true;
+					}
+				}
+				if (text.StartsWith("["))
+				{
+					int closeIdx = text.IndexOf(']');
+					if (closeIdx > 0 && closeIdx <= 24)
+					{
+						text = text.Substring(closeIdx + 1).Trim();
+						cleaned = true;
+					}
 				}
 			}
 
 			string lower = text.ToLower();
 
-			bool isDefeat = lower.Contains("bị tiêu diệt") || lower.Contains("tiêu diệt") || lower.Contains("hạ gục") || lower.Contains("đã chết") || lower.Contains("bi tieu diet");
-			bool isAppear = lower.Contains("xuất hiện") || lower.Contains("vừa xuất hiện") || lower.Contains("đã xuất hiện") || lower.Contains("đang ở") || lower.Contains("tại") || lower.Contains("xuat hien") || lower.Contains("vua xuat hien") || lower.Contains("khu vực") || lower.Contains("khu vuc");
+			bool isDefeat = lower.Contains("bị tiêu diệt") || lower.Contains("tiêu diệt") || lower.Contains("hạ gục") || lower.Contains("đã chết") || lower.Contains("bi tieu diet")
+				|| lower.Contains("dikalahkan") || lower.Contains("telah mati") || lower.Contains("dibunuh")
+				|| lower.Contains("defeated") || lower.Contains("slain") || lower.Contains("killed");
+			bool isAppear = lower.Contains("xuất hiện") || lower.Contains("vừa xuất hiện") || lower.Contains("đã xuất hiện") || lower.Contains("đang ở") || lower.Contains("tại") || lower.Contains("xuat hien") || lower.Contains("vua xuat hien") || lower.Contains("khu vực") || lower.Contains("khu vuc")
+				|| lower.Contains("muncul") || lower.Contains("berada di")
+				|| lower.Contains("appeared") || lower.Contains("spawned");
 
-			if (!isDefeat && !isAppear && !lower.Contains("boss"))
+			if (!isDefeat && !isAppear && !lower.Contains("boss") && !lower.Contains("bos "))
 			{
+				if (IsBossCandidate(lower))
+				{
+					LogBossDebug("DROP-GATE", raw);
+				}
 				return;
 			}
 
-			// 1. Tìm tên Boss
 			string foundBoss = null;
-			for (int i = 0; i < KNOWN_BOSSES.Length; i++)
+			string mapName = isDefeat ? "Đã bị hạ gục!" : "Không rõ map";
+
+			// 2. Trích xuất Boss Name và Map Name theo phương pháp chia 2 vế (chuẩn MOD DVK mở rộng)
+			if (isDefeat)
 			{
-				if (text.IndexOf(KNOWN_BOSSES[i], StringComparison.OrdinalIgnoreCase) >= 0)
+				string[] defeatSplits = new string[]
 				{
-					foundBoss = KNOWN_BOSSES[i];
-					break;
+					" vừa bị tiêu diệt bởi ", " đã bị tiêu diệt bởi ", " bị tiêu diệt bởi ", " tiêu diệt bởi ",
+					" vừa bị tiêu diệt", " đã bị tiêu diệt", " bị tiêu diệt", " tiêu diệt",
+					" vừa bị hạ gục bởi ", " đã bị hạ gục bởi ", " bị hạ gục bởi ", " hạ gục bởi ",
+					" vừa bị hạ gục", " đã bị hạ gục", " bị hạ gục", " hạ gục",
+					" đã chết", " da chet", " bi tieu diet",
+					" telah dikalahkan oleh ", " dikalahkan oleh ", " telah dikalahkan", " dikalahkan",
+					" telah mati", " dibunuh bởi ", " dibunuh oleh ", " dibunuh",
+					" was defeated by ", " defeated by ", " was defeated", " defeated",
+					" was slain by ", " slain by ", " was slain", " slain", " killed by ", " killed"
+				};
+
+				for (int ds = 0; ds < defeatSplits.Length; ds++)
+				{
+					int dIdx = lower.IndexOf(defeatSplits[ds]);
+					if (dIdx > 0)
+					{
+						foundBoss = text.Substring(0, dIdx).Trim();
+						break;
+					}
 				}
 			}
-
-			// 2. Nếu chưa tìm thấy nhưng có từ khóa "BOSS / Boss"
-			if (string.IsNullOrEmpty(foundBoss))
+			else
 			{
-				int bossIdx = text.IndexOf("BOSS ", StringComparison.OrdinalIgnoreCase);
-				if (bossIdx < 0) bossIdx = text.IndexOf("Boss ", StringComparison.OrdinalIgnoreCase);
-
-				if (bossIdx >= 0)
+				string[] appearSplits = new string[]
 				{
-					string afterBoss = text.Substring(bossIdx + 5).Trim();
-					string[] stopWords = new string[] { " vừa ", " đã ", " xuất hiện ", " đang ", " tại ", " ở ", " bị ", " tieu diet ", " hạ gục " };
-					int stopIdx = -1;
-					for (int sw = 0; sw < stopWords.Length; sw++)
+					" vừa xuất hiện tại ", " đã xuất hiện tại ", " xuất hiện tại ",
+					" vừa xuất hiện ở ", " đã xuất hiện ở ", " xuất hiện ở ",
+					" vừa xuất hiện khu vực ", " xuất hiện khu vực ",
+					" vừa xuất hiện toạ độ ", " xuất hiện toạ độ ",
+					" vừa xuất hiện map ", " xuất hiện map ",
+					" vừa xuất hiện ", " đã xuất hiện ", " xuất hiện ",
+					" vua xuat hien tai ", " da xuat hien tai ", " xuat hien tai ",
+					" vua xuat hien o ", " da xuat hien o ", " xuat hien o ",
+					" vua xuat hien ", " da xuat hien ", " xuat hien ",
+					" đã đến ", " vừa đến ", " đang ở ", " dang o ",
+					" telah muncul di ", " baru saja muncul di ", " sudah muncul di ", " muncul di ",
+					" telah muncul ", " muncul ", " berada di ",
+					" has appeared at ", " have appeared at ", " appeared at ", " appear at ",
+					" has spawned at ", " have spawned at ", " spawned at ", " spawn at ",
+					" has appeared in ", " appeared in ", " appeared ", " spawned "
+				};
+
+				for (int sp = 0; sp < appearSplits.Length; sp++)
+				{
+					int sIdx = lower.IndexOf(appearSplits[sp]);
+					if (sIdx > 0)
 					{
-						int idx = afterBoss.ToLower().IndexOf(stopWords[sw]);
-						if (idx > 0 && (stopIdx == -1 || idx < stopIdx))
+						foundBoss = text.Substring(0, sIdx).Trim();
+						string right = text.Substring(sIdx + appearSplits[sp].Length).Trim();
+						if (!string.IsNullOrEmpty(right))
 						{
-							stopIdx = idx;
+							mapName = right;
 						}
+						break;
 					}
-					if (stopIdx > 0)
+				}
+			}
+
+			// 3. Tinh lọc tên Boss nếu có từ khóa BOSS / BOS
+			if (!string.IsNullOrEmpty(foundBoss))
+			{
+				if (foundBoss.StartsWith("BOSS ", StringComparison.OrdinalIgnoreCase))
+				{
+					foundBoss = foundBoss.Substring(5).Trim();
+				}
+				else if (foundBoss.StartsWith("BOS ", StringComparison.OrdinalIgnoreCase))
+				{
+					foundBoss = foundBoss.Substring(4).Trim();
+				}
+				while (foundBoss.StartsWith("["))
+				{
+					int ci = foundBoss.IndexOf(']');
+					if (ci <= 0 || ci > 24) break;
+					foundBoss = foundBoss.Substring(ci + 1).Trim();
+				}
+			}
+
+			// 4. Fallback tra cứu qua KNOWN_BOSSES nếu chưa tìm thấy tên
+			if (string.IsNullOrEmpty(foundBoss))
+			{
+				for (int i = 0; i < KNOWN_BOSSES.Length; i++)
+				{
+					if (text.IndexOf(KNOWN_BOSSES[i], StringComparison.OrdinalIgnoreCase) >= 0)
 					{
-						foundBoss = afterBoss.Substring(0, stopIdx).Trim();
-					}
-					else if (afterBoss.Length > 0 && afterBoss.Length < 25)
-					{
-						foundBoss = afterBoss;
+						foundBoss = KNOWN_BOSSES[i];
+						break;
 					}
 				}
 			}
 
 			if (string.IsNullOrEmpty(foundBoss))
 			{
+				if (IsBossCandidate(lower))
+				{
+					LogBossDebug("DROP-NONAME", raw);
+				}
 				return;
 			}
 
-			// 3. Phân tích địa điểm / bản đồ / trạng thái
-			string mapName = isDefeat ? "Đã bị hạ gục!" : "Không rõ map";
+			// 5. Làm sạch tên Map và tách bỏ hậu tố khu vực (để ModNextMap tìm đúng map)
 			if (!isDefeat)
 			{
-				string[] splitKeywords = new string[] { " tại ", " ở ", " khu vực ", " toạ độ ", " map ", " tai ", " o " };
-				for (int j = 0; j < splitKeywords.Length; j++)
+				if (string.IsNullOrEmpty(mapName) || mapName.Equals("Không rõ map"))
 				{
-					int idx = lower.IndexOf(splitKeywords[j]);
-					if (idx >= 0)
+					string[] splitKeywords = new string[] { " tại ", " ở ", " khu vực ", " toạ độ ", " map ", " tai ", " o ", " di ", " ke ", " pada ", " at ", " on ", " in " };
+					for (int j = 0; j < splitKeywords.Length; j++)
 					{
-						string sub = text.Substring(idx + splitKeywords[j].Length).Trim();
-						int dotIdx = sub.IndexOfAny(new char[] { '.', ',', '!', ';', '\n' });
-						if (dotIdx > 0)
+						int ridx = lower.IndexOf(splitKeywords[j]);
+						if (ridx >= 0)
 						{
-							sub = sub.Substring(0, dotIdx).Trim();
+							string sub = text.Substring(ridx + splitKeywords[j].Length).Trim();
+							if (!string.IsNullOrEmpty(sub))
+							{
+								mapName = sub;
+								break;
+							}
 						}
-						if (!string.IsNullOrEmpty(sub))
+					}
+				}
+
+				if (!string.IsNullOrEmpty(mapName) && !mapName.Equals("Không rõ map"))
+				{
+					int dotIdx = mapName.IndexOfAny(new char[] { '.', ',', '!', ';', '\n', '\r' });
+					if (dotIdx > 0)
+					{
+						mapName = mapName.Substring(0, dotIdx).Trim();
+					}
+
+					string[] zoneKeywords = new string[] { " khu vực ", " khu ", " kv ", " toạ độ ", " tọa độ ", " zone ", " ch " };
+					for (int z = 0; z < zoneKeywords.Length; z++)
+					{
+						int zIdx = mapName.ToLower().IndexOf(zoneKeywords[z]);
+						if (zIdx > 0)
 						{
-							mapName = sub;
+							mapName = mapName.Substring(0, zIdx).Trim();
 							break;
 						}
 					}
@@ -180,10 +371,57 @@ public static class ModBossNotice
 			string timeStr = string.Format("{0:D2}:{1:D2}:{2:D2}", now.Hour, now.Minute, now.Second);
 
 			AddBossNotice(foundBoss, mapName, timeStr, isDefeat);
+			LogBossDebug("ADDED boss=" + foundBoss + " map=" + mapName, raw);
 		}
 		catch
 		{
 		}
+	}
+
+	public static string GetTimeAgoString(long timestamp)
+	{
+		if (timestamp <= 0)
+		{
+			return "0s";
+		}
+		long now = mSystem.currentTimeMillis();
+		long diffSec = (now - timestamp) / 1000L;
+		if (diffSec < 0)
+		{
+			diffSec = 0;
+		}
+
+		if (diffSec < 60)
+		{
+			return diffSec + "s";
+		}
+		if (diffSec < 3600)
+		{
+			long m = diffSec / 60L;
+			long s = diffSec % 60L;
+			if (s > 0)
+			{
+				return m + "p" + s + "s";
+			}
+			return m + "p";
+		}
+		if (diffSec < 86400)
+		{
+			long h = diffSec / 3600L;
+			long remM = (diffSec % 3600L) / 60L;
+			if (remM > 0)
+			{
+				return h + "h" + remM + "p";
+			}
+			return h + "h";
+		}
+		long d = diffSec / 86400L;
+		long remH = (diffSec % 86400L) / 3600L;
+		if (remH > 0)
+		{
+			return d + "d" + remH + "h";
+		}
+		return d + "d";
 	}
 
 	public static void PaintBossNotice(mGraphics g)
@@ -212,55 +450,45 @@ public static class ModBossNotice
 
 			try
 			{
-				int startY = 32;
-				int lineH = 14;
-				int padding = 5;
+				g.translate(-g.getTranslateX(), -g.getTranslateY());
+				g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
 
-				int maxTextW = 150;
-				for (int i = 0; i < listBossNotices.Count; i++)
-				{
-					BossNoticeEntry e = listBossNotices[i];
-					if (e != null)
-					{
-						string full = "[" + e.timeStr + "] " + e.bossName + " - " + e.mapName;
-						int w = mFont.tahoma_7b_white.getWidth(full);
-						if (w > maxTextW)
-						{
-							maxTextW = w;
-						}
-					}
-				}
+				int startY = hudStartY;
+				int lineH = 11;
+				int drawY = startY;
 
-				int hudW = maxTextW + padding * 2 + 6;
-				int hudH = listBossNotices.Count * lineH + padding * 2 + 13;
-				int hudX = GameCanvas.w - hudW - 4;
-
-				// Nền mờ chuẩn game NRO
-				g.setColor(0x000000, 0.75f);
-				g.fillRect(hudX, startY, hudW, hudH);
-
-				g.setColor(0xff9800);
-				g.drawRect(hudX, startY, hudW, hudH);
-
-				mFont.tahoma_7b_yellow.drawString(g, "THÔNG BÁO BOSS", hudX + hudW / 2, startY + 2, mFont.CENTER);
-
-				int drawY = startY + 16;
 				for (int j = 0; j < listBossNotices.Count; j++)
 				{
 					BossNoticeEntry entry = listBossNotices[j];
 					if (entry != null)
 					{
-						string timePart = "[" + entry.timeStr + "] ";
-						string bossPart = entry.bossName;
-						string mapPart = " - " + entry.mapName;
+						string bossPart = entry.bossName ?? string.Empty;
+						string mapPart = " - " + (entry.mapName ?? string.Empty) + " - ";
+						string timePart = GetTimeAgoString(entry.timestamp);
 
-						mFont.tahoma_7_grey.drawString(g, timePart, hudX + padding, drawY, mFont.LEFT);
-						int timeW = mFont.tahoma_7_grey.getWidth(timePart);
+						mFont bossF = entry.isDefeated ? mFont.tahoma_7_grey : mFont.tahoma_7_red;
+						mFont mapF = entry.isDefeated ? mFont.tahoma_7_grey : (mFont.tahoma_7_blue ?? mFont.tahoma_7b_blue ?? mFont.tahoma_7_white);
+						mFont timeF = entry.isDefeated ? mFont.tahoma_7_grey : mFont.tahoma_7_green2;
+						if (bossF == null || mapF == null || timeF == null)
+						{
+							break;
+						}
 
-						(entry.isDefeated ? mFont.tahoma_7_grey : mFont.tahoma_7b_red).drawString(g, bossPart, hudX + padding + timeW, drawY, mFont.LEFT);
-						int bossW = (entry.isDefeated ? mFont.tahoma_7_grey : mFont.tahoma_7b_red).getWidth(bossPart);
+						int bossW = bossF.getWidth(bossPart);
+						int mapW = mapF.getWidth(mapPart);
+						int timeW = timeF.getWidth(timePart);
+						int rowW = bossW + mapW + timeW;
 
-						(entry.isDefeated ? mFont.tahoma_7_green2 : mFont.tahoma_7_white).drawString(g, mapPart, hudX + padding + timeW + bossW, drawY, mFont.LEFT);
+						// Thụt lùi sát mép phải màn hình (cách mép 2px)
+						int lineX = GameCanvas.w - rowW - 2;
+						if (lineX < 2)
+						{
+							lineX = 2;
+						}
+
+						bossF.drawString(g, bossPart, lineX, drawY, mFont.LEFT);
+						mapF.drawString(g, mapPart, lineX + bossW, drawY, mFont.LEFT);
+						timeF.drawString(g, timePart, lineX + bossW + mapW, drawY, mFont.LEFT);
 
 						drawY += lineH;
 					}
@@ -274,101 +502,7 @@ public static class ModBossNotice
 
 	public static bool CheckHUDClick(int px, int py)
 	{
-		if (!isShowBossNotice)
-		{
-			return false;
-		}
-
-		// Không bắt sự kiện khi đang mở bảng khác
-		if ((GameCanvas.panel != null && GameCanvas.panel.isShow) ||
-		    (GameCanvas.panel2 != null && GameCanvas.panel2.isShow) ||
-		    (GameCanvas.menu != null && GameCanvas.menu.showMenu) ||
-		    GameCanvas.currentDialog != null ||
-		    ModUI.uiCustomOpen)
-		{
-			return false;
-		}
-
-		lock (listBossNotices)
-		{
-			if (listBossNotices.Count == 0)
-			{
-				return false;
-			}
-
-			try
-			{
-				int startY = 32;
-				int lineH = 14;
-				int padding = 5;
-
-				int maxTextW = 150;
-				for (int i = 0; i < listBossNotices.Count; i++)
-				{
-					BossNoticeEntry e = listBossNotices[i];
-					if (e != null)
-					{
-						string full = "[" + e.timeStr + "] " + e.bossName + " - " + e.mapName;
-						int w = (mFont.tahoma_7b_white != null) ? mFont.tahoma_7b_white.getWidth(full) : 150;
-						if (w > maxTextW)
-						{
-							maxTextW = w;
-						}
-					}
-				}
-
-				int hudW = maxTextW + padding * 2 + 6;
-				int hudH = listBossNotices.Count * lineH + padding * 2 + 13;
-				int hudX = GameCanvas.w - hudW - 4;
-
-				if (px >= hudX && px <= hudX + hudW && py >= startY && py <= startY + hudH)
-				{
-					if (GameCanvas.isPointerClick || GameCanvas.isPointerJustRelease)
-					{
-						int drawY = startY + 16;
-						for (int j = 0; j < listBossNotices.Count; j++)
-						{
-							BossNoticeEntry entry = listBossNotices[j];
-							if (entry != null)
-							{
-								if (py >= drawY && py <= drawY + lineH)
-								{
-									if (!entry.isDefeated)
-									{
-										int targetMapId = ModNextMap.FindMapIdByName(entry.mapName);
-										if (targetMapId >= 0)
-										{
-											ModNextMap.StartNextMap(targetMapId);
-											GameScr.info1.addInfo("Di chuyển đến " + entry.mapName + " săn " + entry.bossName, 0);
-											SoundMn.gI().buttonClick();
-											GameCanvas.clearAllPointerEvent();
-											return true;
-										}
-										else
-										{
-											GameScr.info1.addInfo("Chưa xác định được map: " + entry.mapName, 0);
-										}
-									}
-									else
-									{
-										GameScr.info1.addInfo("Boss " + entry.bossName + " đã bị hạ gục!", 0);
-									}
-									break;
-								}
-								drawY += lineH;
-							}
-						}
-						GameCanvas.clearAllPointerEvent();
-						return true;
-					}
-					return true;
-				}
-			}
-			catch
-			{
-			}
-		}
-
+		// Thông báo boss trên HUD chỉ để hiển thị thông tin, không nhận tương tác click
 		return false;
 	}
 }

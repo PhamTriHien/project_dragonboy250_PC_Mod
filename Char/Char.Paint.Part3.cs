@@ -108,7 +108,20 @@ public partial class Char : IMapObject
 			{
 				ty = 0;
 				SkillInfoPaint[] array = skillInfoPaint();
-				cf = array[indexSkill].status;
+				if (array == null || array.Length == 0)
+				{
+					return;
+				}
+				int frame = indexSkill;
+				if (frame < 0)
+				{
+					frame = 0;
+				}
+				else if (frame >= array.Length)
+				{
+					frame = array.Length - 1;
+				}
+				cf = array[frame].status;
 				paintCharWithoutSkill(g);
 				if (cdir == 1)
 				{
@@ -116,11 +129,11 @@ public partial class Char : IMapObject
 					{
 						if (dx0 == 0)
 						{
-							dx0 = array[indexSkill].e0dx;
+							dx0 = array[frame].e0dx;
 						}
 						if (dy0 == 0)
 						{
-							dy0 = array[indexSkill].e0dy;
+							dy0 = array[frame].e0dy;
 						}
 						SmallImage.drawSmallImage(g, eff0.arrEfInfo[i0].idImg, cx + dx0 + eff0.arrEfInfo[i0].dx, cy + dy0 + eff0.arrEfInfo[i0].dy, 0, mGraphics.VCENTER | mGraphics.HCENTER);
 						i0++;
@@ -134,11 +147,11 @@ public partial class Char : IMapObject
 					{
 						if (dx1 == 0)
 						{
-							dx1 = array[indexSkill].e1dx;
+							dx1 = array[frame].e1dx;
 						}
 						if (dy1 == 0)
 						{
-							dy1 = array[indexSkill].e1dy;
+							dy1 = array[frame].e1dy;
 						}
 						SmallImage.drawSmallImage(g, eff1.arrEfInfo[i1].idImg, cx + dx1 + eff1.arrEfInfo[i1].dx, cy + dy1 + eff1.arrEfInfo[i1].dy, 0, mGraphics.VCENTER | mGraphics.HCENTER);
 						i1++;
@@ -152,11 +165,11 @@ public partial class Char : IMapObject
 					{
 						if (dx2 == 0)
 						{
-							dx2 = array[indexSkill].e2dx;
+							dx2 = array[frame].e2dx;
 						}
 						if (dy2 == 0)
 						{
-							dy2 = array[indexSkill].e2dy;
+							dy2 = array[frame].e2dy;
 						}
 						SmallImage.drawSmallImage(g, eff2.arrEfInfo[i2].idImg, cx + dx2 + eff2.arrEfInfo[i2].dx, cy + dy2 + eff2.arrEfInfo[i2].dy, 0, mGraphics.VCENTER | mGraphics.HCENTER);
 						i2++;
@@ -173,11 +186,11 @@ public partial class Char : IMapObject
 					{
 						if (dx0 == 0)
 						{
-							dx0 = array[indexSkill].e0dx;
+							dx0 = array[frame].e0dx;
 						}
 						if (dy0 == 0)
 						{
-							dy0 = array[indexSkill].e0dy;
+							dy0 = array[frame].e0dy;
 						}
 						SmallImage.drawSmallImage(g, eff0.arrEfInfo[i0].idImg, cx - dx0 - eff0.arrEfInfo[i0].dx, cy + dy0 + eff0.arrEfInfo[i0].dy, 2, mGraphics.VCENTER | mGraphics.HCENTER);
 						i0++;
@@ -193,11 +206,11 @@ public partial class Char : IMapObject
 					{
 						if (dx1 == 0)
 						{
-							dx1 = array[indexSkill].e1dx;
+							dx1 = array[frame].e1dx;
 						}
 						if (dy1 == 0)
 						{
-							dy1 = array[indexSkill].e1dy;
+							dy1 = array[frame].e1dy;
 						}
 						SmallImage.drawSmallImage(g, eff1.arrEfInfo[i1].idImg, cx - dx1 - eff1.arrEfInfo[i1].dx, cy + dy1 + eff1.arrEfInfo[i1].dy, 2, mGraphics.VCENTER | mGraphics.HCENTER);
 						i1++;
@@ -213,11 +226,11 @@ public partial class Char : IMapObject
 					{
 						if (dx2 == 0)
 						{
-							dx2 = array[indexSkill].e2dx;
+							dx2 = array[frame].e2dx;
 						}
 						if (dy2 == 0)
 						{
-							dy2 = array[indexSkill].e2dy;
+							dy2 = array[frame].e2dy;
 						}
 						SmallImage.drawSmallImage(g, eff2.arrEfInfo[i2].idImg, cx - dx2 - eff2.arrEfInfo[i2].dx, cy + dy2 + eff2.arrEfInfo[i2].dy, 2, mGraphics.VCENTER | mGraphics.HCENTER);
 						i2++;
@@ -230,7 +243,6 @@ public partial class Char : IMapObject
 						}
 					}
 				}
-				indexSkill++;
 			}
 	private void paintPKFlag(mGraphics g)
 			{

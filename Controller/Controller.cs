@@ -103,6 +103,7 @@ public partial class Controller : IMessageHandler
 				if (onMessage_Part1(msg)) return;
 				if (onMessage_Part2(msg)) return;
 				if (onMessage_Part3(msg)) return;
+				if (onMessage_Part3b(msg)) return;
 				if (onMessage_Part4(msg)) return;
 				if (onMessage_Part5(msg)) return;
 				if (onMessage_Part6(msg)) return;
@@ -232,7 +233,7 @@ public partial class Controller : IMessageHandler
 						sbyte b73 = msg.reader().readByte();
 						if (char16.cy <= 10 && b73 != 0 && b73 != 2)
 						{
-							Res.outz("nhân vật bay trên trời xuống x= " + char16.cx + " y= " + char16.cy);
+							Res.outz("nhÃ¢n váº­t bay trÃªn trá»i xuá»‘ng x= " + char16.cx + " y= " + char16.cy);
 							Teleport teleport2 = new Teleport(char16.cx, char16.cy, char16.head, char16.cdir, 1, isMe: false, (b73 != 1) ? b73 : char16.cgender);
 							teleport2.id = char16.charID;
 							char16.isTeleport = true;
@@ -375,12 +376,30 @@ public partial class Controller : IMessageHandler
 						return;
 					}
 					Mob mob9 = (Mob)GameScr.vMob.elementAt(num184);
-					mob9.sys = msg.reader().readByte();
-					mob9.levelBoss = msg.reader().readByte();
-					if (mob9.levelBoss != 0)
+				mob9.sys = msg.reader().readByte();
+				mob9.levelBoss = msg.reader().readByte();
+				if (mob9.levelBoss != 0)
+				{
+					mob9.typeSuperEff = Res.random(0, 3);
+					try
 					{
-						mob9.typeSuperEff = Res.random(0, 3);
+						string bn13 = "Boss";
+						try
+						{
+							if (Mob.arrMobTemplate != null && mob9.templateId >= 0 && mob9.templateId < Mob.arrMobTemplate.Length && Mob.arrMobTemplate[mob9.templateId] != null)
+							{
+								bn13 = Mob.arrMobTemplate[mob9.templateId].name;
+							}
+						}
+						catch
+						{
+						}
+						ModMenu.AddBossNotice(bn13, TileMap.mapName, DateTime.Now.ToString("HH:mm:ss"));
 					}
+					catch
+					{
+					}
+				}
 					mob9.x = mob9.xFirst;
 					mob9.y = mob9.yFirst;
 					mob9.status = 5;
@@ -401,14 +420,32 @@ public partial class Controller : IMessageHandler
 					catch (Exception)
 					{
 					}
-					if (mob9 != null)
+				if (mob9 != null)
+				{
+					mob9.levelBoss = msg.reader().readByte();
+					if (mob9.levelBoss > 0)
 					{
-						mob9.levelBoss = msg.reader().readByte();
-						if (mob9.levelBoss > 0)
+						mob9.typeSuperEff = Res.random(0, 3);
+						try
 						{
-							mob9.typeSuperEff = Res.random(0, 3);
+							string bn75 = "Boss";
+							try
+							{
+								if (Mob.arrMobTemplate != null && mob9.templateId >= 0 && mob9.templateId < Mob.arrMobTemplate.Length && Mob.arrMobTemplate[mob9.templateId] != null)
+								{
+									bn75 = Mob.arrMobTemplate[mob9.templateId].name;
+								}
+							}
+							catch
+							{
+							}
+							ModMenu.AddBossNotice(bn75, TileMap.mapName, DateTime.Now.ToString("HH:mm:ss"));
+						}
+						catch
+						{
 						}
 					}
+				}
 					break;
 				}
 				case -9:

@@ -471,18 +471,24 @@ public partial class LoginScr : mScreen, IActionListener
 			{
 				return;
 			}
-			if (text2.Equals(string.Empty))
+		if (text2.Equals(string.Empty))
+		{
+			focus = 1;
+			tfUser.isFocus = false;
+			tfPass.isFocus = true;
+			if (!GameCanvas.isTouch)
 			{
-				focus = 1;
-				tfUser.isFocus = false;
-				tfPass.isFocus = true;
-				if (!GameCanvas.isTouch)
-				{
-					right = tfPass.cmdClear;
-				}
-				return;
+				right = tfPass.cmdClear;
 			}
-			if (!Session_ME.gI().isConnected())
+			return;
+		}
+		currTimeLogin = mSystem.currentTimeMillis();
+		if (currTimeLogin - lastTimeLogin < 3000)
+		{
+			return;
+		}
+		lastTimeLogin = currTimeLogin;
+		if (!Session_ME.gI().isConnected())
 			{
 				GameCanvas.connect();
 			}

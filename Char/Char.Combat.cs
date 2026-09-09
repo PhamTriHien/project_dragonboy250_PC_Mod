@@ -270,62 +270,75 @@ public partial class Char : IMapObject
 
 	public void setAttack()
 		{
-			if (me)
+			try
 			{
-				SkillPaint skillPaint = skillPaintRandomPaint;
-				if (dart != null)
+				if (me)
 				{
-					skillPaint = dart.skillPaint;
-				}
-				if (skillPaint == null)
-				{
+					SkillPaint skillPaint = skillPaintRandomPaint;
+					if (dart != null)
+					{
+						skillPaint = dart.skillPaint;
+					}
+					if (skillPaint == null)
+					{
+						return;
+					}
+					MyVector myVector = new MyVector();
+					MyVector myVector2 = new MyVector();
+					if (charFocus != null)
+					{
+						myVector2.addElement(charFocus);
+					}
+					else if (mobFocus != null)
+					{
+						myVector.addElement(mobFocus);
+					}
+					effPaints = new EffectPaint[myVector.size() + myVector2.size()];
+					int effIdx = skillPaint.effectHappenOnMob - 1;
+					for (int i = 0; i < myVector.size(); i++)
+					{
+						effPaints[i] = new EffectPaint();
+						if (effIdx >= 0 && effIdx < GameScr.efs.Length)
+						{
+							effPaints[i].effCharPaint = GameScr.efs[effIdx];
+						}
+						if (!isSelectingSkillUseAlone())
+						{
+							effPaints[i].eMob = (Mob)myVector.elementAt(i);
+						}
+					}
+					for (int j = 0; j < myVector2.size(); j++)
+					{
+						effPaints[j + myVector.size()] = new EffectPaint();
+						if (effIdx >= 0 && effIdx < GameScr.efs.Length)
+						{
+							effPaints[j + myVector.size()].effCharPaint = GameScr.efs[effIdx];
+						}
+						effPaints[j + myVector.size()].eChar = (Char)myVector2.elementAt(j);
+					}
+					int type = 0;
+					if (mobFocus != null)
+					{
+						type = 1;
+					}
+					else if (charFocus != null)
+					{
+						type = 2;
+					}
+					if (myVector.size() == 0 && myVector2.size() == 0)
+					{
+						stopUseChargeSkill();
+					}
+					if (me && !isSelectingSkillUseAlone() && !hasSendAttack)
+					{
+						Service.gI().sendPlayerAttack(myVector, myVector2, type);
+						hasSendAttack = true;
+					}
 					return;
 				}
-				MyVector myVector = new MyVector();
-				MyVector myVector2 = new MyVector();
-				if (charFocus != null)
-				{
-					myVector2.addElement(charFocus);
-				}
-				else if (mobFocus != null)
-				{
-					myVector.addElement(mobFocus);
-				}
-				effPaints = new EffectPaint[myVector.size() + myVector2.size()];
-				for (int i = 0; i < myVector.size(); i++)
-				{
-					effPaints[i] = new EffectPaint();
-					effPaints[i].effCharPaint = GameScr.efs[skillPaint.effectHappenOnMob - 1];
-					if (!isSelectingSkillUseAlone())
-					{
-						effPaints[i].eMob = (Mob)myVector.elementAt(i);
-					}
-				}
-				for (int j = 0; j < myVector2.size(); j++)
-				{
-					effPaints[j + myVector.size()] = new EffectPaint();
-					effPaints[j + myVector.size()].effCharPaint = GameScr.efs[skillPaint.effectHappenOnMob - 1];
-					effPaints[j + myVector.size()].eChar = (Char)myVector2.elementAt(j);
-				}
-				int type = 0;
-				if (mobFocus != null)
-				{
-					type = 1;
-				}
-				else if (charFocus != null)
-				{
-					type = 2;
-				}
-				if (myVector.size() == 0 && myVector2.size() == 0)
-				{
-					stopUseChargeSkill();
-				}
-				if (me && !isSelectingSkillUseAlone() && !hasSendAttack)
-				{
-					Service.gI().sendPlayerAttack(myVector, myVector2, type);
-					hasSendAttack = true;
-				}
-				return;
+			}
+			catch (Exception)
+			{
 			}
 			SkillPaint skillPaint2 = skillPaintRandomPaint;
 			if (dart != null)

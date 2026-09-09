@@ -260,6 +260,14 @@ public partial class GameScr : mScreen, IChatable
 		}
 	public void chatVip(string chatVip)
 		{
+			try
+			{
+				ModBossNotice.LogBossDebug("RAW-VIP", chatVip);
+				ModMenu.ProcessServerBossNotice(chatVip);
+			}
+			catch
+			{
+			}
 			if (!startChat)
 			{
 				currChatWidth = mFont.tahoma_7b_yellowSmall.getWidth(chatVip);

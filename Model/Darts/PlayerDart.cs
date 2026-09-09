@@ -93,7 +93,7 @@ public class PlayerDart
 			dx = mapObject.getX() + num - x;
 			dy = mapObject.getY() - mapObject.getH() / 2 - y;
 			life++;
-			if (Res.abs(dx) < 20 && Res.abs(dy) < 20)
+			if ((Res.abs(dx) < 20 && Res.abs(dy) < 20) || life > 80)
 			{
 				if (charBelong.charFocus != null && charBelong.charFocus.me)
 				{

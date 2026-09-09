@@ -205,12 +205,29 @@ public partial class Panel : IActionListener, IChatable
 			charInfo = info.charInfo;
 			currItem = null;
 		}
-	private void addLogMessage(InfoItem info)
+	public void addLogMessage(InfoItem info)
 		{
+			if (info == null || info.charInfo == null)
+			{
+				return;
+			}
+			string msg = info.s;
+			if (!string.IsNullOrEmpty(msg) && msg.StartsWith("|"))
+			{
+				string[] array = Res.split(msg, "|", 0);
+				if (array != null && array.Length >= 3)
+				{
+					msg = array[2];
+				}
+				else if (array != null && array.Length >= 2)
+				{
+					msg = array[1];
+				}
+			}
 			string text = "|0|1|" + info.charInfo.cName;
 			text += "\n";
 			text += "\n--";
-			text = text + "\n|5|" + Res.split(info.s, "|", 0)[2];
+			text = text + "\n|5|" + msg;
 			cp = new ChatPopup();
 			popUpDetailInit(cp, text);
 			charInfo = info.charInfo;
