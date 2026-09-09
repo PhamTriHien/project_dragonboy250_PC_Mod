@@ -11095,3 +11095,42 @@ Hệ thống xử lý đăng nhập, quản lý tài khoản và kết nối m�
 2. **Toàn vẹn hệ thống**:
    - Không xuất hiện bất kỳ lỗi null pointer hay xung đột luồng nào.
    - Mật khẩu hoa/thường hoạt động chính xác.
+
+
+---
+
+## 167. ĐỒNG BỘ TOÀN BỘ MÃ NGUỒN, BẢO MẬT & ĐÓNG GÓI ĐA NỀN TẢNG LÊN REPOSITORY GITHUB (GIT UPDATE & SYNC)
+
+### 1. Bối Cảnh & Yêu Cầu
+- **Yêu cầu**: Cập nhật toàn bộ các cải tiến, tái cấu trúc mã nguồn, tối ưu hóa giao diện Master-Detail, bảo mật phần cứng RMS và pipeline build đa nền tảng từ Mục 160 đến 166 lên repository GitHub chính thức.
+- **Repository đích**: https://github.com/PhamTriHien/project_dragonboy250_PC_Mod.git (nhánh main).
+
+---
+
+### 2. Các Thành Phần Được Đồng Bộ
+1. **Module Bảo Mật & Hệ Thống Giám Sát Cốt Lõi**:
+   - ModCredentialSecurity.cs: Mã hóa mật khẩu liên kết phần cứng thiết bị (ENC_V1:), tương thích SHA256 đa nền tảng (.NET 3.5 Mono & .NET 8 Native AOT), Login Watchdog (12s), Zone Watchdog (5s), SwitchServerCleanly.
+2. **Kiến Trúc UI Master-Detail Độc Lập**:
+   - Phân tách ModUI.cs thành 10 tab chuyên trách độc lập: ModUIAutoHeal.cs, ModUIAutoPick.cs, ModUIBoss.cs, ModUIGoBack.cs, ModUIGraphics.cs, ModUIHelp.cs, ModUINextMap.cs, ModUISetActivator.cs, ModUISpeed.cs, ModUITanSat.cs.
+   - 100% sử dụng asset đồ họa gốc của game, tự co giãn theo kích thước cửa sổ.
+3. **Khắc Phục Lỗi Logic Hệ Thống**:
+   - CreateCharScr.Action.cs: Loại bỏ lệnh doChangeMap() khi đổi tóc, sửa 
+um5 != indexHair.
+   - LoginScr.cs & LoginScr.Action.cs: Bảo toàn chữ hoa/thường nguyên bản, loại bỏ hoàn toàn .ToLower(), smart cooldown 1.5s không nuốt click.
+   - ServerScr.Action.cs & ServerListScreen.cs: Cập nhật domain chính thức TeaMobi dragon15.teamobi.com, chuyển server sạch không xung đột socket.
+   - GameCanvas.Part2.cs, GameScr.Update.cs, Controller.Msg.Part6.cs, Controller2.Msg.Part2.cs: Tự động reset watchdog và đồng bộ dữ liệu tài khoản liên kết passAo.
+4. **Pipeline Đóng Gói Đa Nền Tảng (Cross-Platform Packaging)**:
+   - Bổ sung uild_ios.py và uild_ios.bat vào kho mã nguồn (ký số Mach-O ARM64 CodeResources SHA-1/SHA-256).
+5. **Tài Liệu Hệ Thống Toàn Diện**:
+   - Cập nhật toàn bộ PROJECT_DOCUMENTATION.md chi tiết từ Mục 1 đến Mục 167.
+
+---
+
+### 3. Kết Quả Kiểm Thử & Triển Khai
+1. **Biên Dịch & Tương Thích**:
+   - Dragonboy250_PC_projectbuild (.NET 3.5 Unity): **0 Warning(s), 0 Error(s)**.
+   - DragonBoy_Net8_Native (.NET 8 Native AOT): **0 Warning(s), 0 Error(s)**.
+2. **Git Commit & Push**:
+   - Commit hash: 47311d2.
+   - Push thành công lên origin/main của https://github.com/PhamTriHien/project_dragonboy250_PC_Mod.git.
+   - Trạng thái working tree: Sạch hoàn toàn (Clean).
