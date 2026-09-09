@@ -104,6 +104,11 @@ public partial class GameCanvas : IActionListener
 					}
 					gameTick = 0;
 				}
+				if (ModAutoUpdate.isDownloading)
+				{
+					ModAutoUpdate.UpdateDownloadInput();
+					return;
+				}
 				if (currentScreen != null)
 				{
 					if (ChatPopup.serverChatPopUp != null)

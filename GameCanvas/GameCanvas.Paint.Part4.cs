@@ -111,6 +111,7 @@ public partial class GameCanvas : IActionListener
 				}
 				resetTrans(g);
 				ModMenu.Paint(g);
+				ModAutoUpdate.PaintDownloadProgress(g);
 			}
 			catch (Exception)
 			{

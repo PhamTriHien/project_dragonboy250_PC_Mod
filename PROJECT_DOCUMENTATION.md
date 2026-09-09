@@ -11191,3 +11191,56 @@ Bổ sung các trường tải riêng biệt cho từng hệ điều hành:
 1. **Biên dịch**: Cả hai dự án `Dragonboy250_PC_projectbuild` (.NET 3.5) và `DragonBoy_Net8_Native` (.NET 8 Native AOT) đều đạt **0 Warning, 0 Error**.
 2. **Kích thước tệp tin**: Toàn bộ các tệp sửa đổi đều <= 1000 dòng.
 3. **Đa nền tảng**: Hoạt động đồng nhất trên PC Windows, Android APK và iOS IPA.
+
+
+---
+
+## 169. NÂNG CẤP BỘ TỰ CẬP NHẬT TRỰC TIẾP TRONG MÀN HÌNH GAME (IN-GAME DIRECT UPDATER) & LUÔN KIỂM TRA MỖI KHI MỞ GAME
+
+### 1. Bối Cảnh & Yêu Cầu Kỹ Thuật
+- **Yêu cầu từ người dùng**: *"tính năng update luôn kiểm tra mỗi khi mở game update trực tiếp trong màn hình game"*.
+- **Mục tiêu kỹ thuật**:
+  1. **Luôn kiểm tra mỗi khi mở game**: Không lưu cache cản trở việc kiểm tra. Mỗi khi ứng dụng được khởi động, hệ thống tự động reset trạng thái và gửi truy vấn kiểm tra phiên bản mới từ GitHub (`version.json`).
+  2. **Cập nhật trực tiếp trong màn hình game**:
+     - Khi người chơi bấm **[Cập nhật]**, game không mở trình duyệt ngoài mà tiến hành tải trực tiếp tệp cài đặt ngay trên màn hình game.
+     - Hiển thị giao diện nạp bản cập nhật với phong cách đồ họa Ngọc Rồng Online nguyên bản:
+       - Thanh tiến trình nạp dữ liệu: Sử dụng `GameScr.paintOngMauPercent`.
+       - Hiển thị số liệu thời gian thực: Tỉ lệ phần trăm (`%`), dung lượng tải (`MB / MB`), tốc độ nạp mạng (`MB/s` hoặc `KB/s`).
+       - Nút bấm **[HỦY BỎ]**: Cho phép người chơi dừng tải bất cứ lúc nào, giải phóng bộ đệm và quay lại màn hình game bình thường.
+  3. **Tự động áp dụng cập nhật**:
+     - **Windows PC**: Hoán đổi nhị phân qua `apply_update.bat` và tự động khởi động lại game tức thì.
+     - **Android**: Tự động mở trình cài đặt gói Android Package Installer hiển thị đè lên màn hình để cài đè APK.
+     - **iOS**: Kích hoạt giao thức TrollStore / AltStore cài đặt tệp IPA trực tiếp trên thiết bị.
+
+---
+
+### 2. Kiến Trúc Kỹ Thuật & Chi Tiết Triển Khai
+
+#### 2.1. Module `ModAutoUpdate.cs`
+- **Khởi động luôn kiểm tra (`ResetAndCheckOnLaunch`)**:
+  - Đặt lại toàn bộ cờ: `isChecking = false`, `hasChecked = false`, `hasNewVersion = false`, `hasPrompted = false`, `isDownloading = false`.
+  - Khởi chạy luồng kiểm tra ngầm với thời gian chờ tối đa 3 giây.
+- **Tiến trình tải trực tiếp ngầm (`StartInGameDownload`)**:
+  - Sử dụng bộ đệm luồng 64 KB (`ReadStreamToTarget`).
+  - Đo lường dung lượng đã tải (`downloadedBytes`), tổng dung lượng (`totalBytes`), phần trăm (`downloadPercent`) và tốc độ tải (`downloadSpeedStr`).
+  - Cho phép hủy bỏ an toàn (`CancelDownload`) nếu người chơi bấm nút Hủy.
+- **Vẽ giao diện tiến trình trong game (`PaintDownloadProgress`)**:
+  - Phủ mờ màn hình (Dimmer 65%).
+  - Hộp thoại trung tâm bo viền chuẩn game (`PopUp.paintPopUp`).
+  - Thanh tiến trình: Sử dụng cụm khung ảnh sprite gốc `GameScr.frBarPow20..22` (nền) và `GameScr.frBarPow0..2` (nạp tiến độ).
+  - Nút bấm `[HỦY BỎ]` bắt sự kiện chuột và phím cảm ứng.
+- **Tương tác điều khiển (`UpdateDownloadInput`)**:
+  - Chặn click xuyên qua màn hình phía sau khi đang tải.
+  - Bắt sự kiện chạm/click vào nút HỦY BỎ hoặc phím Escape/Softkey để dừng tải.
+
+#### 2.2. Điểm Hook Vòng Đời Trò Chơi
+- `SplashScr.cs`: Gọi `ModAutoUpdate.ResetAndCheckOnLaunch()` mỗi khi nạp game.
+- `GameCanvas.Paint.Part4.cs`: Gọi `ModAutoUpdate.PaintDownloadProgress(g)` ở lớp vẽ trên cùng (trước HUD Mod).
+- `GameCanvas.Update.cs`: Gọi `ModAutoUpdate.UpdateDownloadInput()` để bắt sự kiện người dùng trong lúc tải.
+
+---
+
+### 3. Kết Quả Kiểm Thử & Nghiệm Thu
+1. **Biên dịch**: Cả hai dự án `DragonBoy_Net8_Native` và `Dragonboy250_PC_projectbuild` đều đạt **0 Warning(s), 0 Error(s)**.
+2. **Kích thước file**: Tất cả các tệp sửa đổi đều tuân thủ nghiêm ngặt giới hạn $\le 1000$ dòng.
+3. **Đa nền tảng**: Tương thích hoàn hảo cả trên Windows PC, Android APK và iOS IPA.
