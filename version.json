@@ -1,9 +1,9 @@
 {
-  "version": "2.5.0",
+  "version": "2.5.1",
   "buildDate": "2026-09-10",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.0/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.0/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.0/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.0/DragonBoy_Mod_iOS.ipa",
-  "changelog": "Ban cap nhat da nen tang PC/Android/iOS: Master-Detail Mod UI, bao mat RMS ENC_V1, sua bug doi toc va watchdog chong treo socket."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.1/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.1/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.1/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.1/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.1: Auto Login khi mat ket noi & giu nguyen 100% che do Auto (Tan Sat, Tu Nhat, Hoi Mau, Up Set, Bua, Toc Do), GoBack ve dung bai farm cu; Ho tro Cua so noi va Bong bong messenger tren Android & iOS; WakeLock va Background Modes chong kill app khi treo ngam; Toi uu vuot cuon cham keo Mod UI ca hai ben."
 }

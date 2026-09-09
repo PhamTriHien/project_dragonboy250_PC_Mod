@@ -59,8 +59,8 @@ def main():
 
         info["CFBundleDisplayName"] = "DragonBoy TriHienKun"
         info["CFBundleName"] = "DragonBoyTriHienKun"
-        info["CFBundleShortVersionString"] = "2.5.0"
-        info["CFBundleVersion"] = "2.5.0"
+        info["CFBundleShortVersionString"] = "2.5.1"
+        info["CFBundleVersion"] = "2.5.1"
 
         with open(plist_path, "wb") as f:
             plistlib.dump(info, f)
