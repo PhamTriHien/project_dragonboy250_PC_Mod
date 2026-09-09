@@ -119,19 +119,23 @@ public partial class GameScr : mScreen, IChatable
 			{
 				if (isAnalog != 0)
 				{
-					xTG = (xF = GameCanvas.w - 45);
+					// Nút Đấm (Attack) góc dưới bên phải - Kích thước to hơn
+					xF = GameCanvas.w - 58;
+					yF = GameCanvas.h - 58;
+
+					// Nút Đổi Mục Tiêu (Target) nằm phía trên nút đấm, lệch sát mép phải xíu
+					xTG = GameCanvas.w - 40;
+					yTG = yF - 50;
+
+					// Nút Ăn Đậu Thần (Pea) nằm kế nút đấm, dịch sang trái
+					xHP = xF - 56;
+					yHP = yF + 4;
+
 					if (gamePad.isLargeGamePad)
 					{
 						xSkill = gamePad.wZone + 20;
 						wSkill = 35;
-						xHP = xF - 45;
 					}
-					else if (gamePad.isMediumGamePad)
-					{
-						xHP = xF - 45;
-					}
-					yF = GameCanvas.h - 45;
-					yTG = yF - 45;
 				}
 			}
 

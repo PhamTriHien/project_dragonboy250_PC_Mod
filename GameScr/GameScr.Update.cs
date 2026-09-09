@@ -297,7 +297,7 @@ public partial class GameScr : mScreen, IChatable
 				{
 					return;
 				}
-				if (GameCanvas.isPointerHoldIn(xF, yF, 40, 40))
+				if (GameCanvas.isPointerHoldIn(xF - 2, yF - 2, 58, 58))
 				{
 					mScreen.keyTouch = 5;
 					if (GameCanvas.isPointerJustRelease)
@@ -307,7 +307,7 @@ public partial class GameScr : mScreen, IChatable
 					}
 				}
 				gamePad.update();
-				if (GameCanvas.isPointerHoldIn(xTG, yTG, 34, 34))
+				if (GameCanvas.isPointerHoldIn(xTG - 4, yTG - 4, 38, 38))
 				{
 					mScreen.keyTouch = 13;
 					GameCanvas.isPointerJustDown = false;

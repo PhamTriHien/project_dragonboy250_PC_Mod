@@ -139,7 +139,7 @@ public partial class GameScr : mScreen, IChatable
 						}
 					}
 					updateGamePad();
-					if (((isAnalog != 0) ? GameCanvas.isPointerHoldIn(xHP, yHP + 10, 34, 34) : GameCanvas.isPointerHoldIn(xHP, yHP + 10, 40, 40)) && Char.myCharz().statusMe != 14 && mobCapcha == null)
+					if (((isAnalog != 0) ? GameCanvas.isPointerHoldIn(xHP - 2, yHP - 2, 44, 44) : GameCanvas.isPointerHoldIn(xHP, yHP + 10, 40, 40)) && Char.myCharz().statusMe != 14 && mobCapcha == null)
 					{
 						mScreen.keyTouch = 10;
 						GameCanvas.isPointerJustDown = false;

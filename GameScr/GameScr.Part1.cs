@@ -92,20 +92,17 @@ public partial class GameScr : mScreen, IChatable
 			imgChatsPC2 = GameCanvas.loadImage("/pc/chat2.png");
 			imgArrow = GameCanvas.loadImage("/mainImage/myTexture2darrow.png");
 			imgArrow2 = GameCanvas.loadImage("/mainImage/myTexture2darrow2.png");
-			if (GameCanvas.isTouch)
-			{
-				imgChat = GameCanvas.loadImage("/mainImage/myTexture2dchat.png");
-				imgChat2 = GameCanvas.loadImage("/mainImage/myTexture2dchat2.png");
-				imgFocus2 = GameCanvas.loadImage("/mainImage/myTexture2dfocus2.png");
-				imgHP1 = GameCanvas.loadImage("/mainImage/myTexture2dPea0.png");
-				imgHP2 = GameCanvas.loadImage("/mainImage/myTexture2dPea1.png");
-				imgAnalog1 = GameCanvas.loadImage("/mainImage/myTexture2danalog1.png");
-				imgAnalog2 = GameCanvas.loadImage("/mainImage/myTexture2danalog2.png");
-				imgHP3 = GameCanvas.loadImage("/mainImage/myTexture2dPea2.png");
-				imgHP4 = GameCanvas.loadImage("/mainImage/myTexture2dPea3.png");
-				imgFire0 = GameCanvas.loadImage("/mainImage/myTexture2dfirebtn0.png");
-				imgFire1 = GameCanvas.loadImage("/mainImage/myTexture2dfirebtn1.png");
-			}
+			imgChat = GameCanvas.loadImage("/mainImage/myTexture2dchat.png");
+			imgChat2 = GameCanvas.loadImage("/mainImage/myTexture2dchat2.png");
+			imgFocus2 = GameCanvas.loadImage("/mainImage/myTexture2dfocus2.png");
+			imgHP1 = GameCanvas.loadImage("/mainImage/myTexture2dPea0.png");
+			imgHP2 = GameCanvas.loadImage("/mainImage/myTexture2dPea1.png");
+			imgAnalog1 = GameCanvas.loadImage("/mainImage/myTexture2danalog1.png");
+			imgAnalog2 = GameCanvas.loadImage("/mainImage/myTexture2danalog2.png");
+			imgHP3 = GameCanvas.loadImage("/mainImage/myTexture2dPea2.png");
+			imgHP4 = GameCanvas.loadImage("/mainImage/myTexture2dPea3.png");
+			imgFire0 = GameCanvas.loadImage("/mainImage/myTexture2dfirebtn0.png");
+			imgFire1 = GameCanvas.loadImage("/mainImage/myTexture2dfirebtn1.png");
 			imgNR1 = GameCanvas.loadImage("/mainImage/myTexture2dPea_0.png");
 			imgNR2 = GameCanvas.loadImage("/mainImage/myTexture2dPea_1.png");
 			imgNR3 = GameCanvas.loadImage("/mainImage/myTexture2dPea_2.png");
@@ -146,7 +143,15 @@ public partial class GameScr : mScreen, IChatable
 			imgNut = GameCanvas.loadImage("/mainImage/myTexture2dnut.png");
 			imgNutF = GameCanvas.loadImage("/mainImage/myTexture2dnutF.png");
 			MobCapcha.init();
-			isAnalog = ((Rms.loadRMSInt("analog") == 1) ? 1 : 0);
+			int savedAnalog = Rms.loadRMSInt("analog");
+			if (savedAnalog != -1)
+			{
+				isAnalog = ((savedAnalog == 1) ? 1 : 0);
+			}
+			else if (isAnalog == 0 && !Main.isPC)
+			{
+				isAnalog = 1;
+			}
 			gamePad = new GamePad();
 			arrow = GameCanvas.loadImage("/mainImage/myTexture2darrow3.png");
 			imgTrans = GameCanvas.loadImage("/bg/trans.png");

@@ -206,15 +206,8 @@ public class GamePad
 			}
 			else
 			{
-				xM = (xC = 45);
-				if (!isLargeGamePad)
-				{
-					yM = (yC = GameCanvas.h - 90);
-				}
-				else
-				{
-					yM = (yC = GameCanvas.h - 45);
-				}
+				xM = (xC = 54);
+				yM = (yC = GameCanvas.h - 54);
 				isGamePad = false;
 				resetHold();
 			}
@@ -262,11 +255,17 @@ public class GamePad
 		if (GameScr.isAnalog != 0)
 		{
 			xZone = 0;
-			yZone = (GameCanvas.h >> 1) + 40;
-			wZone = GameCanvas.hw / 4 * 3 - 40;
+			yZone = (GameCanvas.h >> 1);
+			wZone = GameCanvas.hw / 4 * 3;
 			hZone = GameCanvas.h;
-			g.drawImage(GameScr.imgAnalog1, xC, yC, mGraphics.HCENTER | mGraphics.VCENTER);
-			g.drawImage(GameScr.imgAnalog2, xM, yM, mGraphics.HCENTER | mGraphics.VCENTER);
+			if (GameScr.imgAnalog1 != null)
+			{
+				g.drawImage(GameScr.imgAnalog1, xC, yC, mGraphics.HCENTER | mGraphics.VCENTER);
+			}
+			if (GameScr.imgAnalog2 != null)
+			{
+				g.drawImage(GameScr.imgAnalog2, xM, yM, mGraphics.HCENTER | mGraphics.VCENTER);
+			}
 		}
 	}
 

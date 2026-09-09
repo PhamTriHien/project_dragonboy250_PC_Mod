@@ -10304,3 +10304,88 @@ Tệp: `https://raw.githubusercontent.com/PhamTriHien/project_dragonboy250_PC_Mo
 | **Tương tác Tàn Sát & Nhặt Đồ** | Tàn Sát kéo nhân vật đi xa gây sót đồ | **Tàn Sát nhường quyền cho đến khi nhặt sạch map** |
 | **Biên dịch Native AOT (.NET 8)** | 0 Warning, 0 Error | **0 Warning, 0 Error (Publish Succeeded)** |
 | **Biên dịch Standalone (.NET 3.5)** | 0 Warning, 0 Error | **0 Warning, 0 Error (Assembly-CSharp.dll)** |
+
+---
+
+## 157. ĐÓNG GÓI BẢN BUILD ANDROID (.APK) & BỐ CỤC PHÍM CẢM ỨNG CÔNG THÁI HỌC (ANALOG, NÚT ĐẤM LỚN, NÚT ĂN ĐẬU & ĐỔI MỤC TIÊU)
+
+### 1. Bối Cảnh & Yêu Cầu Kỹ Thuật
+- **Yêu cầu từ người dùng**:
+  1. Tạo bản build Android (.APK) hoàn chỉnh, có thể cài đặt và chơi trên các thiết bị Android và giả lập điện thoại.
+  2. Bổ sung cụm phím điều khiển cảm ứng công thái học:
+     - Nút di chuyển Analog nằm bên trái màn hình.
+     - Nút Đấm kích thước to hơn ("nút đấm to xíu") nằm ở góc dưới bên phải, đặt cạnh nút Ăn Đậu Thần.
+     - Nút Ăn Đậu Thần dịch chuyển sang bên trái để nhường không gian cho nút đấm, triệt tiêu việc bấm nhầm.
+     - Nút Đổi Mục Tiêu đặt ở phía trên nút đấm và nằm sát mép phải hơn.
+
+---
+
+### 2. Kiến Trúc Bố Cục Tọa Độ Công Thái Học (Ergonomic Touch Layout)
+
+```
++-----------------------------------------------------------------------------------------------+
+| (Avatar / HP / MP)    137fps - Naga [K.0]                                 [Việt Hoá]  [Cài Đặt]|
+|                                                                                               |
+|                                                                                               |
+|                                                                                               |
+|                                                                      [ĐỔI MỤC TIÊU] (xTG, yTG)|
+|                                                                       (w - 40, yF - 50)       |
+|                                                                                               |
+|                                                   [ĂN ĐẬU] (xHP, yHP)    [NÚT ĐẤM LỚN] (xF, yF)|
+|  [CỤM ANALOG TRÁI]                                (xF - 56, yF + 4)      (w - 58, h - 58)     |
+|   xC = 54, yC = h - 54                                                    Hitbox: 58x58 px    |
++-----------------------------------------------------------------------------------------------+
+```
+
+---
+
+### 3. Chi Tiết Thực Hiện Mã Nguồn
+
+#### A. Pipeline Đóng Gói Tự Động Android APK ([`build_android.bat`](file:///c:/ModNRO/build_android.bat) & [`build_android.ps1`](file:///c:/ModNRO/build_android.ps1))
+- **Công cụ sử dụng**:
+  - `apktool.jar` (v2.10.0) đóng gói cấu trúc tài nguyên, manifests và mã Dalvik/Smali.
+  - `zipalign.exe` (Android Build-Tools 36.0.0) tối ưu hóa căn chỉnh bộ nhớ 4-byte (`-p -f 4`).
+  - `apksigner.bat` ký số với keystore chuẩn `debug.keystore` (RSA 2048, validity 10000 ngày).
+  - Tự động kiểm tra xác thực chữ ký đạt chuẩn: `APK Signature Scheme v2: true`, `APK Signature Scheme v3: true`.
+  - Tự động sao chép file kết quả ra: `C:\Users\PhamTriHien\Desktop\DragonBoy250_Mod_Android.apk`.
+
+#### B. Tải Tài Nguyên Cảm Ứng An Toàn ([`GameScr.Part1.cs`](file:///c:/ModNRO/DragonBoy_Net8_Native/Src/GameScr/GameScr.Part1.cs))
+- Gỡ bỏ điều kiện `if (GameCanvas.isTouch)` để các sprite cảm ứng (`imgAnalog1`, `imgAnalog2`, `imgFire0`, `imgFire1`, `imgFocus`, `imgFocus2`, `imgHP1`) luôn được nạp đầy đủ vào bộ nhớ, tránh văng game do NullReferenceException khi bật phím ảo.
+- Tự động đồng bộ biến `isAnalog` từ RMS hoặc cấu hình `mod_config.ini`, mặc định kích hoạt trên các nền tảng cảm ứng / Mobile.
+
+#### C. Tọa Độ Cụm Nút Điều Khiển ([`GameScr.Update.Input.Part5.cs`](file:///c:/ModNRO/DragonBoy_Net8_Native/Src/GameScr/GameScr.Update.Input.Part5.cs))
+- **Nút Đấm (xF, yF)**:
+  `xF = GameCanvas.w - 58; yF = GameCanvas.h - 58;`
+- **Nút Đổi Mục Tiêu (xTG, yTG)**:
+  `xTG = GameCanvas.w - 40; yTG = yF - 50;` (Nằm trên nút đấm 50px, lệch sang phải 18px sát viền).
+- **Nút Ăn Đậu (xHP, yHP)**:
+  `xHP = xF - 56; yHP = yF + 4;` (Dịch sang trái nút đấm 56px, hạ thấp 4px vừa vặn tầm ngón cái).
+
+#### D. Hitbox Cảm Ứng Chính Xác ([`GameScr.Update.cs`](file:///c:/ModNRO/DragonBoy_Net8_Native/Src/GameScr/GameScr.Update.cs) & [`GameScr.Update.Input.Part4.cs`](file:///c:/ModNRO/DragonBoy_Net8_Native/Src/GameScr/GameScr.Update.Input.Part4.cs))
+- Hitbox Nút Đấm mở rộng: `GameCanvas.isPointerHoldIn(xF - 2, yF - 2, 58, 58)`.
+- Hitbox Nút Đổi Mục Tiêu: `GameCanvas.isPointerHoldIn(xTG - 4, yTG - 4, 38, 38)`.
+- Hitbox Nút Ăn Đậu: `GameCanvas.isPointerHoldIn(xHP - 2, yHP - 2, 44, 44)`.
+
+#### E. Hiển Thị HUD & Analog Bên Trái ([`GameScr.Paint.HUD.cs`](file:///c:/ModNRO/DragonBoy_Net8_Native/Src/GameScr/GameScr.Paint.HUD.cs) & [`GamePad.cs`](file:///c:/ModNRO/DragonBoy_Net8_Native/Src/Core/Input/GamePad.cs))
+- Cụm di chuyển Analog đặt tại tâm: `xC = 54; yC = GameCanvas.h - 54;` giúp tay trái điều hướng mượt mà không bị cấn góc màn hình.
+- Nút Đấm vẽ tại tâm `(xF + 28, yF + 28)` với sprite `imgFire0`/`imgFire1` to rõ ràng.
+- Nút Đổi Mục Tiêu vẽ tại tâm `(xTG + 16, yTG + 16)` bằng sprite `imgFocus`.
+
+#### F. Tích Hợp Bật/Tắt Vào Menu Mod & Lưu Cấu Hình ([`ModConfig.cs`](file:///c:/ModNRO/DragonBoy_Net8_Native/Src/Mod/Core/ModConfig.cs) & [`ModUIGraphics.cs`](file:///c:/ModNRO/DragonBoy_Net8_Native/Src/Mod/UI/ModUIGraphics.cs))
+- Bổ sung trường `isAnalog` vào file cấu hình `mod_config.ini`.
+- Thêm nút chuyển đổi trực quan `Analog: [BẬT / TẮT]` ngay tại Tab Đồ Họa của Menu Mod (F2 / ~), cho phép người chơi tùy biến dễ dàng cả trên PC lẫn Mobile.
+
+---
+
+### 4. Kết Quả Đo Đạc & Kiểm Thử Hệ Thống
+
+| Tiêu Chí Đánh Giá | Trước Khi Thực Hiện | Sau Khi Hoàn Thành |
+| :--- | :--- | :--- |
+| **Bản build Android (.APK)** | Chưa có pipeline đóng gói | **Tự động 1-click đóng gói, ký số v2/v3 thành công** |
+| **Vị trí Analog** | Cố định theo game cũ | **Nằm bên trái công thái học (`xC = 54, yC = h - 54`)** |
+| **Kích thước & Vị trí Nút Đấm** | Nhỏ (35px), dễ bấm trượt | **Nút đấm to (58px), góc dưới phải (`w - 58, h - 58`)** |
+| **Vị trí Nút Ăn Đậu** | Trùng vị trí nút đấm | **Dịch sang trái nút đấm 56px (`xF - 56, yF + 4`)** |
+| **Vị trí Nút Đổi Mục Tiêu** | Nằm lẫn lộn với skill | **Nằm trên nút đấm, sát mép phải (`w - 40, yF - 50`)** |
+| **Tùy biến Menu Mod UI** | Chưa có nút chỉnh Analog | **Nút `Analog: [BẬT/TẮT]` trong Tab Đồ Họa** |
+| **Biên dịch Native AOT (.NET 8)** | Đạt 0 Warning, 0 Error | **0 Warning, 0 Error (Publish Succeeded)** |
+| **Biên dịch Standalone (.NET 3.5)** | Đạt 0 Warning, 0 Error | **0 Warning, 0 Error (Assembly-CSharp.dll)** |

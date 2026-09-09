@@ -66,6 +66,7 @@ public static class ModConfig
 			sb.AppendLine("isFullscreen=" + ModGraphics.isFullscreen);
 			sb.AppendLine("targetFps=" + ModFps.targetFps);
 			sb.AppendLine("isAutoFps=" + ModFps.isAutoFps);
+			sb.AppendLine("isAnalog=" + (GameScr.isAnalog == 1));
 
 			// Thông Báo Boss
 			sb.AppendLine("isShowBossNotice=" + ModBossNotice.isShowBossNotice);
@@ -353,6 +354,12 @@ public static class ModConfig
 						break;
 					case "isTranslate":
 						bool.TryParse(val, out isTranslate);
+						break;
+					case "isAnalog":
+						if (bool.TryParse(val, out bool analogBool))
+						{
+							GameScr.isAnalog = analogBool ? 1 : 0;
+						}
 						break;
 				}
 			}

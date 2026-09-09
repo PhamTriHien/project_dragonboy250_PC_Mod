@@ -67,13 +67,15 @@ public static class ModUIGraphics
 
 		mFont.tahoma_7_green2.drawString(g, "FPS: " + Main.realFPS + " | Màn: " + ModFps.GetDeviceMaxRefreshRate() + "Hz | Cửa sổ: " + Screen.width + "x" + Screen.height, uiX + uiW / 2, uiY + 191, mFont.CENTER);
 
-		// 5. Việt Hoá Server Data & Logo TriHienKun
+		// 5. Việt Hoá Server Data, Logo & Bàn phím ảo Analog
 		mFont.tahoma_7b_white.drawString(g, "Việt Hoá:", uiX + 18, uiY + 207, mFont.LEFT);
-		ModUI.PaintNativeButton(uiX + 72, uiY + 204, 42, 16, ModConfig.isTranslate ? "BẬT" : "TẮT", ModConfig.isTranslate, g);
+		ModUI.PaintNativeButton(uiX + 68, uiY + 204, 38, 16, ModConfig.isTranslate ? "BẬT" : "TẮT", ModConfig.isTranslate, g);
 
-		mFont.tahoma_7b_white.drawString(g, "Logo:", uiX + 125, uiY + 207, mFont.LEFT);
-		ModUI.PaintNativeButton(uiX + 160, uiY + 204, 42, 16, ModLogo.isShowLogoInGame ? "BẬT" : "TẮT", ModLogo.isShowLogoInGame, g);
-		mFont.tahoma_7_yellow.drawString(g, "(Logo mở menu nhanh)", uiX + 208, uiY + 207, mFont.LEFT);
+		mFont.tahoma_7b_white.drawString(g, "Logo:", uiX + 114, uiY + 207, mFont.LEFT);
+		ModUI.PaintNativeButton(uiX + 146, uiY + 204, 38, 16, ModLogo.isShowLogoInGame ? "BẬT" : "TẮT", ModLogo.isShowLogoInGame, g);
+
+		mFont.tahoma_7b_white.drawString(g, "Analog:", uiX + 192, uiY + 207, mFont.LEFT);
+		ModUI.PaintNativeButton(uiX + 238, uiY + 204, 38, 16, (GameScr.isAnalog == 1) ? "BẬT" : "TẮT", GameScr.isAnalog == 1, g);
 	}
 
 	public static bool HandleTap(int px, int py, int uiX, int uiY, int uiW, int uiH)
@@ -144,7 +146,7 @@ public static class ModUIGraphics
 		}
 
 		// 6. Bật / Tắt Việt Hoá Server Data
-		if (px >= uiX + 72 && px <= uiX + 114 && py >= uiY + 204 && py <= uiY + 220)
+		if (px >= uiX + 68 && px <= uiX + 106 && py >= uiY + 204 && py <= uiY + 220)
 		{
 			ModConfig.isTranslate = !ModConfig.isTranslate;
 			ModConfig.SaveConfig();
@@ -155,10 +157,21 @@ public static class ModUIGraphics
 		}
 
 		// 7. Bật / Tắt Logo TriHienKun trong game
-		if (px >= uiX + 160 && px <= uiX + 202 && py >= uiY + 204 && py <= uiY + 220)
+		if (px >= uiX + 146 && px <= uiX + 184 && py >= uiY + 204 && py <= uiY + 220)
 		{
 			ModLogo.isShowLogoInGame = !ModLogo.isShowLogoInGame;
 			ModConfig.SaveConfig();
+			SoundMn.gI().buttonClick();
+			return true;
+		}
+
+		// 8. Bật / Tắt Bàn Phím Ảo & Analog
+		if (px >= uiX + 238 && px <= uiX + 276 && py >= uiY + 204 && py <= uiY + 220)
+		{
+			GameScr.isAnalog = (GameScr.isAnalog == 1) ? 0 : 1;
+			Rms.saveRMSInt("analog", GameScr.isAnalog);
+			ModConfig.SaveConfig();
+			GameScr.info1.addInfo("Bàn phím ảo & Analog: " + ((GameScr.isAnalog == 1) ? "BẬT" : "TẮT"), 0);
 			SoundMn.gI().buttonClick();
 			return true;
 		}

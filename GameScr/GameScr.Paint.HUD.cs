@@ -193,7 +193,8 @@ public partial class GameScr : mScreen, IChatable
 					{
 						if (Char.myCharz().mobFocus.getTemplate() != null)
 						{
-							mFont.tahoma_7b_green2.drawString(g, Char.myCharz().mobFocus.getTemplate().name, imgScrW / 2, 9 + mGraphics.addYWhenOpenKeyBoard, mFont.CENTER);
+							mFont fontTarget = mFont.tahoma_7b_yellow ?? mFont.tahoma_7b_green2;
+							fontTarget.drawString(g, Char.myCharz().mobFocus.getTemplate().name, imgScrW / 2, 9 + mGraphics.addYWhenOpenKeyBoard, mFont.CENTER);
 						}
 						if (Char.myCharz().mobFocus.templateId != 0)
 						{
@@ -202,7 +203,8 @@ public partial class GameScr : mScreen, IChatable
 					}
 					else if (Char.myCharz().npcFocus != null)
 					{
-						mFont.tahoma_7b_green2.drawString(g, Char.myCharz().npcFocus.template.name, imgScrW / 2, 9 + mGraphics.addYWhenOpenKeyBoard, mFont.CENTER);
+						mFont fontTarget = mFont.tahoma_7b_yellow ?? mFont.tahoma_7b_green2;
+						fontTarget.drawString(g, Char.myCharz().npcFocus.template.name, imgScrW / 2, 9 + mGraphics.addYWhenOpenKeyBoard, mFont.CENTER);
 						if (Char.myCharz().npcFocus.template.npcTemplateId == 4)
 						{
 							mFont.tahoma_7b_green2.drawString(g, gI().magicTree.currPeas + "/" + gI().magicTree.maxPeas, imgScrW / 2, 22 + mGraphics.addYWhenOpenKeyBoard, mFont.CENTER);
@@ -210,7 +212,8 @@ public partial class GameScr : mScreen, IChatable
 					}
 					else if (Char.myCharz().charFocus != null)
 					{
-						mFont.tahoma_7b_green2.drawString(g, Char.myCharz().charFocus.cName, imgScrW / 2, 9 + mGraphics.addYWhenOpenKeyBoard, mFont.CENTER);
+						mFont fontTarget = mFont.tahoma_7b_yellow ?? mFont.tahoma_7b_green2;
+						fontTarget.drawString(g, Char.myCharz().charFocus.cName, imgScrW / 2, 9 + mGraphics.addYWhenOpenKeyBoard, mFont.CENTER);
 						mFont.tahoma_7b_green2.drawString(g, NinjaUtil.getMoneys(Char.myCharz().charFocus.cHP) + string.Empty, imgScrW / 2, 22 + mGraphics.addYWhenOpenKeyBoard, mFont.CENTER);
 					}
 					else
@@ -246,9 +249,23 @@ public partial class GameScr : mScreen, IChatable
 			{
 				if (isAnalog != 0 && Char.myCharz().statusMe != 14)
 				{
-					g.drawImage((mScreen.keyTouch != 5 && mScreen.keyMouse != 5) ? imgFire0 : imgFire1, xF + 20, yF + 20, mGraphics.HCENTER | mGraphics.VCENTER);
+					// 1. Nút di chuyển Analog bên trái
 					gamePad.paint(g);
-					g.drawImage((mScreen.keyTouch != 13) ? imgFocus : imgFocus2, xTG + 20, yTG + 20, mGraphics.HCENTER | mGraphics.VCENTER);
+
+					// 2. Nút Đấm (Attack) góc dưới bên phải - Kích thước to hơn
+					Image btnFire = (mScreen.keyTouch != 5 && mScreen.keyMouse != 5) ? imgFire0 : imgFire1;
+					if (btnFire != null)
+					{
+						// Viền nút to rõ nét
+						g.drawImage(btnFire, xF + 28, yF + 28, mGraphics.HCENTER | mGraphics.VCENTER);
+					}
+
+					// 3. Nút Đổi Mục Tiêu (Target) bên trên nút đấm, lệch sát mép phải xíu
+					Image btnFocus = (mScreen.keyTouch != 13) ? imgFocus : imgFocus2;
+					if (btnFocus != null)
+					{
+						g.drawImage(btnFocus, xTG + 16, yTG + 16, mGraphics.HCENTER | mGraphics.VCENTER);
+					}
 				}
 			}
 
