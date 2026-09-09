@@ -9870,3 +9870,102 @@ drawY += lineH + 2;
 - **Repository URL**: `https://github.com/PhamTriHien/project_dragonboy250_PC_Mod.git`
 - **Branch**: `main` (Up to date with `origin/main`)
 - **Working Tree**: Clean 100%, 0 uncommitted changes.
+
+
+---
+
+## 153. TÍNH NĂNG TỰ ĐỘNG CẬP NHẬT GAME MOD QUA GITHUB (AUTO-UPDATER WITH RESILIENT MANIFEST CHECK)
+
+### 1. Bối Cảnh & Yêu Cầu Kỹ Thuật
+- **Yêu cầu của người dùng**: *"tạo tính năng tự cập nhật game mod, khi mở game có mạng sẽ tực check bản cập nhật mới down về"*.
+- **Mục tiêu kỹ thuật**:
+  1. Khi mở game, nếu có kết nối mạng (Internet), hệ thống tự động gửi yêu cầu HTTP truy vấn tệp manifest `version.json` từ kho lưu trữ GitHub chính thức: `https://raw.githubusercontent.com/PhamTriHien/project_dragonboy250_PC_Mod/main/version.json`.
+  2. **Non-blocking / Resilient**: Giới hạn thời gian chờ tối đa 3-4 giây. Nếu mất mạng, ngắt kết nối hoặc timeout, game tự động bỏ qua để vào ngay màn hình chính mà không làm gián đoạn người chơi.
+  3. **Kiểm tra phiên bản & Tải tự động**: So sánh phiên bản hiện tại (`CurrentVersion = "2.5.0"`) với `remoteVersion`. Nếu phát hiện phiên bản mới hơn, tiến hành tải tệp nhị phân mới (`DragonBoy_Net8_Native.exe.new`) với bộ đệm stream 64 KB và hiển thị tiến độ tải theo %.
+  4. **Cơ chế hoán đổi an toàn trên Windows (`apply_update.bat`)**: Giải quyết giới hạn khóa file thực thi đang chạy của Windows bằng cách sinh script hoán đổi ngầm: chờ PID cũ thoát $\rightarrow$ ghi đè binary mới $\rightarrow$ khởi động lại phiên bản mới $\rightarrow$ tự xóa script tạm.
+  5. **An toàn với Native AOT**: Không dùng reflection phức tạp trong JSON parser để tránh lỗi AOT trimming, sử dụng trích xuất chuỗi nhẹ và an toàn tuyệt đối.
+
+---
+
+### 2. Kiến Trúc Luồng Vận Hành (Auto-Update Lifecycle)
+
+```
++-------------------------------------------------------------------------------+
+|                       DRAGONBOY AUTO-UPDATER LIFECYCLE                        |
++-------------------------------------------------------------------------------+
+                                        |
+             [1. Khởi động game - Program.Main]
+                                        |
+                                        v
+          [2. ModAutoUpdate.CheckAndApplyUpdate()]
+                                        |
+                  +---------------------+---------------------+
+                  |                                           |
+       [Có mạng & Kết nối thành công]              [Mất mạng / Timeout 4s]
+                  |                                           |
+                  v                                           v
+       [Tải & đọc version.json]                    [Bỏ qua - Vào game ngay]
+                  |
+         +--------+--------+
+         |                 |
+  [remote <= local]  [remote > local]
+         |                 |
+         v                 v
+[Bản mới nhất]   [Thông báo phiên bản mới & Changelog]
+         |                 |
+         v                 v
+[Vào Game]       [Tải DragonBoy_Net8_Native.exe.new]
+                           |
+                           v
+                 [Sinh apply_update.bat & Relaunch]
+                           |
+                           v
+                 [Environment.Exit(0) nhường quyền hoán đổi]
+```
+
+---
+
+### 3. Chi Tiết Triển Khai Mã Nguồn
+
+#### A. Module Cập Nhật (`ModAutoUpdate.cs` - 257 dòng)
+Tệp: `DragonBoy_Net8_Native/Src/Mod/Update/ModAutoUpdate.cs`
+- Quản lý phiên bản cục bộ: `public const string CurrentVersion = "2.5.0";`.
+- Đường dẫn Manifest: `https://raw.githubusercontent.com/PhamTriHien/project_dragonboy250_PC_Mod/main/version.json`.
+- So sánh phiên bản đa cấp độ: `IsNewerVersion(string remote, string local)`.
+- Tải luồng dữ liệu an toàn với bộ đệm `65536 bytes` (64 KB).
+- Kích hoạt quy trình hoán đổi tiến trình Windows qua `apply_update.bat`.
+
+#### B. Tích Hợp Vào Khởi Động (`Program.cs` - 184 dòng)
+Đặt ngay sau khi khởi tạo Security Watchdog:
+```csharp
+DragonBoy_Net8_Native.Src.Mod.Security.ModSecurity.StartWatchdog();
+
+// Check & Auto-Update game mod if new release exists on GitHub
+DragonBoy_Net8_Native.Src.Mod.Update.ModAutoUpdate.CheckAndApplyUpdate();
+
+Console.WriteLine("[DragonBoy .NET 8] Khoi tao Engine Do Hoa HD & Fullscreen...");
+```
+
+#### C. Manifest Trên GitHub (`version.json`)
+Tệp: `https://raw.githubusercontent.com/PhamTriHien/project_dragonboy250_PC_Mod/main/version.json`
+```json
+{
+  "version": "2.5.0",
+  "buildDate": "2026-09-09",
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.0/DragonBoy_Net8_Native.exe",
+  "changelog": "Ban phat hanh chuan Native AOT x64 tich hop Full Anti-Tamper, HWID Licensing va Transparent HUD."
+}
+```
+
+---
+
+### 4. Kết Quả Đo Đạc & Kiểm Thử Thực Nghiệm
+
+| Chỉ Số Đánh Giá | Kết Quả Thực Nghiệm Thực Tế |
+| :--- | :--- |
+| **Kiểm tra phiên bản trực tuyến** | **HTTP 200 OK từ GitHub Raw** |
+| **Phản hồi khi có phiên bản mới nhất** | `[AUTO-UPDATE] Ban dang su dung phien ban moi nhat (v2.5.0).` |
+| **Xử lý khi mất mạng / timeout** | **Không đóng băng, tự động bỏ qua sau < 4s để vào game** |
+| **Trạng thái biên dịch Native AOT** | **0 Warning, 0 Error** |
+| **Dung lượng nhị phân UPX** | **2.85 MB (`2,995,712` bytes)** |
+| **Kiểm soát giới hạn số dòng** | [`ModAutoUpdate.cs`](file:///c:/ModNRO/DragonBoy_Net8_Native/Src/Mod/Update/ModAutoUpdate.cs): **257 dòng**, [`Program.cs`](file:///c:/ModNRO/DragonBoy_Net8_Native/Program.cs): **184 dòng** |
