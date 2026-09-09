@@ -64,8 +64,8 @@ public static class ModUIHelp
 
 	public static void OnMouseScroll(float wheel)
 	{
-		int listH = 178;
-		int itemH = 22;
+		int listH = 186;
+		int itemH = 24;
 		int contentH = commands.Length * itemH + 6;
 		int maxScroll = (contentH > listH - 6) ? (contentH - (listH - 6)) : 0;
 		if (maxScroll <= 0) return;
@@ -85,16 +85,20 @@ public static class ModUIHelp
 
 	public static void UpdateDragScroll(int px, int py, int uiX, int uiY, int uiW, int uiH)
 	{
-		int listX = uiX + 8;
+		int listX = uiX + 6;
 		int listY = uiY + 24;
-		int listW = uiW - 16;
-		int listH = 178;
+		int listW = uiW - 12;
+		int listH = uiH - 30;
 
-		int itemH = 22;
+		int itemH = 24;
 		int contentH = commands.Length * itemH + 6;
 		int maxScroll = (contentH > listH - 6) ? (contentH - (listH - 6)) : 0;
 
-		if (GameCanvas.isPointerJustDown)
+		bool isDown = Input.GetMouseButton(0) || GameCanvas.isPointerDown;
+		bool isJustDown = Input.GetMouseButtonDown(0) || GameCanvas.isPointerJustDown;
+		bool isJustRelease = Input.GetMouseButtonUp(0) || GameCanvas.isPointerJustRelease;
+
+		if (isJustDown)
 		{
 			if (px >= listX && px <= listX + listW && py >= listY && py <= listY + listH)
 			{
@@ -104,7 +108,7 @@ public static class ModUIHelp
 				startScrollY = scrollY;
 			}
 		}
-		else if (GameCanvas.isPointerDown && isDragging)
+		else if (isDown && isDragging)
 		{
 			int deltaY = py - startDragY;
 			if (Res.abs(deltaY) > 4)
@@ -118,7 +122,7 @@ public static class ModUIHelp
 				if (scrollY > maxScroll) scrollY = maxScroll;
 			}
 		}
-		else if (GameCanvas.isPointerJustRelease)
+		else if (isJustRelease)
 		{
 			isDragging = false;
 		}
@@ -126,22 +130,20 @@ public static class ModUIHelp
 
 	public static void Paint(int uiX, int uiY, int uiW, int uiH, mGraphics g)
 	{
-		int listX = uiX + 8;
+		int listX = uiX + 6;
 		int listY = uiY + 24;
-		int listW = uiW - 16;
-		int listH = 178;
+		int listW = uiW - 12;
+		int listH = uiH - 30;
 
-		// Tiêu đề danh sách & Nút cuộn Lên / Xuống (Vector Triangle sắc nét)
-		mFont.tahoma_7b_dark.drawString(g, "LỆNH CHAT & PHÍM TẮT (" + commands.Length + " mục):", listX, uiY + 8, mFont.LEFT);
-		ModUI.PaintArrowButton(uiX + uiW - 52, uiY + 5, 20, 16, true, false, g);
-		ModUI.PaintArrowButton(uiX + uiW - 28, uiY + 5, 20, 16, false, false, g);
+		// Tiêu đề danh sách
+		mFont.tahoma_7b_dark.drawString(g, "LỆNH CHAT & PHÍM TẮT (" + commands.Length + " mục - Chạm kéo trượt):", listX, uiY + 8, mFont.LEFT);
 
 		// Khung chứa danh sách
 		GameCanvas.paintz.paintFrameSimple(listX, listY, listW, listH, g);
 		g.setColor(15196114);
 		g.fillRect(listX + 2, listY + 2, listW - 4, listH - 4);
 
-		int itemH = 22;
+		int itemH = 24;
 		int contentH = commands.Length * itemH + 6;
 		int maxScroll = (contentH > listH - 6) ? (contentH - (listH - 6)) : 0;
 		if (scrollY > maxScroll) scrollY = maxScroll;
@@ -151,91 +153,77 @@ public static class ModUIHelp
 
 		for (int i = 0; i < commands.Length; i++)
 		{
+			CommandInfo info = commands[i];
+			int rowY = listY + 4 + i * itemH - scrollY;
+
+			if (rowY + itemH < listY || rowY > listY + listH)
+			{
+				continue;
+			}
+
+			// Nền xen kẽ
+			if (i % 2 == 1)
+			{
+				g.setColor(15724527);
+				g.fillRect(listX + 3, rowY, listW - 6, itemH - 1);
+			}
+
+			// Tag loại lệnh
+			g.setColor(info.tagColor);
+			g.fillRect(listX + 6, rowY + 3, 3, 14);
+
+			// Tên lệnh / Phím tắt
+			mFont.tahoma_7b_green2.drawString(g, info.cmd, listX + 14, rowY + 3, mFont.LEFT);
+
+			// Nhãn loại
+			int tagW = mFont.tahoma_7_grey.getWidth(info.tag);
+			mFont.tahoma_7_grey.drawString(g, "[" + info.tag + "]", listX + 85, rowY + 3, mFont.LEFT);
+
+			// Mô tả chức năng
+			mFont.tahoma_7_grey.drawString(g, info.desc, listX + 130, rowY + 3, mFont.LEFT);
+
+			// Phím thử ngay
+			if (info.tag.Equals("Chat") || info.tag.Equals("Hệ thống"))
+			{
+				ModUI.PaintNativeButton(listX + listW - 54, rowY + 2, 48, 17, "Thử", false, g);
+			}
+		}
+
+		g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
+	}
+
+	public static bool HandleTap(int px, int py, int uiX, int uiY, int uiW, int uiH)
+	{
+		if (hasDragged)
+		{
+			hasDragged = false;
+			return false;
+		}
+
+		int listX = uiX + 6;
+		int listY = uiY + 24;
+		int listW = uiW - 12;
+		int listH = uiH - 30;
+
+		if (px < listX || px > listX + listW || py < listY || py > listY + listH)
+		{
+			return false;
+		}
+
+		int itemH = 24;
+
+		for (int i = 0; i < commands.Length; i++)
+		{
 			int rowY = listY + 4 + i * itemH - scrollY;
 			if (rowY + itemH < listY || rowY > listY + listH)
 			{
 				continue;
 			}
 
-			// Màu nền xen kẽ (tông ngà và be sáng NRO)
-			g.setColor((i % 2 == 0) ? 15196114 : 15787715);
-			g.fillRect(listX + 4, rowY, listW - 8, itemH - 2);
-
-			CommandInfo ci = commands[i];
-
-			// Tag loại lệnh: [Chat], [Phím], [Chuột]
-			g.setColor(6702080);
-			g.drawRect(listX + 6, rowY + 3, 34, 13);
-			mFont.tahoma_7b_dark.drawString(g, ci.tag, listX + 23, rowY + 4, mFont.CENTER);
-
-			// Tên lệnh (màu đậm nổi bật)
-			mFont.tahoma_7b_dark.drawString(g, ci.cmd, listX + 46, rowY + 4, mFont.LEFT);
-
-			// Dấu gạch nối và Mô tả chức năng
-			int descX = listX + 46 + mFont.tahoma_7b_dark.getWidth(ci.cmd) + 6;
-			if (descX < listX + 115) descX = listX + 115;
-			mFont.tahoma_7_grey.drawString(g, "- " + ci.desc, descX, rowY + 4, mFont.LEFT);
-		}
-
-		g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
-
-		// Thanh cuộn thanh mảnh (Scrollbar NRO)
-		if (maxScroll > 0)
-		{
-			int barH = listH * (listH - 4) / contentH;
-			if (barH < 14) barH = 14;
-			int barY = listY + 2 + (listH - 4 - barH) * scrollY / maxScroll;
-			g.setColor(3847752);
-			g.fillRect(listX + listW - 4, barY, 2, barH);
-		}
-
-		// Dòng hướng dẫn nhỏ căn giữa ở đáy
-		mFont.tahoma_7_grey.drawString(g, "* Bấm vào từng dòng lệnh để kích hoạt nhanh", uiX + uiW / 2, uiY + 208, mFont.CENTER);
-	}
-
-	public static bool HandleTap(int px, int py, int uiX, int uiY, int uiW, int uiH)
-	{
-		int listX = uiX + 8;
-		int listY = uiY + 24;
-		int listW = uiW - 16;
-		int listH = 178;
-
-		int itemH = 22;
-		int contentH = commands.Length * itemH + 6;
-		int maxScroll = (contentH > listH - 6) ? (contentH - (listH - 6)) : 0;
-
-		// Nếu vừa thực hiện thao tác kéo thả cuộn thì không kích hoạt lệnh nhầm
-		if (hasDragged)
-		{
-			hasDragged = false;
-			return true;
-		}
-
-		// 1. Nút cuộn lên (Vector Up Triangle)
-		if (px >= uiX + uiW - 52 && px <= uiX + uiW - 32 && py >= uiY + 4 && py <= uiY + 22)
-		{
-			scrollY -= 44;
-			if (scrollY < 0) scrollY = 0;
-			SoundMn.gI().buttonClick();
-			return true;
-		}
-
-		// 2. Nút cuộn xuống (Vector Down Triangle)
-		if (px >= uiX + uiW - 28 && px <= uiX + uiW - 8 && py >= uiY + 4 && py <= uiY + 22)
-		{
-			scrollY += 44;
-			if (scrollY > maxScroll) scrollY = maxScroll;
-			SoundMn.gI().buttonClick();
-			return true;
-		}
-
-		// 3. Bấm trực tiếp vào dòng lệnh để kích hoạt tức thì (Action Launcher)
-		if (px >= listX + 4 && px <= listX + listW - 4 && py >= listY + 2 && py <= listY + listH - 2)
-		{
-			int clickedIdx = (py - (listY + 4) + scrollY) / itemH;
-			if (clickedIdx >= 0 && clickedIdx < commands.Length)
+			int btnX = listX + listW - 54;
+			if (px >= btnX && px <= btnX + 48 && py >= rowY + 2 && py <= rowY + 19)
 			{
-				ExecuteCommand(commands[clickedIdx].cmd);
+				ExecuteCommand(commands[i].cmd);
 				SoundMn.gI().buttonClick();
 				return true;
 			}
@@ -260,15 +248,7 @@ public static class ModUIHelp
 			{
 				ModSetActivator.showItemId = !ModSetActivator.showItemId;
 				ModConfig.SaveConfig();
-				GameScr.info1.addInfo("Hiện Tên & ID Item: " + (ModSetActivator.showItemId ? "BẬT" : "TẮT"), 0);
-			}
-			else if (cmd.Equals("nhat_id"))
-			{
-				ModAutoPick.ShowInputFilterId();
-			}
-			else if (cmd.Equals("nhat_ten"))
-			{
-				ModAutoPick.ShowInputFilterName();
+				GameScr.info1.addInfo("Hiện ID & Tên Item: " + (ModSetActivator.showItemId ? "BẬT" : "TẮT"), 0);
 			}
 			else if (cmd.Equals("xnhat"))
 			{
@@ -279,11 +259,11 @@ public static class ModUIHelp
 			{
 				ModDropRate.isInstantPick = !ModDropRate.isInstantPick;
 				ModConfig.SaveConfig();
-				GameScr.info1.addInfo("Trick Rơi Đồ (Hút Tức Thì): " + (ModDropRate.isInstantPick ? "BẬT" : "TẮT"), 0);
+				GameScr.info1.addInfo("Hút Đồ Tức Thì: " + (ModDropRate.isInstantPick ? "BẬT" : "TẮT"), 0);
 			}
 			else if (cmd.Equals("tkrd"))
 			{
-				GameScr.info1.addInfo("TK Rơi Đồ: " + ModDropRate.totalItemsDropped + "/" + ModDropRate.totalMobsKilled + " (" + ModDropRate.GetDropRatePercent() + "%), KH: " + ModDropRate.totalSetKHCount + ", Sao: " + ModDropRate.totalStarCount + ", " + ModDropRate.GetMobsPerMinute() + " quái/ph", 0);
+				GameScr.info1.addInfo("TK Rơi Đồ: " + ModDropRate.totalItemsDropped + "/" + ModDropRate.totalMobsKilled + " (" + ModDropRate.GetDropRatePercent() + "%), " + ModDropRate.GetMobsPerMinute() + " quái/ph", 0);
 			}
 			else if (cmd.Equals("kbroly"))
 			{

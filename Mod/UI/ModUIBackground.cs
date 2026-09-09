@@ -14,7 +14,7 @@ public static class ModUIBackground
 	public static void OnMouseScroll(float wheel)
 	{
 		int listH = 194;
-		int cardStep = 50;
+		int cardStep = 52;
 		int contentH = ModBackground.bgList.Count * cardStep + 6;
 		int maxScroll = (contentH > listH - 6) ? (contentH - (listH - 6)) : 0;
 		if (maxScroll <= 0) return;
@@ -39,11 +39,15 @@ public static class ModUIBackground
 		int listW = detailW - 8;
 		int listH = detailH - 28;
 
-		int cardStep = 50;
+		int cardStep = 52;
 		int contentH = ModBackground.bgList.Count * cardStep + 6;
 		int maxScroll = (contentH > listH - 6) ? (contentH - (listH - 6)) : 0;
 
-		if (GameCanvas.isPointerJustDown)
+		bool isDown = Input.GetMouseButton(0) || GameCanvas.isPointerDown;
+		bool isJustDown = Input.GetMouseButtonDown(0) || GameCanvas.isPointerJustDown;
+		bool isJustRelease = Input.GetMouseButtonUp(0) || GameCanvas.isPointerJustRelease;
+
+		if (isJustDown)
 		{
 			if (px >= listX && px <= listX + listW && py >= listY && py <= listY + listH)
 			{
@@ -53,7 +57,7 @@ public static class ModUIBackground
 				startScrollY = scrollY;
 			}
 		}
-		else if (GameCanvas.isPointerDown && isDragging)
+		else if (isDown && isDragging)
 		{
 			int deltaY = py - startDragY;
 			if (Res.abs(deltaY) > 4)
@@ -67,7 +71,7 @@ public static class ModUIBackground
 				if (scrollY > maxScroll) scrollY = maxScroll;
 			}
 		}
-		else if (GameCanvas.isPointerJustRelease)
+		else if (isJustRelease)
 		{
 			isDragging = false;
 		}
@@ -97,7 +101,7 @@ public static class ModUIBackground
 		g.fillRect(listX + 2, listY + 2, listW - 4, listH - 4);
 
 		int cardH = 46;
-		int cardStep = 50;
+		int cardStep = 52;
 		int contentH = ModBackground.bgList.Count * cardStep + 6;
 		int maxScroll = (contentH > listH - 6) ? (contentH - (listH - 6)) : 0;
 		if (scrollY > maxScroll) scrollY = maxScroll;
@@ -185,26 +189,24 @@ public static class ModUIBackground
 		}
 
 		g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
-
-		// Thanh cuộn NRO bên phải danh sách
-		if (maxScroll > 0)
-		{
-			int barH = listH * (listH - 4) / contentH;
-			if (barH < 14) barH = 14;
-			int barY = listY + 2 + (listH - 4 - barH) * scrollY / maxScroll;
-			g.setColor(3847752);
-			g.fillRect(listX + listW - 4, barY, 2, barH);
-		}
 	}
 
 	public static bool HandleTap(int px, int py, int detailX, int detailY, int detailW, int detailH)
 	{
+		// Nếu vừa thực hiện thao tác kéo trượt thì bỏ qua click
+		if (hasDragged)
+		{
+			hasDragged = false;
+			return false;
+		}
+
 		// 1. Nút << TRỞ VỀ
 		int backW = 62;
 		int backX = detailX + detailW - backW - 4;
 		if (px >= backX && px <= backX + backW && py >= detailY + 3 && py <= detailY + 21)
 		{
 			isOpen = false;
+			ModUI.detailScrollY = 0;
 			SoundMn.gI().buttonClick();
 			return true;
 		}
@@ -231,7 +233,7 @@ public static class ModUIBackground
 		}
 
 		int cardH = 46;
-		int cardStep = 50;
+		int cardStep = 52;
 
 		for (int i = 0; i < ModBackground.bgList.Count; i++)
 		{

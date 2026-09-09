@@ -62,7 +62,11 @@ public static class ModUITanSat
 			maxScroll = (contentH > listH - 6) ? (contentH - (listH - 6)) : 0;
 		}
 
-		if (GameCanvas.isPointerJustDown)
+		bool isDown = Input.GetMouseButton(0) || GameCanvas.isPointerDown;
+		bool isJustDown = Input.GetMouseButtonDown(0) || GameCanvas.isPointerJustDown;
+		bool isJustRelease = Input.GetMouseButtonUp(0) || GameCanvas.isPointerJustRelease;
+
+		if (isJustDown)
 		{
 			if (px >= listX && px <= listX + listW && py >= listY && py <= listY + listH)
 			{
@@ -72,7 +76,7 @@ public static class ModUITanSat
 				startScrollY = (ModUI.tanSatTab == 0) ? scrollMobY : scrollSkillY;
 			}
 		}
-		else if (GameCanvas.isPointerDown && isDragging)
+		else if (isDown && isDragging)
 		{
 			int deltaY = py - startDragY;
 			if (Res.abs(deltaY) > 4)
@@ -88,7 +92,7 @@ public static class ModUITanSat
 				else scrollSkillY = newScroll;
 			}
 		}
-		else if (GameCanvas.isPointerJustRelease)
+		else if (isJustRelease)
 		{
 			isDragging = false;
 		}
@@ -169,15 +173,6 @@ public static class ModUITanSat
 					}
 				}
 				g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
-
-				if (maxScroll > 0)
-				{
-					int barH = listH * (listH - 4) / contentH;
-					if (barH < 12) barH = 12;
-					int barY = listY + 2 + (listH - 4 - barH) * scrollMobY / maxScroll;
-					g.setColor(3847752);
-					g.fillRect(listX + listW - 4, barY, 2, barH);
-				}
 			}
 		}
 		else
@@ -240,15 +235,6 @@ public static class ModUITanSat
 					}
 				}
 				g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
-
-				if (maxScroll > 0)
-				{
-					int barH = listH * (listH - 4) / contentH;
-					if (barH < 12) barH = 12;
-					int barY = listY + 2 + (listH - 4 - barH) * scrollSkillY / maxScroll;
-					g.setColor(3847752);
-					g.fillRect(listX + listW - 4, barY, 2, barH);
-				}
 			}
 		}
 
