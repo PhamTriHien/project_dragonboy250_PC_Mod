@@ -351,7 +351,14 @@ public static class ModUI
 					ModUIAutoHeal.Paint(detailX, detailY, detailW, detailH, g);
 					break;
 				case 4:
-					ModUIGraphics.Paint(detailX, detailY, detailW, detailH, g);
+					if (ModUIBackground.isOpen)
+					{
+						ModUIBackground.Paint(detailX, detailY, detailW, detailH, g);
+					}
+					else
+					{
+						ModUIGraphics.Paint(detailX, detailY, detailW, detailH, g);
+					}
 					break;
 				case 5:
 					ModUIBoss.Paint(detailX, detailY, detailW, detailH, g);
@@ -448,6 +455,10 @@ public static class ModUI
 						{
 							ModUITanSat.OnMouseScroll(wheel);
 						}
+						else if (selectedTab == 4 && ModUIBackground.isOpen)
+						{
+							ModUIBackground.OnMouseScroll(wheel);
+						}
 					}
 				}
 
@@ -490,6 +501,10 @@ public static class ModUI
 				{
 					ModUITanSat.UpdateDragScroll(px, py, detailX, detailY, detailW, detailH);
 				}
+				else if (selectedTab == 4 && ModUIBackground.isOpen)
+				{
+					ModUIBackground.UpdateDragScroll(px, py, detailX, detailY, detailW, detailH);
+				}
 
 				bool isClick = GameCanvas.isPointerClick || GameCanvas.isPointerJustRelease;
 
@@ -504,6 +519,7 @@ public static class ModUI
 						if (px >= uiX + uiW - 32 && px <= uiX + uiW - 4 && py >= uiY + 4 && py <= uiY + 28)
 						{
 							uiCustomOpen = false;
+							ModUIBackground.isOpen = false;
 							ModConfig.SaveConfig();
 							SoundMn.gI().buttonClose();
 							return;
@@ -513,6 +529,7 @@ public static class ModUI
 						if (px >= colX && px <= colX + colW && py >= uiY + 228 && py <= uiY + 252)
 						{
 							uiCustomOpen = false;
+							ModUIBackground.isOpen = false;
 							ModConfig.SaveConfig();
 							SoundMn.gI().buttonClose();
 							return;
@@ -525,6 +542,7 @@ public static class ModUI
 							if (clickedIdx >= 0 && clickedIdx < tabNames.Length)
 							{
 								selectedTab = clickedIdx;
+								ModUIBackground.isOpen = false;
 								ModConfig.SaveConfig();
 								SoundMn.gI().buttonClick();
 								return;
@@ -554,7 +572,14 @@ public static class ModUI
 									handled = ModUIAutoHeal.HandleTap(px, py, detailX, detailY, detailW, detailH);
 									break;
 								case 4:
-									handled = ModUIGraphics.HandleTap(px, py, detailX, detailY, detailW, detailH);
+									if (ModUIBackground.isOpen)
+									{
+										handled = ModUIBackground.HandleTap(px, py, detailX, detailY, detailW, detailH);
+									}
+									else
+									{
+										handled = ModUIGraphics.HandleTap(px, py, detailX, detailY, detailW, detailH);
+									}
 									break;
 								case 5:
 									handled = ModUIBoss.HandleTap(px, py, detailX, detailY, detailW, detailH);

@@ -115,6 +115,10 @@ public static class ModConfig
 			// Việt Hoá Data Server
 			sb.AppendLine("isTranslate=" + isTranslate);
 
+			// Hình Nền Phong Cảnh Git
+			sb.AppendLine("isCustomBGActive=" + ModBackground.isCustomBGActive);
+			sb.AppendLine("selectedBgId=" + ModBackground.selectedBgId);
+
 			File.WriteAllText(ConfigPath, sb.ToString());
 		}
 		catch
@@ -360,6 +364,12 @@ public static class ModConfig
 						{
 							GameScr.isAnalog = analogBool ? 1 : 0;
 						}
+						break;
+					case "isCustomBGActive":
+						bool.TryParse(val, out ModBackground.isCustomBGActive);
+						break;
+					case "selectedBgId":
+						ModBackground.selectedBgId = val;
 						break;
 				}
 			}

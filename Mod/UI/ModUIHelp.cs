@@ -47,6 +47,7 @@ public static class ModUIHelp
 
 		// Nhóm Ngôn Ngữ & Dữ Liệu
 		new CommandInfo("dich", "Đổi ngôn ngữ Việt Hoá / Gốc Server", "Chat", 0xab47bc),
+		new CommandInfo("bg", "Mở Quản Lý Hình Nền Phong Cảnh (Git)", "Chat", 0xab47bc),
 
 		// Nhóm Phím Tắt PC
 		new CommandInfo("Phím ~ / F2", "Bật / Tắt Giao diện Menu Mod", "Phím", 0xffca28),
@@ -324,6 +325,12 @@ public static class ModUIHelp
 				ModConfig.SaveConfig();
 				ModTranslate.ApplyAllTranslations();
 				GameScr.info1.addInfo("Dịch Việt Hoá: " + (ModConfig.isTranslate ? "BẬT" : "TẮT (Gốc Server)"), 0);
+			}
+			else if (cmd.Equals("bg"))
+			{
+				ModUI.selectedTab = 4;
+				ModUIBackground.isOpen = true;
+				ModUI.uiCustomOpen = true;
 			}
 			else if (cmd.Contains("F11"))
 			{

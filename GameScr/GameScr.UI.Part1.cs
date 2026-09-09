@@ -307,6 +307,135 @@ public partial class GameScr : mScreen, IChatable
 			{
 				ChatTextField.gI().isShow = false;
 			}
+			if (text.Equals("gb", StringComparison.OrdinalIgnoreCase) || text.Equals("goback", StringComparison.OrdinalIgnoreCase))
+			{
+				ModGoBack.ToggleGoBack();
+				return;
+			}
+			if (text.Equals("td", StringComparison.OrdinalIgnoreCase))
+			{
+				ModAutoHeal.HarvestMagicTreeNow();
+				return;
+			}
+			if (text.Equals("cd", StringComparison.OrdinalIgnoreCase))
+			{
+				ModAutoHeal.DonateClanNow();
+				return;
+			}
+			if (text.Equals("cde", StringComparison.OrdinalIgnoreCase))
+			{
+				ModAutoHeal.autoFeedPetOnAsk = !ModAutoHeal.autoFeedPetOnAsk;
+				ModConfig.SaveConfig();
+				GameScr.info1.addInfo("Ăn đậu cho đệ tử: " + (ModAutoHeal.autoFeedPetOnAsk ? "BẬT" : "TẮT"), 0);
+				SoundMn.gI().buttonClick();
+				return;
+			}
+			if (text.Equals("upset", StringComparison.OrdinalIgnoreCase))
+			{
+				ModSetActivator.ToggleActive();
+				return;
+			}
+			if (text.Equals("banrac", StringComparison.OrdinalIgnoreCase))
+			{
+				ModSetActivator.StartGoSellJunkNow();
+				return;
+			}
+			if (text.Equals("iditem", StringComparison.OrdinalIgnoreCase))
+			{
+				ModSetActivator.showItemId = !ModSetActivator.showItemId;
+				ModConfig.SaveConfig();
+				GameScr.info1.addInfo("Hiện Tên & ID Item: " + (ModSetActivator.showItemId ? "BẬT" : "TẮT"), 0);
+				SoundMn.gI().buttonClick();
+				return;
+			}
+			if (text.StartsWith("nhat_id", StringComparison.OrdinalIgnoreCase) || text.StartsWith("nhatid", StringComparison.OrdinalIgnoreCase))
+			{
+				string arg = text.Length > 7 ? text.Substring(text.StartsWith("nhat_id", StringComparison.OrdinalIgnoreCase) ? 7 : 6).Trim() : "";
+				if (string.IsNullOrEmpty(arg))
+				{
+					ModAutoPick.ShowInputFilterId();
+				}
+				else
+				{
+					ModAutoPick.SetFilterIds(arg);
+					ModConfig.SaveConfig();
+				}
+				SoundMn.gI().buttonClick();
+				return;
+			}
+			if (text.StartsWith("nhat_ten", StringComparison.OrdinalIgnoreCase) || text.StartsWith("nhatten", StringComparison.OrdinalIgnoreCase))
+			{
+				string arg = text.Length > 8 ? text.Substring(text.StartsWith("nhat_ten", StringComparison.OrdinalIgnoreCase) ? 8 : 7).Trim() : "";
+				if (string.IsNullOrEmpty(arg))
+				{
+					ModAutoPick.ShowInputFilterName();
+				}
+				else
+				{
+					ModAutoPick.SetFilterNames(arg);
+					ModConfig.SaveConfig();
+				}
+				SoundMn.gI().buttonClick();
+				return;
+			}
+			if (text.Equals("xnhat", StringComparison.OrdinalIgnoreCase))
+			{
+				ModAutoPick.ClearFilters();
+				ModConfig.SaveConfig();
+				SoundMn.gI().buttonClick();
+				return;
+			}
+			if (text.Equals("kbroly", StringComparison.OrdinalIgnoreCase) || text.Equals("broly", StringComparison.OrdinalIgnoreCase))
+			{
+				ModKiteBroly.ToggleAutoKite();
+				return;
+			}
+			if (text.Equals("kc", StringComparison.OrdinalIgnoreCase))
+			{
+				ModKiteBroly.ToggleKhinhCong();
+				return;
+			}
+			if (text.Equals("roido", StringComparison.OrdinalIgnoreCase))
+			{
+				ModDropRate.isInstantPick = !ModDropRate.isInstantPick;
+				ModConfig.SaveConfig();
+				GameScr.info1.addInfo("Trick Rơi Đồ (Hút Tức Thì): " + (ModDropRate.isInstantPick ? "BẬT" : "TẮT"), 0);
+				SoundMn.gI().buttonClick();
+				return;
+			}
+			if (text.Equals("tkrd", StringComparison.OrdinalIgnoreCase))
+			{
+				GameScr.info1.addInfo("TK Rơi Đồ: " + ModDropRate.totalItemsDropped + "/" + ModDropRate.totalMobsKilled + " (" + ModDropRate.GetDropRatePercent() + "%), KH: " + ModDropRate.totalSetKHCount + ", Sao: " + ModDropRate.totalStarCount + ", " + ModDropRate.GetMobsPerMinute() + " quái/ph", 0);
+				SoundMn.gI().buttonClick();
+				return;
+			}
+			if (text.Equals("muabua", StringComparison.OrdinalIgnoreCase) || text.Equals("bua", StringComparison.OrdinalIgnoreCase))
+			{
+				ModAutoBuyBua.StartBuyBuaNow();
+				return;
+			}
+			if (text.Equals("autobua", StringComparison.OrdinalIgnoreCase))
+			{
+				ModAutoBuyBua.ToggleAutoRebuy();
+				return;
+			}
+			if (text.Equals("dich", StringComparison.OrdinalIgnoreCase) || text.Equals("vietnam", StringComparison.OrdinalIgnoreCase) || text.Equals("trans", StringComparison.OrdinalIgnoreCase))
+			{
+				ModConfig.isTranslate = !ModConfig.isTranslate;
+				ModConfig.SaveConfig();
+				ModTranslate.ApplyAllTranslations();
+				GameScr.info1.addInfo("Dịch Việt Hoá: " + (ModConfig.isTranslate ? "BẬT" : "TẮT (Gốc Server)"), 0);
+				SoundMn.gI().buttonClick();
+				return;
+			}
+			if (text.Equals("bg", StringComparison.OrdinalIgnoreCase) || text.Equals("phongcanh", StringComparison.OrdinalIgnoreCase))
+			{
+				ModUI.selectedTab = 4;
+				ModUIBackground.isOpen = true;
+				ModUI.uiCustomOpen = true;
+				SoundMn.gI().buttonClick();
+				return;
+			}
 			if (to.Equals(mResources.chat_player))
 			{
 				if (info2.playerID != Char.myCharz().charID)

@@ -108,6 +108,14 @@ public class Main : MonoBehaviour
 				Debug.LogWarning("ModGraphics.InitGraphics error: " + ex.Message);
 			}
 		}
+		try
+		{
+			ModBackground.Init();
+		}
+		catch (System.Exception ex)
+		{
+			Debug.LogWarning("ModBackground.Init error: " + ex.Message);
+		}
 		Debug.LogWarning("MAIN.START FINISHED");
 	}
 

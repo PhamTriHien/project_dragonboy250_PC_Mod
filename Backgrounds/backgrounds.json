@@ -1,0 +1,50 @@
+[
+  {
+    "id": "bg_galaxy",
+    "name": "Thiên Hà Galaxy",
+    "filename": "bg_galaxy.png",
+    "url": "https://raw.githubusercontent.com/PhamTriHien/project_dragonboy250_PC_Mod/main/Backgrounds/bg_galaxy.png",
+    "size": "58 KB",
+    "desc": "Bầu trời vũ trụ đa sắc huyền ảo với dải ngân hà và tinh vân tuyệt đẹp."
+  },
+  {
+    "id": "bg_sunset",
+    "name": "Hoàng Hôn Sunset",
+    "filename": "bg_sunset.png",
+    "url": "https://raw.githubusercontent.com/PhamTriHien/project_dragonboy250_PC_Mod/main/Backgrounds/bg_sunset.png",
+    "size": "54 KB",
+    "desc": "Chiều tà hoàng hôn rực rỡ với vầng thái dương lặn sau dãy núi xa xăm."
+  },
+  {
+    "id": "bg_sakura",
+    "name": "Anh Đào Sakura",
+    "filename": "bg_sakura.png",
+    "url": "https://raw.githubusercontent.com/PhamTriHien/project_dragonboy250_PC_Mod/main/Backgrounds/bg_sakura.png",
+    "size": "62 KB",
+    "desc": "Đỉnh núi phủ tuyết mùa xuân cùng những cánh hoa anh đào bay lượn."
+  },
+  {
+    "id": "bg_cyberpunk",
+    "name": "Đêm Neon Cyberpunk",
+    "filename": "bg_cyberpunk.png",
+    "url": "https://raw.githubusercontent.com/PhamTriHien/project_dragonboy250_PC_Mod/main/Backgrounds/bg_cyberpunk.png",
+    "size": "60 KB",
+    "desc": "Thành phố công nghệ tương lai hiện đại với ánh đèn neon rực rỡ về đêm."
+  },
+  {
+    "id": "bg_snow_mountain",
+    "name": "Tuyết Sơn Bắc Cực",
+    "filename": "bg_snow_mountain.png",
+    "url": "https://raw.githubusercontent.com/PhamTriHien/project_dragonboy250_PC_Mod/main/Backgrounds/bg_snow_mountain.png",
+    "size": "56 KB",
+    "desc": "Dãy núi tuyết lạnh giá hùng vĩ dưới dải cực quang xanh ngọc lung linh."
+  },
+  {
+    "id": "bg_namek_fantasy",
+    "name": "Huyền Ảo Namek",
+    "filename": "bg_namek_fantasy.png",
+    "url": "https://raw.githubusercontent.com/PhamTriHien/project_dragonboy250_PC_Mod/main/Backgrounds/bg_namek_fantasy.png",
+    "size": "55 KB",
+    "desc": "Bầu trời hành tinh Namek xanh ngọc với tam nguyệt và các hòn đảo nổi."
+  }
+]

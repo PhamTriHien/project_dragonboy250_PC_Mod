@@ -74,6 +74,10 @@ public static class ModUIGraphics
 
 		mFont.tahoma_7b_dark.drawString(g, "Analog:", uiX + 196, uiY + 192, mFont.LEFT);
 		ModUI.PaintNativeButton(uiX + 242, uiY + 188, 42, 18, (GameScr.isAnalog == 1) ? "BẬT" : "TẮT", GameScr.isAnalog == 1, g);
+
+		// 6. Phong Cảnh Nền Game (Git)
+		string bgBtnText = "🌌 HÌNH NỀN PHONG CẢNH (GIT)" + (ModBackground.isCustomBGActive ? " [ĐANG BẬT]" : "");
+		ModUI.PaintNativeButton(uiX + 8, uiY + 208, uiW - 16, 18, bgBtnText, ModBackground.isCustomBGActive, g);
 	}
 
 	public static bool HandleTap(int px, int py, int uiX, int uiY, int uiW, int uiH)
@@ -169,6 +173,14 @@ public static class ModUIGraphics
 			Rms.saveRMSInt("analog", GameScr.isAnalog);
 			ModConfig.SaveConfig();
 			GameScr.info1.addInfo("Bàn phím ảo & Analog: " + ((GameScr.isAnalog == 1) ? "BẬT" : "TẮT"), 0);
+			SoundMn.gI().buttonClick();
+			return true;
+		}
+
+		// 9. Mở Giao diện Hình Nền Phong Cảnh
+		if (px >= uiX + 8 && px <= uiX + uiW - 8 && py >= uiY + 208 && py <= uiY + 228)
+		{
+			ModUIBackground.isOpen = true;
 			SoundMn.gI().buttonClick();
 			return true;
 		}

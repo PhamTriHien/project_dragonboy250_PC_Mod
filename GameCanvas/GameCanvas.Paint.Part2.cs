@@ -18,6 +18,11 @@ public partial class GameCanvas : IActionListener
 			int gW = GameScr.gW;
 			int gH = GameScr.gH;
 			g.translate(-g.getTranslateX(), -g.getTranslateY());
+			if (ModBackground.isCustomBGActive && ModBackground.currentBGImage != null)
+			{
+				ModBackground.PaintCustomBG(g);
+				return;
+			}
 			if (ModMenu.graphicsQuality >= 2)
 			{
 				if (GameScr.gI() != null && GameScr.gI().isRongThanXuatHien)
