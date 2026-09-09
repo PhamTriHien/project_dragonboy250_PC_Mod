@@ -56,6 +56,7 @@ public static class ModAutoPick
 	public static string filterNameRaw = "";
 	public static List<string> filterNameKeywords = new List<string>();
 
+	public static bool isBusy = false;
 	private static long lastPickTime = 0;
 	private static readonly AutoPickActionListener listener = new AutoPickActionListener();
 
@@ -163,8 +164,9 @@ public static class ModAutoPick
 
 	public static bool ShouldPickItem(ItemMap it)
 	{
-		if (it == null || it.template == null) return false;
+		if (it == null) return false;
 		if (pickAll) return true;
+		if (it.template == null) return true;
 
 		int tId = it.template.id;
 		string name = it.template.name;
@@ -215,22 +217,25 @@ public static class ModAutoPick
 		{
 			if (!autoPick || ModNextMap.isNextMapActive || ModGoBack.isReturning || ModSetActivator.isBusy)
 			{
+				isBusy = false;
 				return;
 			}
 			long now = mSystem.currentTimeMillis();
-			if (now - lastPickTime < 250)
+			if (now - lastPickTime < 200)
 			{
 				return;
 			}
 			Char me = Char.myCharz();
 			if (me == null || me.cHP <= 0 || me.statusMe == 14 || me.statusMe == 5)
 			{
+				isBusy = false;
 				return;
 			}
 
 			MyVector items = GameScr.vItemMap;
 			if (items == null || items.size() == 0)
 			{
+				isBusy = false;
 				return;
 			}
 
@@ -259,6 +264,7 @@ public static class ModAutoPick
 			if (closest != null)
 			{
 				lastPickTime = now;
+				isBusy = true;
 				if (minDistance <= 30)
 				{
 					// Đã ở cự ly gần: Nhặt trực tiếp
@@ -273,9 +279,17 @@ public static class ModAutoPick
 					Service.gI().pickItem(closest.itemMapID);
 				}
 			}
+			else
+			{
+				if (now - lastPickTime > 200)
+				{
+					isBusy = false;
+				}
+			}
 		}
 		catch
 		{
+			isBusy = false;
 		}
 	}
 }

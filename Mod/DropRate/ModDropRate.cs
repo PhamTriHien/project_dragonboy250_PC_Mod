@@ -57,40 +57,53 @@ public static class ModDropRate
 
 	public static void OnItemSpawned(ItemMap item)
 	{
-		if (item == null || item.template == null) return;
+		if (item == null) return;
 		InitSession();
 
 		Char me = Char.myCharz();
 		int myId = (me != null) ? me.charID : -1;
 
-		// Kiểm tra nếu vật phẩm thuộc về nhân vật hoặc của chung
-		if (item.playerId == myId || item.playerId == -1)
+		// Kiểm tra quyền sở hữu hợp lệ:
+		// - Thuộc về chính nhân vật (playerId == myId)
+		// - Đồ rơi tự do / của chung (playerId == -1 || playerId == 0)
+		// - Đồ hào quang đặc biệt rơi từ quái như Ngọc Rồng (playerId == -2)
+		bool isMyItem = (item.playerId == myId || item.playerId == -1 || item.playerId == -2 || item.playerId == 0);
+		if (!isMyItem)
 		{
-			totalItemsDropped++;
+			return;
+		}
 
-			// Phân loại vật phẩm
-			if (item.template.type >= 0 && item.template.type <= 4)
+		totalItemsDropped++;
+
+		// Phân loại vật phẩm trang bị / kích hoạt / sao
+		if (item.template != null && item.template.type >= 0 && item.template.type <= 4)
+		{
+			// Kiểm tra nếu là trang bị
+			Item fakeItem = new Item();
+			fakeItem.template = item.template;
+
+			// Kiểm tra đồ kích hoạt
+			if (ModSetActivator.IsSetKichHoat(fakeItem))
 			{
-				// Kiểm tra nếu là trang bị
-				Item fakeItem = new Item();
-				fakeItem.template = item.template;
-
-				// Kiểm tra đồ kích hoạt
-				if (ModSetActivator.IsSetKichHoat(fakeItem))
-				{
-					totalSetKHCount++;
-					GameScr.info1.addInfo("RƠI ĐỒ KÍCH HOẠT: [" + item.template.id + "] " + item.template.name + "!", 0);
-				}
-				else if (ModSetActivator.GetItemStarCount(fakeItem) > 0)
-				{
-					totalStarCount++;
-					GameScr.info1.addInfo("RƠI ĐỒ SAO: [" + item.template.id + "] " + item.template.name + " (" + ModSetActivator.GetItemStarCount(fakeItem) + " Sao)!", 0);
-				}
+				totalSetKHCount++;
+				GameScr.info1.addInfo("RƠI ĐỒ KÍCH HOẠT: [" + item.template.id + "] " + item.template.name + "!", 0);
 			}
-
-			// TRICK ZERO-LATENCY INSTANT PICK: Hút đồ ngay tức thì tại tick 0
-			if (isInstantPick)
+			else if (ModSetActivator.GetItemStarCount(fakeItem) > 0)
 			{
+				totalStarCount++;
+				GameScr.info1.addInfo("RƠI ĐỒ SAO: [" + item.template.id + "] " + item.template.name + " (" + ModSetActivator.GetItemStarCount(fakeItem) + " Sao)!", 0);
+			}
+		}
+
+		// TRICK ZERO-LATENCY INSTANT PICK: Hút đồ ngay tức thì tại tick 0
+		if (isInstantPick)
+		{
+			if (ModAutoPick.ShouldPickItem(item))
+			{
+				if (me != null)
+				{
+					me.itemFocus = item;
+				}
 				Service.gI().pickItem(item.itemMapID);
 			}
 		}

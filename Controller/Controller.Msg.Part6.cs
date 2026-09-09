@@ -159,6 +159,7 @@ public partial class Controller : IMessageHandler
 					if (!flag8)
 					{
 						GameScr.vItemMap.addElement(itemMap);
+						ModDropRate.OnItemSpawned(itemMap);
 					}
 					break;
 				}
@@ -172,7 +173,9 @@ public partial class Controller : IMessageHandler
 					{
 						return true;
 					}
-					GameScr.vItemMap.addElement(new ItemMap(msg.reader().readShort(), msg.reader().readShort(), @char.cx, @char.cy, msg.reader().readShort(), msg.reader().readShort()));
+					ItemMap thrownItem = new ItemMap(msg.reader().readShort(), msg.reader().readShort(), @char.cx, @char.cy, msg.reader().readShort(), msg.reader().readShort());
+					GameScr.vItemMap.addElement(thrownItem);
+					ModDropRate.OnItemSpawned(thrownItem);
 					break;
 				case -22:
 					GameCanvas.debug("SA65", 2);

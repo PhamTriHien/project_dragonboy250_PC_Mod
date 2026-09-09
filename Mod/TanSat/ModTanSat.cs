@@ -92,8 +92,8 @@ public static class ModTanSat
 		{
 			if (!autoTanSat) return;
 
-			// Tam dung khi dang Next Map, GoBack hoac chuyen map
-			if (ModNextMap.isNextMapActive || ModGoBack.isReturning || ModSetActivator.isBusy || ModAutoBuyBua.isBusy || Char.isLoadingMap || Char.ischangingMap) return;
+			// Tam dung khi dang Next Map, GoBack, nhat do hoac chuyen map
+			if (ModNextMap.isNextMapActive || ModGoBack.isReturning || ModSetActivator.isBusy || ModAutoBuyBua.isBusy || ModAutoPick.isBusy || Char.isLoadingMap || Char.ischangingMap) return;
 
 			Char me = Char.myCharz();
 			if (me == null || me.cHP <= 0 || me.statusMe == 14 || me.statusMe == 5) return;
