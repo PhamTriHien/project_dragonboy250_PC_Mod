@@ -1,6 +1,9 @@
 {
   "version": "2.5.0",
-  "buildDate": "2026-09-09",
+  "buildDate": "2026-09-10",
   "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.0/DragonBoy_Net8_Native.exe",
-  "changelog": "Ban phat hanh chuan Native AOT x64 tich hop Full Anti-Tamper, HWID Licensing va Transparent HUD."
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.0/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.0/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.0/DragonBoy_Mod_iOS.ipa",
+  "changelog": "Ban cap nhat da nen tang PC/Android/iOS: Master-Detail Mod UI, bao mat RMS ENC_V1, sua bug doi toc va watchdog chong treo socket."
 }

@@ -53,6 +53,7 @@ public static class ModUIHelp
 		new CommandInfo("F11", "Bật / Tắt Toàn Màn Hình (Fullscreen)", "Phím", 0xffca28),
 		new CommandInfo("Phím Home", "Giải kẹt nhân vật khẩn cấp (Unstuck)", "Phím", 0xffca28),
 		new CommandInfo("Click Logo", "Bấm Logo TriHienKun để mở Menu Mod", "Chuột", 0x26a69a),
+		new CommandInfo("update", "Kiểm tra & Tải cập nhật mới (GitHub)", "Hệ thống", 0x00e676),
 	};
 
 	private static bool isDragging = false;
@@ -331,6 +332,10 @@ public static class ModUIHelp
 			else if (cmd.Contains("Home"))
 			{
 				ModHotkey.EmergencyUnstuck();
+			}
+			else if (cmd.Equals("update"))
+			{
+				ModAutoUpdate.CheckManual();
 			}
 		}
 		catch

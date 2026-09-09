@@ -278,6 +278,7 @@ public partial class ServerListScreen : mScreen, IActionListener
 				cmdDownload = null;
 			}
 			base.update();
+			ModAutoUpdate.UpdateTick();
 			if (Char.isLoadingMap || !loadScreen || !isAutoConect || GameCanvas.currentScreen != this)
 			{
 				return;

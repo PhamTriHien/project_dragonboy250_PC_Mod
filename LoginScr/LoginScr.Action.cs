@@ -131,6 +131,7 @@ public partial class LoginScr : mScreen, IActionListener
 				Main.isMiniApp = true;
 			}
 			DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.UpdateLoginWatchdog();
+			ModAutoUpdate.UpdateTick();
 			updateTfWhenOpenKb();
 		}
 

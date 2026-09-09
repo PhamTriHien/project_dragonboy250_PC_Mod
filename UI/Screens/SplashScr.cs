@@ -48,6 +48,7 @@ public class SplashScr : mScreen
 			}
 			SoundMn.gI().getStrOption();
 			ServerListScreen.loadIP();
+			ModAutoUpdate.StartCheckAsync();
 		}
 		if (splashScrStat >= 25 && !isSwitchToLogin)
 		{
