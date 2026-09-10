@@ -12101,3 +12101,26 @@ dotnet publish -c Release -r win-x64 --self-contained true
 - `DragonBoy_Net8_Native`: Native AOT Win-x64 biên dịch **0 Warning, 0 Error**.
 - Tệp thực thi xuất bản: `DragonBoy_Net8_Native\bin\Release\net8.0\win-x64\publish\DragonBoy_Net8_Native.exe`.
 
+---
+
+## 182. Biên Dịch Thành Công Gói Android APK Native Thuần .NET 8 & Đồng Bộ BlueStacks
+
+### 1. Thiết Lập Môi Trường Biên Dịch Android Thuần C#
+- **Cài đặt .NET for Android Workload**: Đã tải và cấu hình thành công gói SDK `net8.0-android` (phiên bản 34.0.154) và Android SDK API 34 (`android-34/android.jar`).
+- **Dự án**: `DragonBoy_Mobile/Android/DragonBoy_Android.csproj`.
+- **Liên kết mã nguồn**: Liên kết trực tiếp 100% vào toàn bộ 438 tệp C# của `DragonBoy_Net8_Native/Src/` và các lớp tương thích `Engine/`.
+
+### 2. Kết Quả Biên Dịch & Đóng Gói
+- **Lệnh biên dịch**:
+```cmd
+dotnet build DragonBoy_Android.csproj -p:AndroidSdkDirectory="C:\Users\PhamTriHien\AppData\Local\Android\Sdk"
+```
+- **Trạng thái**: **0 Error**, biên dịch thành công 100% ra tệp thực thi Android.
+- **Tệp xuất bản**:
+  - `DragonBoy_Mobile/Android/bin/Debug/net8.0-android/com.trihienkun.dragonboy-Signed.apk` (10,411,985 bytes, ~10.4 MB).
+  - Tệp DLL lõi: `DragonBoy_Android.dll` (1,410,560 bytes).
+
+### 3. Đồng Bộ Màn Hình Desktop & Triển Khai BlueStacks
+- **Tệp APK Desktop**: Đã copy tệp `DragonBoy_Net8_Native_Android.apk` ra Desktop.
+- **Script cài đặt 1-click**: `CAI_DAT_VAO_BLUESTACKS.bat` tại màn hình Desktop giúp người dùng tự động cài đặt gói APK vào BlueStacks và mở giả lập trải nghiệm tức thời.
+
