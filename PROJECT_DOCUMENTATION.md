@@ -12332,3 +12332,80 @@ dotnet build DragonBoy_Android.csproj -p:AndroidSdkDirectory="C:\Users\PhamTriHi
 
 
 
+
+
+---
+
+## 187. TOÀN DIỆN HỖ TRỢ BÀN PHÍM VẬT LÝ VÀ BÀN PHÍM ẢO (PHYSICAL & VIRTUAL KEYBOARD INPUT) TRÊN ANDROID VÀ BLUESTACKS
+
+### 1. Bối Cảnh & Vấn Đề Kỹ Thuật
+- **Phản ánh của người dùng**: *"game không hổ trợ nhập chữ bàn phím?"*.
+- **Phân tích nguyên nhân gốc rễ**:
+  1. **Bàn phím vật lý (Physical Keyboard / BlueStacks)**:
+     - Trong `MainActivity.cs`, hàm `OnKeyDown` và `OnKeyUp` chỉ kiểm tra duy nhất một điều kiện: `if (keyCode == Keycode.Back)`.
+     - 100% các phím bấm khác (chữ cái A-Z, a-z, chữ số 0-9, dấu cách Space, phím xoá Backspace/Del, phím Enter, phím Tab, phím điều hướng Mũi tên/D-pad/WASD và các ký tự đặc biệt) đều rơi vào `return base.OnKeyDown(keyCode, e);` mà **hoàn toàn không được chuyển tiếp sang `GameCanvas`**!
+     - `GameView.cs` (SurfaceView) trước đây không cài đặt `OnKeyDown`, `OnKeyUp`, hay `DispatchKeyEvent`.
+  2. **Bàn phím ảo hệ thống (Soft Keyboard / IME)**:
+     - Khi người chơi chạm vào các ô nhập liệu (`TField` tài khoản, mật khẩu ở `LoginScr`, hoặc ô chat ở `GameScr`), lớp `TouchScreenKeyboard.Open` chỉ là stub rỗng trả về `null`.
+     - `GameView.cs` chưa triển khai `OnCreateInputConnection` để kết nối với `BaseInputConnection` của Android IME.
+     - Hàm `TField.setFocusWithKb` trước đây bị chặn bởi điều kiện `Thread.CurrentThread.Name == Main.mainThreadName`.
+  3. **Bộ gõ Tiếng Việt Telex**:
+     - `TField.Input.cs` và `TField.Telex.cs` bị giới hạn bởi cờ `Main.isPC == true`, khiến môi trường Android/giả lập không tận dụng được bộ gõ Telex tích hợp sẵn.
+
+---
+
+### 2. Giải Pháp Kỹ Thuật Đã Triển Khai (Production-Ready)
+
+#### A. Tạo Module Cầu Nối Bàn Phím Tập Trung (`AndroidInputBridge.cs`)
+Tệp: `DragonBoy_Mobile/Android/AndroidInputBridge.cs`
+- **Xử lý sự kiện bàn phím vật lý (`HandleKeyEvent`)**:
+  - Trích xuất ký tự chính xác qua `e.UnicodeChar` (có tính đến Shift, CapsLock, Alt). Ký tự >= 32 được chuyển tiếp ngay tới `GameMidlet.gameCanvas.keyPressedz(unicodeChar)`.
+  - Phím điều hướng D-pad / Mũi tên: Chuyển đổi chính xác sang mã NRO: Up (`-1`), Down (`-2`), Left (`-3`), Right (`-4`).
+  - Phím điều khiển: Backspace (`-8`), Delete (`-9`), Enter (`-5`), Tab (`-26`), Escape (`-7`).
+  - Phím tắt Clipboard chuyên nghiệp:
+    + `Ctrl + V`: Đọc dữ liệu từ Android `ClipboardManager` và gọi `paste(clip)` vào ô nhập liệu đang active hoặc `ChatTextField`.
+    + `Ctrl + C`: Sao chép văn bản từ ô nhập liệu vào Android `ClipboardManager` qua `ClipData.NewPlainText`.
+    + `Ctrl + A`: Chọn/Xóa sạch toàn bộ văn bản trong ô nhập liệu (`clearAllText()`).
+  - Hỗ trợ đầy đủ phím chức năng `F1` (`-21`), `F2` (`-22`), `F3` (`-23`).
+- **Tích hợp bàn phím ảo Android IME (`AndroidGameInputConnection : BaseInputConnection`)**:
+  - Ghi nhận văn bản nhập từ bàn phím mềm/gợi ý từ/bộ gõ tiếng Việt qua `CommitText`.
+  - Xử lý phím xoá mềm qua `DeleteSurroundingText`.
+  - Xử lý nút Done / Send / Next trên bàn phím ảo qua `PerformEditorAction` (tự động submit hoặc chuyển ô và ẩn bàn phím ảo).
+- **Hàm tiện ích hiển thị/ẩn bàn phím ảo**: `ShowSoftKeyboard(view)` và `HideSoftKeyboard(view)` thông qua `InputMethodManager`.
+
+#### B. Tích Hợp Vào `GameView.cs` & `MainActivity.cs`
+- `GameView.cs`:
+  - Thiết lập `Focusable = true`, `FocusableInTouchMode = true`, `RequestFocus()`.
+  - Override `OnKeyDown`, `OnKeyUp`, `DispatchKeyEvent` gọi `AndroidInputBridge.HandleKeyEvent`.
+  - Override `OnCreateInputConnection` trả về `AndroidGameInputConnection` với `ImeAction.Done` và `ImeFlags.NoExtractUi`.
+- `MainActivity.cs`:
+  - Override `DispatchKeyEvent`, `OnKeyDown`, `OnKeyUp` chuyển tiếp toàn bộ tới `AndroidInputBridge`.
+  - Đăng ký `TouchScreenKeyboard.OpenHandler` và `ClearHandler` tự động gọi `ShowSoftKeyboard` và `HideSoftKeyboard`.
+
+#### C. Hoàn Thiện `TouchScreenKeyboard.cs` & `TField`
+- `TouchScreenKeyboard.cs`: Bỏ stub `return null`, triển khai cơ chế ủy quyền `OpenHandler` và `ClearHandler`, quản lý trạng thái `visible`, `active`, `text`.
+- `TField.Input.cs`:
+  - Trong `setFocusWithKb`: Loại bỏ rào cản luồng `Thread.CurrentThread.Name`, kích hoạt `TouchScreenKeyboard.Open` khi focus và `Clear()` khi mất focus.
+  - Trong `keyPressedAscii`: Bỏ điều kiện `Main.isPC` để hỗ trợ bộ gõ Telex trên mọi nền tảng.
+- `TField.Telex.cs`: Cho phép `tryTelexCompose` hoạt động mượt mà khi gõ phím tiếng Việt.
+- `GameCanvas.Input.cs`: Đồng bộ phím điều hướng keypad (2, 8, 4, 6, 5) cùng với Qwerty (21, 22, 23, 24, 25) trong cả `mapKeyPress` và `mapKeyRelease`.
+- `LoginScr.Action.cs`:
+  - Chạm vào ô Tài khoản / Mật khẩu gọi `setFocusWithKb(true)` kích hoạt đồng bộ bàn phím.
+  - Vô hiệu hóa đoạn auto-login sớm của di động thời cũ gây submit trước khi người chơi hoàn tất gõ.
+
+---
+
+### 3. Kết Quả Kiểm Thử Thực Nghiệm Trực Tiếp Trên BlueStacks
+1. **Biên dịch**:
+   - `DragonBoy_Net8_Native.csproj`: **0 Warning(s), 0 Error(s)**.
+   - `DragonBoy_Android.csproj`: **0 Error(s)**.
+2. **Triển khai & Kiểm thử thực tế**:
+   - Cài đặt bản build Release APK lên BlueStacks (`emulator-5554`).
+   - Mở màn hình Đăng nhập (`LoginScr`).
+   - **Gõ chữ cái**: Gõ các phím `H, I, E, N` -> Chữ `"hien|"` xuất hiện ngay lập tức trong ô Tài khoản cùng con trỏ nhấp nháy sắc nét (`current_screen18.png`).
+   - **Phím xoá (Backspace)**: Nhấn 2 lần phím Backspace -> Ô Tài khoản tự động xoá lùi thành `"hi|"`.
+   - **Gõ số**: Gõ liên tiếp `9, 9, 9` -> Ô Tài khoản cập nhật tức thì thành `"hi999|"`.
+   - **Phím chuyển ô (Mũi tên xuống / Down Arrow)**: Nhấn phím Mũi tên xuống -> Focus lập tức chuyển mượt mà từ ô Tài khoản xuống ô Mật khẩu!
+   - **Gõ mật khẩu bảo mật**: Gõ `p, a, s, s, 1, 2, 3` -> Ô Mật khẩu tự động mã hóa thành các chấm sao `"*******|"` với con trỏ sẵn sàng (`current_screen19.png`).
+3. **Đồng bộ phát hành**:
+   - Đã cập nhật file APK ký số hoàn chỉnh ra màn hình Desktop: [`C:\Users\PhamTriHien\Desktop\DragonBoy_Net8_Native_Android.apk`](file:///C:/Users/PhamTriHien/Desktop/DragonBoy_Net8_Native_Android.apk).
