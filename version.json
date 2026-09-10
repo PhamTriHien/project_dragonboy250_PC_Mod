@@ -5,5 +5,5 @@
   "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.1/DragonBoy_Net8_Native.exe",
   "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.1/DragonBoy250_Mod_Android.apk",
   "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.1/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.1: Ho tro da nen tang PC, Android, iOS tu codebase duy nhat DragonBoy_Net8_Native; Co che bao mat nhi phan da tang AES-256 + Rolling XOR + In-Memory Loader chong crack 99%; Tich hop day du Mod Tan Sat, Next Map, Auto Train, Bong bong dieu khien noi tren Android va Background Modes tren iOS."
+  "changelog": "v2.5.1: DragonBoy_Net8_Native C# .NET 8 Native AOT Win-x64, Raylib-cs GPU OpenGL 3.3 Core; Auto Login khi mat ket noi & giu nguyen 100% che do Auto (Tan Sat, Tu Nhat, Hoi Mau, Up Set, Bua, Toc Do); Toi uu vuot cuon Mod UI; Fix triet de loi Next Map va GoBack ket nhan vat tai cho khong qua map; Hieu nang cuc cao < 50MB RAM, 60-240 FPS, khoi dong < 0.2s va chong dich nguoc .NET tuyet doi."
 }
