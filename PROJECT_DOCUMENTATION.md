@@ -12053,79 +12053,21 @@ Xây dựng lớp chuyên trách `ModAutoLogin.cs` quản lý toàn bộ vòng �
 
 ---
 
-## 180. Chuẩn Hóa Phạm Vi Dự Án Duy Nhất: DragonBoy_Net8_Native (Loại Bỏ Triệt Để Toàn Bộ Tài Liệu & Thành Phần Phi Native)
+## 180. Chuẩn Hóa Mã Nguồn & Bản Build Native (DragonBoy_Net8_Native)
 
-### 1. Bối Cảnh, Phản Hồi Người Dùng & Quyết Định Kỹ Thuật
-- **Phản hồi từ người dùng**:
-  1. *"không phải bản native"* (khi kiểm thử giao diện APK BlueStacks phát hiện ngôn ngữ Indonesia và thành phần Java/Smali từ bản decompiled cũ).
-  2. *"cập nhật file md xóa những thứ không liên quan project mod native"*.
-- **Quyết định dứt khoát & Nguyên tắc tối thượng**:
-  - Loại bỏ hoàn toàn mọi tài liệu, quy trình thử nghiệm và thành phần đóng gói liên quan đến các bản build không phải Native (loại bỏ toàn bộ các mục về Android APK decompiled, Smali host Indo com.blue.dragonball, và các tệp gói không chạy trên C# Native Engine).
-  - Khẳng định duy nhất và tuyệt đối: Dự án duy nhất và chính thống là **`DragonBoy_Net8_Native`** (Mã nguồn C# .NET 8 Native AOT Win-x64 độc lập 100%, 438 tệp C# trong `Src/`, chạy Raylib-cs / OpenGL phần cứng).
+### 1. Thông Tin Dự Án
+- **Tên dự án**: `DragonBoy_Net8_Native`
+- **Nền tảng**: Windows x64 Native AOT (.NET 8, C# 12)
+- **Đồ họa**: Raylib-cs / OpenGL phần cứng (1280x720, Fullscreen F11, Filter F10)
+- **Mã nguồn**: 438 tệp C# tại `DragonBoy_Net8_Native/Src/`
+- **Tệp cấu hình**: `DragonBoy_Net8_Native.csproj`
 
----
-
-### 2. Kiến Trúc & Đặc Tả Kỹ Thuật Chính Thức Của Dự Án DragonBoy_Net8_Native
-
-#### 2.1. Cấu Trúc Dự Án C# Native Thuần Túy
-- **Đường dẫn thư mục**: `C:\ModNRO\DragonBoy_Net8_Native`
-- **Tệp dự án**: `DragonBoy_Net8_Native.csproj` (.NET 8, C# 12, Single-File, Unsafe, Native AppHost Win-x64).
-- **Tổng số tệp mã nguồn**: **438 tệp C#** nằm trong thư mục `DragonBoy_Net8_Native\Src\`.
-- **Hệ thống đồ họa (Render Engine)**:
-  - Raylib-cs / OpenGL 3.3 Core Profile phần cứng.
-  - Quản lý hiển thị: `Engine/Graphics/RenderManager.cs` (Độ phân giải HD 1280x720, Fullscreen tức thời F11 / Alt+Enter, bộ lọc F10 Pixel-Art / HD Bilinear, tự động căn giữa Letterbox 16:9 không méo hình).
-  - Lớp đồ họa 2D: `Engine/Graphics/mGraphics.cs` (drawRegion, fillRect, setClip, drawImage...).
-  - Quản lý Texture: `Engine/Graphics/Image.cs` (Nạp Texture GPU từ sprite x2 gốc).
-  - Phông chữ sắc nét: `Engine/Graphics/mFont.cs` (Drop Shadow 4 hướng, không bị vỡ hạt như Unity Mono).
-
-#### 2.2. Hệ Thống Mod Tích Hợp Đầy Đủ & Hoàn Chỉnh
-- **`ModAutoTrain.cs` (Tàn Sát)**: Tự động tìm quái gần nhất, tiếp cận theo toạ độ thật, kích hoạt kỹ năng tối ưu, tự động hồi sinh / nhặt đồ / buff đậu thần.
-- **`ModNextMap.cs` & `ModWaypoint.cs` (Chuyển Map Thông Minh)**:
-  - Tự động dò toạ độ waypoint, di chuyển chính xác đến toạ độ chạm sàn `T_TOP`, xoá sạch `entranceWaypoint`, gửi packet đổi map trực tiếp lên server.
-  - Xử lý timeout và giải phóng khóa phím an toàn khi đổi cờ hoặc bị lỗi mạng.
-- **`ModUI.cs` & `ModMenu.cs` (Giao Diện Mod Trực Quan)**:
-  - Menu cấu hình trực tiếp in-game sử dụng tài nguyên sprite gốc (`imgArrow`, `imgArrow2`, `imgMenu`, `imgFocus`).
-  - Hỗ trợ vuốt cuộn chuột và phím điều hướng mượt mà.
-- **`AutoLogin.cs` & `ModBackground.cs` (Treo Máy & Giữ Kết Nối)**:
-  - Tự động kết nối lại khi mất mạng, tự đăng nhập lại tài khoản và khôi phục 100% các chế độ auto đang chạy.
-  - Giữ luồng mạng và vòng lặp game hoạt động liên tục khi thu nhỏ cửa sổ.
-- **`ModConfig.cs` (Lưu Trữ Bền Vững)**: Tự động nạp và ghi cấu hình vào `mod_config.ini`.
-
-#### 2.3. Hiệu Năng & Khả Năng Bảo Mật
-- **Hiệu năng**:
-  - Tiêu thụ RAM cực thấp: **< 50MB RAM** (so với 200MB - 450MB của Unity cũ).
-  - Tốc độ khung hình: 60 - 240 FPS ổn định, mượt mà.
-  - Thời gian khởi động: < 0.2 giây.
-- **Bảo mật chống dịch ngược**:
-  - Biên dịch bằng Native AOT / Single-File: Mã nguồn C# được biên dịch thẳng ra mã máy x64 nhị phân (x86_64 Machine Code).
-  - Hoàn toàn không chứa bytecode CIL/MSIL, **miễn nhiễm 100% với các công cụ dịch ngược .NET** (dnSpy, ILSpy, de4dot).
-
----
-
-### 3. Quy Trình Biên Dịch Duy Nhất (Build Pipeline)
-
-Script biên dịch chuẩn duy nhất tại thư mục gốc: `C:\ModNRO\build_native.bat`.
-
+### 2. Quy Trình Biên Dịch
+- **Script build**: `build_native.bat`
 ```cmd
-@echo off
 cd /d "C:\ModNRO\DragonBoy_Net8_Native"
 dotnet publish -c Release -r win-x64 --self-contained true
 ```
-
-- **Đầu ra nhị phân chính thức**:
-  `C:\ModNRO\DragonBoy_Net8_Native\bin\Release\net8.0\win-x64\publish\DragonBoy_Net8_Native.exe`
-- **Trạng thái kiểm định**: **0 Warning, 0 Error**.
-- **Đồng bộ Desktop**: Tệp `DragonBoy_Net8_Native.exe` được cập nhật trực tiếp ra Desktop để người dùng khởi chạy tức thời.
-
----
-
-### 4. Thanh Lọc Toàn Diện Không Gian Làm Việc (Workspace Cleanup)
-
-1. **Loại bỏ thư mục & tệp không thuộc Native**:
-   - Đã xóa bỏ hoàn toàn thư mục `DragonBoy_Net8_Native/Platform` (chứa các tệp decompiled Android/smali).
-   - Đã xóa bỏ các script đóng gói Android APK và iOS IPA phi native.
-2. **Cập nhật và làm sạch tài liệu**:
-   - `PROJECT_DOCUMENTATION.md`: Xóa toàn bộ các mục 180 đến 189 về các bản build thử nghiệm decompiled Android/iOS.
-   - `walkthrough.md`: Làm sạch toàn bộ nhật ký logcat và ảnh chụp BlueStacks liên quan đến bản APK không phải Native.
-   - Tập trung 100% nội dung tài liệu vào kiến trúc, mã nguồn C# và hướng dẫn vận hành của `DragonBoy_Net8_Native`.
+- **Tệp thực thi**: `DragonBoy_Net8_Native\bin\Release\net8.0\win-x64\publish\DragonBoy_Net8_Native.exe`
+- **Trạng thái**: Biên dịch thành công, 0 Warning, 0 Error.
 
