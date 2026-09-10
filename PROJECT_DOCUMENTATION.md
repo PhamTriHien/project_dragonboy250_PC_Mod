@@ -12298,3 +12298,14 @@ Xây dựng lớp chuyên trách `ModAutoLogin.cs` quản lý toàn bộ vòng �
 | **Android OS** | `DragonBoy250_Mod_Android.apk` | **89.93 MB** | Zipalign 4-byte, APK Scheme v2 + v3 Verified | **Đã Đồng Bộ** |
 | **Apple iOS** | `DragonBoy_Mod_iOS.ipa` | **137.69 MB** | CodeResources SHA-1 + SHA-256 (18.237 files) | **Đã Đồng Bộ** |
 
+---
+
+### 4. Triển Khai & Kiểm Thử APK Trực Tiếp Trên BlueStacks
+1. **Kết Nối & Cài Đặt**:
+   - Kết nối ADB tới BlueStacks qua cổng `127.0.0.1:5555`.
+   - Lệnh cài đặt: `adb install -r DragonBoy250_Mod_Android.apk` phản hồi `Performing Streamed Install -> Success`.
+2. **Khởi Chạy Ứng Dụng**:
+   - Khởi chạy thành công Activity của game `com.bluedragonss.boysss`.
+   - Chụp ảnh màn hình trực tiếp từ BlueStacks xác nhận game tải dữ liệu tài nguyên gốc chuẩn `http://ngocrongonline.com v2.5.0(4)`, hiển thị hộp thoại kết nối máy chủ và giao diện đồ họa sắc nét.
+
+
