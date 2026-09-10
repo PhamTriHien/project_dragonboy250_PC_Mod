@@ -1,9 +1,9 @@
 @echo off
 chcp 65001 >nul
-python "%~dp002_iOS_Builds\build_ios.py"
+python "C:\ModNRO\02_iOS_Builds\build_ios_native.py"
 if %ERRORLEVEL% NEQ 0 (
     echo.
-    echo [LỖI] Quá trình build iOS IPA thất bại!
+    echo [LOI] Qua trinh build iOS IPA that bai!
     pause
     exit /b %ERRORLEVEL%
 )
