@@ -5,5 +5,5 @@
   "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.1/DragonBoy_Net8_Native.exe",
   "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.1/DragonBoy250_Mod_Android.apk",
   "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.1/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.1: Auto Login khi mat ket noi & giu nguyen 100% che do Auto (Tan Sat, Tu Nhat, Hoi Mau, Up Set, Bua, Toc Do), GoBack ve dung bai farm cu; Ho tro Cua so noi va Bong bong messenger tren Android & iOS; WakeLock va Background Modes chong kill app khi treo ngam; Toi uu vuot cuon cham keo Mod UI ca hai ben."
+  "changelog": "v2.5.1: Auto Login khi mat ket noi & giu nguyen 100% che do Auto (Tan Sat, Tu Nhat, Hoi Mau, Up Set, Bua, Toc Do), GoBack ve dung bai farm cu; Ho tro Cua so noi va Bong bong messenger tren Android & iOS; WakeLock va Background Modes chong kill app khi treo ngam; Toi uu vuot cuon cham keo Mod UI ca hai ben; Fix triet de loi Next Map va GoBack ket nhan vat tai cho khong qua map."
 }
