@@ -12071,3 +12071,33 @@ dotnet publish -c Release -r win-x64 --self-contained true
 - **Tệp thực thi**: `DragonBoy_Net8_Native\bin\Release\net8.0\win-x64\publish\DragonBoy_Net8_Native.exe`
 - **Trạng thái**: Biên dịch thành công, 0 Warning, 0 Error.
 
+---
+
+## 181. Kiến Trúc Chuyển Đổi Đa Nền Tảng (Cross-Platform Architecture: Desktop, Android, iOS)
+
+### 1. Phân Tầng Kiến Trúc (Decoupled Layer Architecture)
+- **Lõi C# Core (`DragonBoy_Net8_Native/Src`)**: 438 tệp C# độc lập 100% với nền tảng, chứa toàn bộ gameplay, giao tiếp mạng socket và hệ thống Mod.
+- **Tầng trừu tượng (`DragonBoy_Net8_Native/Engine/Platform`)**:
+  - `IPlatformBridge.cs`: Siêu dữ liệu nền tảng, định tuyến URL, vòng đời ứng dụng.
+  - `IGraphicsDriver.cs`: Trừu tượng hóa vòng lặp render, vùng hiển thị ảo và co giãn màn hình.
+  - `IInputDriver.cs`: Trừu tượng hóa luồng sự kiện cảm ứng và bàn phím.
+- **Desktop Adapter**:
+  - `RaylibGraphicsDriver.cs`: Kết nối `RenderManager` hiển thị cửa sổ OpenGL 3.3.
+  - `RaylibInputDriver.cs`: Kết nối `EventPump` xử lý phím và chuột.
+  - `DefaultDesktopBridge.cs`: Quản lý tiến trình Windows x64.
+
+### 2. Cấu Trúc Dự Án Di Động (`DragonBoy_Mobile`)
+- **Android Host (`DragonBoy_Mobile/Android`)**:
+  - `DragonBoy_Android.csproj` (`net8.0-android`, AOT / LLVM).
+  - `AndroidManifest.xml`: Cấu hình quyền INTERNET, WAKE_LOCK, FOREGROUND_SERVICE, khóa màn hình ngang `sensorLandscape`.
+  - Tích hợp pipeline cảm ứng `GameCanvas.isTouch = true` và `KeepAliveService` chạy ngầm.
+- **iOS Host (`DragonBoy_Mobile/iOS`)**:
+  - `DragonBoy_iOS.csproj` (`net8.0-ios`, Native AOT ARM64).
+  - `Info.plist`: Cấu hình quyền và `UIBackgroundModes` (`audio`, `voip`, `fetch`, `processing`).
+- **Pipeline Đa Nền Tảng**:
+  - Script điều phối `DragonBoy_Mobile/build_mobile.bat` (`desktop`, `android`, `ios`).
+
+### 3. Kết Quả Kiểm Định
+- `DragonBoy_Net8_Native`: Native AOT Win-x64 biên dịch **0 Warning, 0 Error**.
+- Tệp thực thi xuất bản: `DragonBoy_Net8_Native\bin\Release\net8.0\win-x64\publish\DragonBoy_Net8_Native.exe`.
+
