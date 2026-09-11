@@ -2,8 +2,37 @@ using System;
 using Assets.src.e;
 using Assets.src.g;
 using UnityEngine;
+public class BgData
+{
+	public int typeBg;
+	public int nBg;
+	public Image[] imgBG;
+	public int[] bgW;
+	public int[] bgH;
+	public int[] colorTop;
+	public int[] colorBotton;
+	public int[] layerSpeed;
+	public int[] moveX;
+	public int[] moveXSpeed;
+	public int skyColor;
+	public int transY;
+	public Image imgCaycot;
+	public Image imgSun;
+	public Image imgSun2;
+	public Image[] imgSunSpec;
+	public int sunX;
+	public int sunY;
+	public int sunX2;
+	public int[] cloudX;
+	public int[] cloudY;
+	public Image imgCloud;
+	public Image imgWaterflow;
+}
+
 public partial class GameCanvas : IActionListener
 {
+	public static System.Collections.Generic.Dictionary<string, BgData> bgDataCache = new System.Collections.Generic.Dictionary<string, BgData>();
+
 	public static void loadBG(int typeBG)
 		{
 			try
@@ -23,6 +52,52 @@ public partial class GameCanvas : IActionListener
 				{
 					return;
 				}
+
+				string cacheKey = typeBG + "_" + TileMap.bgType;
+				if (bgDataCache.TryGetValue(cacheKey, out BgData cached) && cached != null)
+				{
+					TileMap.lastBgID = (sbyte)typeBG;
+					TileMap.lastType = (sbyte)TileMap.bgType;
+					typeBg = typeBG;
+					transY = cached.transY;
+					isBoltEff = false;
+					layerSpeed = (cached.layerSpeed != null) ? (int[])cached.layerSpeed.Clone() : null;
+					moveX = (cached.moveX != null) ? (int[])cached.moveX.Clone() : null;
+					moveXSpeed = (cached.moveXSpeed != null) ? (int[])cached.moveXSpeed.Clone() : null;
+					skyColor = cached.skyColor;
+					nBg = cached.nBg;
+					imgBG = cached.imgBG;
+					bgW = cached.bgW;
+					bgH = cached.bgH;
+					colorTop = cached.colorTop;
+					colorBotton = cached.colorBotton;
+					imgCaycot = cached.imgCaycot;
+					imgSun = cached.imgSun;
+					imgSun2 = cached.imgSun2;
+					imgSunSpec = cached.imgSunSpec;
+					sunX = cached.sunX;
+					sunY = cached.sunY;
+					sunX2 = cached.sunX2;
+					cloudX = (cached.cloudX != null) ? (int[])cached.cloudX.Clone() : null;
+					cloudY = (cached.cloudY != null) ? (int[])cached.cloudY.Clone() : null;
+					imgCloud = cached.imgCloud;
+					if (cached.imgWaterflow != null)
+					{
+						TileMap.imgWaterflow = cached.imgWaterflow;
+					}
+					getYBackground(typeBg);
+					if (typeBg == 4)
+					{
+						BackgroudEffect.addEffect(3);
+					}
+					else if (typeBg == 9)
+					{
+						BackgroudEffect.addEffect(9);
+					}
+					paintBG = true;
+					return;
+				}
+
 				transY = 12;
 				TileMap.lastBgID = (sbyte)typeBG;
 				TileMap.lastType = (sbyte)TileMap.bgType;
@@ -159,6 +234,12 @@ public partial class GameCanvas : IActionListener
 				bgH = new int[nBg];
 				colorBotton = new int[nBg];
 				colorTop = new int[nBg];
+				int defaultBgSky = (typeBg >= 0 && typeBg < StaticObj.SKYCOLOR.Length) ? StaticObj.SKYCOLOR[typeBg] : skyColor;
+				for (int iInit = 0; iInit < nBg; iInit++)
+				{
+					colorTop[iInit] = defaultBgSky;
+					colorBotton[iInit] = defaultBgSky;
+				}
 				if (TileMap.bgType == 100)
 				{
 					imgBG[0] = loadImageRMS("/bg/b100.png");
@@ -171,10 +252,10 @@ public partial class GameCanvas : IActionListener
 						{
 							int[] data2 = new int[1];
 							imgBG[j].getRGB(ref data2, 0, 1, mGraphics.getRealImageWidth(imgBG[j]) / 2, 0, 1, 1);
-							colorTop[j] = data2[0];
+							if (data2[0] != 0) colorTop[j] = data2[0];
 							data2 = new int[1];
 							imgBG[j].getRGB(ref data2, 0, 1, mGraphics.getRealImageWidth(imgBG[j]) / 2, mGraphics.getRealImageHeight(imgBG[j]) - 1, 1, 1);
-							colorBotton[j] = data2[0];
+							if (data2[0] != 0) colorBotton[j] = data2[0];
 							bgW[j] = mGraphics.getImageWidth(imgBG[j]);
 							bgH[j] = mGraphics.getImageHeight(imgBG[j]);
 						}
@@ -200,10 +281,10 @@ public partial class GameCanvas : IActionListener
 						{
 							int[] data3 = new int[1];
 							imgBG[k].getRGB(ref data3, 0, 1, mGraphics.getRealImageWidth(imgBG[k]) / 2, 0, 1, 1);
-							colorTop[k] = data3[0];
+							if (data3[0] != 0) colorTop[k] = data3[0];
 							data3 = new int[1];
 							imgBG[k].getRGB(ref data3, 0, 1, mGraphics.getRealImageWidth(imgBG[k]) / 2, mGraphics.getRealImageHeight(imgBG[k]) - 1, 1, 1);
-							colorBotton[k] = data3[0];
+							if (data3[0] != 0) colorBotton[k] = data3[0];
 							bgW[k] = mGraphics.getImageWidth(imgBG[k]);
 							bgH[k] = mGraphics.getImageHeight(imgBG[k]);
 						}
@@ -355,11 +436,32 @@ public partial class GameCanvas : IActionListener
 						}
 					}
 				}
-				paintBG = false;
-				if (!paintBG)
-				{
-					paintBG = true;
-				}
+				paintBG = true;
+				BgData newBgData = new BgData();
+				newBgData.typeBg = typeBg;
+				newBgData.nBg = nBg;
+				newBgData.imgBG = imgBG;
+				newBgData.bgW = bgW;
+				newBgData.bgH = bgH;
+				newBgData.colorTop = colorTop;
+				newBgData.colorBotton = colorBotton;
+				newBgData.layerSpeed = (layerSpeed != null) ? (int[])layerSpeed.Clone() : null;
+				newBgData.moveX = (moveX != null) ? (int[])moveX.Clone() : null;
+				newBgData.moveXSpeed = (moveXSpeed != null) ? (int[])moveXSpeed.Clone() : null;
+				newBgData.skyColor = skyColor;
+				newBgData.transY = transY;
+				newBgData.imgCaycot = imgCaycot;
+				newBgData.imgSun = imgSun;
+				newBgData.imgSun2 = imgSun2;
+				newBgData.imgSunSpec = imgSunSpec;
+				newBgData.sunX = sunX;
+				newBgData.sunY = sunY;
+				newBgData.sunX2 = sunX2;
+				newBgData.cloudX = (cloudX != null) ? (int[])cloudX.Clone() : null;
+				newBgData.cloudY = (cloudY != null) ? (int[])cloudY.Clone() : null;
+				newBgData.imgCloud = imgCloud;
+				newBgData.imgWaterflow = TileMap.imgWaterflow;
+				bgDataCache[cacheKey] = newBgData;
 			}
 			catch (Exception)
 			{

@@ -19,6 +19,8 @@ public partial class CreateCharScr
 					MapTemplate.maps[i][j] = dataInputStream.read();
 				}
 				MapTemplate.types[i] = new int[MapTemplate.maps[i].Length];
+				MapTemplate.pxw[i] = MapTemplate.tmw[i] * TileMap.size;
+				MapTemplate.pxh[i] = MapTemplate.tmh[i] * TileMap.size;
 			}
 		}
 
@@ -103,17 +105,15 @@ public partial class CreateCharScr
 
 	public void doChangeMap()
 		{
-			TileMap.maps = new int[MapTemplate.maps[indexGender].Length];
-			for (int i = 0; i < MapTemplate.maps[indexGender].Length; i++)
+			if (MapTemplate.maps != null && indexGender >= 0 && indexGender < MapTemplate.maps.Length && MapTemplate.maps[indexGender] != null)
 			{
-				TileMap.maps[i] = MapTemplate.maps[indexGender][i];
+				TileMap.maps = MapTemplate.maps[indexGender];
+				TileMap.types = MapTemplate.types[indexGender];
+				TileMap.tmw = MapTemplate.tmw[indexGender];
+				TileMap.tmh = MapTemplate.tmh[indexGender];
+				TileMap.pxw = MapTemplate.tmw[indexGender] * TileMap.size;
+				TileMap.pxh = MapTemplate.tmh[indexGender] * TileMap.size;
 			}
-			TileMap.types = MapTemplate.types[indexGender];
-			TileMap.pxh = MapTemplate.pxh[indexGender];
-			TileMap.pxw = MapTemplate.pxw[indexGender];
-			TileMap.tileID = MapTemplate.pxw[indexGender];
-			TileMap.tmw = MapTemplate.tmw[indexGender];
-			TileMap.tmh = MapTemplate.tmh[indexGender];
 			TileMap.tileID = bgID[indexGender] + 1;
 			TileMap.loadMainTile();
 			TileMap.loadTileCreatChar();

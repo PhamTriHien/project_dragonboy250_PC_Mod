@@ -57,11 +57,17 @@ public partial class CreateCharScr : mScreen, IActionListener
 			}
 			try
 			{
-				if (!GameCanvas.lowGraphic)
-				{
-					loadMapFromResource(new sbyte[3] { 39, 40, 41 });
-				}
+				loadMapFromResource(new sbyte[3] { 39, 40, 41 });
 				loadMapTableFromResource(new sbyte[3] { 39, 40, 41 });
+				// Preload all 3 planets into cache for instant, zero-lag switching
+				for (int p = 0; p < 3; p++)
+				{
+					int bId = bgID[p];
+					int tId = bId + 1;
+					GameCanvas.loadBG(bId);
+					TileMap.tileID = tId;
+					TileMap.getTile();
+				}
 			}
 			catch (Exception ex)
 			{

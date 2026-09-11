@@ -29,11 +29,16 @@ public class SelectCharScr : mScreen, IActionListener
 	{
 		try
 		{
-			if (!GameCanvas.lowGraphic)
-			{
-				loadMapFromResource(new sbyte[3] { 39, 40, 41 });
-			}
+			loadMapFromResource(new sbyte[3] { 39, 40, 41 });
 			loadMapTableFromResource(new sbyte[3] { 39, 40, 41 });
+			for (int p = 0; p < 3; p++)
+			{
+				int bId = bgID[p];
+				int tId = bId + 1;
+				GameCanvas.loadBG(bId);
+				TileMap.tileID = tId;
+				TileMap.getTile();
+			}
 		}
 		catch (Exception ex)
 		{
@@ -73,6 +78,8 @@ public class SelectCharScr : mScreen, IActionListener
 				MapTemplate.maps[i][j] = dataInputStream.read();
 			}
 			MapTemplate.types[i] = new int[MapTemplate.maps[i].Length];
+			MapTemplate.pxw[i] = MapTemplate.tmw[i] * TileMap.size;
+			MapTemplate.pxh[i] = MapTemplate.tmh[i] * TileMap.size;
 		}
 	}
 
@@ -154,17 +161,15 @@ public class SelectCharScr : mScreen, IActionListener
 
 	public void doChangeMap()
 	{
-		TileMap.maps = new int[MapTemplate.maps[indexGender].Length];
-		for (int i = 0; i < MapTemplate.maps[indexGender].Length; i++)
+		if (MapTemplate.maps != null && indexGender >= 0 && indexGender < MapTemplate.maps.Length && MapTemplate.maps[indexGender] != null)
 		{
-			TileMap.maps[i] = MapTemplate.maps[indexGender][i];
+			TileMap.maps = MapTemplate.maps[indexGender];
+			TileMap.types = MapTemplate.types[indexGender];
+			TileMap.tmw = MapTemplate.tmw[indexGender];
+			TileMap.tmh = MapTemplate.tmh[indexGender];
+			TileMap.pxw = MapTemplate.tmw[indexGender] * TileMap.size;
+			TileMap.pxh = MapTemplate.tmh[indexGender] * TileMap.size;
 		}
-		TileMap.types = MapTemplate.types[indexGender];
-		TileMap.pxh = MapTemplate.pxh[indexGender];
-		TileMap.pxw = MapTemplate.pxw[indexGender];
-		TileMap.tileID = MapTemplate.pxw[indexGender];
-		TileMap.tmw = MapTemplate.tmw[indexGender];
-		TileMap.tmh = MapTemplate.tmh[indexGender];
 		TileMap.tileID = bgID[indexGender] + 1;
 		TileMap.loadMainTile();
 		TileMap.loadTileCreatChar();

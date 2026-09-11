@@ -342,14 +342,22 @@ public partial class TileMap
 			return false;
 		}
 
+	public static System.Collections.Generic.Dictionary<int, Image[]> tileDataCache = new System.Collections.Generic.Dictionary<int, Image[]>();
+
 	public static void getTile()
 		{
+			if (tileDataCache.TryGetValue(tileID, out Image[] cachedTiles) && cachedTiles != null)
+			{
+				imgTile = cachedTiles;
+				return;
+			}
 			if (mSystem.clientType == 3 || mSystem.clientType == 5)
 			{
 				if (mGraphics.zoomLevel == 1)
 				{
 					imgTile = new Image[1];
 					imgTile[0] = GameCanvas.loadImage("/t/" + tileID + ".png");
+					if (imgTile[0] != null) tileDataCache[tileID] = imgTile;
 					return;
 				}
 				imgTile = new Image[100];
@@ -357,6 +365,7 @@ public partial class TileMap
 				{
 					imgTile[i] = GameCanvas.loadImage("/t/" + tileID + "/" + (i + 1) + ".png");
 				}
+				tileDataCache[tileID] = imgTile;
 				return;
 			}
 			if (mGraphics.zoomLevel == 1)
@@ -380,9 +389,19 @@ public partial class TileMap
 					empty = ((k >= 9) ? ("/t/" + tileID + "/t_" + (k + 1)) : ("/t/" + tileID + "/t_0" + (k + 1)));
 					imgTile[k] = GameCanvas.loadImage(empty);
 				}
+				tileDataCache[tileID] = imgTile;
 				return;
 			}
-			Image image = GameCanvas.loadImageRMS("/t/" + tileID + "$1.png");
+			Image image = GameCanvas.loadImageRMS("/t/" + tileID + ".png");
+			if (image != null)
+			{
+				Rms.DeleteStorage("$");
+				imgTile = new Image[1];
+				imgTile[0] = image;
+				tileDataCache[tileID] = imgTile;
+				return;
+			}
+			image = GameCanvas.loadImageRMS("/t/" + tileID + "$1.png");
 			if (image != null)
 			{
 				Rms.DeleteStorage("x" + mGraphics.zoomLevel + "t" + tileID);
@@ -391,16 +410,7 @@ public partial class TileMap
 				{
 					imgTile[l] = GameCanvas.loadImageRMS("/t/" + tileID + "$" + (l + 1) + ".png");
 				}
-			}
-			else
-			{
-				image = GameCanvas.loadImageRMS("/t/" + tileID + ".png");
-				if (image != null)
-				{
-					Rms.DeleteStorage("$");
-					imgTile = new Image[1];
-					imgTile[0] = image;
-				}
+				tileDataCache[tileID] = imgTile;
 			}
 		}
 
