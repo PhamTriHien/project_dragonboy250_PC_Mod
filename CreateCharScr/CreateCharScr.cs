@@ -25,9 +25,9 @@ public partial class CreateCharScr : mScreen, IActionListener
 			new int[3] { 6, 27, 28 }
 		};
 
-	public static int[] defaultLeg = new int[3] { 1, 12, 7 };
+	public static int[] defaultLeg = new int[3] { 2, 13, 8 };
 
-	public static int[] defaultBody = new int[3] { 2, 13, 8 };
+	public static int[] defaultBody = new int[3] { 1, 12, 7 };
 
 	private int yButton;
 

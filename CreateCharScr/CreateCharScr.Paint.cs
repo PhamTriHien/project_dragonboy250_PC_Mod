@@ -41,7 +41,11 @@ public partial class CreateCharScr
 			try
 			{
 				g.drawImage(TileMap.bong, cx, cy + dy, 3);
-				// Thứ tự vẽ: Chân (Layer dưới) -> Thân (Layer giữa) -> Đầu (Layer trên cùng)
+				// Thứ tự vẽ chuẩn: Đầu -> Chân -> Thân (Thân vẽ trên cùng để áo và tay che cổ và cạp quần)
+				if (partHead != null && partHead.pi != null && partHead.pi.Length > Char.CharInfo[cf][0][0])
+				{
+					SmallImage.drawSmallImage(g, partHead.pi[Char.CharInfo[cf][0][0]].id, cx + Char.CharInfo[cf][0][1] + partHead.pi[Char.CharInfo[cf][0][0]].dx, cy - Char.CharInfo[cf][0][2] + partHead.pi[Char.CharInfo[cf][0][0]].dy + dy, 0, 0);
+				}
 				if (partLeg != null && partLeg.pi != null && partLeg.pi.Length > Char.CharInfo[cf][1][0])
 				{
 					SmallImage.drawSmallImage(g, partLeg.pi[Char.CharInfo[cf][1][0]].id, cx + Char.CharInfo[cf][1][1] + partLeg.pi[Char.CharInfo[cf][1][0]].dx, cy - Char.CharInfo[cf][1][2] + partLeg.pi[Char.CharInfo[cf][1][0]].dy + dy, 0, 0);
@@ -49,10 +53,6 @@ public partial class CreateCharScr
 				if (partBody != null && partBody.pi != null && partBody.pi.Length > Char.CharInfo[cf][2][0])
 				{
 					SmallImage.drawSmallImage(g, partBody.pi[Char.CharInfo[cf][2][0]].id, cx + Char.CharInfo[cf][2][1] + partBody.pi[Char.CharInfo[cf][2][0]].dx, cy - Char.CharInfo[cf][2][2] + partBody.pi[Char.CharInfo[cf][2][0]].dy + dy, 0, 0);
-				}
-				if (partHead != null && partHead.pi != null && partHead.pi.Length > Char.CharInfo[cf][0][0])
-				{
-					SmallImage.drawSmallImage(g, partHead.pi[Char.CharInfo[cf][0][0]].id, cx + Char.CharInfo[cf][0][1] + partHead.pi[Char.CharInfo[cf][0][0]].dx, cy - Char.CharInfo[cf][0][2] + partHead.pi[Char.CharInfo[cf][0][0]].dy + dy, 0, 0);
 				}
 			}
 			catch (Exception ex)
@@ -74,7 +74,11 @@ public partial class CreateCharScr
 			if (GameCanvas.w < 200)
 			{
 				GameCanvas.paintz.paintFrame(GameScr.popupX, GameScr.popupY, GameScr.popupW, GameScr.popupH, g);
-				// Thứ tự vẽ: Chân -> Thân -> Đầu
+				// Thứ tự vẽ chuẩn: Đầu -> Chân -> Thân
+				if (partHead != null && partHead.pi != null && partHead.pi.Length > Char.CharInfo[0][0][0])
+				{
+					SmallImage.drawSmallImage(g, partHead.pi[Char.CharInfo[0][0][0]].id, GameCanvas.w / 2 + Char.CharInfo[0][0][1] + partHead.pi[Char.CharInfo[0][0][0]].dx, GameScr.popupY + 30 + 3 * num - Char.CharInfo[0][0][2] + partHead.pi[Char.CharInfo[0][0][0]].dy + dy, 0, 0);
+				}
 				if (partLeg != null && partLeg.pi != null && partLeg.pi.Length > Char.CharInfo[0][1][0])
 				{
 					SmallImage.drawSmallImage(g, partLeg.pi[Char.CharInfo[0][1][0]].id, GameCanvas.w / 2 + Char.CharInfo[0][1][1] + partLeg.pi[Char.CharInfo[0][1][0]].dx, GameScr.popupY + 30 + 3 * num - Char.CharInfo[0][1][2] + partLeg.pi[Char.CharInfo[0][1][0]].dy + dy, 0, 0);
@@ -82,10 +86,6 @@ public partial class CreateCharScr
 				if (partBody != null && partBody.pi != null && partBody.pi.Length > Char.CharInfo[0][2][0])
 				{
 					SmallImage.drawSmallImage(g, partBody.pi[Char.CharInfo[0][2][0]].id, GameCanvas.w / 2 + Char.CharInfo[0][2][1] + partBody.pi[Char.CharInfo[0][2][0]].dx, GameScr.popupY + 30 + 3 * num - Char.CharInfo[0][2][2] + partBody.pi[Char.CharInfo[0][2][0]].dy + dy, 0, 0);
-				}
-				if (partHead != null && partHead.pi != null && partHead.pi.Length > Char.CharInfo[0][0][0])
-				{
-					SmallImage.drawSmallImage(g, partHead.pi[Char.CharInfo[0][0][0]].id, GameCanvas.w / 2 + Char.CharInfo[0][0][1] + partHead.pi[Char.CharInfo[0][0][0]].dx, GameScr.popupY + 30 + 3 * num - Char.CharInfo[0][0][2] + partHead.pi[Char.CharInfo[0][0][0]].dy + dy, 0, 0);
 				}
 				for (int k = 0; k < mResources.MENUNEWCHAR.Length; k++)
 				{
@@ -173,35 +173,6 @@ public partial class CreateCharScr
 					mFont.tahoma_7b_dark.drawString(g, mResources.hairStyleName[indexGender][m], GameCanvas.w / 2 - num6 + m * num6, yButton + disY - 5, mFont.CENTER);
 				}
 				tAddName.paint(g);
-				g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
-
-				// Vẽ nhân vật trực tiếp ở giữa màn hình bên dưới các nút chọn để người chơi thấy rõ ràng
-				int charPreviewX = GameCanvas.w / 2;
-				int charPreviewY = yButton + disY + 60;
-				try
-				{
-					if (TileMap.bong != null)
-					{
-						g.drawImage(TileMap.bong, charPreviewX, charPreviewY, 3);
-					}
-					// Thứ tự vẽ: Chân (Layer dưới) -> Thân (Layer giữa) -> Đầu (Layer trên cùng)
-					if (partLeg != null && partLeg.pi != null && partLeg.pi.Length > Char.CharInfo[cf][1][0])
-					{
-						SmallImage.drawSmallImage(g, partLeg.pi[Char.CharInfo[cf][1][0]].id, charPreviewX + Char.CharInfo[cf][1][1] + partLeg.pi[Char.CharInfo[cf][1][0]].dx, charPreviewY - Char.CharInfo[cf][1][2] + partLeg.pi[Char.CharInfo[cf][1][0]].dy, 0, 0);
-					}
-					if (partBody != null && partBody.pi != null && partBody.pi.Length > Char.CharInfo[cf][2][0])
-					{
-						SmallImage.drawSmallImage(g, partBody.pi[Char.CharInfo[cf][2][0]].id, charPreviewX + Char.CharInfo[cf][2][1] + partBody.pi[Char.CharInfo[cf][2][0]].dx, charPreviewY - Char.CharInfo[cf][2][2] + partBody.pi[Char.CharInfo[cf][2][0]].dy, 0, 0);
-					}
-					if (partHead != null && partHead.pi != null && partHead.pi.Length > Char.CharInfo[cf][0][0])
-					{
-						SmallImage.drawSmallImage(g, partHead.pi[Char.CharInfo[cf][0][0]].id, charPreviewX + Char.CharInfo[cf][0][1] + partHead.pi[Char.CharInfo[cf][0][0]].dx, charPreviewY - Char.CharInfo[cf][0][2] + partHead.pi[Char.CharInfo[cf][0][0]].dy, 0, 0);
-					}
-				}
-				catch (Exception ex)
-				{
-					Res.outz("Error drawing character preview in CreateCharScr: " + ex.Message);
-				}
 			}
 			g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
 			if (cmdSelectSv != null)

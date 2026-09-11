@@ -124,6 +124,10 @@ public class ChooseCharScr : mScreen, IActionListener
 					{
 						g.drawImage(TileMap.bong, cx[j] + 12, cy[j] + 16, 3);
 					}
+					if (part != null && part.pi != null && part.pi.Length > Char.CharInfo[cf][0][0])
+					{
+						SmallImage.drawSmallImage(g, part.pi[Char.CharInfo[cf][0][0]].id, cx[j] + Char.CharInfo[cf][0][1] + part.pi[Char.CharInfo[cf][0][0]].dx, cy[j] - Char.CharInfo[cf][0][2] + part.pi[Char.CharInfo[cf][0][0]].dy, 0, 0);
+					}
 					if (part2 != null && part2.pi != null && part2.pi.Length > Char.CharInfo[cf][1][0])
 					{
 						SmallImage.drawSmallImage(g, part2.pi[Char.CharInfo[cf][1][0]].id, cx[j] + Char.CharInfo[cf][1][1] + part2.pi[Char.CharInfo[cf][1][0]].dx, cy[j] - Char.CharInfo[cf][1][2] + part2.pi[Char.CharInfo[cf][1][0]].dy, 0, 0);
@@ -131,10 +135,6 @@ public class ChooseCharScr : mScreen, IActionListener
 					if (part3 != null && part3.pi != null && part3.pi.Length > Char.CharInfo[cf][2][0])
 					{
 						SmallImage.drawSmallImage(g, part3.pi[Char.CharInfo[cf][2][0]].id, cx[j] + Char.CharInfo[cf][2][1] + part3.pi[Char.CharInfo[cf][2][0]].dx, cy[j] - Char.CharInfo[cf][2][2] + part3.pi[Char.CharInfo[cf][2][0]].dy, 0, 0);
-					}
-					if (part != null && part.pi != null && part.pi.Length > Char.CharInfo[cf][0][0])
-					{
-						SmallImage.drawSmallImage(g, part.pi[Char.CharInfo[cf][0][0]].id, cx[j] + Char.CharInfo[cf][0][1] + part.pi[Char.CharInfo[cf][0][0]].dx, cy[j] - Char.CharInfo[cf][0][2] + part.pi[Char.CharInfo[cf][0][0]].dy, 0, 0);
 					}
 					if (focus == j)
 					{
