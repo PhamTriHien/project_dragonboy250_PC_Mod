@@ -30,13 +30,33 @@ public partial class CreateCharScr
 			int num2 = hairID[indexGender][indexHair];
 			int num3 = defaultLeg[indexGender];
 			int num4 = defaultBody[indexGender];
-			g.drawImage(TileMap.bong, cx, cy + dy, 3);
-			Part part = GameScr.parts[num2];
-			Part part2 = GameScr.parts[num3];
-			Part part3 = GameScr.parts[num4];
-			SmallImage.drawSmallImage(g, part.pi[Char.CharInfo[cf][0][0]].id, cx + Char.CharInfo[cf][0][1] + part.pi[Char.CharInfo[cf][0][0]].dx, cy - Char.CharInfo[cf][0][2] + part.pi[Char.CharInfo[cf][0][0]].dy + dy, 0, 0);
-			SmallImage.drawSmallImage(g, part2.pi[Char.CharInfo[cf][1][0]].id, cx + Char.CharInfo[cf][1][1] + part2.pi[Char.CharInfo[cf][1][0]].dx, cy - Char.CharInfo[cf][1][2] + part2.pi[Char.CharInfo[cf][1][0]].dy + dy, 0, 0);
-			SmallImage.drawSmallImage(g, part3.pi[Char.CharInfo[cf][2][0]].id, cx + Char.CharInfo[cf][2][1] + part3.pi[Char.CharInfo[cf][2][0]].dx, cy - Char.CharInfo[cf][2][2] + part3.pi[Char.CharInfo[cf][2][0]].dy + dy, 0, 0);
+			if (GameScr.parts == null || GameScr.parts.Length == 0)
+			{
+				GameScr.gI().initSelectChar();
+			}
+			Part part = (GameScr.parts != null && num2 >= 0 && num2 < GameScr.parts.Length) ? GameScr.parts[num2] : null;
+			Part part2 = (GameScr.parts != null && num3 >= 0 && num3 < GameScr.parts.Length) ? GameScr.parts[num3] : null;
+			Part part3 = (GameScr.parts != null && num4 >= 0 && num4 < GameScr.parts.Length) ? GameScr.parts[num4] : null;
+			try
+			{
+				g.drawImage(TileMap.bong, cx, cy + dy, 3);
+				if (part != null && part.pi != null && part.pi.Length > Char.CharInfo[cf][0][0])
+				{
+					SmallImage.drawSmallImage(g, part.pi[Char.CharInfo[cf][0][0]].id, cx + Char.CharInfo[cf][0][1] + part.pi[Char.CharInfo[cf][0][0]].dx, cy - Char.CharInfo[cf][0][2] + part.pi[Char.CharInfo[cf][0][0]].dy + dy, 0, 0);
+				}
+				if (part2 != null && part2.pi != null && part2.pi.Length > Char.CharInfo[cf][1][0])
+				{
+					SmallImage.drawSmallImage(g, part2.pi[Char.CharInfo[cf][1][0]].id, cx + Char.CharInfo[cf][1][1] + part2.pi[Char.CharInfo[cf][1][0]].dx, cy - Char.CharInfo[cf][1][2] + part2.pi[Char.CharInfo[cf][1][0]].dy + dy, 0, 0);
+				}
+				if (part3 != null && part3.pi != null && part3.pi.Length > Char.CharInfo[cf][2][0])
+				{
+					SmallImage.drawSmallImage(g, part3.pi[Char.CharInfo[cf][2][0]].id, cx + Char.CharInfo[cf][2][1] + part3.pi[Char.CharInfo[cf][2][0]].dx, cy - Char.CharInfo[cf][2][2] + part3.pi[Char.CharInfo[cf][2][0]].dy + dy, 0, 0);
+				}
+			}
+			catch (Exception ex)
+			{
+				Res.outz("Error drawing character in CreateCharScr: " + ex.Message);
+			}
 			if (!GameCanvas.lowGraphic)
 			{
 				for (int j = 0; j < MapTemplate.vCurrItem[indexGender].size(); j++)
@@ -52,9 +72,18 @@ public partial class CreateCharScr
 			if (GameCanvas.w < 200)
 			{
 				GameCanvas.paintz.paintFrame(GameScr.popupX, GameScr.popupY, GameScr.popupW, GameScr.popupH, g);
-				SmallImage.drawSmallImage(g, part.pi[Char.CharInfo[0][0][0]].id, GameCanvas.w / 2 + Char.CharInfo[0][0][1] + part.pi[Char.CharInfo[0][0][0]].dx, GameScr.popupY + 30 + 3 * num - Char.CharInfo[0][0][2] + part.pi[Char.CharInfo[0][0][0]].dy + dy, 0, 0);
-				SmallImage.drawSmallImage(g, part2.pi[Char.CharInfo[0][1][0]].id, GameCanvas.w / 2 + Char.CharInfo[0][1][1] + part2.pi[Char.CharInfo[0][1][0]].dx, GameScr.popupY + 30 + 3 * num - Char.CharInfo[0][1][2] + part2.pi[Char.CharInfo[0][1][0]].dy + dy, 0, 0);
-				SmallImage.drawSmallImage(g, part3.pi[Char.CharInfo[0][2][0]].id, GameCanvas.w / 2 + Char.CharInfo[0][2][1] + part3.pi[Char.CharInfo[0][2][0]].dx, GameScr.popupY + 30 + 3 * num - Char.CharInfo[0][2][2] + part3.pi[Char.CharInfo[0][2][0]].dy + dy, 0, 0);
+				if (part != null && part.pi != null && part.pi.Length > Char.CharInfo[0][0][0])
+				{
+					SmallImage.drawSmallImage(g, part.pi[Char.CharInfo[0][0][0]].id, GameCanvas.w / 2 + Char.CharInfo[0][0][1] + part.pi[Char.CharInfo[0][0][0]].dx, GameScr.popupY + 30 + 3 * num - Char.CharInfo[0][0][2] + part.pi[Char.CharInfo[0][0][0]].dy + dy, 0, 0);
+				}
+				if (part2 != null && part2.pi != null && part2.pi.Length > Char.CharInfo[0][1][0])
+				{
+					SmallImage.drawSmallImage(g, part2.pi[Char.CharInfo[0][1][0]].id, GameCanvas.w / 2 + Char.CharInfo[0][1][1] + part2.pi[Char.CharInfo[0][1][0]].dx, GameScr.popupY + 30 + 3 * num - Char.CharInfo[0][1][2] + part2.pi[Char.CharInfo[0][1][0]].dy + dy, 0, 0);
+				}
+				if (part3 != null && part3.pi != null && part3.pi.Length > Char.CharInfo[0][2][0])
+				{
+					SmallImage.drawSmallImage(g, part3.pi[Char.CharInfo[0][2][0]].id, GameCanvas.w / 2 + Char.CharInfo[0][2][1] + part3.pi[Char.CharInfo[0][2][0]].dx, GameScr.popupY + 30 + 3 * num - Char.CharInfo[0][2][2] + part3.pi[Char.CharInfo[0][2][0]].dy + dy, 0, 0);
+				}
 				for (int k = 0; k < mResources.MENUNEWCHAR.Length; k++)
 				{
 					if (selected == k)
@@ -78,7 +107,8 @@ public partial class CreateCharScr
 						disY = 60;
 						if (GameCanvas.w > GameCanvas.h)
 						{
-							yButton = GameScr.popupY + 30 + 3 * num + part3.pi[Char.CharInfo[0][2][0]].dy + dy - 15;
+							int dy3 = (part3 != null && part3.pi != null && part3.pi.Length > Char.CharInfo[0][2][0]) ? part3.pi[Char.CharInfo[0][2][0]].dy : 0;
+							yButton = GameScr.popupY + 30 + 3 * num + dy3 + dy - 15;
 							disY = 35;
 						}
 					}
@@ -140,6 +170,33 @@ public partial class CreateCharScr
 					mFont.tahoma_7b_dark.drawString(g, mResources.hairStyleName[indexGender][m], GameCanvas.w / 2 - num6 + m * num6, yButton + disY - 5, mFont.CENTER);
 				}
 				tAddName.paint(g);
+
+				// Vẽ nhân vật trực tiếp ở giữa màn hình bên dưới các nút chọn để người chơi thấy rõ ràng
+				int charPreviewX = GameCanvas.w / 2;
+				int charPreviewY = yButton + disY + 60;
+				try
+				{
+					if (TileMap.bong != null)
+					{
+						g.drawImage(TileMap.bong, charPreviewX, charPreviewY, 3);
+					}
+					if (part2 != null && part2.pi != null && part2.pi.Length > Char.CharInfo[cf][1][0])
+					{
+						SmallImage.drawSmallImage(g, part2.pi[Char.CharInfo[cf][1][0]].id, charPreviewX + Char.CharInfo[cf][1][1] + part2.pi[Char.CharInfo[cf][1][0]].dx, charPreviewY - Char.CharInfo[cf][1][2] + part2.pi[Char.CharInfo[cf][1][0]].dy, 0, 0);
+					}
+					if (part3 != null && part3.pi != null && part3.pi.Length > Char.CharInfo[cf][2][0])
+					{
+						SmallImage.drawSmallImage(g, part3.pi[Char.CharInfo[cf][2][0]].id, charPreviewX + Char.CharInfo[cf][2][1] + part3.pi[Char.CharInfo[cf][2][0]].dx, charPreviewY - Char.CharInfo[cf][2][2] + part3.pi[Char.CharInfo[cf][2][0]].dy, 0, 0);
+					}
+					if (part != null && part.pi != null && part.pi.Length > Char.CharInfo[cf][0][0])
+					{
+						SmallImage.drawSmallImage(g, part.pi[Char.CharInfo[cf][0][0]].id, charPreviewX + Char.CharInfo[cf][0][1] + part.pi[Char.CharInfo[cf][0][0]].dx, charPreviewY - Char.CharInfo[cf][0][2] + part.pi[Char.CharInfo[cf][0][0]].dy, 0, 0);
+					}
+				}
+				catch (Exception ex)
+				{
+					Res.outz("Error drawing character preview in CreateCharScr: " + ex.Message);
+				}
 			}
 			g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
 			if (cmdSelectSv != null)

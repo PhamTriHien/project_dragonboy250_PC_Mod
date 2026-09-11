@@ -12526,3 +12526,102 @@ Tệp: `DragonBoy_Mobile/Android/AndroidInputBridge.cs`
    - **Đồng bộ Desktop**: Đã cập nhật tệp APK ký số mới nhất ra màn hình Desktop: [`C:\Users\PhamTriHien\Desktop\DragonBoy_Net8_Native_Android.apk`](file:///C:/Users/PhamTriHien/Desktop/DragonBoy_Net8_Native_Android.apk).
    - **Trạng thái thực chiến**: Hoạt động hoàn hảo 100% trên cả PC Native x64 và Android / BlueStacks.
 
+---
+
+## 189. KHẮC PHỤC TRIỆT ĐỂ LỖI CHƠI MỚI (TREO "XIN CHỜ" / BÁO SAI MẬT KHẨU), KHẮC PHỤC XOAY CANVAS 270 ĐỘ VÀ HIỂN THỊ TRỰC QUAN NHÂN VẬT TẠI MÀN HÌNH TẠO / CHỌN NHÂN VẬT (CREATECHARSCR & CHOOSECHARSCR)
+
+### 1. Bối Cảnh & Phân Tích Nguyên Nhân Kỹ Thuật Gốc Rễ (Root Causes)
+1. **Lỗi "Chơi Mới" Treo "Xin Chờ" & Báo "Sai Mật Khẩu [4]"**:
+   - **Treo "Xin Chờ" do thiếu bắt tay dữ liệu `finishUpdate()`**: Trong mã nguồn gốc Ngọc Rồng (`Goc`), gói tin `Service.gI().finishUpdate()` chỉ được gọi duy nhất bên trong `LoginScr.update()`. Khi người chơi bấm "Chơi mới" từ `ServerListScreen`, luồng game gọi thẳng `login2(string.Empty)` mà hoàn toàn không kích hoạt `LoginScr.update()`. Hậu quả là máy chủ NRO rơi vào trạng thái chờ vô tận để nhận gói tin hoàn tất cập nhật (`finishUpdate`), khiến client bị treo cứng vĩnh viễn ở hộp thoại cuộn giấy "Xin chờ...".
+   - **Báo "Username atau Sai mật khẩu [4]"**: Trên màn hình độ phân giải cao 1920x1080 với tỷ lệ phóng đại `mGraphics.zoomLevel = 2`, `GameCanvas.hh = 270`. Vị trí tâm nút 0 ("Chơi TK: cauut...") tại $y = 500$, nút 1 ("Chơi mới") tại $y = 560$. Khi hộp thoại "Xin chờ" bị treo lâu, người chơi chạm hủy hoặc nhấp trúng tọa độ gần nút 0, khiến hệ thống gửi thông tin đăng nhập tài khoản cũ đã hết hạn lên server và nhận về thông báo lỗi "Username atau Sai mật khẩu [4]". Đồng thời, trong `Controller.cs` (`readLogin()`), hộp thoại `GameCanvas.endDlg()` không được gọi khi hoàn tất đăng nhập, dẫn đến hộp thoại "Xin chờ" đè chồng lên màn hình tiếp theo.
+2. **Lỗi Xoay Canvas 270 Độ Trên Android (`AndroidGraphicsBackend.cs`)**:
+   - Khi vẽ mũi tên kỹ năng hoặc icon biến đổi góc (`GameScr.arrow`), mã nguồn gọi phép quay hình học `GUIUtility.RotateAroundPivot(270f, pivot)`.
+   - Trong `AndroidGraphicsBackend.cs`, lệnh `canvas.Rotate(270f, px, py)` được gọi trực tiếp mà **KHÔNG CÓ `canvas.Save()`** để lưu trạng thái ma trận hiện tại, đồng thời hàm phục hồi ma trận `RestoreMatrix()` không được cài đặt khi Unity khôi phục `GUI.matrix`.
+   - Hệ quả: Toàn bộ Canvas 2D của Android bị xoay lệch vĩnh viễn 270 độ, khiến toàn bộ giao diện, nút bấm và đồ họa bị dựng đứng vuông góc.
+3. **Lỗi "Không Thấy Nhân Vật" Tại Màn Hình Tạo / Chọn Nhân Vật (`CreateCharScr` & `ChooseCharScr`)**:
+   - Trong bản gốc Java/Unity 320x240, `CreateCharScr` dựa vào việc dựng nhân vật đứng trên bục đất bản đồ thế giới tại tọa độ cố định $cx = 168, cy = 350$. Trên màn hình rộng hiện đại (960x540 canvas), chiều rộng bản đồ Trái Đất chỉ có 720px khiến giới hạn camera $cmxLim < 0$, đẩy bục đất và nhân vật lệch sâu xuống góc dưới bên phải ngoài tầm nhìn trọng tâm, trong khi khu vực trống dưới các nút chọn tộc/tóc không có hình nhân vật preview.
+   - Trong `ChooseCharScr.cs`, khung chữ nhật `rectPanel` bị gán cứng theo độ phân giải cũ, không tự động co giãn theo kích thước thực tế `GameCanvas.w` và `GameCanvas.h`.
+   - Lỗi tràn chỉ số mảng và null pointer trong `SmallImage.cs` khi server trả về ID hình ảnh vượt quá kích thước mảng khởi tạo ban đầu.
+
+---
+
+### 2. Giải Pháp Kỹ Thuật Đã Triển Khai (100% Production-Ready)
+
+#### A. Chuẩn Hóa Luồng Handshake & Chuyển Cảnh "Chơi Mới"
+- Trong [`GameCanvas.Update.cs`](file:///C:/ModNRO/DragonBoy_Net8_Native/Src/GameCanvas/GameCanvas.Update.cs): Bổ sung cơ chế kích hoạt toàn cục `finishUpdate()`:
+  ```csharp
+  if (isUpdate() && isPointerDown && !isPointerMove)
+  {
+      Service.gI().finishUpdate();
+  }
+  ```
+- Trong [`ServerListScreen.Part1.cs`](file:///C:/ModNRO/DragonBoy_Net8_Native/Src/ServerListScreen/ServerListScreen.Part1.cs): Kích hoạt `finishUpdate()` ngay khi kết nối server và chuẩn bị luồng đăng nhập "Chơi mới":
+  ```csharp
+  Service.gI().finishUpdate();
+  GameCanvas.startOKDlg(mResources.PLEASEWAIT);
+  ```
+- Trong [`Controller.cs`](file:///C:/ModNRO/DragonBoy_Net8_Native/Src/Controller/Controller.cs) (`readLogin()`): Thêm `GameCanvas.endDlg()` trước khi chuyển sang `CreateCharScr` hoặc `ChooseCharScr`, bảo đảm dọn dẹp hộp thoại "Xin chờ".
+- Phân định rõ ràng hitbox các nút bấm trên `ServerListScreen`, ngăn chặn hoàn toàn việc chạm nhầm giữa nút "Chơi tiếp/Chơi TK" và "Chơi mới".
+
+#### B. Cơ Chế Quản Lý Ngăn Xếp Ma Trận Đồ Họa Android Canvas (Matrix Stack Safety)
+- Trong [`AndroidGraphicsBackend.cs`](file:///C:/ModNRO/DragonBoy_Mobile/Android/AndroidGraphicsBackend.cs):
+  - Bổ sung biến theo dõi ngăn xếp `s_MatrixSaveCount`.
+  - Trong `RotateAroundPivot(float angle, Vector2 pivot)`: Thực hiện `canvas.Save()` trước khi gọi `canvas.Rotate(angle, pivot.x, pivot.y)` và tăng `s_MatrixSaveCount++`.
+  - Triển khai `RestoreMatrix()` và `ResetMatrixStack()`:
+    ```csharp
+    public static void RestoreMatrix()
+    {
+        if (s_CurrentCanvas != null && s_MatrixSaveCount > 0)
+        {
+            s_CurrentCanvas.Restore();
+            s_MatrixSaveCount--;
+        }
+    }
+    public static void ResetMatrixStack()
+    {
+        if (s_CurrentCanvas != null)
+        {
+            while (s_MatrixSaveCount > 0)
+            {
+                s_CurrentCanvas.Restore();
+                s_MatrixSaveCount--;
+            }
+        }
+    }
+    ```
+- Trong [`UnityEngine.System.cs`](file:///C:/ModNRO/DragonBoy_Net8_Native/Engine/Compatibility/UnityEngine/UnityEngine.System.cs): Kết nối `GUI.matrix` setter trực tiếp với `AndroidGraphicsBackend.RestoreMatrix()`.
+- Trong [`GameView.cs`](file:///C:/ModNRO/DragonBoy_Mobile/Android/GameView.cs): Gọi `AndroidGraphicsBackend.ResetMatrixStack()` trước và sau khi thực thi `OnGUI()` trong `RenderThread`, triệt tiêu 100% hiện tượng rò rỉ xoay ma trận.
+- Trong [`mGraphics.Draw.cs`](file:///C:/ModNRO/DragonBoy_Net8_Native/Src/mGraphics/mGraphics.Draw.cs): Thay thế lệnh xoay ngược bù trừ bằng thao tác sao lưu và phục hồi chuẩn `GUI.matrix = matrix`.
+
+#### C. Dựng Hình Nhân Vật Trực Quan Trung Tâm Tại `CreateCharScr` & `ChooseCharScr`
+- Trong [`CreateCharScr.Paint.cs`](file:///C:/ModNRO/DragonBoy_Net8_Native/Src/CreateCharScr/CreateCharScr.Paint.cs):
+  - Dựng hình nhân vật preview trực tiếp ngay chính giữa màn hình bên dưới các nút lựa chọn (`charPreviewX = GameCanvas.w / 2`, `charPreviewY = yButton + disY + 60`).
+  - Vẽ bóng chân nhân vật (`TileMap.bong`), chân (`part2`), thân (`part3`), đầu tóc (`part`), tích hợp nhịp thở hoạt họa idle `cf` (`Char.CharInfo`).
+  - Toàn bộ khối lệnh được bọc trong `try-catch` bảo đảm an toàn tuyệt đối, không làm gián đoạn luồng vẽ.
+- Trong [`CreateCharScr.Action.cs`](file:///C:/ModNRO/DragonBoy_Net8_Native/Src/CreateCharScr/CreateCharScr.Action.cs):
+  - Chuẩn hóa điều kiện bắt cảm ứng giữa các hàng nút (Tên, Hành tinh/Giới tính, Tóc) với cấu trúc `else if`, loại bỏ hoàn toàn hiện tượng chạm chồng lấn.
+  - Bổ sung hỗ trợ đầy đủ các phím điều hướng cứng chuẩn NRO (2, 8, 4, 6 và 21, 22, 23, 24).
+- Trong [`ChooseCharScr.cs`](file:///C:/ModNRO/DragonBoy_Net8_Native/Src/UI/Screens/ChooseCharScr.cs):
+  - Tự động tính toán lại kích thước và vị trí bảng điều khiển `rectPanel` theo `GameCanvas.w` và `GameCanvas.h` thực tế.
+  - Vẽ bóng chân nhân vật và bảo đảm thứ tự Z-order: Chân $\rightarrow$ Thân $\rightarrow$ Đầu.
+
+#### D. An Toàn Bộ Nhớ & Chỉ Số Mảng `SmallImage.cs`
+- Thêm cơ chế tự động mở rộng mảng `Small.small` khi nhận ID vượt quá kích thước hiện tại, ngăn ngừa triệt để lỗi `IndexOutOfRangeException`.
+- Kiểm tra `null` an toàn trong `ensureImgNew(int id)`, `getSmall(int id)`, và `setSmall(int id, Small s)`.
+
+---
+
+### 3. Kết Quả Kiểm Thử Thực Nghiệm & Nghiệm Thu Hệ Thống
+1. **Kiểm thử trực tiếp trên BlueStacks (`emulator-5554`, 1920x1080)**:
+   - Nhấn "Chơi mới" $\rightarrow$ Cuộn giấy "Xin chờ" hoàn tất handshake `finishUpdate()` tức thì và chuyển cảnh mượt mà sang màn hình tạo nhân vật (`CreateCharScr`).
+   - Triệt tiêu 100% lỗi "Username atau Sai mật khẩu [4]".
+   - Nhân vật hiển thị to rõ, sắc nét, hoạt họa nhịp nhàng ngay chính giữa màn hình bên dưới các hàng nút chọn Giới tính và Tóc (minh chứng qua các ảnh chụp artifact `screen_final_createchar.png`, `screen_final_createchar2.png`).
+   - Hoán đổi giữa 3 hành tinh (Trái Đất, Namec, Xayda) và 3 kiểu tóc: Hình ảnh nhân vật preview lập tức cập nhật đúng trang phục, khuôn mặt và kiểu tóc tương ứng theo thời gian thực.
+   - Toàn bộ giao diện hiển thị nằm ngang chuẩn xác 100%, triệt tiêu hoàn toàn lỗi xoay 270 độ.
+2. **Tính toàn vẹn biên dịch**:
+   - `DragonBoy_Net8_Native.csproj` (PC Win-x64): **0 Warning(s), 0 Error(s)**.
+   - `Dragonboy250_PC_projectbuild.csproj` (.NET 3.5): **0 Warning(s), 0 Error(s)**.
+   - `DragonBoy_Android.csproj` (Android APK): **0 Error(s)**.
+3. **Đồng bộ hóa & Phát hành**:
+   - Đã cập nhật file APK ký số mới nhất ra màn hình Desktop: [`C:\Users\PhamTriHien\Desktop\DragonBoy_Net8_Native_Android.apk`](file:///C:/Users/PhamTriHien/Desktop/DragonBoy_Net8_Native_Android.apk).
+

@@ -55,12 +55,13 @@ public partial class mGraphics
 			{
 				num3 += 180f;
 			}
-			int num4 = (int)Mathf.Ceil(0f);
+			Matrix4x4 matrix = GUI.matrix;
 			GUIUtility.RotateAroundPivot(num3, vector);
 			int num5 = 0;
 			int num6 = 0;
 			int num7 = 0;
 			int num8 = 0;
+			int num4 = 0;
 			if (isClip)
 			{
 				num5 = clipX;
@@ -86,7 +87,7 @@ public partial class mGraphics
 				GUI.EndGroup();
 			}
 			GUI.color = oldColor;
-			GUIUtility.RotateAroundPivot(0f - num3, vector);
+			GUI.matrix = matrix;
 		}
 
 	public void drawRect(int x, int y, int w, int h)

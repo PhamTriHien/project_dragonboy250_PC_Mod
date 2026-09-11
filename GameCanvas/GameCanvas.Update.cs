@@ -7,7 +7,7 @@ public partial class GameCanvas : IActionListener
 {
 	public void update()
 		{
-			if (currentScreen == _SelectCharScr)
+			if (currentScreen == _SelectCharScr || currentScreen is CreateCharScr || currentScreen is ChooseCharScr)
 			{
 				if (gameTick % 2 == 0 && SmallImage.vt_images_watingDowload.size() > 0)
 				{
@@ -206,6 +206,12 @@ public partial class GameCanvas : IActionListener
 				{
 					resetToLoginScr = false;
 					doResetToLoginScr(loginScr);
+				}
+				if (LoginScr.isUpdateAll && !LoginScr.isUpdateData && !LoginScr.isUpdateItem && !LoginScr.isUpdateMap && !LoginScr.isUpdateSkill)
+				{
+					LoginScr.isUpdateAll = false;
+					mSystem.gcc();
+					Service.gI().finishUpdate();
 				}
 				debug("Zzz", 0);
 				if ((currentScreen != serverScr || !serverScr.isPaintNewUi) && Controller.isConnectOK)

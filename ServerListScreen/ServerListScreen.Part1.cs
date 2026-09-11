@@ -118,7 +118,7 @@ public partial class ServerListScreen : mScreen, IActionListener
 				switch (i)
 				{
 				case 0:
-					cmd[0] = new Command(string.Empty, this, 3, null);
+					cmd[0] = new Command(string.Empty, this, (nCmdPlay == 0) ? 10100 : 3, null);
 					if (text == null)
 					{
 						cmd[0].caption = mResources.playNew;
@@ -279,6 +279,12 @@ public partial class ServerListScreen : mScreen, IActionListener
 			}
 			base.update();
 			ModAutoUpdate.UpdateTick();
+			if (LoginScr.isUpdateAll && !LoginScr.isUpdateData && !LoginScr.isUpdateItem && !LoginScr.isUpdateMap && !LoginScr.isUpdateSkill)
+			{
+				LoginScr.isUpdateAll = false;
+				mSystem.gcc();
+				Service.gI().finishUpdate();
+			}
 			if (Char.isLoadingMap || !loadScreen || !isAutoConect || GameCanvas.currentScreen != this)
 			{
 				return;
@@ -311,9 +317,14 @@ public partial class ServerListScreen : mScreen, IActionListener
 		}
 	public static void updateDeleteData()
 		{
-			if (cmdDeleteRMS != null && cmdDeleteRMS.isPointerPressInside())
+			if (cmdDeleteRMS != null)
 			{
-				cmdDeleteRMS.performAction();
+				cmdDeleteRMS.x = GameCanvas.w - 78;
+				cmdDeleteRMS.y = GameCanvas.h - 26;
+				if (cmdDeleteRMS.isPointerPressInside())
+				{
+					cmdDeleteRMS.performAction();
+				}
 			}
 		}
 

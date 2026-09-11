@@ -154,7 +154,7 @@ public partial class CreateCharScr
 
 	public override void updateKey()
 		{
-			if (GameCanvas.keyPressed[(!Main.isPC) ? 2 : 21])
+			if (GameCanvas.keyPressed[2] || GameCanvas.keyPressed[21])
 			{
 				selected--;
 				if (selected < 0)
@@ -162,7 +162,7 @@ public partial class CreateCharScr
 					selected = mResources.MENUNEWCHAR.Length - 1;
 				}
 			}
-			if (GameCanvas.keyPressed[(!Main.isPC) ? 8 : 22])
+			if (GameCanvas.keyPressed[8] || GameCanvas.keyPressed[22])
 			{
 				selected++;
 				if (selected >= mResources.MENUNEWCHAR.Length)
@@ -180,7 +180,7 @@ public partial class CreateCharScr
 			}
 			if (selected == 1)
 			{
-				if (GameCanvas.keyPressed[(!Main.isPC) ? 4 : 23])
+				if (GameCanvas.keyPressed[4] || GameCanvas.keyPressed[23])
 				{
 					indexGender--;
 					if (indexGender < 0)
@@ -189,7 +189,7 @@ public partial class CreateCharScr
 					}
 					doChangeMap();
 				}
-				if (GameCanvas.keyPressed[(!Main.isPC) ? 6 : 24])
+				if (GameCanvas.keyPressed[6] || GameCanvas.keyPressed[24])
 				{
 					indexGender++;
 					if (indexGender > mResources.MENUGENDER.Length - 1)
@@ -202,7 +202,7 @@ public partial class CreateCharScr
 			}
 			if (selected == 2)
 			{
-				if (GameCanvas.keyPressed[(!Main.isPC) ? 4 : 23])
+				if (GameCanvas.keyPressed[4] || GameCanvas.keyPressed[23])
 				{
 					indexHair--;
 					if (indexHair < 0)
@@ -210,7 +210,7 @@ public partial class CreateCharScr
 						indexHair = mResources.hairStyleName[0].Length - 1;
 					}
 				}
-				if (GameCanvas.keyPressed[(!Main.isPC) ? 6 : 24])
+				if (GameCanvas.keyPressed[6] || GameCanvas.keyPressed[24])
 				{
 					indexHair++;
 					if (indexHair > mResources.hairStyleName[0].Length - 1)
@@ -230,12 +230,15 @@ public partial class CreateCharScr
 					num = 100;
 					num2 = 40;
 				}
-				if (GameCanvas.isPointerHoldIn(GameCanvas.w / 2 - 3 * num3 / 2, 15, num3 * 3, 80))
+				int genderY = (GameCanvas.w > GameCanvas.h) ? 65 : (num - 30);
+				int hairY = (GameCanvas.w > GameCanvas.h) ? 120 : (num - 30 + num2 + 5);
+
+				if (GameCanvas.isPointerHoldIn(GameCanvas.w / 2 - 3 * num3 / 2, 10, num3 * 3, 55))
 				{
 					selected = 0;
 					tAddName.isFocus = true;
 				}
-				if (GameCanvas.isPointerHoldIn(GameCanvas.w / 2 - 3 * num3 / 2, num - 30, num3 * 3, num2 + 5))
+				else if (GameCanvas.isPointerHoldIn(GameCanvas.w / 2 - 3 * num3 / 2, genderY, num3 * 3, 55))
 				{
 					selected = 1;
 					int num4 = indexGender;
@@ -253,7 +256,7 @@ public partial class CreateCharScr
 						doChangeMap();
 					}
 				}
-				if (GameCanvas.isPointerHoldIn(GameCanvas.w / 2 - 3 * num3 / 2, num - 30 + num2 + 5, num3 * 3, 65))
+				else if (GameCanvas.isPointerHoldIn(GameCanvas.w / 2 - 3 * num3 / 2, hairY, num3 * 3, 55))
 				{
 					selected = 2;
 					indexHair = (GameCanvas.px - (GameCanvas.w / 2 - 3 * num3 / 2)) / num3;

@@ -565,6 +565,7 @@ public partial class Controller : IMessageHandler
 							{
 								Char.myCharz().charFocus = null;
 							}
+							ModDropRate.OnItemSpawned(itemMap6);
 						}
 					}
 					catch (Exception)
@@ -594,6 +595,7 @@ public partial class Controller : IMessageHandler
 						{
 							Char.myCharz().charFocus = null;
 						}
+						ModDropRate.OnItemSpawned(itemMap5);
 					}
 					break;
 				}
@@ -733,6 +735,21 @@ public partial class Controller : IMessageHandler
 						return;
 					}
 					@char.addInfo(text9);
+
+					// Hook: Ăn đậu khi đệ tử xin
+					if (ModAutoHeal.autoFeedPetOnAsk && !string.IsNullOrEmpty(text9))
+					{
+						string lower = text9.ToLower();
+						if (lower.Contains("đậu") || lower.Contains("dau") || lower.Contains("sư phụ") || lower.Contains("su phu") || lower.Contains("cho con"))
+						{
+							Char myPet = Char.myPetz();
+							bool isMyPet = (@char.isPet || (myPet != null && @char.cName == myPet.cName) || @char.charID < 0);
+							if (isMyPet)
+							{
+								ModAutoHeal.FeedPetBean(text9);
+							}
+						}
+					}
 					break;
 				}
 				case 18:
@@ -787,6 +804,7 @@ public partial class Controller : IMessageHandler
 				long ppoint = msg.reader().readLong();
 				ChooseCharScr.playerData[i] = new PlayerData(playerID, name, head, body, leg, ppoint);
 			}
+			GameCanvas.endDlg();
 			GameCanvas.chooseCharScr.switchToMe();
 			GameCanvas.chooseCharScr.updateChooseCharacter((byte)b);
 		}
