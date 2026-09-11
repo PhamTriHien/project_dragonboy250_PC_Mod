@@ -1,9 +1,9 @@
 {
-  "version": "2.5.1",
-  "buildDate": "2026-09-10",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.1/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.1/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.1/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.1/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.1: DragonBoy_Net8_Native C# .NET 8 Native AOT Win-x64, Raylib-cs GPU OpenGL 3.3 Core; Auto Login khi mat ket noi & giu nguyen 100% che do Auto (Tan Sat, Tu Nhat, Hoi Mau, Up Set, Bua, Toc Do); Toi uu vuot cuon Mod UI; Fix triet de loi Next Map va GoBack ket nhan vat tai cho khong qua map; Hieu nang cuc cao < 50MB RAM, 60-240 FPS, khoi dong < 0.2s va chong dich nguoc .NET tuyet doi."
+  "version": "2.5.2",
+  "buildDate": "2026-09-12",
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.2/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.2/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.2/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.2/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.2: Tối ưu hoá cắm 6 tab 24/7 không nóng máy, 0% GPU chạy ngầm, ngắt âm thanh ngầm thông minh, chống LMK diệt tab; Cơ chế cập nhật mới với nút nổi và chấm sáng đỏ tại sảnh game; Bảng thông tin cập nhật chi tiết."
 }
