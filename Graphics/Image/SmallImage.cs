@@ -146,6 +146,14 @@ public class SmallImage
 		if (mGraphics.zoomLevel == 1)
 		{
 			Image image = GameCanvas.loadImage("/SmallImage/Small" + id + ".png");
+			if (image == null)
+			{
+				image = GameCanvas.loadImageRMS("/x1/SmallImage/Small" + id + ".png");
+			}
+			if (image == null)
+			{
+				image = Image.createImage("x1/SmallImage/Small" + id + ".png");
+			}
 			if (image != null)
 			{
 				setSmall(id, new Small(image, id));
@@ -163,6 +171,14 @@ public class SmallImage
 			return;
 		}
 		Image image2 = GameCanvas.loadImage("/SmallImage/Small" + id + ".png");
+		if (image2 == null)
+		{
+			image2 = GameCanvas.loadImageRMS("/x1/SmallImage/Small" + id + ".png");
+		}
+		if (image2 == null)
+		{
+			image2 = Image.createImage("x1/SmallImage/Small" + id + ".png");
+		}
 		if (image2 != null)
 		{
 			setSmall(id, new Small(image2, id));

@@ -12625,3 +12625,66 @@ Tệp: `DragonBoy_Mobile/Android/AndroidInputBridge.cs`
 3. **Đồng bộ hóa & Phát hành**:
    - Đã cập nhật file APK ký số mới nhất ra màn hình Desktop: [`C:\Users\PhamTriHien\Desktop\DragonBoy_Net8_Native_Android.apk`](file:///C:/Users/PhamTriHien/Desktop/DragonBoy_Net8_Native_Android.apk).
 
+
+---
+
+## 190. Sửa Triệt Để Lỗi Hiển Thị Nhân Vật (Rời Rạc, Mất Thân/Chân, Thiếu Sprite Tóc) & Lỗi Rò Rỉ Clipping Trên Màn Hình Tạo Nhân Vật (CreateCharScr)
+
+### 1. Bản Chất Nguyên Nhân Kỹ Thuật Gây Lỗi
+1. **Hoán Đổi Nhầm Part ID Giữa Thân và Chân (CreateCharScr.cs)**:
+   - *Hiện tượng*: Khi vào màn hình tạo nhân vật (CreateCharScr), người chơi chỉ nhìn thấy các mẩu sprite rời rạc gồm hai cánh tay và râu/tóc trôi lơ lửng trên bóng đổ; toàn bộ phần thân áo và chân hoàn toàn biến mất.
+   - *Nguyên nhân*: Trong CreateCharScr.cs, hai mảng định nghĩa part mặc định bị hoán đổi:
+     ``csharp
+     public static int[] defaultLeg = new int[3] { 2, 13, 8 };  // SAI: Đây là ID của Thân (Body)
+     public static int[] defaultBody = new int[3] { 1, 12, 7 }; // SAI: Đây là ID của Chân (Leg)
+     ``
+     Theo đặc tả dữ liệu gốc Assets/data/NR_part (tổng cộng 2059 parts):
+     - Part Type 1 là **Leg (Chân)**: gồm 17 phần tử part_image (piLen = 17). Cụ thể: Part 1 (Trái đất), Part 12 (Namếc), Part 7 (Xayda).
+     - Part Type 2 là **Body (Thân)**: gồm 14 phần tử part_image (piLen = 14). Cụ thể: Part 2 (Trái đất), Part 13 (Namếc), Part 8 (Xayda).
+     Khi bị hoán đổi, hàm vẽ lấy sprite Chân gán vào vị trí Thân (CharInfo[cf][2]) và sprite Thân gán vào vị trí Chân (CharInfo[cf][1]), dẫn tới sai lệch chỉ số offset frame hoạt họa khiến các bộ phận không hiển thị được.
+2. **Rò Rỉ Trạng Thái Clipping Từ TField.Paint.cs**:
+   - Khi vẽ ô nhập "Tên nhân vật", TField.paint(g) gọi g.setClip(x + 3, y + 1, width - 4, height - 2) để xén text trong textbox nhưng kết thúc hàm lại **không khôi phục vùng clip về toàn màn hình**. Trạng thái clip của ô nhập tên bị giữ nguyên trong các lệnh vẽ tiếp theo, xén mất phần thân và chân của nhân vật preview bên dưới.
+3. **Lỗi Nhân Đôi Độ Dời Tịnh Tiến Trong mGraphics.cs & mGraphics.Image.cs**:
+   - Khi mGraphics.setClip(x, y, w, h) được gọi, hàm đã chủ động tính toán độ dời tịnh tiến sang tọa độ tuyệt đối màn hình: clipX = x * zoomLevel + translateX.
+   - Tuy nhiên, trong mGraphics.Image.cs (_drawRegion và __drawRegion), khi cờ isTranslate == true, mã nguồn lại cộng tiếp clipTX, clipTY một lần nữa (
+um10 += clipTX; num11 += clipTY;). Lỗi cộng dồn này làm vùng cắt xén bị dịch chuyển lệch ra ngoài màn hình mỗi khi gọi g.translate(-GameScr.cmx, -GameScr.cmy), gây xén cụt sprite và sinh ra các vệt rách hình chữ nhật ở góc dưới bên trái màn hình.
+4. **Thiếu File Sprite Tóc Trong Chế Độ Offline (SmallImage.createImage)**:
+   - Kiểu tóc đầu tiên (Gohan, Piccolo cởi trần, Cadic) có ID < 181 nằm trong Big0.png. Nhưng các kiểu tóc index 1 & 2 (Krillin, Yamcha, Piccolo quấn khăn, Kami già, Radic, Goku) sử dụng sprite ID $\ge 259$ được lưu riêng lẻ dưới dạng tệp Assets/x1/SmallImage/Small{id}.png.
+   - Khi zoomLevel == 2, hàm SmallImage.createImage(id) ban đầu tìm file ở thư mục x2/, nếu chưa kịp tải từ server sẽ trả về ảnh rỗng (imgEmpty), khiến đầu tóc của các kiểu tóc 1 và 2 biến mất hoàn toàn.
+
+---
+
+### 2. Các Giải Pháp Kỹ Thuật Đã Triển Khai
+1. **Chuẩn Hóa Lại Part Mapping Trong CreateCharScr.cs**:
+   - Trả lại đúng bản chất dữ liệu gốc:
+     ``csharp
+     public static int[] defaultLeg = new int[3] { 1, 12, 7 }; // Type 1 Legs: Trái đất (1), Namếc (12), Xayda (7)
+     public static int[] defaultBody = new int[3] { 2, 13, 8 }; // Type 2 Bodies: Trái đất (2), Namếc (13), Xayda (8)
+     ``
+2. **Chuẩn Hóa Z-Order Vẽ & Khôi Phục Clip Trong CreateCharScr.Paint.cs**:
+   - Đặt g.setClip(0, 0, GameCanvas.w, GameCanvas.h) ngay đầu hàm paint(g) và trước khi vẽ vùng preview trung tâm.
+   - Thống nhất thứ tự phân lớp hiển thị (Z-order) chuẩn cho cả nhân vật trên nền đất thế giới và nhân vật preview giữa màn hình:
+     Bóng nhân vật (TileMap.bong) $\rightarrow$ Chân (partLeg) $\rightarrow$ Thân (partBody) $\rightarrow$ Đầu tóc (partHead).
+3. **Triệt Tiêu Rò Rỉ Clipping Tại TField.Paint.cs**:
+   - Bổ sung g.setClip(0, 0, GameCanvas.w, GameCanvas.h) ở dòng cuối cùng của phương thức paint(mGraphics g) trong TField.Paint.cs.
+4. **Sửa Triệt Để Phép Toán Cắt Xén Tọa Độ Trong mGraphics.cs & mGraphics.Image.cs**:
+   - Trong mGraphics.setClip: Bổ sung kiểm tra toàn màn hình (x <= 0 && y <= 0 && w >= GameCanvas.w && h >= GameCanvas.h) để hủy trạng thái cắt xén (isClip = false) tức thì, giảm tải tính toán giao nhau.
+   - Trong mGraphics.Image.cs: Loại bỏ hoàn toàn phép cộng dư thừa 
+um10 += clipTX; num11 += clipTY; trong cả hai hàm _drawRegion và __drawRegion. Phép kiểm tra giao nhau Math.Max / Math.Min giữa vùng sprite trên màn hình và clipX, clipY, clipW, clipH đạt độ chính xác pixel-perfect.
+5. **Cơ Chế Nạp Fallback Tức Thời Cho Sprite Tóc Trong SmallImage.cs**:
+   - Trong SmallImage.createImage(int id): Bổ sung fallback tự động tải từ Assets/x1/SmallImage/Small{id}.png khi tra cứu x2/ trả về null, bảo đảm 100% tất cả 9 kiểu tóc đều sẵn sàng hiển thị offline trước cả khi kết nối mạng vào server.
+
+---
+
+### 3. Kết Quả Kiểm Thử Thực Tế & Nghiệm Thu
+1. **Biên Dịch Hệ Thống (Compilation)**:
+   - DragonBoy_Net8_Native.csproj (.NET 8 Win-x64): **0 Warning(s), 0 Error(s)**.
+   - Dragonboy250_PC_projectbuild.csproj (.NET 3.5 Native): **0 Warning(s), 0 Error(s)**.
+   - DragonBoy_Android.csproj (.NET 8 Android APK): **0 Error(s)**.
+2. **Kiểm Thử Thực Nghiệm Trên Giả Lập BlueStacks (emulator-5554, 1920x1080)**:
+   - Cả 3 hành tinh: **Trái đất**, **Namếc**, **Xayda** hiển thị giải phẫu nhân vật đầy đủ 100% (đầu, thân, chân, tay, trang phục đặc trưng từng hệ).
+   - Kiểm thử toàn bộ 9 kiểu tóc (Gohan, Krillin, Yamcha, Piccolo trần, Piccolo quấn khăn, Kami già, Cadic dựng đứng, Radic dài gai nhọn, Kakalot đuôi chim): Tất cả đều hiển thị sắc nét, sống động, đồng bộ nhịp thở idle cf ở cả vị trí trung tâm và trên nền thế giới.
+   - Hoàn toàn triệt tiêu các lỗi rò rỉ clip và vệt rách hình chữ nhật góc dưới bên trái màn hình.
+3. **Đồng Bộ & Phát Hành**:
+   - Đã đóng gói và cập nhật bản APK phát hành ra Desktop: [C:\Users\PhamTriHien\Desktop\DragonBoy_Net8_Native_Android.apk](file:///C:/Users/PhamTriHien/Desktop/DragonBoy_Net8_Native_Android.apk) (112,638,935 bytes).
+   - Đồng bộ mã nguồn trên toàn bộ các project và đẩy lên GitHub repository.

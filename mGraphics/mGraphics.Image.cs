@@ -86,11 +86,6 @@ public partial class mGraphics
 				num11 = clipY;
 				num12 = clipW;
 				num13 = clipH;
-				if (isTranslate)
-				{
-					num10 += clipTX;
-					num11 += clipTY;
-				}
 				Rect r = new Rect(x, y, w, h);
 				Rect rect = intersectRect(r2: new Rect(num10, num11, num12, num13), r1: r);
 				if (rect.width <= 0f || rect.height <= 0f)
@@ -236,11 +231,6 @@ public partial class mGraphics
 				num11 = clipY;
 				num12 = clipW;
 				num13 = clipH;
-				if (isTranslate)
-				{
-					num10 += clipTX;
-					num11 += clipTY;
-				}
 				Rect r = new Rect(x, y, w, h);
 				Rect rect = intersectRect(r2: new Rect(num10, num11, num12, num13), r1: r);
 				if (rect.width <= 0f || rect.height <= 0f)

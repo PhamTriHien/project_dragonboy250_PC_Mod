@@ -25,9 +25,9 @@ public partial class CreateCharScr : mScreen, IActionListener
 			new int[3] { 6, 27, 28 }
 		};
 
-	public static int[] defaultLeg = new int[3] { 2, 13, 8 };
+	public static int[] defaultLeg = new int[3] { 1, 12, 7 };
 
-	public static int[] defaultBody = new int[3] { 1, 12, 7 };
+	public static int[] defaultBody = new int[3] { 2, 13, 8 };
 
 	private int yButton;
 
@@ -129,8 +129,29 @@ public partial class CreateCharScr : mScreen, IActionListener
 		{
 		}
 
+	public void updatePosition()
+		{
+			if (tAddName != null)
+			{
+				if (GameCanvas.w < 200)
+				{
+					tAddName.x = GameScr.popupX + 45;
+					tAddName.y = GameScr.popupY + 12;
+				}
+				else
+				{
+					tAddName.x = GameCanvas.w / 2 - tAddName.width / 2;
+					tAddName.y = 35;
+				}
+				yBegin = tAddName.y;
+			}
+		}
+
 	public override void switchToMe()
 		{
+			mGraphics.addYWhenOpenKeyBoard = 0;
+			GameScr.gI().initSelectChar();
+			SmallImage.loadBigRMS();
 			LoginScr.isContinueToLogin = false;
 			GameCanvas.menu.showMenu = false;
 			GameCanvas.endDlg();

@@ -72,6 +72,7 @@ public partial class TField
 					g.drawImage(GameCanvas.imgClear, x + width - 13, y + height / 2 + 3, mGraphics.VCENTER | mGraphics.HCENTER);
 				}
 			}
+			g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
 		}
 
 }
