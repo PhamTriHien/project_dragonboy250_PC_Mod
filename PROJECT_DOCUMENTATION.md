@@ -13122,4 +13122,113 @@ um10 += clipTX; num11 += clipTY; trong cả hai hàm _drawRegion và __drawRegio
 4. **Bàn Giao Bản Cập Nhật Mới Nhất Ra Desktop**:
    - File APK: `C:\Users\PhamTriHien\Desktop\DragonBoy_1Game_6Tabs.apk` (Dung lượng: 114,662,493 bytes).
 
+---
+
+## 197. Tái Thiết Kế Cơ Chế Cập Nhật Game: Nút Nổi Sảnh Góc Phải Với Chấm Sáng Đỏ & Bảng Thông Tin Cập Nhật Chi Tiết
+
+### 1. Hiện Trạng & Yêu Cầu Đổi Mới Của Người Dùng
+- **Hiện trạng trước đây**: Khi người chơi mở game và có bản cập nhật mới, hệ thống tự động hiển thị hộp thoại `YesNoDlg` hỏi cập nhật ngay lập tức. Điều này gây gián đoạn trải nghiệm người dùng, bất tiện khi người chơi chỉ muốn vào game nhanh hoặc đang treo tài khoản.
+- **Yêu cầu đổi mới từ người dùng**:
+  1. Loại bỏ hoàn toàn hộp thoại Yes/No tự động nhảy lên khi mở game.
+  2. Cơ chế kiểm tra cập nhật ngầm từ GitHub `version.json` vẫn tiếp tục hoạt động êm ái dưới nền.
+  3. Tạo một **nút bấm nhỏ nổi ở góc phải trên cùng tại sảnh game** (`ServerListScreen` & `LoginScr`).
+  4. Nếu có bản cập nhật mới (`hasNewVersion == true`):
+     - Nút sảnh nổi bật với viền vàng kim hoàng gia `[ CẬP NHẬT ]`.
+     - Xuất hiện **chấm sáng đỏ ("chấm sáng đỏ")** nhấp nháy/phát sáng (pulsing glow animation) tại góc trên phải của nút để thu hút sự chú ý của người chơi một cách tinh tế.
+  5. Khi nhấn vào nút: Hiển thị **Bảng Thông Tin Cập Nhật** ở giữa màn hình gồm:
+     - Tiêu đề: **THÔNG TIN CẬP NHẬT** (Font vàng đậm NRO).
+     - Phiên bản mới (ví dụ: `v2.5.2`) & Phiên bản hiện tại (`v2.5.1`).
+     - Ngày phát hành (`buildDate`).
+     - Khung hiển thị nội dung cập nhật (changelog) hỗ trợ vuốt cuộn mượt mà.
+     - Nút **[ CẬP NHẬT ]** (kích hoạt luồng tải trực tiếp tốc độ cao ngay trong game hoặc tải bản mới).
+     - Nút **[ ĐÓNG ]** và nút [X] ở góc phải để đóng bảng mượt mà.
+  6. 100% sử dụng tông màu và tài nguyên nguyên bản gốc của game (`PopUp.paintPopUp`, `mFont.tahoma_7b_yellow`, tông gỗ cổ điển NRO).
+
+---
+
+### 2. Kiến Trúc Kỹ Thuật & Cấu Trúc Mã Nguồn Đã Triển Khai
+
+#### A. Cập Nhật State & Logic Tại [ModAutoUpdate.cs](file:///c:/ModNRO/DragonBoy_Net8_Native/Src/Mod/Update/ModAutoUpdate.cs)
+- **Quản lý trạng thái giao diện**:
+  ```csharp
+  public static bool isShowUpdateBoard = false;
+  public static int scrollY = 0;
+  public static int maxScrollY = 0;
+  private static int lastPointerY = 0;
+  private static bool isDraggingScroll = false;
+  ```
+- **Tọa độ & kích thước chuẩn của nút sảnh góc trên bên phải**:
+  ```csharp
+  public static int GetBtnW() => 72;
+  public static int GetBtnH() => 22;
+  public static int GetBtnX() => GameCanvas.w - GetBtnW() - 6;
+  public static int GetBtnY() => 4;
+  ```
+- **Loại bỏ Popup tự động nhảy**:
+  Gán `hasPrompted = true` trong `ResetAndCheckOnLaunch()` và `PerformCheck()` để ngăn chặn gọi `GameCanvas.startYesNoDlg()`. Luồng kiểm tra phiên bản ngầm vẫn cập nhật `hasNewVersion`, `remoteVersion`, `changelog`, `downloadUrl` khi có phiên bản mới từ GitHub.
+- **Dựng hình nút sảnh nổi & hiệu ứng Chấm Sáng Đỏ (`PaintLobbyUpdateButton`)**:
+  - Khung nút bo góc chuẩn game: `g.setColor(0x1a0f05, 0.88f); g.fillRoundRect(...)`.
+  - Viền vàng kim rực rỡ khi có update: `g.setColor(0xffc107); g.drawRoundRect(...)`.
+  - Text: `[ CẬP NHẬT ]` màu vàng cam sắc nét.
+  - **Chấm sáng đỏ nhấp nháy (Pulsing Glow Halo)**:
+    Sử dụng hàm sóng sin theo nhịp `GameCanvas.gameTick`:
+    ```csharp
+    float pulse = (float)(System.Math.Sin(GameCanvas.gameTick * 0.25) * 0.5 + 0.5);
+    int haloRadius = 4 + (int)(pulse * 3);
+    // Vẽ quầng hào quang đỏ mờ
+    g.setColor(0xff1744, 0.45f * pulse + 0.15f);
+    g.fillRoundRect(dotX - haloRadius, dotY - haloRadius, haloRadius * 2, haloRadius * 2, haloRadius, haloRadius);
+    // Vẽ tâm chấm đỏ rực rỡ
+    g.setColor(0xff1744);
+    g.fillRoundRect(dotX - 3, dotY - 3, 6, 6, 3, 3);
+    // Điểm phản quang màu trắng
+    g.setColor(0xffffff, 0.85f);
+    g.fillRect(dotX - 1, dotY - 2, 2, 2);
+    ```
+
+#### B. Dựng Hình Bảng Thông Tin Cập Nhật Chuẩn Phong Cách Game Gốc (`PaintUpdateInfoBoard`)
+- **Khung bảng chính**: Sử dụng `PopUp.paintPopUp(g, boardX, boardY, boardW, boardH, -1, isButton: false)` tạo viền gỗ cổ điển đặc trưng của DragonBoy.
+- **Tiêu đề & Thông số phiên bản**:
+  - Tiêu đề: `THÔNG TIN CẬP NHẬT` font `mFont.tahoma_7b_yellow`.
+  - Nút đóng nhanh `[X]` ở góc trên phải của bảng với hiệu ứng nhấn chìm.
+  - Hàng thông tin: `Bản mới: v{remoteVersion}` (vàng sáng) song song với `Hiện tại: v{CurrentVersion}` (trắng đục).
+  - Ngày phát hành: `Ngày phát hành: {buildDate}`.
+- **Vùng nội dung Changelog có thể cuộn (Scrollable Viewport)**:
+  - Khung nền sẫm bên trong: `g.setColor(0x2d2218, 0.95f); g.fillRoundRect(...)`.
+  - Kẹp vùng vẽ với `g.setClip(viewX, viewY, viewW, viewH)`.
+  - Tự động ngắt dòng văn bản theo bề rộng khung và hỗ trợ kéo vuốt cảm ứng đa điểm (`pointerPressed`, `pointerDragged`, `pointerReleased`).
+- **Nút Hành Động Ở Chân Bảng**:
+  - `[ CẬP NHẬT ]`: Kích thước $88 \times 22$, màu cam viền vàng, bấm vào bắt đầu tải trực tiếp tốc độ cao ngay trong game (`StartInGameDownload()`).
+  - `[ ĐÓNG ]`: Kích thước $88 \times 22$, bấm vào đóng bảng cập nhật sạch sẽ.
+
+#### C. Hook Tương Tác & Dời Tọa Độ Text Sảnh Tránh Xung Đột Giao Diện
+- **Dời text sảnh**:
+  - Trong [`ServerListScreen.Paint.cs`](file:///c:/ModNRO/DragonBoy_Net8_Native/Src/ServerListScreen/ServerListScreen.Paint.cs) và [`LoginScr.Paint.cs`](file:///c:/ModNRO/DragonBoy_Net8_Native/Src/LoginScr/LoginScr.Paint.cs):
+    Tọa độ căn phải của `linkweb` và version được điều chỉnh về `GameCanvas.w - 82` (nằm bên trái của nút cập nhật), giúp 2 thành phần hiển thị song song thoáng đẹp, không hề bị đè chữ.
+- **Hook vẽ giao diện**:
+  - Thêm `ModAutoUpdate.PaintLobbyUI(g)` vào cuối các hàm vẽ của `ServerListScreen.paint()` và `LoginScr.paint()`.
+- **Hook xử lý phím & cảm ứng**:
+  - Thêm `if (ModAutoUpdate.UpdateLobbyInput()) return;` vào đầu `ServerListScreen.updateKey()` và `LoginScr.updateKey()`, chặn toàn bộ sự kiện chạm lọt xuống sảnh khi bảng đang mở.
+
+---
+
+### 3. Kết Quả Kiểm Thử Thực Nghiệm & Bằng Chứng Trực Quan Trên BlueStacks
+
+1. **Kiểm Tra Nút Nổi & Chấm Sáng Đỏ Tại Sảnh**:
+   - Khi sảnh game khởi động, kiểm tra GitHub `version.json` phát hiện phiên bản mới `v2.5.2` (máy đang chạy `v2.5.1`).
+   - Nút `[ CẬP NHẬT ]` nổi bật ở góc trên bên phải màn hình.
+   - Chấm đỏ pulsing halo nhấp nháy mượt mà tại góc nút.
+   - Hoàn toàn không có popup phiền hà nào tự động nhảy ra.
+2. **Kiểm Tra Bảng Thông Tin Cập Nhật**:
+   - Chạm vào nút `[ CẬP NHẬT ]` $\rightarrow$ Bảng "THÔNG TIN CẬP NHẬT" mở ngay tại giữa màn hình.
+   - Đầy đủ thông số: `Bản mới: v2.5.2`, `Hiện tại: v2.5.1`, `Ngày phát hành: 2026-09-12`.
+   - Khung chi tiết cập nhật hiển thị chính xác nội dung changelog từ GitHub.
+   - Vuốt cuộn hoạt động mượt mà không giật lag.
+3. **Kiểm Tra Nút Đóng**:
+   - Nhấn nút `[ ĐÓNG ]` hoặc `[X]` $\rightarrow$ Bảng đóng tức thì, sảnh game trở lại trạng thái ban đầu, nút cập nhật vẫn sẵn sàng cho lần bấm tiếp theo.
+4. **Bàn Giao Bản Build Đã Ký Ra Desktop**:
+   - Đường dẫn APK: `C:\Users\PhamTriHien\Desktop\DragonBoy_1Game_6Tabs.apk`.
+   - Dung lượng: **114,674,781 bytes**.
+   - Trạng thái: **Signed APK Release**, tích hợp trọn bộ 6 Tab độc lập, giữ nguyên cấu hình và tài khoản cũ.
+
 
