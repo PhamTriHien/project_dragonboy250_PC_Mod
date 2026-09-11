@@ -31,7 +31,7 @@ public partial class GameCanvas : IActionListener
 				}
 				else
 				{
-					if (imgBG == null || imgBG[num] == null)
+					if (imgBG == null || imgBG[num] == null || bgW[num] <= 0)
 					{
 						return;
 					}
@@ -44,16 +44,20 @@ public partial class GameCanvas : IActionListener
 					{
 						cmy = h;
 					}
+					int maxDrawW = (GameScr.gW > w) ? GameScr.gW : w;
+					int maxDrawH = (GameScr.gH > h) ? GameScr.gH : h;
 					if (layerSpeed[num] != 0)
 					{
-						for (int i = -((GameScr.cmx + moveX[num] >> layerSpeed[num]) % bgW[num]); i < GameScr.gW; i += bgW[num])
+						int move = (GameScr.cmx + moveX[num]) >> layerSpeed[num];
+						int offset = (move % bgW[num] + bgW[num]) % bgW[num];
+						for (int i = -offset; i < maxDrawW; i += bgW[num])
 						{
 							g.drawImage(imgBG[num], i, yb[num] - ((deltaY > 0) ? (cmy >> deltaY) : 0), 0);
 						}
 					}
 					else
 					{
-						for (int j = 0; j < GameScr.gW; j += bgW[num])
+						for (int j = 0; j < maxDrawW; j += bgW[num])
 						{
 							g.drawImage(imgBG[num], j, yb[num] - ((deltaY > 0) ? (cmy >> deltaY) : 0), 0);
 						}
@@ -62,22 +66,22 @@ public partial class GameCanvas : IActionListener
 					{
 						if (num == nBg - 1)
 						{
-							fillRect(g, color1, 0, -(cmy >> deltaY), GameScr.gW, yb[num], deltaY);
+							fillRect(g, color1, 0, -(cmy >> deltaY), maxDrawW, yb[num], deltaY);
 						}
 						else
 						{
-							fillRect(g, color1, 0, yb[num - 1] + bgH[num - 1], GameScr.gW, yb[num] - (yb[num - 1] + bgH[num - 1]), deltaY);
+							fillRect(g, color1, 0, yb[num - 1] + bgH[num - 1], maxDrawW, yb[num] - (yb[num - 1] + bgH[num - 1]), deltaY);
 						}
 					}
 					if (color2 != -1)
 					{
 						if (num == 0)
 						{
-							fillRect(g, color2, 0, yb[num] + bgH[num], GameScr.gW, GameScr.gH - (yb[num] + bgH[num]), deltaY);
+							fillRect(g, color2, 0, yb[num] + bgH[num], maxDrawW, maxDrawH - (yb[num] + bgH[num]), deltaY);
 						}
 						else
 						{
-							fillRect(g, color2, 0, yb[num] + bgH[num], GameScr.gW, yb[num - 1] - (yb[num] + bgH[num]) + 80, deltaY);
+							fillRect(g, color2, 0, yb[num] + bgH[num], maxDrawW, yb[num - 1] - (yb[num] + bgH[num]) + 80, deltaY);
 						}
 					}
 					if (currentScreen == GameScr.instance)

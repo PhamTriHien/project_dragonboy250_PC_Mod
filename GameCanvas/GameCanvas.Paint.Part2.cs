@@ -35,7 +35,15 @@ public partial class GameCanvas : IActionListener
 				g.fillRect(0, 0, w, h);
 				return;
 			}
-			g.setColor(0);
+			if (colorTop != null && colorTop.Length > 0 && colorTop[colorTop.Length - 1] != 0)
+			{
+				g.setColor(colorTop[colorTop.Length - 1]);
+			}
+			else
+			{
+				int fallbackSky = (typeBg >= 0 && typeBg < StaticObj.SKYCOLOR.Length) ? StaticObj.SKYCOLOR[typeBg] : skyColor;
+				g.setColor(fallbackSky != 0 ? fallbackSky : 0xD4EDFF);
+			}
 			g.fillRect(0, 0, w, h);
 			try
 			{
@@ -236,9 +244,15 @@ public partial class GameCanvas : IActionListener
 				g.fillRect(0, 0, w, h);
 				if (tam != null)
 				{
-					for (int j = -((GameScr.cmx >> 2) % mGraphics.getImageWidth(tam)); j < GameScr.gW; j += mGraphics.getImageWidth(tam))
+					int tamW = mGraphics.getImageWidth(tam);
+					if (tamW > 0)
 					{
-						g.drawImage(tam, j, (GameScr.cmy >> 3) + h / 2 - 50, 0);
+						int valTam = GameScr.cmx >> 2;
+						int offsetTam = (valTam % tamW + tamW) % tamW;
+						for (int j = -offsetTam; j < GameScr.gW; j += tamW)
+						{
+							g.drawImage(tam, j, (GameScr.cmy >> 3) + h / 2 - 50, 0);
+						}
 					}
 				}
 				g.setColor(5084791);

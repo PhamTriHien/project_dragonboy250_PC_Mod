@@ -75,6 +75,7 @@ public partial class TileMap
 					}
 				}
 			}
+			paintExtendedBorderTiles(g);
 		}
 
 	public static void paintTilemapSuperLow(mGraphics g)
@@ -104,6 +105,7 @@ public partial class TileMap
 						}
 					}
 				}
+				paintExtendedBorderTiles(g);
 			}
 			catch
 			{
@@ -184,30 +186,7 @@ public partial class TileMap
 					}
 				}
 			}
-			if (GameScr.cmx < 24)
-			{
-				for (int l = GameScr.gssy; l < GameScr.gssye; l++)
-				{
-					int num2 = maps[l * tmw + 1] - 1;
-					if (num2 != -1)
-					{
-						paintTile(g, num2, 0, l);
-					}
-				}
-			}
-			if (GameScr.cmx <= GameScr.cmxLim)
-			{
-				return;
-			}
-			int num3 = tmw - 2;
-			for (int m = GameScr.gssy; m < GameScr.gssye; m++)
-			{
-				int num4 = maps[m * tmw + num3] - 1;
-				if (num4 != -1)
-				{
-					paintTile(g, num4, num3 + 1, m);
-				}
-			}
+			paintExtendedBorderTiles(g);
 		}
 
 	public static void paintOutTilemap(mGraphics g)
@@ -258,7 +237,119 @@ public partial class TileMap
 					}
 				}
 			}
+
+			// Kéo dài hiệu ứng mặt nước sang 2 bên màn hình khi chơi full màn hình
+			int minCol = (GameScr.cmx / size) - 1;
+			if (minCol <= 0)
+			{
+				for (int col = minCol; col <= 0; col++)
+				{
+					for (int j = GameScr.gssy; j < GameScr.gssye; j++)
+					{
+						if (j < 0 || j >= tmh || (tileTypeAt(1, j) & 0x40) != 64)
+						{
+							continue;
+						}
+						Image image = ((tileID == 5) ? imgWaterlowN : ((tileID != 8) ? imgWaterflow : imgWaterlowN2));
+						if (!isWaterEff())
+						{
+							g.drawRegion(image, 0, 0, 24, 24, 0, col * size, j * size - 1, 0);
+							g.drawRegion(image, 0, 0, 24, 24, 0, col * size, j * size - 3, 0);
+						}
+						g.drawRegion(image, 0, (GameCanvas.gameTick % 8 >> 2) * 24, 24, 24, 0, col * size, j * size - 12, 0);
+					}
+				}
+			}
+			int maxCol = ((GameScr.cmx + GameScr.gW) / size) + 1;
+			int rightEdgeCol = tmw - 2;
+			if (rightEdgeCol > 0 && maxCol >= tmw - 1)
+			{
+				for (int col = tmw - 1; col <= maxCol; col++)
+				{
+					for (int j = GameScr.gssy; j < GameScr.gssye; j++)
+					{
+						if (j < 0 || j >= tmh || (tileTypeAt(rightEdgeCol, j) & 0x40) != 64)
+						{
+							continue;
+						}
+						Image image = ((tileID == 5) ? imgWaterlowN : ((tileID != 8) ? imgWaterflow : imgWaterlowN2));
+						if (!isWaterEff())
+						{
+							g.drawRegion(image, 0, 0, 24, 24, 0, col * size, j * size - 1, 0);
+							g.drawRegion(image, 0, 0, 24, 24, 0, col * size, j * size - 3, 0);
+						}
+						g.drawRegion(image, 0, (GameCanvas.gameTick % 8 >> 2) * 24, 24, 24, 0, col * size, j * size - 12, 0);
+					}
+				}
+			}
 			BackgroudEffect.paintWaterAll(g);
 		}
+
+	private static void paintExtendedBorderTiles(mGraphics g)
+	{
+		if (maps == null || tmw <= 2)
+		{
+			return;
+		}
+
+		// Kéo dài render full map sang bên trái (màn hình rộng hoặc camera dịch trái/âm)
+		int minCol = (GameScr.cmx / size) - 1;
+		if (minCol <= 0)
+		{
+			for (int col = minCol; col <= 0; col++)
+			{
+				for (int l = GameScr.gssy; l < GameScr.gssye; l++)
+				{
+					if (l < 0 || l >= tmh)
+					{
+						continue;
+					}
+					int num2 = maps[l * tmw + 1] - 1;
+					if (num2 != -1)
+					{
+						paintTile(g, num2, col, l);
+					}
+					if ((tileTypeAt(1, l) & 0x20) == 32)
+					{
+						g.drawRegion(imgWaterfall, 0, 24 * (GameCanvas.gameTick % 8 >> 1), 24, 24, 0, col * size, l * size, 0);
+					}
+					else if ((tileTypeAt(1, l) & 0x80) == 128)
+					{
+						g.drawRegion(imgTopWaterfall, 0, 24 * (GameCanvas.gameTick % 8 >> 1), 24, 24, 0, col * size, l * size, 0);
+					}
+				}
+			}
+		}
+
+		// Kéo dài render full map sang bên phải (màn hình rộng hoặc camera dịch phải)
+		int maxCol = ((GameScr.cmx + GameScr.gW) / size) + 1;
+		int rightEdgeCol = tmw - 2;
+		if (rightEdgeCol > 0 && maxCol >= tmw - 1)
+		{
+			for (int col = tmw - 1; col <= maxCol; col++)
+			{
+				for (int m = GameScr.gssy; m < GameScr.gssye; m++)
+				{
+					if (m < 0 || m >= tmh)
+					{
+						continue;
+					}
+					int num4 = maps[m * tmw + rightEdgeCol] - 1;
+					if (num4 != -1)
+					{
+						paintTile(g, num4, col, m);
+					}
+					if ((tileTypeAt(rightEdgeCol, m) & 0x20) == 32)
+					{
+						g.drawRegion(imgWaterfall, 0, 24 * (GameCanvas.gameTick % 8 >> 1), 24, 24, 0, col * size, m * size, 0);
+					}
+					else if ((tileTypeAt(rightEdgeCol, m) & 0x80) == 128)
+					{
+						g.drawRegion(imgTopWaterfall, 0, 24 * (GameCanvas.gameTick % 8 >> 1), 24, 24, 0, col * size, m * size, 0);
+					}
+				}
+			}
+		}
+	}
 
 }
