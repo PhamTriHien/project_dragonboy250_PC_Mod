@@ -77,8 +77,12 @@ public partial class ServerListScreen : mScreen, IActionListener
 					}
 					for (int j = 0; j < num; j++)
 					{
-						if (cmd[j] != null && cmd[j].isPointerPressInside())
+						if (cmd[j] != null && (cmd[j].isPointerPressInside() ||
+							((GameCanvas.isPointerJustRelease || GameCanvas.isPointerClick) &&
+							 (GameCanvas.isPointer(cmd[j].x, cmd[j].y, cmd[j].w, cmd[j].h) ||
+							  GameCanvas.isPointerHoldIn(cmd[j].x, cmd[j].y, cmd[j].w, cmd[j].h)))))
 						{
+							GameCanvas.clearAllPointerEvent();
 							cmd[j].performAction();
 							return;
 						}
@@ -108,6 +112,18 @@ public partial class ServerListScreen : mScreen, IActionListener
 						selected = cmd.Length - 1;
 					}
 					processInput();
+				}
+				if (GameCanvas.keyPressed[5] || GameCanvas.keyPressed[15] || (Main.isPC && GameCanvas.keyPressed[25]))
+				{
+					GameCanvas.keyPressed[5] = false;
+					GameCanvas.keyPressed[15] = false;
+					if (Main.isPC) GameCanvas.keyPressed[25] = false;
+					if (cmd[selected] != null)
+					{
+						GameCanvas.clearAllPointerEvent();
+						cmd[selected].performAction();
+						return;
+					}
 				}
 			}
 			if (!isWait)

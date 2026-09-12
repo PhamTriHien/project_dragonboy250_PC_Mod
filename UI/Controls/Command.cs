@@ -224,7 +224,7 @@ public class Command
 	public bool isPointerPressInside()
 	{
 		isFocus = false;
-		if (GameCanvas.isPointerHoldIn(x, y, w, h))
+		if (GameCanvas.isPointerHoldIn(x, y, w, h) || GameCanvas.isPointer(x, y, w, h))
 		{
 			if (GameCanvas.isPointerDown)
 			{

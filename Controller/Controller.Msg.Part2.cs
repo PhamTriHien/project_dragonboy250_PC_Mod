@@ -444,21 +444,18 @@ public partial class Controller : IMessageHandler
 							SplashScr.imgLogo = null;
 							ServerListScreen.loadScreen = true;
 							Res.outz(">>>vo ne: " + GameCanvas.currentScreen);
-							if (GameCanvas.currentScreen != GameCanvas.loginScr)
+							ServerListScreen.bigOk = true;
+							if (ServerListScreen.cmdDownload != null)
+							{
+								ServerListScreen.cmdDownload = null;
+							}
+							if (GameCanvas.currentScreen is SplashScr || GameCanvas.currentScreen == null)
 							{
 								if (GameCanvas.serverScreen == null)
 								{
 									GameCanvas.serverScreen = new ServerListScreen();
 								}
 								GameCanvas.serverScreen.switchToMe();
-							}
-							else
-							{
-								if (GameCanvas.loginScr == null)
-								{
-									GameCanvas.loginScr = new LoginScr();
-								}
-								GameCanvas.loginScr.doLogin();
 							}
 						}
 					}
@@ -507,8 +504,12 @@ public partial class Controller : IMessageHandler
 						GameScr.gI().loadGameScr();
 						GameScr.isLoadAllData = false;
 						Service.gI().updateData();
-						if (GameCanvas.currentScreen != GameCanvas.loginScr)
+						if (GameCanvas.currentScreen is SplashScr || GameCanvas.currentScreen == null || (GameCanvas.serverScreen != null && GameCanvas.currentScreen == GameCanvas.serverScreen && !ServerListScreen.loadScreen))
 						{
+							if (GameCanvas.serverScreen == null)
+							{
+								GameCanvas.serverScreen = new ServerListScreen();
+							}
 							GameCanvas.serverScreen.switchToMe();
 						}
 					}

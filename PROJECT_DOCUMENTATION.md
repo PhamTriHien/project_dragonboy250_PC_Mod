@@ -14266,3 +14266,60 @@ um10 += clipTX; num11 += clipTY; trong cả hai hàm _drawRegion và __drawRegio
    - Toàn bộ mã nguồn sạch sẽ được commit và push lên nhánh `main` của repository GitHub.
 
 
+
+## 209. Khắc Phục Triệt Để Lỗi Các Nút Ở Sảnh Game Không Nhấn Được / Bị Đá Màn Hình Do Vòng Lặp Packet -111 Trên PC & Android & Phát Hành Bản Dựng v2.5.5 (Fix Lobby Buttons Touch/Click Dropping, Infinite Screen Switching Loop from Opcode -111 & v2.5.5 Release)
+
+### 1. Phản Ánh Của Người Dùng & Hiện Tượng Thực Tế
+- **Hiện tượng**:
+  1. Người chơi nhấn vào nút "Đổi tài khoản" ở sảnh chính (ServerListScreen) thì bị đá ngược lại sảnh hoặc tự động đăng nhập luôn vào tài khoản cũ thay vì hiển thị form LoginScr cho người chơi nhập thông tin.
+  2. Người chơi bấm các nút khác ở sảnh ("Chơi mới", "Máy chủ") đôi lúc không phản hồi, bị rơi sự kiện chạm (touch drop) hoặc bị reset trạng thái màn hình liên tục.
+
+### 2. Phân Tích Kỹ Thuật & Nguyên Nhân Gốc Rễ (Deep Root Cause Analysis)
+1. **Lỗi Vòng Lặp Đệ Quy & Tự Động Đăng Nhập Do Gói Tin -111 (Controller.Msg.Part2.cs)**:
+   - Khi Client kết nối tới Server, Server liên tục gửi gói tin -111 (GET_IMAGE_SOURCE, 14 == 0 và 14 == 3).
+   - Mã nguồn gốc xử lý gói tin -111 (case 0):
+     `csharp
+     if (GameCanvas.currentScreen != GameCanvas.loginScr)
+     {
+         GameCanvas.serverScreen.switchToMe();
+     }
+     else
+     {
+         GameCanvas.loginScr.doLogin();
+     }
+     `
+   - **Hậu quả thảm họa**:
+     + Nếu người chơi vừa bấm "Đổi tài khoản" để sang LoginScr, khi gói tin -111 tới, nó lập tức kích hoạt GameCanvas.loginScr.doLogin(), tự động đăng nhập vào nick cũ mà người chơi không kịp gõ gì!
+     + Nếu người chơi đang ở ServerScr ("Chọn máy chủ"), gói tin -111 đá người chơi quay ngược về ServerListScreen!
+     + Nếu người chơi đang ở ServerListScreen, gói tin -111 gọi lại switchToMe(), tái tạo lại mảng cmd giữa chừng khiến sự kiện nhấn chuột / chạm màn hình (touch / click) bị rơi và mất dấu!
+2. **Chuẩn Hóa Điểm Chạm Con Trỏ Trong Command.cs & ServerListScreen.Action.cs**:
+   - Trong Command.isPointerPressInside(), bổ sung kiểm tra kép cả isPointerHoldIn(x, y, w, h) lẫn isPointer(x, y, w, h) cùng các cờ isPointerJustRelease || isPointerClick, đồng thời tự động cập nhật isFocus khi đang nhấn giữ.
+   - Trong ServerListScreen.Action.cs: Bổ sung fallback kiểm tra tọa độ cho toàn bộ mảng cmd[j], dọn dẹp sự kiện con trỏ sau khi kích hoạt (clearAllPointerEvent()), và hỗ trợ phím bàn phím vật lý Enter (keyPressed[25], keyPressed[15]), Space/5 (keyPressed[5]).
+
+### 3. Các Giải Pháp Kỹ Thuật Đã Triển Khai (Production-Ready)
+1. **Sửa Đổi Tại Controller.Msg.Part2.cs**:
+   - Xóa bỏ logic tự ý gọi doLogin() và gọi đệ quy serverScreen.switchToMe().
+   - Chỉ chuyển màn hình về serverScreen.switchToMe() khi đang ở màn hình khởi động (SplashScr) hoặc currentScreen == null.
+   - Cập nhật đồng bộ trên cả 3 dự án: DragonBoy_Net8_Native, Dragonboy250_PC_projectbuild, và  3_Reference_Sources/DragonBoy250_Source.
+2. **Cập Nhật Command.cs & ServerListScreen.Action.cs**:
+   - Đảm bảo độ nhạy 100% khi người chơi chạm trên màn hình cảm ứng Android cũng như nhấp chuột trên PC.
+3. **Nâng Cấp Phiên Bản v2.5.5**:
+   - ModAutoUpdate.CurrentVersion = "2.5.5"
+   - ersion.json: Cập nhật metadata, URL tải về và changelog phiên bản 2.5.5.
+   - DragonBoy_Android.csproj: ApplicationVersion = 255, ApplicationDisplayVersion = 2.5.5.
+
+### 4. Kết Quả Kiểm Chứng Thực Nghiệm Trực Tiếp (Live Verification)
+1. **Biên Dịch PC**:
+   - dotnet build -c Release trên Dragonboy250_PC_projectbuild.csproj: **0 Warning, 0 Error**.
+   - DLL C:\Users\PhamTriHien\Desktop\DragonBoy250\DragonBoy250_Data\Managed\Assembly-CSharp.dll đã được đồng bộ ra Desktop.
+2. **Biên Dịch Android APK**:
+   - dotnet build -c Release trên DragonBoy_Android.csproj bằng .NET 8 Android SDK: **0 Error**.
+   - Các bản dựng signed APK DragonBoy_1Game_6Tabs.apk và DragonBoy_Net8_Native_Android.apk đã được đồng bộ ra Desktop.
+3. **Kiểm Thử Thực Tế Từng Nút Trên BlueStacks (emulator-5554)**:
+   - Chạm "Tải dữ liệu" (Center Y=656): Tải dữ liệu tài nguyên thành công 100%, không bị treo hay vòng lặp packet -111.
+   - Chạm "Chơi mới" (Center Y=561): Mở giao diện tạo nhân vật (CreateCharScr) ổn định.
+   - Chạm "Đổi tài khoản" (Center Y=621): Mở giao diện LoginScr chuẩn xác, hiển thị đầy đủ ô nhập tài khoản, mật khẩu, checkbox "Nhớ", nút "OK", "Quên M.khẩu", "Đóng", "Dán". Màn hình giữ nguyên trạng thái ổn định, KHÔNG bị tự động đăng nhập hay đá màn hình.
+   - Chạm "Đóng" (Bottom-Left Y=1045): Quay trở lại sảnh chính tức thì.
+   - Chạm "Máy chủ: Vũ trụ 1" (Center Y=681): Mở giao diện ServerScr ("Chọn máy chủ") chuẩn xác, giữ nguyên màn hình, bấm "Đóng" quay lại sảnh chính hoàn hảo.
+4. **Đồng Bộ Git & GitHub**:
+   - Toàn bộ mã nguồn được cập nhật, commit và push lên nhánh main của repository GitHub.
