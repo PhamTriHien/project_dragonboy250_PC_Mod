@@ -65,6 +65,7 @@ public partial class ServerListScreen : mScreen, IActionListener
 						if (cmd_New_Ui[i] != null && cmd_New_Ui[i].isPointerPressInside())
 						{
 							cmd_New_Ui[i].performAction();
+							return;
 						}
 					}
 				}
@@ -79,6 +80,7 @@ public partial class ServerListScreen : mScreen, IActionListener
 						if (cmd[j] != null && cmd[j].isPointerPressInside())
 						{
 							cmd[j].performAction();
+							return;
 						}
 					}
 				}

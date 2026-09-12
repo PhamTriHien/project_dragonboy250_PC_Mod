@@ -375,4 +375,27 @@ public partial class TField
 			}
 		}
 
+	public void paste(string clip)
+	{
+		if (string.IsNullOrEmpty(clip))
+		{
+			return;
+		}
+		suspendTelex = true;
+		try
+		{
+			for (int i = 0; i < clip.Length; i++)
+			{
+				char c = clip[i];
+				if (c >= ' ' && c != 127)
+				{
+					keyPressed((int)c);
+				}
+			}
+		}
+		finally
+		{
+			suspendTelex = false;
+		}
+	}
 }

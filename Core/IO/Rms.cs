@@ -258,8 +258,8 @@ public class Rms
 				string baseDir = AppDomain.CurrentDomain.BaseDirectory;
 				string[] paths = new string[]
 				{
-					Path.Combine(baseDir, "Assets", "data", filename),
-					Path.Combine(baseDir, "data", filename),
+					Path.Combine(Path.Combine(baseDir, "Assets"), Path.Combine("data", filename)),
+					Path.Combine(Path.Combine(baseDir, "data"), filename),
 					Path.Combine(@"C:\ModNRO\DragonBoy_Net8_Native\Assets\data", filename)
 				};
 				foreach (string p in paths)

@@ -302,6 +302,8 @@ public partial class LoginScr : mScreen, IActionListener
 			}
 			GameCanvas.loadBG(0);
 			left = new Command(mResources.BACK, this, 101, null);
+			GameCanvas.clearAllPointerEvent();
+			GameCanvas.clearKeyPressed();
 			base.switchToMe();
 			updatePosition();
 		}

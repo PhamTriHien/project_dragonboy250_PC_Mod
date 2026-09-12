@@ -19,6 +19,26 @@ public partial class TField : IActionListener
 
 	public bool paintFocus = true;
 
+	public static TField GetActive()
+	{
+		if (currentTField != null && currentTField.isFocus)
+		{
+			return currentTField;
+		}
+		LoginScr loginScr = GameCanvas.currentScreen as LoginScr;
+		if (loginScr != null)
+		{
+			if (loginScr.tfUser != null && loginScr.tfUser.isFocus) return loginScr.tfUser;
+			if (loginScr.tfPass != null && loginScr.tfPass.isFocus) return loginScr.tfPass;
+		}
+		InputDlg inputDlg = GameCanvas.currentDialog as InputDlg;
+		if (inputDlg != null)
+		{
+			if (inputDlg.tfInput != null && inputDlg.tfInput.isFocus) return inputDlg.tfInput;
+		}
+		return null;
+	}
+
 	public const sbyte KEY_LEFT = 14;
 
 	public const sbyte KEY_RIGHT = 15;

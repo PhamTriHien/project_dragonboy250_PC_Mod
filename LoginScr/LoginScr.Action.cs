@@ -389,18 +389,29 @@ public partial class LoginScr : mScreen, IActionListener
 				break;
 			case 2008:
 				DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.SaveCredentials(tfUser.getText(), tfPass.getText(), isCheck);
-				if (ServerListScreen.isNewUI)
+				if (!string.IsNullOrEmpty(tfUser.getText()) && !string.IsNullOrEmpty(tfPass.getText()))
+				{
+					doLogin();
+				}
+				else if (ServerListScreen.isNewUI)
 				{
 					Controller.isEXTRA_LINK = false;
 					GameCanvas.serverScreen.Login_New();
 				}
-				else if (ServerListScreen.loadScreen)
-				{
-					GameCanvas.serverScreen.switchToMe();
-				}
 				else
 				{
-					GameCanvas.serverScreen.show2();
+					if (string.IsNullOrEmpty(tfUser.getText()))
+					{
+						focus = 0;
+						tfUser.setFocusWithKb(true);
+						tfPass.setFocusWithKb(false);
+					}
+					else if (string.IsNullOrEmpty(tfPass.getText()))
+					{
+						focus = 1;
+						tfUser.setFocusWithKb(false);
+						tfPass.setFocusWithKb(true);
+					}
 				}
 				break;
 			case 4000:

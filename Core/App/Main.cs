@@ -98,8 +98,10 @@ public class Main : MonoBehaviour
 		mainThreadName = Thread.CurrentThread.Name;
 #if ANDROID || __ANDROID__
 		isPC = false;
-#else
+#elif NET5_0_OR_GREATER
 		isPC = !System.OperatingSystem.IsAndroid() && !System.OperatingSystem.IsIOS();
+#else
+		isPC = (Application.platform != RuntimePlatform.Android && Application.platform != RuntimePlatform.IPhonePlayer);
 #endif
 		started = true;
 		if (isPC)
@@ -213,8 +215,10 @@ public class Main : MonoBehaviour
 			}
 #if ANDROID || __ANDROID__
 			isPC = false;
-#else
+#elif NET5_0_OR_GREATER
 			isPC = !System.OperatingSystem.IsAndroid() && !System.OperatingSystem.IsIOS();
+#else
+			isPC = (Application.platform != RuntimePlatform.Android && Application.platform != RuntimePlatform.IPhonePlayer);
 #endif
 			if (isPC)
 			{
@@ -552,7 +556,7 @@ public class Main : MonoBehaviour
 		}
 	}
 
-	public override void OnApplicationQuit()
+	public void OnApplicationQuit()
 	{
 		try
 		{
