@@ -69,7 +69,9 @@ public partial class TField
 					{
 						caretTextW = mFont.tahoma_8b.getWidth(paintedText.Substring(0, caretPos));
 					}
-					g.fillRect(TEXT_GAP_X + 1 + offsetX + x + caretTextW, y + (height - CARET_HEIGHT) / 2 + 5, CARET_WIDTH, CARET_HEIGHT);
+					int caretH = mFont.tahoma_8b.getHeight();
+					int caretY = y + (height - caretH) / 2 + 2;
+					g.fillRect(TEXT_GAP_X + 1 + offsetX + x + caretTextW, caretY, CARET_WIDTH, caretH);
 				}
 				GameCanvas.resetTrans(g);
 				if (text != null && text.Length > 0 && GameCanvas.isTouch)

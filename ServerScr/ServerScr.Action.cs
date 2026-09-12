@@ -9,7 +9,24 @@ public partial class ServerScr
 			{
 				GameScr.cmx = 100;
 			}
-			if (!isPaintNewUi)
+			if (isChooseArea)
+			{
+				if (cmdChooseArea != null)
+				{
+					int cx = cmdChooseArea.x;
+					int cy = cmdChooseArea.y;
+					int cw = (cmdChooseArea.w > 0) ? cmdChooseArea.w : 68;
+					int ch = (cmdChooseArea.h > 0) ? cmdChooseArea.h : 26;
+					if ((GameCanvas.isPointerHoldIn(cx - 8, cy - 8, cw + 16, ch + 16) || GameCanvas.isPointer(cx - 8, cy - 8, cw + 16, ch + 16) || cmdChooseArea.isPointerPressInside()) && (GameCanvas.isPointerJustRelease || GameCanvas.isPointerClick))
+					{
+						isPaint_select_area = false;
+						GameCanvas.isPointerJustRelease = false;
+						GameCanvas.isPointerClick = false;
+						cmdChooseArea.performAction();
+					}
+				}
+			}
+			else if (!isPaintNewUi)
 			{
 				for (int i = 0; i < vecServer.size(); i++)
 				{
@@ -103,6 +120,13 @@ public partial class ServerScr
 			Res.outz("idAction >>>>   " + idAction);
 			switch (idAction)
 			{
+			case 998:
+				if (GameCanvas.serverScreen == null)
+				{
+					GameCanvas.serverScreen = new ServerListScreen();
+				}
+				GameCanvas.serverScreen.switchToMe();
+				break;
 			case 999:
 				Save_RMS_Area();
 				SetNewSelectMenu(select_Area, 0);
@@ -154,6 +178,8 @@ public partial class ServerScr
 	public void SetNewSelectMenu(int area, int typeSv)
 		{
 			isChooseArea = false;
+			center = null;
+			left = new Command(mResources.BACK, this, 998, null);
 			if (mSystem.clientType != 1)
 			{
 				isPaintNewUi = true;

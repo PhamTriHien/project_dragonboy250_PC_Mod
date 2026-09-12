@@ -141,6 +141,12 @@ public partial class ServerScr : mScreen, IActionListener
 			mainSelect = ServerListScreen.ipSelect;
 			numw = 1;
 			numh = 1;
+			isPaintNewUi = false;
+			isChooseArea = false;
+			isPaint_select_area = false;
+			isPaint_select_lang = false;
+			center = null;
+			left = new Command(mResources.BACK, this, 998, null);
 			Load_NewUI();
 			if (!isPaintNewUi && !isChooseArea)
 			{
@@ -366,21 +372,25 @@ public partial class ServerScr : mScreen, IActionListener
 
 	private void UpdTouch_NewUI_Popup()
 		{
-			if (GameCanvas.isPointer(xPopUp_Area, yBox, wBox, hBox) && GameCanvas.isPointerJustRelease)
+			if (GameCanvas.isPointer(xPopUp_Area, yBox, wBox, hBox) && (GameCanvas.isPointerJustRelease || GameCanvas.isPointerClick))
 			{
 				isPaint_select_area = !isPaint_select_area;
 				isPaint_select_lang = false;
 				GameCanvas.isPointerJustRelease = false;
+				GameCanvas.isPointerClick = false;
 			}
 			if (!isPaint_select_area)
 			{
 				return;
 			}
+			bool isTouchItem = false;
 			for (sbyte b = 0; b < strArea.Length; b++)
 			{
 				int num = yPopUp_Area + b * htext;
-				if (GameCanvas.isPointerHoldIn(xPopUp_Area, num, wBox, htext) && GameCanvas.isPointerDown)
+				if (GameCanvas.isPointerHoldIn(xPopUp_Area, num, wBox, htext) && (GameCanvas.isPointerDown || GameCanvas.isPointerJustRelease || GameCanvas.isPointerClick))
 				{
+					select_Area = b;
+					Save_RMS_Area();
 					if (isChooseArea)
 					{
 						select_Area = b;
@@ -390,8 +400,15 @@ public partial class ServerScr : mScreen, IActionListener
 						SetNewSelectMenu(b, select_typeSv);
 					}
 					isPaint_select_lang = (isPaint_select_area = false);
+					GameCanvas.isPointerJustRelease = false;
+					GameCanvas.isPointerClick = false;
+					isTouchItem = true;
 					break;
 				}
+			}
+			if (!isTouchItem && (GameCanvas.isPointerJustRelease || GameCanvas.isPointerClick))
+			{
+				isPaint_select_area = false;
 			}
 		}
 
@@ -402,9 +419,11 @@ public partial class ServerScr : mScreen, IActionListener
 				if (Rms.loadRMS("area_select") == null)
 				{
 					isChooseArea = true;
+					isPaintNewUi = false;
 					cmdChooseArea = new Command(mResources.OK, this, 999, null);
 					cmdChooseArea.x = GameCanvas.hw - 38;
 					cmdChooseArea.y = GameCanvas.hh + 50;
+					center = cmdChooseArea;
 					vecServer = new MyVector();
 					vecServer.addElement(cmdChooseArea);
 					yBox = GameCanvas.hh - 30;
@@ -414,6 +433,7 @@ public partial class ServerScr : mScreen, IActionListener
 				else
 				{
 					isChooseArea = false;
+					center = null;
 					Load_RMS_Area();
 					SetNewSelectMenu(select_Area, select_typeSv);
 				}

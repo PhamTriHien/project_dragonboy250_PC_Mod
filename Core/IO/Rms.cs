@@ -29,25 +29,16 @@ public class Rms
 
 	public static string RMS_check = "check";
 
+	private static readonly object rmsLock = new object();
+
 	public static void saveRMS(string filename, sbyte[] data)
 	{
-		if (Main.isPC || Thread.CurrentThread.Name == Main.mainThreadName)
-		{
-			__saveRMS(filename, data);
-		}
-		else
-		{
-			_saveRMS(filename, data);
-		}
+		__saveRMS(filename, data);
 	}
 
 	public static sbyte[] loadRMS(string filename)
 	{
-		if (Main.isPC || Thread.CurrentThread.Name == Main.mainThreadName)
-		{
-			return __loadRMS(filename);
-		}
-		return _loadRMS(filename);
+		return __loadRMS(filename);
 	}
 
 	public static string loadRMSString(string fileName)
@@ -202,27 +193,88 @@ public class Rms
 
 	private static void __saveRMS(string filename, sbyte[] data)
 	{
-		string text = GetiPhoneDocumentsPath() + "/" + filename;
-		FileStream fileStream = new FileStream(text, FileMode.Create);
-		fileStream.Write(ArrayCast.cast(data), 0, data.Length);
-		fileStream.Flush();
-		fileStream.Close();
-		Main.setBackupIcloud(text);
+		if (string.IsNullOrEmpty(filename) || data == null) return;
+		lock (rmsLock)
+		{
+			try
+			{
+				string text = GetiPhoneDocumentsPath() + "/" + filename;
+				string dir = Path.GetDirectoryName(text);
+				if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+				{
+					Directory.CreateDirectory(dir);
+				}
+				using (FileStream fileStream = new FileStream(text, FileMode.Create, FileAccess.Write, FileShare.None))
+				{
+					fileStream.Write(ArrayCast.cast(data), 0, data.Length);
+					fileStream.Flush();
+				}
+				Main.setBackupIcloud(text);
+			}
+			catch (Exception ex)
+			{
+				Cout.LogError("Loi __saveRMS " + filename + ": " + ex.Message);
+			}
+		}
 	}
 
 	private static sbyte[] __loadRMS(string filename)
 	{
-		try
+		if (string.IsNullOrEmpty(filename)) return null;
+		lock (rmsLock)
 		{
-			FileStream fileStream = new FileStream(GetiPhoneDocumentsPath() + "/" + filename, FileMode.Open);
-			byte[] array = new byte[fileStream.Length];
-			fileStream.Read(array, 0, array.Length);
-			fileStream.Close();
-			sbyte[] array2 = ArrayCast.cast(array);
-			return ArrayCast.cast(array);
-		}
-		catch (Exception)
-		{
+			try
+			{
+				string fullPath = GetiPhoneDocumentsPath() + "/" + filename;
+				if (File.Exists(fullPath))
+				{
+					using (FileStream fileStream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+					{
+						byte[] array = new byte[fileStream.Length];
+						fileStream.Read(array, 0, array.Length);
+						return ArrayCast.cast(array);
+					}
+				}
+			}
+			catch (Exception)
+			{
+			}
+
+			// Fallback to bundled data templates (e.g. NR_image, NR_part, NR_dart, etc.)
+			try
+			{
+				var textAsset = Resources.Load("data/" + filename) as TextAsset;
+				if (textAsset != null && textAsset.bytes != null && textAsset.bytes.Length > 0)
+				{
+					return ArrayCast.cast(textAsset.bytes);
+				}
+			}
+			catch (Exception)
+			{
+			}
+
+			try
+			{
+				string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+				string[] paths = new string[]
+				{
+					Path.Combine(baseDir, "Assets", "data", filename),
+					Path.Combine(baseDir, "data", filename),
+					Path.Combine(@"C:\ModNRO\DragonBoy_Net8_Native\Assets\data", filename)
+				};
+				foreach (string p in paths)
+				{
+					if (File.Exists(p))
+					{
+						byte[] bytes = File.ReadAllBytes(p);
+						return ArrayCast.cast(bytes);
+					}
+				}
+			}
+			catch (Exception)
+			{
+			}
+
 			return null;
 		}
 	}
@@ -270,13 +322,22 @@ public class Rms
 
 	public static void deleteRecord(string name)
 	{
-		try
+		if (string.IsNullOrEmpty(name)) return;
+		lock (rmsLock)
 		{
-			PlayerPrefs.DeleteKey(name);
-		}
-		catch (Exception ex)
-		{
-			Cout.println("loi xoa RMS --------------------------" + ex.ToString());
+			try
+			{
+				PlayerPrefs.DeleteKey(name);
+				string text = GetiPhoneDocumentsPath() + "/" + name;
+				if (File.Exists(text))
+				{
+					File.Delete(text);
+				}
+			}
+			catch (Exception ex)
+			{
+				Cout.println("loi xoa RMS --------------------------" + ex.ToString());
+			}
 		}
 	}
 

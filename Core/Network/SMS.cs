@@ -26,11 +26,7 @@ public class SMS
 
 	public static int send(string content, string to)
 	{
-		if (Thread.CurrentThread.Name == Main.mainThreadName)
-		{
-			return __send(content, to);
-		}
-		return _send(content, to);
+		return __send(content, to);
 	}
 
 	private static int _send(string content, string to)

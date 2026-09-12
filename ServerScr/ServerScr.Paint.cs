@@ -34,9 +34,14 @@ public partial class ServerScr
 		{
 			if (isChooseArea)
 			{
+				PopUp.paintPopUp(g, GameCanvas.hw - 60, yBox - 35, 120, 24, 0, isButton: true);
+				mFont.tahoma_7b_dark.drawString(g, "CHỌN KHU VỰC", GameCanvas.hw, yBox - 30, 2);
+				if (cmdChooseArea != null)
+				{
+					cmdChooseArea.paint(g);
+				}
 				paint_Area(g, GameCanvas.hw - wBox / 2, yBox);
 				paint_Lang(g, GameCanvas.hw + 20, yBox);
-				cmdChooseArea.paint(g);
 			}
 		}
 

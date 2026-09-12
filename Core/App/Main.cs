@@ -73,12 +73,13 @@ public class Main : MonoBehaviour
 
 	public static bool isCompactDevice = true;
 
-	private void Start()
+	public void Start()
 	{
 		Debug.LogWarning("MAIN.START CALLED");
 		mSystem.isTest = true; // Kích hoạt log Engine & Network gốc vào output_log.txt
 		Application.runInBackground = true; // DUY TRÌ GAME CHẠY LIÊN TỤC 24/7 KHI THU NHỎ HOẶC CHẠY DƯỚI NỀN
 		ModConfig.LoadConfig();
+		ModTdltLogger.InitSession();
 		ModFps.LoadFPS();
 		if (started)
 		{
@@ -95,7 +96,11 @@ public class Main : MonoBehaviour
 		{
 		}
 		mainThreadName = Thread.CurrentThread.Name;
-		isPC = true;
+#if ANDROID || __ANDROID__
+		isPC = false;
+#else
+		isPC = !System.OperatingSystem.IsAndroid() && !System.OperatingSystem.IsIOS();
+#endif
 		started = true;
 		if (isPC)
 		{
@@ -145,7 +150,7 @@ public class Main : MonoBehaviour
 		}
 	}
 
-	private void OnGUI()
+	public void OnGUI()
 	{
 		if (count >= 10)
 		{
@@ -206,7 +211,11 @@ public class Main : MonoBehaviour
 			{
 				IMEI = GetMacAddress();
 			}
-			isPC = true;
+#if ANDROID || __ANDROID__
+			isPC = false;
+#else
+			isPC = !System.OperatingSystem.IsAndroid() && !System.OperatingSystem.IsIOS();
+#endif
 			if (isPC)
 			{
 				Screen.fullScreen = ModGraphics.isFullscreen;
@@ -276,9 +285,13 @@ public class Main : MonoBehaviour
 		}
 	}
 
-	private void FixedUpdate()
+	public void FixedUpdate()
 	{
-		if (count == 0) Debug.LogWarning("MAIN.FIXEDUPDATE FIRST TICK");
+		if (count == 0)
+		{
+			Debug.LogWarning("MAIN.FIXEDUPDATE FIRST TICK");
+			mainThreadName = Thread.CurrentThread.Name;
+		}
 		Rms.update();
 		count++;
 		if (count >= 10)
@@ -312,7 +325,7 @@ public class Main : MonoBehaviour
 		}
 	}
 
-	private void Update()
+	public void Update()
 	{
 		if (Time.fixedDeltaTime != 0.02f)
 		{
@@ -348,105 +361,173 @@ public class Main : MonoBehaviour
 		{
 			char character = Event.current.character;
 			int num = 0;
-			if (ChatTextField.gI().isShow)
+
+			// 1. Phím tắt Ctrl (Ctrl+V dán, Ctrl+C sao chép, Ctrl+A xóa toàn bộ, Ctrl+X cắt)
+			if (Event.current.control || character == 22 || character == 3 || character == 1 || character == 24)
 			{
-				if (Event.current.control)
+				TField activeTf = TField.GetActive();
+				if (Event.current.keyCode == KeyCode.V || character == 22)
 				{
-					if (Event.current.keyCode == KeyCode.V || character == 22)
+					try
 					{
-						try
+						string clip = GUIUtility.systemCopyBuffer;
+						if (!string.IsNullOrEmpty(clip))
 						{
-							string clip = GUIUtility.systemCopyBuffer;
-							if (!string.IsNullOrEmpty(clip))
+							if (ChatTextField.gI().isShow)
 							{
 								ChatTextField.gI().pasteText(clip);
 							}
+							else if (activeTf != null)
+							{
+								activeTf.paste(clip);
+							}
 						}
-						catch
-						{
-						}
-						return;
 					}
-					if (Event.current.keyCode == KeyCode.C || character == 3)
+					catch
 					{
-						try
+					}
+					return;
+				}
+				if (Event.current.keyCode == KeyCode.C || character == 3)
+				{
+					try
+					{
+						if (ChatTextField.gI().isShow)
 						{
 							GUIUtility.systemCopyBuffer = ChatTextField.gI().tfChat.getText();
 						}
-						catch
+						else if (activeTf != null)
 						{
+							GUIUtility.systemCopyBuffer = activeTf.getText();
 						}
-						return;
 					}
-					if (Event.current.keyCode == KeyCode.A || character == 1)
+					catch
 					{
-						return;
 					}
-				}
-				if (character == 27 || Event.current.keyCode == KeyCode.Escape)
-				{
-					ChatTextField.gI().close();
 					return;
 				}
-				if (character == '\n' || character == '\r' || Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter)
+				if (Event.current.keyCode == KeyCode.A || character == 1)
 				{
-					ChatTextField.gI().sendChat();
+					try
+					{
+						if (ChatTextField.gI().isShow)
+						{
+							ChatTextField.gI().tfChat.clearAllText();
+						}
+						else if (activeTf != null)
+						{
+							activeTf.clearAllText();
+						}
+					}
+					catch
+					{
+					}
 					return;
 				}
-				if (character == '\b' || Event.current.keyCode == KeyCode.Backspace)
+				if (Event.current.keyCode == KeyCode.X || character == 24)
+				{
+					try
+					{
+						if (ChatTextField.gI().isShow)
+						{
+							GUIUtility.systemCopyBuffer = ChatTextField.gI().tfChat.getText();
+							ChatTextField.gI().tfChat.clearAllText();
+						}
+						else if (activeTf != null)
+						{
+							GUIUtility.systemCopyBuffer = activeTf.getText();
+							activeTf.clearAllText();
+						}
+					}
+					catch
+					{
+					}
+					return;
+				}
+				return;
+			}
+
+			// 2. Phím chức năng & điều hướng (Ưu tiên tuyệt đối trước khi xử lý ký tự)
+			if (character == '\b' || Event.current.keyCode == KeyCode.Backspace)
+			{
+				if (ChatTextField.gI().isShow)
 				{
 					ChatTextField.gI().keyPressed(-8);
 					return;
 				}
-				if (character == 127 || Event.current.keyCode == KeyCode.Delete)
-				{
-					ChatTextField.gI().keyPressed(-9);
-					return;
-				}
-				if (Event.current.keyCode == KeyCode.LeftArrow)
-				{
-					ChatTextField.gI().keyPressed(-3);
-					return;
-				}
-				if (Event.current.keyCode == KeyCode.RightArrow)
-				{
-					ChatTextField.gI().keyPressed(-4);
-					return;
-				}
-				if (character >= ' ' && character != 127)
-				{
-					ChatTextField.gI().keyPressed((int)character);
-					return;
-				}
-			}
-			if (character >= ' ' && character != 127)
-			{
-				num = (int)character;
-			}
-			else if (character == '\b' || Event.current.keyCode == KeyCode.Backspace)
-			{
 				num = -8;
 			}
 			else if (character == 127 || Event.current.keyCode == KeyCode.Delete)
 			{
+				if (ChatTextField.gI().isShow)
+				{
+					ChatTextField.gI().keyPressed(-9);
+					return;
+				}
 				num = -9;
 			}
 			else if (character == '\n' || character == '\r' || Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter)
 			{
+				if (ChatTextField.gI().isShow)
+				{
+					ChatTextField.gI().sendChat();
+					return;
+				}
 				num = -5;
 			}
 			else if (character == 27 || Event.current.keyCode == KeyCode.Escape)
 			{
+				if (ChatTextField.gI().isShow)
+				{
+					ChatTextField.gI().close();
+					return;
+				}
 				num = -7;
 			}
 			else if (character == '\t' || Event.current.keyCode == KeyCode.Tab)
 			{
 				num = -26;
 			}
+			else if (Event.current.keyCode == KeyCode.LeftArrow)
+			{
+				if (ChatTextField.gI().isShow)
+				{
+					ChatTextField.gI().keyPressed(-3);
+					return;
+				}
+				num = -3;
+			}
+			else if (Event.current.keyCode == KeyCode.RightArrow)
+			{
+				if (ChatTextField.gI().isShow)
+				{
+					ChatTextField.gI().keyPressed(-4);
+					return;
+				}
+				num = -4;
+			}
+			else if (Event.current.keyCode == KeyCode.UpArrow)
+			{
+				num = -1;
+			}
+			else if (Event.current.keyCode == KeyCode.DownArrow)
+			{
+				num = -2;
+			}
+			else if (character >= ' ' && character != 127)
+			{
+				if (ChatTextField.gI().isShow)
+				{
+					ChatTextField.gI().keyPressed((int)character);
+					return;
+				}
+				num = (int)character;
+			}
 			else
 			{
 				num = MyKeyMap.map(Event.current.keyCode);
 			}
+
 			if (num != 0)
 			{
 				GameMidlet.gameCanvas.keyPressedz(num);
@@ -471,7 +552,7 @@ public class Main : MonoBehaviour
 		}
 	}
 
-	private void OnApplicationQuit()
+	public override void OnApplicationQuit()
 	{
 		try
 		{
@@ -506,6 +587,11 @@ public class Main : MonoBehaviour
 		try
 		{
 			main?.OnApplicationQuit();
+#if ANDROID || __ANDROID__
+			Android.OS.Process.KillProcess(Android.OS.Process.MyPid());
+#else
+			System.Environment.Exit(0);
+#endif
 		}
 		catch
 		{

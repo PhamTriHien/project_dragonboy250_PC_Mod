@@ -109,11 +109,12 @@ public class Sound
 
 	public static void stop()
 	{
+		if (player == null) return;
 		for (int i = 0; i < player.Length; i++)
 		{
 			if (player[i] != null)
 			{
-				player[i].GetComponent<AudioSource>().Pause();
+				player[i].GetComponent<AudioSource>()?.Pause();
 			}
 		}
 	}
@@ -168,9 +169,12 @@ public class Sound
 
 	public static void stopAllz()
 	{
-		for (int i = 0; i < music.Length; i++)
+		if (music != null)
 		{
-			stop(i);
+			for (int i = 0; i < music.Length; i++)
+			{
+				stop(i);
+			}
 		}
 		for (int j = 0; j < l1; j++)
 		{
@@ -306,14 +310,7 @@ public class Sound
 
 	public static void load(string filename, int pos)
 	{
-		if (Thread.CurrentThread.Name == Main.mainThreadName)
-		{
-			__load(filename, pos);
-		}
-		else
-		{
-			_load(filename, pos);
-		}
+		__load(filename, pos);
 	}
 
 	private static void _load(string filename, int pos)
@@ -352,14 +349,7 @@ public class Sound
 
 	public static void start(float volume, int pos)
 	{
-		if (Thread.CurrentThread.Name == Main.mainThreadName)
-		{
-			__start(volume, pos);
-		}
-		else
-		{
-			_start(volume, pos);
-		}
+		__start(volume, pos);
 	}
 
 	public static void _start(float volume, int pos)
@@ -393,22 +383,15 @@ public class Sound
 
 	public static void __start(float volume, int pos)
 	{
-		if (!(player[pos] == null))
+		if (player != null && pos >= 0 && pos < player.Length && player[pos] != null)
 		{
-			player[pos].GetComponent<AudioSource>().PlayOneShot(music[pos], volume);
+			player[pos].GetComponent<AudioSource>()?.PlayOneShot(music[pos], volume);
 		}
 	}
 
 	public static void stop(int pos)
 	{
-		if (Thread.CurrentThread.Name == Main.mainThreadName)
-		{
-			__stop(pos);
-		}
-		else
-		{
-			_stop(pos);
-		}
+		__stop(pos);
 	}
 
 	public static void _stop(int pos)
@@ -441,9 +424,9 @@ public class Sound
 
 	public static void __stop(int pos)
 	{
-		if (player[pos] != null)
+		if (player != null && pos >= 0 && pos < player.Length && player[pos] != null)
 		{
-			player[pos].GetComponent<AudioSource>().Stop();
+			player[pos].GetComponent<AudioSource>()?.Stop();
 		}
 	}
 }
