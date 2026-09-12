@@ -41,11 +41,13 @@ public partial class LoginScr : mScreen, IActionListener
 				}
 				xLog = GameCanvas.w / 2 - num3 / 2;
 				tfUser.x = xLog + 10;
-				tfUser.y = yLog + 20;
+				tfUser.y = yLog + 15;
 				tfPass.x = xLog + 10;
-				tfPass.y = yLog + 55;
+				tfPass.y = yLog + 46;
 				tfUser.paint(g);
 				tfPass.paint(g);
+				ModUI.DrawCheckbox(xLog + 10, yLog + 74, isCheck, g);
+				mFont.tahoma_7b_dark.drawString(g, mResources.remember, xLog + 34, yLog + 77, 0);
 				int num4 = 0;
 				if (GameCanvas.w >= 176)
 				{

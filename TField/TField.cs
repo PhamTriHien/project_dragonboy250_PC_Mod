@@ -417,12 +417,12 @@ public partial class TField : IActionListener
 
 	public void setTextBox()
 		{
-			if (GameCanvas.isPointerHoldIn(x + width - 20, y, 40, height))
+			if (text != null && text.Length > 0 && GameCanvas.isPointerHoldIn(x + width - 24, y, 24, height))
 			{
 				clearAllText();
 				isFocus = true;
 			}
-			else if (GameCanvas.isPointerHoldIn(x, y, width - 20, height))
+			else if (GameCanvas.isPointerHoldIn(x, y, width - 24, height))
 			{
 				setFocusWithKb(isFocus: true);
 			}
@@ -454,6 +454,10 @@ public partial class TField : IActionListener
 				indexOfActiveChar = 0;
 				this.text = text;
 				paintedText = text;
+				if (kb != null)
+				{
+					kb.text = text;
+				}
 				if (text == string.Empty)
 				{
 					TouchScreenKeyboard.Clear();
@@ -467,6 +471,10 @@ public partial class TField : IActionListener
 	public void insertText(string text)
 		{
 			this.text = this.text.Substring(0, caretPos) + text + this.text.Substring(caretPos);
+			if (kb != null)
+			{
+				kb.text = this.text;
+			}
 			setPasswordTest();
 			caretPos += text.Length;
 			setOffset();

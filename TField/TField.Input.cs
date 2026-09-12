@@ -270,7 +270,7 @@ public partial class TField
 			}
 			if (kb != null && currentTField == this)
 			{
-				if (kb.text.Length < 40 && isFocus)
+				if (kb.text != null && kb.text != text && isFocus)
 				{
 					setText(kb.text);
 				}

@@ -32,7 +32,7 @@ public partial class LoginScr : mScreen, IActionListener
 			}
 			if (TouchScreenKeyboard.visible)
 			{
-				mGraphics.addYWhenOpenKeyBoard = 50;
+				mGraphics.addYWhenOpenKeyBoard = 0;
 			}
 			for (int i = 0; i < Effect2.vEffect2.size(); i++)
 			{
@@ -251,14 +251,28 @@ public partial class LoginScr : mScreen, IActionListener
 				if (GameCanvas.isPointerHoldIn(tfUser.x, tfUser.y, tfUser.width, tfUser.height))
 				{
 					focus = 0;
-					tfUser.isFocus = true;
-					tfPass.isFocus = false;
+					tfUser.setFocusWithKb(true);
+					tfPass.setFocusWithKb(false);
+					GameCanvas.isPointerJustRelease = false;
+					GameCanvas.isPointerClick = false;
+					GameCanvas.clearKeyPressed();
 				}
 				else if (GameCanvas.isPointerHoldIn(tfPass.x, tfPass.y, tfPass.width, tfPass.height))
 				{
 					focus = 1;
-					tfUser.isFocus = false;
-					tfPass.isFocus = true;
+					tfUser.setFocusWithKb(false);
+					tfPass.setFocusWithKb(true);
+					GameCanvas.isPointerJustRelease = false;
+					GameCanvas.isPointerClick = false;
+					GameCanvas.clearKeyPressed();
+				}
+				else if (GameCanvas.isPointerHoldIn(xLog + 10, yLog + 72, 130, 22))
+				{
+					isCheck = !isCheck;
+					DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.SaveCredentials(tfUser.getText(), tfPass.getText(), isCheck);
+					GameCanvas.isPointerJustRelease = false;
+					GameCanvas.isPointerClick = false;
+					GameCanvas.clearKeyPressed();
 				}
 			}
 			if (Main.isPC && GameCanvas.keyPressed[(!Main.isPC) ? 5 : 25] && right != null)

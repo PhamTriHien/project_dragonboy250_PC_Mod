@@ -61,16 +61,14 @@ public partial class GameCanvas : IActionListener
 				if (TouchScreenKeyboard.visible)
 				{
 					timeOpenKeyBoard++;
-					if (timeOpenKeyBoard > ((!Main.isWindowsPhone) ? 10 : 5))
-					{
-						mGraphics.addYWhenOpenKeyBoard = 94;
-					}
+					mGraphics.addYWhenOpenKeyBoard = 0;
 				}
 				else
 				{
 					mGraphics.addYWhenOpenKeyBoard = 0;
 					timeOpenKeyBoard = 0;
 				}
+				DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.UpdateLoginWatchdog();
 				debugUpdate.removeAllElements();
 				long num = mSystem.currentTimeMillis();
 				if (num - timeTickEff1 >= 780 && !isEff1)

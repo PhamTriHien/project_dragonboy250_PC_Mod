@@ -236,15 +236,18 @@ public partial class LoginScr : mScreen, IActionListener
 			yLog = GameCanvas.hh - 30;
 			lY = ((GameCanvas.w < 200) ? (tfUser.y - 30) : (yLog - 30));
 			tfUser.x = xLog + 10;
-			tfUser.y = yLog + 20;
+			tfUser.y = yLog + 15;
+			tfPass.x = xLog + 10;
+			tfPass.y = yLog + 46;
 			cmdOK = new Command(mResources.OK, this, 2008, null);
 			cmdOK.x = GameCanvas.w / 2 - 84;
-			cmdOK.y = cmdLogin.y;
+			cmdOK.y = yLog + 105;
 			cmdFogetPass = new Command(mResources.forgetPass, this, 1003, null);
 			cmdFogetPass.x = GameCanvas.w / 2 + 3;
-			cmdFogetPass.y = cmdLogin.y;
+			cmdFogetPass.y = yLog + 105;
 			center = cmdOK;
 			left = cmdFogetPass;
+			updatePosition();
 		}
 
 	public static void getServerLink()
@@ -300,6 +303,7 @@ public partial class LoginScr : mScreen, IActionListener
 			GameCanvas.loadBG(0);
 			left = new Command(mResources.BACK, this, 101, null);
 			base.switchToMe();
+			updatePosition();
 		}
 
 	public void setUserPass()
@@ -579,14 +583,14 @@ public partial class LoginScr : mScreen, IActionListener
 			if (tfUser != null)
 			{
 				tfUser.x = xLog + 10;
-				tfUser.y = yLog + 20;
+				tfUser.y = yLog + 15;
 				tfUser.width = wC;
 				tfUser.height = mScreen.ITEM_HEIGHT + 2;
 			}
 			if (tfPass != null)
 			{
 				tfPass.x = xLog + 10;
-				tfPass.y = yLog + 55;
+				tfPass.y = yLog + 46;
 				tfPass.width = wC;
 				tfPass.height = mScreen.ITEM_HEIGHT + 2;
 			}
@@ -608,7 +612,7 @@ public partial class LoginScr : mScreen, IActionListener
 			}
 			if (GameCanvas.isTouch)
 			{
-				int btnY = (GameCanvas.h >= 200) ? (yLog + 110) : (GameCanvas.h - 26);
+				int btnY = (GameCanvas.h >= 200) ? (yLog + 105) : (GameCanvas.h - 26);
 				if (cmdLogin != null)
 				{
 					cmdLogin.x = GameCanvas.w / 2 + 8;
