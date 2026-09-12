@@ -64,7 +64,12 @@ public partial class TField
 				if (keyInActiveState == 0 && (showCaretCounter > 0 || counter / CARET_SHOWING_TIME % 4 == 0))
 				{
 					g.setColor(7999781);
-					g.fillRect(TEXT_GAP_X + 1 + offsetX + x + mFont.tahoma_8b.getWidth(paintedText.Substring(0, caretPos) + "a") - CARET_WIDTH - mFont.tahoma_8b.getWidth("a"), y + (height - CARET_HEIGHT) / 2 + 5, CARET_WIDTH, CARET_HEIGHT);
+					int caretTextW = 0;
+					if (caretPos > 0 && !string.IsNullOrEmpty(paintedText) && caretPos <= paintedText.Length)
+					{
+						caretTextW = mFont.tahoma_8b.getWidth(paintedText.Substring(0, caretPos));
+					}
+					g.fillRect(TEXT_GAP_X + 1 + offsetX + x + caretTextW, y + (height - CARET_HEIGHT) / 2 + 5, CARET_WIDTH, CARET_HEIGHT);
 				}
 				GameCanvas.resetTrans(g);
 				if (text != null && text.Length > 0 && GameCanvas.isTouch)

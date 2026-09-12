@@ -197,9 +197,11 @@ public partial class mFont
 		{
 			try
 			{
+				if (string.IsNullOrEmpty(s)) return 0;
 				GUIStyle gUIStyle = new GUIStyle();
 				gUIStyle.font = myFont;
-				return (int)gUIStyle.CalcSize(new GUIContent(s)).x / mGraphics.zoomLevel;
+				int zoom = (mGraphics.zoomLevel > 0) ? mGraphics.zoomLevel : 1;
+				return (int)(gUIStyle.CalcSize(new GUIContent(s)).x / (float)zoom + 0.5f);
 			}
 			catch (Exception ex)
 			{

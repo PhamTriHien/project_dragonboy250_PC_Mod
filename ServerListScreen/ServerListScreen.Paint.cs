@@ -15,7 +15,8 @@ public partial class ServerListScreen : mScreen, IActionListener
 				GameCanvas.paintBGGameScr(g);
 			}
 			int num = 2;
-			mFont.tahoma_7_white.drawString(g, "v" + GameMidlet.VERSION + "(" + mGraphics.zoomLevel + ")", GameCanvas.w - 2, num + 15, 1, mFont.tahoma_7_grey);
+			int textRightX = ModAutoUpdate.hasNewVersion ? (GameCanvas.w - 82) : (GameCanvas.w - 2);
+			mFont.tahoma_7_white.drawString(g, "v" + GameMidlet.VERSION + "(" + mGraphics.zoomLevel + ")", textRightX, num + 13, 1, mFont.tahoma_7_grey);
 			try
 			{
 				string empty = string.Empty;
@@ -23,7 +24,7 @@ public partial class ServerListScreen : mScreen, IActionListener
 				empty = ((testConnect != 0) ? (empty + sName + " connected") : (empty + sName + " disconnect"));
 				if (mSystem.isTest)
 				{
-					mFont.tahoma_7_white.drawString(g, empty, GameCanvas.w - 2, num + 15 + 15, 1, mFont.tahoma_7_grey);
+					mFont.tahoma_7_white.drawString(g, empty, textRightX, num + 26, 1, mFont.tahoma_7_grey);
 				}
 			}
 			catch (Exception)
@@ -37,12 +38,12 @@ public partial class ServerListScreen : mScreen, IActionListener
 				}
 				else
 				{
-					mFont.tahoma_7_white.drawString(g, linkweb, GameCanvas.w - 2, num, 1, mFont.tahoma_7_grey);
+					mFont.tahoma_7_white.drawString(g, linkweb, textRightX, num, 1, mFont.tahoma_7_grey);
 				}
 			}
 			else
 			{
-				mFont.tahoma_7_white.drawString(g, linkweb, GameCanvas.w - 2, num, 1, mFont.tahoma_7_grey);
+				mFont.tahoma_7_white.drawString(g, linkweb, textRightX, num, 1, mFont.tahoma_7_grey);
 			}
 			int num2 = ((GameCanvas.w < 200) ? 160 : 180);
 			paintDeleteData(g);
@@ -53,7 +54,7 @@ public partial class ServerListScreen : mScreen, IActionListener
 					g.drawImage(LoginScr.imgTitle, GameCanvas.hw, GameCanvas.hh - 32, 3);
 					if (!isGetData)
 					{
-						mFont.tahoma_7b_white.drawString(g, mResources.taidulieudechoi, GameCanvas.hw, GameCanvas.hh + 24, 2);
+						mFont.tahoma_7b_white.drawString(g, mResources.taidulieudechoi, GameCanvas.hw, GameCanvas.hh + 20, 2);
 						if (cmdDownload != null)
 						{
 							cmdDownload.paint(g);
@@ -61,13 +62,13 @@ public partial class ServerListScreen : mScreen, IActionListener
 					}
 					else
 					{
+						mFont.tahoma_7b_white.drawString(g, mResources.downloading_data + percent + "%", GameCanvas.w / 2, GameCanvas.hh + 20, 2);
+						GameScr.paintOngMauPercent(GameScr.frBarPow20, GameScr.frBarPow21, GameScr.frBarPow22, GameCanvas.w / 2 - 50, GameCanvas.hh + 36, 100, 100f, g);
+						GameScr.paintOngMauPercent(GameScr.frBarPow0, GameScr.frBarPow1, GameScr.frBarPow2, GameCanvas.w / 2 - 50, GameCanvas.hh + 36, 100, percent, g);
 						if (cmdDownload != null)
 						{
 							cmdDownload.paint(g);
 						}
-						mFont.tahoma_7b_white.drawString(g, mResources.downloading_data + percent + "%", GameCanvas.w / 2, GameCanvas.hh + 24, 2);
-						GameScr.paintOngMauPercent(GameScr.frBarPow20, GameScr.frBarPow21, GameScr.frBarPow22, GameCanvas.w / 2 - 50, GameCanvas.hh + 45, 100, 100f, g);
-						GameScr.paintOngMauPercent(GameScr.frBarPow0, GameScr.frBarPow1, GameScr.frBarPow2, GameCanvas.w / 2 - 50, GameCanvas.hh + 45, 100, percent, g);
 					}
 				}
 			}
@@ -89,12 +90,15 @@ public partial class ServerListScreen : mScreen, IActionListener
 				else
 				{
 					int num4 = cmd.Length;
-					if (mGraphics.zoomLevel > 1)
-					{
-					}
+					int numY = GameCanvas.hh - 15 * cmd.Length + 28;
 					for (int i = 0; i < num4; i++)
 					{
-						cmd[i].paint(g);
+						if (cmd[i] != null)
+						{
+							cmd[i].x = (GameCanvas.w - cmd[i].w) / 2;
+							cmd[i].y = numY + i * 30;
+							cmd[i].paint(g);
+						}
 					}
 					g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
 					if (mGraphics.zoomLevel == 1)
@@ -114,12 +118,15 @@ public partial class ServerListScreen : mScreen, IActionListener
 				}
 			}
 			base.paint(g);
+			ModAutoUpdate.PaintLobbyUI(g);
 		}
 
 	public static void paintDeleteData(mGraphics g)
 		{
 			if (cmdDeleteRMS != null)
 			{
+				cmdDeleteRMS.x = GameCanvas.w - 78;
+				cmdDeleteRMS.y = GameCanvas.h - 26;
 				mFont.tahoma_7_white.drawString(g, mResources.xoadulieu, GameCanvas.w - 2, GameCanvas.h - 15, 1, mFont.tahoma_7_grey);
 			}
 		}
