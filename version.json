@@ -1,9 +1,9 @@
 {
-  "version": "2.5.2",
-  "buildDate": "2026-09-12",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.2/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.2/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.2/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.2/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.2: Tối ưu hoá cắm 6 tab 24/7 không nóng máy, 0% GPU chạy ngầm, ngắt âm thanh ngầm thông minh, chống LMK diệt tab; Cơ chế cập nhật mới với nút nổi và chấm sáng đỏ tại sảnh game; Bảng thông tin cập nhật chi tiết."
+  "version": "2.5.3",
+  "buildDate": "2026-09-13",
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.3/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.3/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.3/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.3/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.3: Khắc phục triệt để 100% lỗi nút Đổi tài khoản trên ServerListScreen (loại bỏ vùng chết hitbox, triệt tiêu vòng lặp nảy sảnh khi mở form đăng nhập, hỗ trợ điều hướng cả chuột, cảm ứng và phím mũi tên); Tối ưu hóa form đăng nhập và checkbox ghi nhớ mật khẩu."
 }

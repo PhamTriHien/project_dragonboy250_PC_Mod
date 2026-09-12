@@ -230,7 +230,7 @@ public class Command
 			{
 				isFocus = true;
 			}
-			if (GameCanvas.isPointerJustRelease)
+			if (GameCanvas.isPointerJustRelease || GameCanvas.isPointerClick)
 			{
 				return true;
 			}

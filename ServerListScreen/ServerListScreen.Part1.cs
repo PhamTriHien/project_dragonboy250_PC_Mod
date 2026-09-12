@@ -182,9 +182,14 @@ public partial class ServerListScreen : mScreen, IActionListener
 				cmd[i].y = num;
 				cmd[i].setType();
 				cmd[i].x = (GameCanvas.w - cmd[i].w) / 2;
-				cmd[i].h = 28;
+				cmd[i].h = 30;
 				num += 30;
 			}
+			if (selected < 0 || selected >= cmd.Length)
+			{
+				selected = 0;
+			}
+			processInput();
 		}
 	public static void doUpdateServer()
 		{

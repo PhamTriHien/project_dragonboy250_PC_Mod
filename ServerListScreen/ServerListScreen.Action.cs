@@ -85,27 +85,27 @@ public partial class ServerListScreen : mScreen, IActionListener
 					}
 				}
 			}
-			else if (loadScreen)
+			if (loadScreen && cmd != null && cmd.Length > 0)
 			{
-				if (GameCanvas.keyPressed[8])
+				if (GameCanvas.keyPressed[(!Main.isPC) ? 8 : 22] || GameCanvas.keyPressed[8])
 				{
-					int num2 = ((mGraphics.zoomLevel <= 1) ? 4 : 2);
+					GameCanvas.keyPressed[(!Main.isPC) ? 8 : 22] = false;
 					GameCanvas.keyPressed[8] = false;
 					selected++;
-					if (selected > num2)
+					if (selected >= cmd.Length)
 					{
 						selected = 0;
 					}
 					processInput();
 				}
-				if (GameCanvas.keyPressed[2])
+				if (GameCanvas.keyPressed[(!Main.isPC) ? 2 : 21] || GameCanvas.keyPressed[2])
 				{
-					int num3 = ((mGraphics.zoomLevel <= 1) ? 4 : 2);
+					GameCanvas.keyPressed[(!Main.isPC) ? 2 : 21] = false;
 					GameCanvas.keyPressed[2] = false;
 					selected--;
 					if (selected < 0)
 					{
-						selected = num3;
+						selected = cmd.Length - 1;
 					}
 					processInput();
 				}

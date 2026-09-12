@@ -486,7 +486,7 @@ public partial class GameCanvas : IActionListener
 
 	public static bool isPointerHoldIn(int x, int y, int w, int h)
 		{
-			if (!isPointerDown && !isPointerJustRelease)
+			if (!isPointerDown && !isPointerJustRelease && !isPointerClick)
 			{
 				return false;
 			}

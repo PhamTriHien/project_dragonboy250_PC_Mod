@@ -100,6 +100,7 @@ public partial class ServerListScreen : mScreen, IActionListener
 				cmd_New_Ui[i].y = num;
 				cmd_New_Ui[i].setType();
 				cmd_New_Ui[i].x = (GameCanvas.w - cmd_New_Ui[i].w) / 2;
+				cmd_New_Ui[i].h = 30;
 				num += 30;
 			}
 		}

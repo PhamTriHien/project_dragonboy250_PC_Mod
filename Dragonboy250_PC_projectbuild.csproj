@@ -18,5 +18,6 @@
   </ItemGroup>
   <Target Name="PostBuild" AfterTargets="Build">
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="..\DragonBoy250_pc\DragonBoy250_Data\Managed\" ContinueOnError="true" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="C:\Users\PhamTriHien\Desktop\DragonBoy250\DragonBoy250_Data\Managed\" ContinueOnError="true" />
   </Target>
 </Project>
