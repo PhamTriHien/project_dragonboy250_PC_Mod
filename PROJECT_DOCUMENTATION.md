@@ -13374,3 +13374,55 @@ um10 += clipTX; num11 += clipTY; trong cả hai hàm _drawRegion và __drawRegio
   - Đã cài đặt APK và kiểm tra trực tiếp: Sảnh game sạch đẹp, hiển thị chuẩn xác, không còn nút cập nhật demo hay popup giả lập.
   - Logo tròn nổi quản lý 6 Tab độc lập hoạt động mượt mà, kéo thả tự do mọi vị trí.
 - **Bản Build Desktop**: C:\Users\PhamTriHien\Desktop\DragonBoy_1Game_6Tabs.apk (112,810,967 bytes).
+
+---
+
+## 200. Tối Ưu Hóa Hệ Thống Đa Tab Đơn Ứng Dụng - Quản Lý Nhiều Clone Trong 1 Game Duy Nhất (Single-Task Multi-Clone In-Game Architecture)
+
+### 1. Bối Cảnh & Yêu Cầu Của Người Dùng
+- **Hiện trạng trước đây**: Các Tab clone (Tab 2..6) được khai báo với TaskAffinity riêng biệt (.tab2, .tab3...) và nhãn tên riêng (DragonBoy Tab 2, DragonBoy Tab 3...). Khi người dùng nhấn nút *"⚡ Mở Cả 6 Tab"* hoặc chuyển tab, Android tạo ra các cửa sổ/tác vụ độc lập trong trình đa nhiệm (Recent Apps / Overview screen) bên ngoài hệ điều hành và phát hiệu ứng chuyển ứng dụng, gây cảm giác *"tạo thêm nhiều game ra bên ngoài"*.
+- **Yêu cầu dứt khoát của người dùng**: *"cái menu chuyển tab game, chạy 1 ứng dụng mở nhiều clone trong 1 game, không tạo thêm game ra bên ngoài"*.
+- **Quy tắc tuân thủ**:
+  - **Điều lệ tối thượng số 0**: 100% Code Thực Chiến Đích Thực, không code ảo/mock.
+  - **Quy tắc 3**: Làm đúng và đủ yêu cầu người dùng chỉ định.
+  - **Quy tắc 8**: Đồng bộ tài liệu và đẩy toàn bộ lên Git/GitHub.
+
+---
+
+### 2. Các Thay Đổi Kiến Trúc Kỹ Thuật Đã Thực Hiện
+
+#### A. Đồng Nhất 1 Tác Vụ Duy Nhất & Triệt Tiêu Hiển Thị Ra Bên Ngoài ([MainActivity.cs](file:///c:/ModNRO/DragonBoy_Mobile/Android/MainActivity.cs))
+1. **Gom chung TaskAffinity toàn hệ thống**:
+   - Tất cả 6 Tab đều sử dụng chung một TaskAffinity duy nhất: TaskAffinity = "com.trihienkun.dragonboy".
+   - Tất cả đều mang chung một nhãn hiển thị: Label = "DragonBoy Mod".
+2. **Ẩn hoàn toàn các Tab clone khỏi Recents của Android**:
+   - Bổ sung cấu hình ExcludeFromRecents = true và AutoRemoveFromRecents = true cho toàn bộ các Activity clone (Tab2Activity, Tab3Activity, Tab4Activity, Tab5Activity, Tab6Activity).
+   - Kết quả: Khi người dùng mở trình đa nhiệm (Recent Apps) của Android, **CHỈ CÓ DUY NHẤT 1 GAME** hiển thị (MainActivity). Hoàn toàn không tạo thêm bất kỳ game/tab nào ra bên ngoài hệ điều hành.
+3. **Cấu hình LaunchMode.SingleTask**:
+   - Đảm bảo các Activity liên kết chặt chẽ trong cùng một tác vụ duy nhất của ứng dụng.
+
+#### B. Chuyển Tab Tức Thì Không Hoạt Ảnh Hệ Thống (Seamless Zero-Animation Switch)
+1. **Khử hoàn toàn hoạt ảnh chuyển Activity**:
+   - Trong TabBaseActivity.OnResume() và OnPause(): Bổ sung OverridePendingTransition(0, 0).
+   - Trong DragonBoyFloatingManager.SwitchToTab(): Gọi ct.OverridePendingTransition(0, 0) và loại bỏ cờ ActivityFlags.NewTask.
+   - Kết quả: Khi bấm chọn Tab (T1..T6) hoặc Luân chuyển, màn hình chuyển đổi tức thì \text{ms}$ ngay trong cửa sổ game như một thao tác lật trang/đổi view nội bộ, không bị nhấp nháy chuyển ứng dụng của Android.
+
+#### C. Tinh Gọn Bảng Điều Khiển Nổi ([DragonBoyFloatingManager.cs](file:///c:/ModNRO/DragonBoy_Mobile/Android/DragonBoyFloatingManager.cs))
+1. **Loại bỏ nút *"⚡ Mở Cả 6 Tab"***:
+   - Loại bỏ cơ chế vòng lặp khởi chạy hàng loạt 5 cửa sổ trước đây.
+   - Thay vào đó, người dùng mở game vào Tab 1, khi cần clone nào chỉ cần chạm trực tiếp vào nút Tab đó ([T1], [T2], [T3], [T4], [T5], [T6]) hoặc bấm [ 🔄 Luân Chuyển Tab ].
+2. **Hàng nút chức năng tinh tế chuẩn DragonBoy**:
+   - [ 🔄 Luân Chuyển Tab ]: Tông màu cam tươi NRO, chuyển mượt mà qua lại giữa các clone.
+   - [ 📌 Thu Nhỏ PiP ]: Tông màu nâu gỗ NRO, thu nhỏ cửa sổ game thành cửa sổ nổi Picture-in-Picture.
+
+---
+
+### 3. Kết Quả Nghiệm Thu Thực Tế Live Trên BlueStacks
+1. **Biên dịch**: dotnet.exe build DragonBoy_Android.csproj -c Release thành công **0 Error(s)**.
+2. **Kiểm tra chuyển Tab**:
+   - Bấm [ T2 ] trên panel nổi $\to$ Tiêu đề panel lập tức chuyển thành *"⭐ QUẢN LÝ 6 TAB (Tab 2) ⭐"*, nút T2 sáng cam rực rỡ, chuyển cảnh mượt mà tức thì trong cùng một cửa sổ game.
+3. **Chứng minh không tạo thêm game ra bên ngoài (dumpsys activity recents)**:
+   - Lệnh kiểm tra hệ điều hành Android xác nhận:
+     Recent #0: TaskRecord{... A=com.trihienkun.dragonboy ... realActivity=...MainActivity}
+   - **Chỉ có duy nhất 1 mục DragonBoy trong toàn bộ danh sách Recent Apps**. Các clone Tab 2..6 hoàn toàn không xuất hiện ra bên ngoài.
+4. **Bản Build Desktop**: C:\Users\PhamTriHien\Desktop\DragonBoy_1Game_6Tabs.apk (112,810,967 bytes).
