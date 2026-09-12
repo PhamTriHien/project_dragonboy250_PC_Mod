@@ -13308,3 +13308,69 @@ um10 += clipTX; num11 += clipTY; trong cả hai hàm _drawRegion và __drawRegio
 
 
 
+
+---
+
+## 199. Hoàn Thiện Cơ Chế Cập Nhật Thực Chiến - Triệt Tiêu Code Demo & Chỉ Hiển Thị Khi Có Bản Mới Thật Sự (Production Update Mechanism - Zero Demo & True Version Gate)
+
+### 1. Bối Cảnh & Phân Tích Yêu Cầu Người Dùng
+- **Hiện tượng**: Khi kiểm tra tính năng cập nhật sảnh trước đó, việc gán tạm phiên bản client thấp hơn server (2.5.1 so với 2.5.2 trong ersion.json) khiến game luôn kích hoạt cờ hasNewVersion = true và hiển thị nút cập nhật chấm đỏ cùng popup *"Bản mới v2.5.2 - Hiện tại: v2.5.1"* ngay cả khi người dùng đang chạy chính bản build mới phát hành.
+- **Yêu cầu người dùng**: *"cái này khi nào có update mới hiển thị , không code demo"*.
+- **Quy tắc tuân thủ nghiêm ngặt**:
+  - **Điều lệ tối thượng số 0 (Universal Supreme Rule)**: Cấm tuyệt đối code ảo, code demo, placeholder, hay số liệu ảo chưa được chứng minh.
+  - **Quy tắc 3**: Chỉ làm đúng và đủ những gì người dùng yêu cầu chỉ định.
+  - **Quy tắc 8**: Đồng bộ mã nguồn, cập nhật tài liệu và đẩy toàn bộ lên Git/GitHub.
+
+---
+
+### 2. Các Thay Đổi Kỹ Thuật Đã Thực Hiện
+
+#### A. Đồng Bộ Phiên Bản Thực Tế Sản Xuất (Production Version Sync)
+- Cập nhật trong [ModAutoUpdate.cs](file:///c:/ModNRO/DragonBoy_Net8_Native/Src/Mod/Update/ModAutoUpdate.cs):
+  public const string CurrentVersion = "2.5.2";
+- Cập nhật trong [DragonBoy_Android.csproj](file:///c:/ModNRO/DragonBoy_Mobile/Android/DragonBoy_Android.csproj):
+  <ApplicationVersion>252</ApplicationVersion>
+  <ApplicationDisplayVersion>2.5.2</ApplicationDisplayVersion>
+- Đồng bộ chuẩn xác với tệp [version.json](file:///c:/ModNRO/ModNRO_Tools/Decompiled/Dragonboy250_PC_projectbuild/version.json) trên GitHub repository ("version": "2.5.2").
+
+#### B. Triệt Tiêu Hoàn Toàn Nút Nổi & Bảng Thông Tin Khi Chưa Có Bản Mới
+- **Tại ModAutoUpdate.PaintLobbyUpdateButton(mGraphics g)**:
+  - Thêm điều kiện kiểm tra nghiêm ngặt:
+    `csharp
+    if (isDownloading || isShowUpdateBoard || !hasNewVersion) return;
+    `
+  - Loại bỏ hoàn toàn khối else trước đây (vốn vẽ nút "Đang ktra..." hoặc nút xám giữ chỗ). Khi hasNewVersion == false, hàm lập tức thoát và không vẽ bất kỳ điểm ảnh nào lên màn hình.
+- **Tại ModAutoUpdate.PaintUpdateInfoBoard(mGraphics g)**:
+  - Thêm điều kiện: if (!isShowUpdateBoard || isDownloading || !hasNewVersion) return;
+  - Đảm bảo bảng thông tin cập nhật không bao giờ được vẽ khi không có bản cập nhật mới.
+- **Tại ModAutoUpdate.UpdateLobbyInput()**:
+  - Khóa chặt vùng bắt click tại góc phải trên cùng: chỉ cho phép nhận diện click mở bảng khi hasNewVersion == true.
+- **Tại ServerListScreen.Paint.cs & LoginScr.Paint.cs**:
+  - Căn chỉnh tọa độ hiển thị văn bản góc trên bên phải:
+    `csharp
+    int textRightX = ModAutoUpdate.hasNewVersion ? (GameCanvas.w - 82) : (GameCanvas.w - 2);
+    `
+  - Khi chưa có bản mới (!hasNewVersion), dòng chữ link web và phiên bản game hiển thị sát mép phải nguyên bản ( - 2$). Chỉ khi phát hiện có bản mới thật sự, chữ mới tự động dịch sang trái để nhường chỗ cho nút cập nhật nổi viền vàng.
+
+---
+
+### 3. Quy Trình Vận Hành Thực Chiến (Production Workflow)
+1. **Khi khởi động game**: Luồng nền PerformCheck() tải ersion.json từ GitHub.
+2. **So sánh phiên bản**: IsNewerVersion(remoteVersion, CurrentVersion).
+   - Vì bản build hiện tại là 2.5.2 và ersion.json là 2.5.2 $\to$ Kết quả trả về alse.
+   - hasNewVersion giữ nguyên alse.
+3. **Hiển thị giao diện**:
+   - Sảnh game hoàn toàn sạch sẽ \%$, không có nút cập nhật, không có chấm đỏ, không có bất kỳ popup nào.
+4. **Khi phát hành bản cập nhật mới trong tương lai (ví dụ v2.5.3)**:
+   - Quản trị viên cập nhật ersion.json trên nhánh main của GitHub thành "version": "2.5.3".
+   - Game trên máy người chơi đang ở 2.5.2 sẽ tự động phát hiện 2.5.3 > 2.5.2.
+   - Cờ hasNewVersion bật thành 	rue $\to$ Nút nổi viền vàng hoàng kim kèm chấm sáng đỏ nhấp nháy lập tức xuất hiện tại sảnh để người chơi bấm vào và tải bản mới nhất trực tiếp!
+
+---
+
+### 4. Kết Quả Nghiệm Thu Thực Tế
+- **Biên dịch**: c:\ModNRO\dotnet\dotnet.exe build DragonBoy_Android.csproj -c Release đạt **0 Error(s)**.
+- **Kiểm thử trên BlueStacks**:
+  - Đã cài đặt APK và kiểm tra trực tiếp: Sảnh game sạch đẹp, hiển thị chuẩn xác, không còn nút cập nhật demo hay popup giả lập.
+  - Logo tròn nổi quản lý 6 Tab độc lập hoạt động mượt mà, kéo thả tự do mọi vị trí.
+- **Bản Build Desktop**: C:\Users\PhamTriHien\Desktop\DragonBoy_1Game_6Tabs.apk (112,810,967 bytes).
