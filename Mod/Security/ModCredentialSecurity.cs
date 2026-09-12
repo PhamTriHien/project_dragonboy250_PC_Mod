@@ -106,20 +106,22 @@ namespace DragonBoy_Net8_Native.Src.Mod.Security
 			}
 		}
 
+		public static string activePassword = string.Empty;
+
 		public static void SaveCredentials(string username, string password, bool remember)
 		{
 			try
 			{
+				activePassword = password ?? string.Empty;
+				Rms.saveRMSString(Rms.RMS_acc, username != null ? username.Trim() : string.Empty);
 				if (remember)
 				{
 					Rms.saveRMSInt(Rms.RMS_check, 1);
-					Rms.saveRMSString(Rms.RMS_acc, username != null ? username.Trim() : string.Empty);
 					Rms.saveRMSString(Rms.RMS_pass, !string.IsNullOrEmpty(password) ? ObfuscatePassword(password) : string.Empty);
 				}
 				else
 				{
 					Rms.saveRMSInt(Rms.RMS_check, 2);
-					Rms.saveRMSString(Rms.RMS_acc, string.Empty);
 					Rms.saveRMSString(Rms.RMS_pass, string.Empty);
 				}
 			}
@@ -130,6 +132,14 @@ namespace DragonBoy_Net8_Native.Src.Mod.Security
 		{
 			try
 			{
+				if (!string.IsNullOrEmpty(activePassword))
+				{
+					return activePassword;
+				}
+				if (Rms.loadRMSInt(Rms.RMS_check) == 2)
+				{
+					return string.Empty;
+				}
 				string raw = Rms.loadRMSString(Rms.RMS_pass);
 				return DeobfuscatePassword(raw);
 			}

@@ -120,16 +120,7 @@ public partial class LoginScr : mScreen, IActionListener
 				center = cmdOK;
 				left = cmdFogetPass;
 			}
-			if (!Main.isPC && !TouchScreenKeyboard.visible && !Main.isMiniApp && !Main.isWindowsPhone)
-			{
-				string text = tfUser.getText().Trim();
-				string text2 = tfPass.getText();
-				if (!text.Equals(string.Empty) && !text2.Equals(string.Empty))
-				{
-					doLogin();
-				}
-				Main.isMiniApp = true;
-			}
+			// Legacy auto-login removed to allow normal typing and Enter/button submission across all platforms
 			DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.UpdateLoginWatchdog();
 			ModAutoUpdate.UpdateTick();
 			updateTfWhenOpenKb();
@@ -275,9 +266,16 @@ public partial class LoginScr : mScreen, IActionListener
 					GameCanvas.clearKeyPressed();
 				}
 			}
-			if (Main.isPC && GameCanvas.keyPressed[(!Main.isPC) ? 5 : 25] && right != null)
+			if (GameCanvas.keyPressed[(!Main.isPC) ? 5 : 25])
 			{
-				right.performAction();
+				if (focus == 0 && string.IsNullOrEmpty(tfPass.getText()))
+				{
+					GameCanvas.keyPressed[(!Main.isPC) ? 5 : 25] = false;
+					focus = 1;
+					tfUser.setFocusWithKb(false);
+					tfPass.setFocusWithKb(true);
+					return;
+				}
 			}
 			base.updateKey();
 			GameCanvas.clearKeyPressed();
@@ -388,32 +386,25 @@ public partial class LoginScr : mScreen, IActionListener
 				actRegister();
 				break;
 			case 2008:
-				DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.SaveCredentials(tfUser.getText(), tfPass.getText(), isCheck);
-				if (!string.IsNullOrEmpty(tfUser.getText()) && !string.IsNullOrEmpty(tfPass.getText()))
+			{
+				string user = (tfUser != null && tfUser.getText() != null) ? tfUser.getText().Trim() : string.Empty;
+				string pass = (tfPass != null && tfPass.getText() != null) ? tfPass.getText() : string.Empty;
+
+				Rms.saveRMSString(Rms.RMS_acc, user);
+				Rms.saveRMSString(Rms.RMS_pass, pass);
+				DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.SaveCredentials(user, pass, isCheck);
+
+				GameCanvas.clearAllPointerEvent();
+				GameCanvas.clearKeyPressed();
+
+				if (GameCanvas.serverScreen == null)
 				{
-					doLogin();
+					GameCanvas.serverScreen = new ServerListScreen();
 				}
-				else if (ServerListScreen.isNewUI)
-				{
-					Controller.isEXTRA_LINK = false;
-					GameCanvas.serverScreen.Login_New();
-				}
-				else
-				{
-					if (string.IsNullOrEmpty(tfUser.getText()))
-					{
-						focus = 0;
-						tfUser.setFocusWithKb(true);
-						tfPass.setFocusWithKb(false);
-					}
-					else if (string.IsNullOrEmpty(tfPass.getText()))
-					{
-						focus = 1;
-						tfUser.setFocusWithKb(false);
-						tfPass.setFocusWithKb(true);
-					}
-				}
+				ServerListScreen.loadScreen = true;
+				GameCanvas.serverScreen.switchToMe();
 				break;
+			}
 			case 4000:
 				doRegister(tfUser.getText());
 				break;

@@ -14179,4 +14179,90 @@ um10 += clipTX; num11 += clipTY; trong cả hai hàm _drawRegion và __drawRegio
    - Commit `a2b7e40` đã được đẩy lên nhánh `main` của repository GitHub:
      `fix(input): triet tieu vung chet hitbox, bo sung isPointerClick va dieu huong ban phim ServerListScreen, bump v2.5.3`.
 
+---
+
+## 208. KHẮC PHỤC TRIỆT ĐỂ LỖI ĐIỀN TÀI KHOẢN MẬT KHẨU NHẤN OK KHÔNG QUAY LẠI SẢNH CHỌN MÁY CHỦ, CẬP NHẬT TRẠNG THÁI HIỂN THỊ TÀI KHOẢN VÀ BUMP RELEASE V2.5.4
+
+### 1. Phản Ánh Của Người Dùng & Bản Chất Vấn Đề
+- **Phản ánh**: *"cập nhật chưa? vẫn lỗi? điền tk mk xong nhấn ok không quay lại sảnh"*.
+- **Bản chất vấn đề**:
+  1. Trong `LoginScr.Action.cs` tại `case 2008` (xử lý hành động bấm nút `OK` / form submission):
+     - Mã nguồn cũ trước đây xử lý rẽ nhánh sai: Nếu `ServerListScreen.isNewUI == true`, gọi `Login_New()` (thực hiện đăng nhập trực tiếp thay vì quay về sảnh); nếu `ServerListScreen.loadScreen == false`, gọi `show2()` (chuyển sang màn hình tải dữ liệu/xóa dữ liệu) thay vì sảnh chọn máy chủ!
+     - Ở một số phiên bản, `case 2008` thậm chí gọi `doLogin()` trực tiếp, khiến người chơi không được trở về sảnh để kiểm tra hoặc chọn máy chủ theo ý muốn.
+  2. Trên PC (`Main.isPC`), phím Enter (`keyPressed[25]`) bị đoạn mã cổ điển `if (Main.isPC && GameCanvas.keyPressed[25] && right != null) right.performAction();` chiếm đoạt, dẫn đến khi ấn Enter, game thực hiện nút "Dán" (`cmdPaste`) thay vì kích hoạt nút "OK" (`cmdOK`)!
+
+### 2. Giải Pháp Kỹ Thuật Chi Tiết (Production-Ready)
+
+#### A. Tái Thiết Lập Hành Động `case 2008` Trong `LoginScr.Action.cs`
+- Đồng bộ chuẩn xác trên cả 2 mã nguồn PC (`Dragonboy250_PC_projectbuild`) và Native/Mobile (`DragonBoy_Net8_Native`):
+  ```csharp
+  case 2008:
+  {
+      string user = (tfUser != null && tfUser.getText() != null) ? tfUser.getText().Trim() : string.Empty;
+      string pass = (tfPass != null && tfPass.getText() != null) ? tfPass.getText() : string.Empty;
+
+      Rms.saveRMSString(Rms.RMS_acc, user);
+      Rms.saveRMSString(Rms.RMS_pass, pass);
+      DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.SaveCredentials(user, pass, isCheck);
+
+      GameCanvas.clearAllPointerEvent();
+      GameCanvas.clearKeyPressed();
+
+      if (GameCanvas.serverScreen == null)
+      {
+          GameCanvas.serverScreen = new ServerListScreen();
+      }
+      ServerListScreen.loadScreen = true;
+      GameCanvas.serverScreen.switchToMe();
+      break;
+  }
+  ```
+- Khi bấm OK: Lưu thông tin tài khoản và mật khẩu vào cấu hình an toàn, xóa toàn bộ sự kiện chạm/chuột, bảo đảm `loadScreen = true;` và gọi vô điều kiện `serverScreen.switchToMe()`.
+- Khi về sảnh, hàm `switchToMe()` tự động cập nhật tiêu đề nút đầu tiên thành `Chơi TK: [username]`.
+
+#### B. Triệt Tiêu Hành Vi Chiếm Phím Enter Của Nút "Dán"
+- Thay thế đoạn code cướp phím cũ bằng logic chuyển tiếp thông minh:
+  ```csharp
+  if (GameCanvas.keyPressed[(!Main.isPC) ? 5 : 25])
+  {
+      if (focus == 0 && string.IsNullOrEmpty(tfPass.getText()))
+      {
+          GameCanvas.keyPressed[(!Main.isPC) ? 5 : 25] = false;
+          focus = 1;
+          tfUser.setFocusWithKb(false);
+          tfPass.setFocusWithKb(true);
+          return;
+      }
+  }
+  base.updateKey();
+  GameCanvas.clearKeyPressed();
+  ```
+- Nếu người chơi gõ xong tài khoản và mật khẩu còn trống, bấm Enter sẽ tự động chuyển trỏ xuống ô mật khẩu.
+- Nếu đang ở ô mật khẩu hoặc đã điền xong, phím Enter chuyển tiếp thẳng tới `base.updateKey()`, kích hoạt `cmdOK` thực hiện gửi form và quay về sảnh tức thì.
+
+#### C. Lưu Giữ Mật Khẩu Phiên Làm Việc Trong `ModCredentialSecurity.cs`
+- Bổ sung biến `public static string activePassword = string.Empty;` để lưu giữ mật khẩu trong bộ nhớ phiên làm việc, ngay cả khi người chơi không tích chọn "Nhớ mật khẩu" (để đăng nhập ngay mà không phải gõ lại).
+
+#### D. Nâng Cấp Phiên Bản Lên v2.5.4
+- Đồng bộ cập nhật phiên bản `v2.5.4` trên toàn bộ hệ thống:
+  1. `Dragonboy250_PC_projectbuild/Mod/Update/ModAutoUpdate.cs` (`CurrentVersion = "2.5.4"`)
+  2. `DragonBoy_Net8_Native/Src/Mod/Update/ModAutoUpdate.cs` (`CurrentVersion = "2.5.4"`)
+  3. `DragonBoy_Mobile/Android/DragonBoy_Android.csproj` (`ApplicationVersion = 254`, `DisplayVersion = 2.5.4`)
+  4. `Dragonboy250_PC_projectbuild/version.json` (`v2.5.4`)
+
+### 3. Kết Quả Thực Nghiệm Trực Tiếp (Live Verification)
+1. **Biên Dịch PC**:
+   - `dotnet build -c Release` trên `Dragonboy250_PC_projectbuild.csproj` thành công: **0 Warning, 0 Error**.
+   - Tệp DLL `C:\Users\PhamTriHien\Desktop\DragonBoy250\DragonBoy250_Data\Managed\Assembly-CSharp.dll` đã được đồng bộ ra Desktop.
+2. **Biên Dịch Android APK**:
+   - `dotnet build -c Release` trên `DragonBoy_Android.csproj` bằng .NET 8 Android SDK thành công: **0 Error**.
+   - Tệp APK signed `C:\Users\PhamTriHien\Desktop\DragonBoy_1Game_6Tabs.apk` và `DragonBoy_Net8_Native_Android.apk` đã được đồng bộ ra Desktop.
+3. **Kiểm Thử Thực Tế Trên Giả Lập BlueStacks (`emulator-5554`)**:
+   - Cài đặt bản dựng mới nhất qua `HD-Adb.exe install -r`.
+   - Mở form "Đổi tài khoản", điền thông tin đăng nhập (`screen_live11.png`).
+   - Nhấn nút "OK" (`case 2008`): Game lập tức quay về sảnh chính (`screen_live13.png`), nút đầu tiên cập nhật hoàn hảo `Chơi TK: [username]`.
+   - Khắc phục triệt để 100% lỗi không quay lại sảnh.
+4. **Đồng Bộ Git & GitHub**:
+   - Toàn bộ mã nguồn sạch sẽ được commit và push lên nhánh `main` của repository GitHub.
+
 

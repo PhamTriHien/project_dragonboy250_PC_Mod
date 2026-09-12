@@ -113,6 +113,8 @@ public partial class ServerListScreen : mScreen, IActionListener
 	public override void switchToMe()
 		{
 			Res.outz(">>>>switchToMe  ServerListScreen: ");
+			GameCanvas.clearAllPointerEvent();
+			GameCanvas.clearKeyPressed();
 			EffectManager.remove();
 			GameScr.cmy = 0;
 			GameScr.cmx = 0;
@@ -122,6 +124,7 @@ public partial class ServerListScreen : mScreen, IActionListener
 			loadScreen = true;
 			GameCanvas.loadBG(0);
 			bigOk = true;
+			selected = 0;
 			string sName = (nameServer != null && ipSelect >= 0 && ipSelect < nameServer.Length) ? nameServer[ipSelect] : string.Empty;
 			cmd[2 + nCmdPlay].caption = mResources.server + ": " + sName;
 			center = new Command(string.Empty, this, cmd[selected].idAction, null);
