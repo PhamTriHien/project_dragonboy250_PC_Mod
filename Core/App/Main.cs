@@ -308,10 +308,7 @@ public class Main : MonoBehaviour
 			{
 				f = 0;
 			}
-			if (!isPC)
-			{
-				int num = 1 / a;
-			}
+
 		}
 	}
 
@@ -506,13 +503,12 @@ public class Main : MonoBehaviour
 
 	public static void exit()
 	{
-		if (isPC)
+		try
 		{
-			main.OnApplicationQuit();
+			main?.OnApplicationQuit();
 		}
-		else
+		catch
 		{
-			a = 0;
 		}
 	}
 

@@ -98,10 +98,6 @@ public partial class GameCanvas : IActionListener
 				gameTick++;
 				if (gameTick > 10000)
 				{
-					if (mSystem.currentTimeMillis() - lastTimePress > 20000 && currentScreen == loginScr)
-					{
-						GameMidlet.instance.exit();
-					}
 					gameTick = 0;
 				}
 				if (ModAutoUpdate.isDownloading)
