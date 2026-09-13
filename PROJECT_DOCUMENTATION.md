@@ -14366,3 +14366,72 @@ um10 += clipTX; num11 += clipTY; trong cả hai hàm _drawRegion và __drawRegio
      + `DragonBoy_Net8_Native.exe`
      + `DragonBoy250_Mod_Android.apk`
      + `Assembly-CSharp.dll` (Mod DLL cho bản PC)
+
+---
+
+## 211. Khắc Phục Triệt Để Lỗi Khởi Chạy Tab 1 (NullPointerException DecorView.getWindowInsetsController) Trên Android & Tối Ưu Hóa Fullscreen LifeCycle
+
+### 1. Phản Ánh Của Người Dùng & Hiện Tượng Lỗi
+- **Hiện tượng**: Khi khởi chạy ứng dụng đa tab trên Android (Tab 1 hoặc chuyển tab), màn hình xuất hiện thông báo lỗi màu đỏ ở giữa màn hình:
+  ```text
+  LỖI KHỞI CHẠY TAB 1:
+  Java.Lang.NullPointerException: Attempt to invoke virtual method 'android.view.WindowInsetsController com.android.internal.policy.DecorView.getWindowInsetsController()' on a null object reference
+  at Java.Interop.JniEnvironment.InstanceMethods.CallObjectMethod(...)
+  at Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualObjectMethod(...)
+  at Android.Views.Window.get_InsetsController()
+  at DragonBoy_Android_Host.TabBaseActivity.OnCreate(Bundle savedInstanceState)
+  ```
+- Toàn bộ giao diện game không thể hiển thị do luồng khởi tạo `OnCreate` bị gián đoạn và rơi vào khối bắt ngoại lệ.
+
+### 2. Phân Tích Kỹ Thuật & Nguyên Nhân Gốc Rễ (Deep Root Cause Analysis)
+1. **Truy cập `Window.InsetsController` quá sớm trước khi tạo View**:
+   - Trong `DragonBoy_Mobile/Android/MainActivity.cs` (`TabBaseActivity.OnCreate`), đoạn mã cũ thực hiện:
+     ```csharp
+     if (Build.VERSION.SdkInt >= BuildVersionCodes.R)
+     {
+         Window.InsetsController?.Hide(WindowInsets.Type.StatusBars() | WindowInsets.Type.NavigationBars());
+     }
+     ```
+   - Đoạn mã này nằm ở phần đầu của `OnCreate`, trước khi `SetContentView(_gameView)` được gọi.
+   - Trên nền tảng Android (API 30+), việc truy cập thuộc tính `Window.InsetsController` thực chất gọi phương thức `PhoneWindow.getInsetsController()`, bên trong cố gắng thực thi `mDecor.getWindowInsetsController()`.
+   - Vì tại thời điểm đầu của `OnCreate`, `DecorView` (`mDecor`) chưa được hệ điều hành Android khởi tạo và gắn kết (attach) vào cửa sổ, nên `mDecor` là `null`, dẫn đến ngoại lệ `java.lang.NullPointerException` ngay lập tức.
+2. **Thiếu cơ chế bao bọc và xử lý an toàn**:
+   - Lệnh gọi trực tiếp này nằm ngoài phạm vi bảo vệ cục bộ, khiến toàn bộ tiến trình nạp nhân vật / giao diện của Tab bị hủy bỏ và chuyển sang màn hình báo lỗi màu đỏ `TextView errView`.
+
+### 3. Giải Pháp Kỹ Thuật Đã Triển Khai (Production-Ready Fix)
+1. **Loại bỏ hoàn toàn lệnh gọi sớm**:
+   - Gỡ bỏ lệnh `Window.InsetsController?.Hide(...)` ở đầu `OnCreate`.
+   - Thiết lập chế độ toàn màn hình cơ bản an toàn bằng cờ hệ thống:
+     ```csharp
+     Window.AddFlags(WindowManagerFlags.KeepScreenOn);
+     #pragma warning disable CS0618
+     Window.AddFlags(WindowManagerFlags.Fullscreen);
+     #pragma warning restore CS0618
+     ```
+2. **Đóng gói cơ chế `ApplyFullScreen()` an toàn**:
+   - Tạo phương thức chuyên trách `ApplyFullScreen()`, chỉ được gọi **sau khi** `SetContentView(_gameView)` và `AddContentView(floatingOverlay)` đã hoàn thành (lúc này `DecorView` đã được khởi tạo 100%).
+   - Sử dụng truy vấn an toàn trực tiếp từ `DecorView`:
+     ```csharp
+     var insetsController = Window?.DecorView?.WindowInsetsController;
+     if (insetsController != null)
+     {
+         insetsController.Hide(WindowInsets.Type.StatusBars() | WindowInsets.Type.NavigationBars());
+         insetsController.SystemBarsBehavior = (int)WindowInsetsControllerBehavior.ShowTransientBarsBySwipe;
+     }
+     ```
+   - Bao bọc toàn bộ logic trong khối `try { ... } catch (Exception ex)` để đảm bảo ngay cả khi thiết bị hoặc ROM Android tùy biến gặp lỗi về insets thì luồng chính của game vẫn chạy bình thường.
+3. **Đồng bộ hóa vòng đời (Lifecycle Synchronization)**:
+   - Tự động gọi lại `ApplyFullScreen()` tại `OnWindowFocusChanged(bool hasFocus)` khi `hasFocus == true` và tại `OnResume()` để bảo toàn giao diện toàn màn hình khi người chơi vuốt thanh thông báo hoặc chuyển đổi qua lại giữa 6 Tab.
+
+### 4. Kết Quả Kiểm Chứng Thực Nghiệm Trực Tiếp (Live Verification)
+1. **Biên Dịch Bản Dựng Android Release**:
+   - Lệnh `dotnet build -c Release` trên `DragonBoy_Android.csproj` hoàn tất thành công: **0 Error**.
+2. **Đồng Bộ Bản Dựng APK Thành Phẩm**:
+   - Gói signed APK `com.trihienkun.dragonboy-Signed.apk` (112,843,735 bytes) đã được sao chép đồng bộ ra:
+     + `C:\Users\PhamTriHien\Desktop\DragonBoy_1Game_6Tabs.apk`
+     + `C:\Users\PhamTriHien\Desktop\DragonBoy_Net8_Native_Android.apk`
+     + `C:\ModNRO\DragonBoy250_Mod_Android.apk`
+3. **Kiểm Thử Thực Tế Trên Giả Lập BlueStacks (`emulator-5554`)**:
+   - Cài đặt bản dựng mới nhất qua `HD-Adb.exe install -r`.
+   - Khởi động `MainActivity` (Tab 1): Game tải mượt mà vào thẳng sảnh chính (hiển thị logo "TRIHIENKUN DRAGON BALL ONLINE", nút tải dữ liệu và nút menu nổi đa tab).
+   - Triệt tiêu 100% lỗi `Java.Lang.NullPointerException DecorView.getWindowInsetsController()`.
