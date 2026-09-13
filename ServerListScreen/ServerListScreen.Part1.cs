@@ -290,6 +290,7 @@ public partial class ServerListScreen : mScreen, IActionListener
 			}
 			base.update();
 			ModAutoUpdate.UpdateTick();
+			ModAutoUpdate.UpdateLobbyInput();
 			if (LoginScr.isUpdateAll && !LoginScr.isUpdateData && !LoginScr.isUpdateItem && !LoginScr.isUpdateMap && !LoginScr.isUpdateSkill)
 			{
 				LoginScr.isUpdateAll = false;

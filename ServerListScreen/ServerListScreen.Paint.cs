@@ -15,7 +15,7 @@ public partial class ServerListScreen : mScreen, IActionListener
 				GameCanvas.paintBGGameScr(g);
 			}
 			int num = 2;
-			int textRightX = ModAutoUpdate.hasNewVersion ? (GameCanvas.w - 82) : (GameCanvas.w - 2);
+			int textRightX = GameCanvas.w - 82;
 			mFont.tahoma_7_white.drawString(g, "v" + GameMidlet.VERSION + "(" + mGraphics.zoomLevel + ")", textRightX, num + 13, 1, mFont.tahoma_7_grey);
 			try
 			{

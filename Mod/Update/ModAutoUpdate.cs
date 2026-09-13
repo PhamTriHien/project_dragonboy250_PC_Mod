@@ -12,7 +12,7 @@ using UnityEngine;
 
 public static class ModAutoUpdate
 {
-	public const string CurrentVersion = "2.5.6";
+	public const string CurrentVersion = "2.5.7";
 	public const string ManifestUrl = "https://raw.githubusercontent.com/PhamTriHien/project_dragonboy250_PC_Mod/main/version.json";
 
 	public static bool isChecking = false;
@@ -549,37 +549,45 @@ public static class ModAutoUpdate
 
 	public static void PaintLobbyUpdateButton(mGraphics g)
 	{
-		// Chỉ khi có bản cập nhật mới (hasNewVersion == true) thì mới hiển thị nút nổi
-		if (isDownloading || isShowUpdateBoard || !hasNewVersion) return;
+		if (isDownloading || isShowUpdateBoard) return;
 
 		int btnW = GetBtnW();
 		int btnH = GetBtnH();
 		int btnX = GetBtnX();
 		int btnY = GetBtnY();
 
-		// Nút nổi viền vàng rực NRO (Style 1: active button)
-		PopUp.paintPopUp(g, btnX, btnY, btnW, btnH, 1, isButton: true);
-		mFont.tahoma_7b_yellow.drawString(g, "CẬP NHẬT", btnX + btnW / 2, btnY + 4, mFont.CENTER);
+		if (hasNewVersion)
+		{
+			// Nút nổi viền vàng rực NRO (Style 1: active button)
+			PopUp.paintPopUp(g, btnX, btnY, btnW, btnH, 1, isButton: true);
+			mFont.tahoma_7b_yellow.drawString(g, "CẬP NHẬT", btnX + btnW / 2, btnY + 4, mFont.CENTER);
 
-		// Chấm Sáng Đỏ nhấp nháy thu hút sự chú ý
-		int dotX = btnX + btnW - 3;
-		int dotY = btnY - 2;
+			// Chấm Sáng Đỏ nhấp nháy thu hút sự chú ý
+			int dotX = btnX + btnW - 3;
+			int dotY = btnY - 2;
 
-		// Quầng sáng đỏ phát quang theo gameTick
-		int pulse = (int)(System.Math.Sin(GameCanvas.gameTick * 0.25) * 2);
-		int haloRadius = 7 + pulse;
-		if (haloRadius < 5) haloRadius = 5;
+			// Quầng sáng đỏ phát quang theo gameTick
+			int pulse = (int)(System.Math.Sin(GameCanvas.gameTick * 0.25) * 2);
+			int haloRadius = 7 + pulse;
+			if (haloRadius < 5) haloRadius = 5;
 
-		g.setColor(0xff1744, 0.45f);
-		g.fillRoundRect(dotX - haloRadius / 2, dotY - haloRadius / 2, haloRadius, haloRadius, haloRadius, haloRadius);
+			g.setColor(0xff1744, 0.45f);
+			g.fillRoundRect(dotX - haloRadius / 2, dotY - haloRadius / 2, haloRadius, haloRadius, haloRadius, haloRadius);
 
-		// Chấm đỏ đặc
-		g.setColor(0xd50000);
-		g.fillRoundRect(dotX - 3, dotY - 3, 6, 6, 6, 6);
+			// Chấm đỏ đặc
+			g.setColor(0xd50000);
+			g.fillRoundRect(dotX - 3, dotY - 3, 6, 6, 6, 6);
 
-		// Điểm sáng phản quang trắng
-		g.setColor(0xffffff);
-		g.fillRect(dotX - 1, dotY - 2, 2, 1);
+			// Điểm sáng phản quang trắng
+			g.setColor(0xffffff);
+			g.fillRect(dotX - 1, dotY - 2, 2, 1);
+		}
+		else
+		{
+			// Nút phiên bản chuẩn NRO (Style 0: normal button)
+			PopUp.paintPopUp(g, btnX, btnY, btnW, btnH, 0, isButton: true);
+			mFont.tahoma_7b_white.drawString(g, "v" + CurrentVersion, btnX + btnW / 2, btnY + 4, mFont.CENTER);
+		}
 	}
 
 	public static void PaintUpdateInfoBoard(mGraphics g)
@@ -803,8 +811,8 @@ public static class ModAutoUpdate
 			return;
 		}
 
-		// 2. Khi ở sảnh game (chưa mở bảng), chỉ kiểm tra click nút nổi khi thực sự CÓ BẢN MỚI
-		if (hasNewVersion && GameCanvas.isPointerClick)
+		// 2. Khi ở sảnh game (chưa mở bảng), xử lý click nút ở góc trên bên phải
+		if (GameCanvas.isPointerClick)
 		{
 			int px = GameCanvas.px;
 			int py = GameCanvas.py;
@@ -812,8 +820,23 @@ public static class ModAutoUpdate
 			{
 				GameCanvas.isPointerClick = false;
 				SoundMn.gI()?.buttonClick();
-				scrollY = 0;
-				isShowUpdateBoard = true;
+				if (hasNewVersion)
+				{
+					scrollY = 0;
+					isShowUpdateBoard = true;
+				}
+				else if (isChecking)
+				{
+					GameCanvas.startOK("Đang kết nối GitHub kiểm tra cập nhật...", 8882, null);
+				}
+				else if (hasChecked)
+				{
+					GameCanvas.startOK("Bạn đang ở phiên bản mới nhất (v" + CurrentVersion + ").\nĐã đồng bộ dữ liệu GitHub!", 8882, null);
+				}
+				else
+				{
+					CheckManual();
+				}
 			}
 		}
 	}

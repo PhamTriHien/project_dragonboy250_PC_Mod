@@ -13,14 +13,15 @@ public partial class LoginScr : mScreen, IActionListener
 			{
 				num += 5;
 			}
-			mFont.tahoma_7_white.drawString(g, "v" + GameMidlet.VERSION, GameCanvas.w - 2, 17, 1, mFont.tahoma_7_grey);
+			int textRightX = GameCanvas.w - 82;
+			mFont.tahoma_7_white.drawString(g, "v" + GameMidlet.VERSION, textRightX, 15, 1, mFont.tahoma_7_grey);
 			if (mSystem.clientType == 1 && !GameCanvas.isTouch)
 			{
 				mFont.tahoma_7_white.drawString(g, ServerListScreen.linkweb, GameCanvas.w - 2, GameCanvas.h - 15, 1, mFont.tahoma_7_grey);
 			}
 			else
 			{
-				mFont.tahoma_7_white.drawString(g, ServerListScreen.linkweb, GameCanvas.w - 2, 2, 1, mFont.tahoma_7_grey);
+				mFont.tahoma_7_white.drawString(g, ServerListScreen.linkweb, textRightX, 2, 1, mFont.tahoma_7_grey);
 			}
 			if (GameCanvas.currentDialog == null)
 			{
@@ -63,6 +64,7 @@ public partial class LoginScr : mScreen, IActionListener
 			}
 			base.paint(g);
 			cmdBack.paint(g);
+			ModAutoUpdate.PaintLobbyUI(g);
 		}
 
 }

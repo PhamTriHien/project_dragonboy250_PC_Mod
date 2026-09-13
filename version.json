@@ -1,9 +1,9 @@
 {
-  "version": "2.5.6",
+  "version": "2.5.7",
   "buildDate": "2026-09-14",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.6/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.6/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.6/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.6/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.6: Khắc phục triệt để lỗi khởi chạy Tab 1 (NullPointerException DecorView.getWindowInsetsController) trên Android; Tối ưu hóa an toàn ApplyFullScreen và đồng bộ vòng đời toàn màn hình đa tab."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.7/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.7/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.7/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.7/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.7: Tự động scale UI thông minh trên mobile (zoomLevel 3x/4x cho màn hình HD/FHD+/2K), font chữ to nét, nút bấm vừa vặn ngón tay; Nút Cập Nhật luôn xuất hiện ở sảnh game (báo trạng thái phiên bản / cập nhật trực tiếp in-game), tăng timeout kết nối mạng lên 10s."
 }

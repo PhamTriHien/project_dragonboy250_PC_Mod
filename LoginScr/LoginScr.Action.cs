@@ -123,6 +123,7 @@ public partial class LoginScr : mScreen, IActionListener
 			// Legacy auto-login removed to allow normal typing and Enter/button submission across all platforms
 			DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.UpdateLoginWatchdog();
 			ModAutoUpdate.UpdateTick();
+			ModAutoUpdate.UpdateLobbyInput();
 			updateTfWhenOpenKb();
 		}
 
