@@ -185,10 +185,10 @@ public partial class ServerListScreen : mScreen, IActionListener
 			demPercent = 0;
 			percent = 0;
 			stopDownload = true;
-			GameCanvas.serverScreen.show2();
 			isGetData = false;
-			cmdDownload.isFocus = true;
-			center = new Command(string.Empty, this, 2, null);
+			loadScreen = true;
+			bigOk = true;
+			GameCanvas.serverScreen.switchToMe();
 		}
 	public void init()
 		{
@@ -215,9 +215,9 @@ public partial class ServerListScreen : mScreen, IActionListener
 			GameScr.cmx = 0;
 			GameScr.cmy = 0;
 			initCommand();
-			loadScreen = false;
+			loadScreen = true;
 			percent = 0;
-			bigOk = false;
+			bigOk = true;
 			isGetData = false;
 			p = 0;
 			demPercent = 0;
@@ -329,20 +329,16 @@ public partial class ServerListScreen : mScreen, IActionListener
 					Service.gI().login(text, string.Empty, GameMidlet.VERSION, 1);
 				}
 				Rms.saveRMSInt(RMS_svselect, ipSelect);
-				if (Session_ME.connected)
-				{
-					GameCanvas.startWaitDlg();
-				}
-				else
-				{
-					GameCanvas.startOK(mResources.maychutathoacmatsong + " [3]", 8884, null);
-				}
+				GameCanvas.startWaitDlg(mResources.PLEASEWAIT);
 			}
 			else
 			{
 				GameCanvas.loginScr.doLogin();
 			}
-			LoginScr.serverName = nameServer[ipSelect];
+			if (nameServer != null && ipSelect >= 0 && ipSelect < nameServer.Length)
+			{
+				LoginScr.serverName = nameServer[ipSelect];
+			}
 		}
 
 }

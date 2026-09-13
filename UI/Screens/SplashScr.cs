@@ -58,15 +58,8 @@ public class SplashScr : mScreen
 				GameCanvas.serverScreen = new ServerListScreen();
 			}
 			ServerListScreen.loadScreen = true;
-			if (Session_ME.gI().isConnected())
-			{
-				GameCanvas.serverScreen.switchToMe();
-			}
-			else
-			{
-				mSystem.onDisconnected();
-				GameCanvas.serverScreen.switchToMe();
-			}
+			ServerListScreen.bigOk = true;
+			GameCanvas.serverScreen.switchToMe();
 		}
 		ServerListScreen.updateDeleteData();
 	}

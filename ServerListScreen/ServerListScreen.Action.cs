@@ -49,12 +49,9 @@ public partial class ServerListScreen : mScreen, IActionListener
 				{
 					cmdCallHotline.performAction();
 				}
-				if (!loadScreen)
+				if (!loadScreen && cmdDownload != null && cmdDownload.isPointerPressInside())
 				{
-					if (cmdDownload != null && cmdDownload.isPointerPressInside())
-					{
-						cmdDownload.performAction();
-					}
+					cmdDownload.performAction();
 					base.updateKey();
 					return;
 				}
@@ -195,8 +192,11 @@ public partial class ServerListScreen : mScreen, IActionListener
 				Service.gI().setClientType();
 				Service.gI().login2(string.Empty);
 				Res.outz("tao user ao");
-				GameCanvas.startWaitDlg();
-				LoginScr.serverName = nameServer[ipSelect];
+				GameCanvas.startWaitDlg(mResources.PLEASEWAIT);
+				if (nameServer != null && ipSelect >= 0 && ipSelect < nameServer.Length)
+				{
+					LoginScr.serverName = nameServer[ipSelect];
+				}
 			}
 			if (idAction == 5)
 			{

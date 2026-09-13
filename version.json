@@ -1,9 +1,9 @@
 {
-  "version": "2.5.7",
+  "version": "2.5.8",
   "buildDate": "2026-09-14",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.7/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.7/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.7/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.7/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.7: Tự động scale UI thông minh trên mobile (zoomLevel 3x/4x cho màn hình HD/FHD+/2K), font chữ to nét, nút bấm vừa vặn ngón tay; Nút Cập Nhật luôn xuất hiện ở sảnh game (báo trạng thái phiên bản / cập nhật trực tiếp in-game), tăng timeout kết nối mạng lên 10s."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.8/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.8/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.8/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.8/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.8: Khắc phục triệt để lỗi kẹt nút sảnh game (nhấn Chơi mới / Chơi tiếp / Đổi tài khoản chỉ nháy), loại bỏ ngắt kết nối non nớt tại Splash screen, tối ưu hóa kết nối mạng nền bất đồng bộ 100%."
 }

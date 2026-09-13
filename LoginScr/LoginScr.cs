@@ -506,15 +506,7 @@ public partial class LoginScr : mScreen, IActionListener
 			Service.gI().login(text, text2, GameMidlet.VERSION, (sbyte)(isLogin2 ? 1 : 0));
 			Res.outz(Controller.isEXTRA_LINK + " = Controller.isEXTRA_LINK " + text + " " + text2 + " " + GameMidlet.VERSION + " " + (sbyte)(isLogin2 ? 1 : 0));
 			Rms.saveRMSInt(ServerListScreen.RMS_svselect, ServerListScreen.ipSelect);
-			if (Session_ME.connected)
-			{
-				GameCanvas.startWaitDlg();
-			}
-			else
-			{
-				DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.OnLoginFinished();
-				GameCanvas.startOK(mResources.maychutathoacmatsong + " [0]", 8884, null);
-			}
+			GameCanvas.startWaitDlg(mResources.PLEASEWAIT);
 			focus = 0;
 			if (!isLogin2)
 			{
