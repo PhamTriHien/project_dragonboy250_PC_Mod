@@ -14323,3 +14323,46 @@ um10 += clipTX; num11 += clipTY; trong cả hai hàm _drawRegion và __drawRegio
    - Chạm "Máy chủ: Vũ trụ 1" (Center Y=681): Mở giao diện ServerScr ("Chọn máy chủ") chuẩn xác, giữ nguyên màn hình, bấm "Đóng" quay lại sảnh chính hoàn hảo.
 4. **Đồng Bộ Git & GitHub**:
    - Toàn bộ mã nguồn được cập nhật, commit và push lên nhánh main của repository GitHub.
+
+---
+
+## 210. Bảo Toàn Trạng Thái Lựa Chọn Máy Chủ Giữa Các Màn Hình Sảnh, Rebuild Toàn Diện & Triển Khai Bản Phát Hành v2.5.5 Lên GitHub Releases
+
+### 1. Vấn Đề Kỹ Thuật Phát Sinh
+- Khi người chơi điều hướng qua lại giữa các màn hình ở sảnh game (`LoginScr`, `CreateCharScr`, `SelectCharScr`) và nhấn "Đóng" hoặc "OK" để quay về `ServerListScreen`:
+  1. Trong `CreateCharScr.Action.cs` (case 10018) và `SelectCharScr.cs` (case 102), hệ thống cũ vô tình gọi `ServerListScreen.SetIpSelect(-1, issave: true);`, khiến chỉ số máy chủ bị reset về `-1`.
+  2. Nút "Máy chủ: [Tên]" tại `ServerListScreen` hiển thị rỗng hoặc nhảy về mặc định do `ipSelect` chưa được khôi phục từ RMS trước khi `initCommand()`.
+  3. Hàm `loadIP()` trong `SplashScr.cs` chưa xử lý fallback an toàn khi chỉ số máy chủ vượt quá giới hạn mảng `nameServer`.
+
+### 2. Giải Pháp Kỹ Thuật Đã Triển Khai
+1. **Loại bỏ việc reset chỉ số máy chủ**:
+   - Gỡ bỏ hoàn toàn lệnh `ServerListScreen.SetIpSelect(-1, issave: true)` trong `CreateCharScr.Action.cs` (case 10018) và `SelectCharScr.cs` (case 102).
+2. **Tự động khôi phục máy chủ từ RMS**:
+   - Trong `LoginScr.Action.cs` (case 101 và case 2008): Chủ động đọc `savedSv = Rms.loadRMSInt(ServerListScreen.RMS_svselect)` và gán `ServerListScreen.ipSelect = savedSv` trước khi chuyển về `serverScreen`.
+   - Trong `ServerListScreen.Part2.cs` (`switchToMe()`): Tự động khôi phục `ipSelect` từ `RMS_svselect` và kiểm tra hợp lệ với `nameServer.Length` trước khi tái tạo `initCommand()`.
+   - Trong `ServerListScreen.Part1.cs` (`initCommand()`): Đảm bảo tiêu đề nút máy chủ luôn hiển thị chính xác: `cmd[2 + nCmdPlay].caption = mResources.server + ": " + sName;`.
+3. **Chuẩn hóa hàm `SplashScr.loadIP()`**:
+   - Kiểm tra `sv >= 0` và `sv < ServerListScreen.nameServer.Length`, nếu không hợp lệ thì fallback về `ServerListScreen.serverPriority` hoặc 0 một cách an toàn.
+4. **Đồng bộ mã nguồn**:
+   - Triển khai đồng thời trên cả hai dự án: `Dragonboy250_PC_projectbuild` và `DragonBoy_Net8_Native`.
+
+### 3. Kết Quả Biên Dịch & Đồng Bộ Nhị Phân
+1. **PC Build (`Dragonboy250_PC_projectbuild`)**:
+   - `dotnet build -c Release` thành công 100% (**0 Warning, 0 Error**).
+   - Tự động xuất DLL ra `C:\Users\PhamTriHien\Desktop\DragonBoy250\DragonBoy250_Data\Managed\Assembly-CSharp.dll` (1,218,048 bytes).
+2. **Native AOT Standalone (`DragonBoy_Net8_Native`)**:
+   - `dotnet publish -c Release -r win-x64` thành công (**0 Warning, 0 Error**).
+   - Xuất bản file nhị phân PE duy nhất `DragonBoy_Net8_Native.exe` (7,418,880 bytes) tại `C:\ModNRO\DragonBoy_Net8_Native\bin\Release\net8.0\win-x64\publish\`.
+3. **Android Signed APK (`DragonBoy_Android.csproj`)**:
+   - `dotnet build -c Release` thành công (**0 Error**).
+   - File Signed APK `com.trihienkun.dragonboy-Signed.apk` (112,843,735 bytes) đồng bộ ra Desktop thành `DragonBoy_1Game_6Tabs.apk` và `DragonBoy250_Mod_Android.apk`.
+
+### 4. Triển Khai Lên Git & GitHub Releases v2.5.5
+1. **Git Commit & Push**:
+   - Commit toàn bộ thay đổi mã nguồn sạch lên nhánh `main` của repository `project_dragonboy250_PC_Mod`.
+2. **GitHub Release v2.5.5**:
+   - Tạo tag và Release `v2.5.5` trên GitHub qua API chính thức.
+   - Upload toàn bộ assets nhị phân thành phẩm:
+     + `DragonBoy_Net8_Native.exe`
+     + `DragonBoy250_Mod_Android.apk`
+     + `Assembly-CSharp.dll` (Mod DLL cho bản PC)

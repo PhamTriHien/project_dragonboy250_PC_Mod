@@ -118,6 +118,11 @@ public partial class ServerListScreen : mScreen, IActionListener
 			EffectManager.remove();
 			GameScr.cmy = 0;
 			GameScr.cmx = 0;
+			int savedSv = Rms.loadRMSInt(RMS_svselect);
+			if (savedSv >= 0 && nameServer != null && savedSv < nameServer.Length)
+			{
+				ipSelect = savedSv;
+			}
 			initCommand();
 			isWait = false;
 			GameCanvas.loginScr = null;
@@ -146,6 +151,11 @@ public partial class ServerListScreen : mScreen, IActionListener
 		{
 			GameScr.cmy = 0;
 			GameScr.cmx = 0;
+			int savedSv = Rms.loadRMSInt(RMS_svselect);
+			if (savedSv >= 0 && nameServer != null && savedSv < nameServer.Length)
+			{
+				ipSelect = savedSv;
+			}
 			initCommand();
 			isWait = false;
 			GameCanvas.loginScr = null;

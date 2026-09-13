@@ -185,6 +185,11 @@ public partial class ServerListScreen : mScreen, IActionListener
 				cmd[i].h = 30;
 				num += 30;
 			}
+			if (cmd.Length > 2 + nCmdPlay && cmd[2 + nCmdPlay] != null)
+			{
+				string sName = (nameServer != null && ipSelect >= 0 && ipSelect < nameServer.Length) ? nameServer[ipSelect] : string.Empty;
+				cmd[2 + nCmdPlay].caption = mResources.server + ": " + sName;
+			}
 			if (selected < 0 || selected >= cmd.Length)
 			{
 				selected = 0;

@@ -321,7 +321,6 @@ public partial class CreateCharScr
 				GameCanvas.serverScreen.switchToMe();
 				break;
 			case 10018:
-				ServerListScreen.SetIpSelect(-1, issave: true);
 				ServerScr.isShowSv_HaveChar = false;
 				Controller.isEXTRA_LINK = false;
 				GameCanvas.serverScr.switchToMe();

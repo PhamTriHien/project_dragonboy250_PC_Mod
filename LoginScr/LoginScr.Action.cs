@@ -287,8 +287,19 @@ public partial class LoginScr : mScreen, IActionListener
 			switch (idAction)
 			{
 			case 101:
+			{
+				int savedSv101 = Rms.loadRMSInt(ServerListScreen.RMS_svselect);
+				if (savedSv101 >= 0 && ServerListScreen.nameServer != null && savedSv101 < ServerListScreen.nameServer.Length)
+				{
+					ServerListScreen.ipSelect = savedSv101;
+				}
+				if (GameCanvas.serverScreen == null)
+				{
+					GameCanvas.serverScreen = new ServerListScreen();
+				}
 				GameCanvas.serverScreen.switchToMe();
 				break;
+			}
 			case 13:
 				switch (mSystem.clientType)
 				{
@@ -396,6 +407,12 @@ public partial class LoginScr : mScreen, IActionListener
 
 				GameCanvas.clearAllPointerEvent();
 				GameCanvas.clearKeyPressed();
+
+				int savedSv2008 = Rms.loadRMSInt(ServerListScreen.RMS_svselect);
+				if (savedSv2008 >= 0 && ServerListScreen.nameServer != null && savedSv2008 < ServerListScreen.nameServer.Length)
+				{
+					ServerListScreen.ipSelect = savedSv2008;
+				}
 
 				if (GameCanvas.serverScreen == null)
 				{
