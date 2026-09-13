@@ -14435,3 +14435,20 @@ um10 += clipTX; num11 += clipTY; trong cả hai hàm _drawRegion và __drawRegio
    - Cài đặt bản dựng mới nhất qua `HD-Adb.exe install -r`.
    - Khởi động `MainActivity` (Tab 1): Game tải mượt mà vào thẳng sảnh chính (hiển thị logo "TRIHIENKUN DRAGON BALL ONLINE", nút tải dữ liệu và nút menu nổi đa tab).
    - Triệt tiêu 100% lỗi `Java.Lang.NullPointerException DecorView.getWindowInsetsController()`.
+
+### 5. Triển Khai Bản Phát Hành v2.5.6 Lên Git & GitHub Releases
+1. **Nâng cấp phiên bản v2.5.6**:
+   - `version.json`: `version: "2.5.6"`, cập nhật URL tải về v2.5.6 và changelog.
+   - `ModAutoUpdate.cs`: `CurrentVersion = "2.5.6"` trên cả hai dự án PC và Native.
+   - `DragonBoy_Android.csproj`: `ApplicationVersion = 256`, `ApplicationDisplayVersion = 2.5.6`.
+2. **Git Commit, Push & Tag**:
+   - Commit toàn bộ mã nguồn sạch sẽ lên nhánh `main`.
+   - Tạo tag `v2.5.6` và đẩy lên GitHub repository.
+3. **Triển khai GitHub Release v2.5.6**:
+   - Tạo bản phát hành chính thức: [GitHub Release v2.5.6](https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/tag/v2.5.6)
+   - Tải lên đầy đủ 3 tệp nhị phân thành phẩm:
+     + `DragonBoy_Net8_Native.exe` (7,418,880 bytes)
+     + `Assembly-CSharp.dll` (1,218,048 bytes)
+     + `DragonBoy250_Mod_Android.apk` (112,843,735 bytes)
+4. **Đồng bộ Desktop**:
+   - Toàn bộ các file nhị phân PC và Android ngoài Desktop của người dùng đã được cập nhật đồng bộ 100% với bản phát hành v2.5.6.
