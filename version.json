@@ -1,9 +1,9 @@
 {
-  "version": "2.5.5",
-  "buildDate": "2026-09-13",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.5/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.5/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.5/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.5/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.5: Khắc phục triệt để lỗi các nút bấm ở sảnh game không nhấn được / bị đá màn hình hoặc tự động đăng nhập khi nhận gói tin -111 từ Server; Chuẩn hóa vùng chạm con trỏ và phím điều hướng trên PC & Android."
+  "version": "2.5.6",
+  "buildDate": "2026-09-14",
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.6/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.6/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.6/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.6/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.6: Khắc phục triệt để lỗi khởi chạy Tab 1 (NullPointerException DecorView.getWindowInsetsController) trên Android; Tối ưu hóa an toàn ApplyFullScreen và đồng bộ vòng đời toàn màn hình đa tab."
 }
