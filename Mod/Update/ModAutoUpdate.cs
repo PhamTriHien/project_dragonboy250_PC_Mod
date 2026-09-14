@@ -12,13 +12,13 @@ using UnityEngine;
 
 public static class ModAutoUpdate
 {
-	public const string CurrentVersion = "2.5.10";
+	public const string CurrentVersion = "2.5.11";
 	public const string ManifestUrl = "https://raw.githubusercontent.com/PhamTriHien/project_dragonboy250_PC_Mod/main/version.json";
 
 	public static bool isChecking = false;
 	public static bool hasChecked = false;
 	public static bool hasNewVersion = false;
-	public static bool hasPrompted = true; // Tắt hoàn toàn tự động nhảy popup Yes/No khi khởi động
+	public static bool hasPrompted = false;
 
 	public static string remoteVersion = string.Empty;
 	public static string downloadUrl = string.Empty;
@@ -54,7 +54,7 @@ public static class ModAutoUpdate
 		isChecking = false;
 		hasChecked = false;
 		hasNewVersion = false;
-		hasPrompted = true; // Không tự động hiện YesNoDlg
+		hasPrompted = false;
 		isShowUpdateBoard = false;
 		scrollY = 0;
 		maxScrollY = 0;
@@ -191,8 +191,11 @@ public static class ModAutoUpdate
 
 	public static void UpdateTick()
 	{
-		// Đã tắt tự động nhảy popup Yes/No khi khởi động game.
-		// Nút nổi với chấm sáng đỏ ở góc phải sảnh game sẽ thông báo cho người dùng.
+		if (hasNewVersion && !hasPrompted)
+		{
+			hasPrompted = true;
+			ShowUpdateDialog();
+		}
 
 		if (!string.IsNullOrEmpty(manualStatusMsg))
 		{

@@ -1,9 +1,9 @@
 {
-  "version": "2.5.10",
-  "buildDate": "2026-09-14",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.10/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.10/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.10/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.10/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.10: Khắc phục triệt để lỗi màu chữ bị chìm/trùng màu nền; giữ nguyên popup thông báo 'CẬP NHẬT HOÀN TẤT' khi tải 100% kèm nút 'CÀI ĐẶT NGAY' / 'KHỞI ĐỘNG LẠI'; xử lý chuẩn quyền Unknown Apps và tự động kích hoạt trình cài đặt APK trên Android; nhận diện động tên file game trên PC."
+  "version": "2.5.11",
+  "buildDate": "2026-09-15",
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.11/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.11/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.11/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.11/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.11: Khắc phục triệt để lỗi nút Đăng nhập không phản hồi (phím ảo TouchScreenKeyboard crash Main.closeKeyBoard, debounce ModCredentialSecurity, validation trống tài khoản/mật khẩu); giải quyết lỗi kết nối mạng socket Teamobi trên Android (.NET 8 multiconnect DNS resolution); tự động hiển thị bảng thông báo cập nhật khi có bản mới; đồng bộ hệ thống client."
 }
