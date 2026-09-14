@@ -239,7 +239,7 @@ public partial class LoginScr : mScreen, IActionListener
 			tfUser.y = yLog + 15;
 			tfPass.x = xLog + 10;
 			tfPass.y = yLog + 46;
-			cmdOK = new Command(mResources.OK, this, 2008, null);
+			cmdOK = new Command((GameCanvas.w <= 200) ? mResources.login2 : mResources.login, this, 2008, null);
 			cmdOK.x = GameCanvas.w / 2 - 84;
 			cmdOK.y = yLog + 105;
 			cmdFogetPass = new Command(mResources.forgetPass, this, 1003, null);
@@ -499,10 +499,28 @@ public partial class LoginScr : mScreen, IActionListener
 		}
 		DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.OnLoginStarted();
 		lastTimeLogin = currTimeLogin;
-		if (!Session_ME.gI().isConnected())
+		if (string.IsNullOrEmpty(GameMidlet.IP) || GameMidlet.PORT == 0)
+		{
+			if (ServerListScreen.address == null || ServerListScreen.address.Length == 0)
 			{
-				GameCanvas.connect();
+				ServerListScreen.loadIP();
 			}
+			int sv = ServerListScreen.ipSelect;
+			if (ServerListScreen.address != null && ServerListScreen.address.Length > 0)
+			{
+				if (sv < 0 || sv >= ServerListScreen.address.Length)
+				{
+					sv = (ServerListScreen.serverPriority >= 0 && ServerListScreen.serverPriority < ServerListScreen.address.Length) ? ServerListScreen.serverPriority : 0;
+				}
+				ServerListScreen.ipSelect = sv;
+				GameMidlet.IP = ServerListScreen.address[sv];
+				GameMidlet.PORT = ServerListScreen.port[sv];
+			}
+		}
+		if (!Session_ME.gI().isConnected())
+		{
+			GameCanvas.connect();
+		}
 			Service.gI().login(text, text2, GameMidlet.VERSION, (sbyte)(isLogin2 ? 1 : 0));
 			Res.outz(Controller.isEXTRA_LINK + " = Controller.isEXTRA_LINK " + text + " " + text2 + " " + GameMidlet.VERSION + " " + (sbyte)(isLogin2 ? 1 : 0));
 			Rms.saveRMSInt(ServerListScreen.RMS_svselect, ServerListScreen.ipSelect);
@@ -603,6 +621,10 @@ public partial class LoginScr : mScreen, IActionListener
 			if (cmdLogin != null)
 			{
 				cmdLogin.caption = (GameCanvas.w <= 200) ? mResources.login2 : mResources.login;
+			}
+			if (cmdOK != null)
+			{
+				cmdOK.caption = (GameCanvas.w <= 200) ? mResources.login2 : mResources.login;
 			}
 			if (GameCanvas.isTouch)
 			{

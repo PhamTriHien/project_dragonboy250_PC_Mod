@@ -282,11 +282,16 @@ public class Main : MonoBehaviour
 
 	public static void closeKeyBoard()
 	{
-		if (TouchScreenKeyboard.visible)
+		try
 		{
-			TField.kb.active = false;
-			TField.kb = null;
+			TouchScreenKeyboard.Clear();
+			if (TField.kb != null)
+			{
+				TField.kb.active = false;
+				TField.kb = null;
+			}
 		}
+		catch { }
 	}
 
 	public void FixedUpdate()
@@ -579,11 +584,16 @@ public class Main : MonoBehaviour
 		{
 			isResume = true;
 		}
-		if (TouchScreenKeyboard.visible)
+		try
 		{
-			TField.kb.active = false;
-			TField.kb = null;
+			TouchScreenKeyboard.Clear();
+			if (TField.kb != null)
+			{
+				TField.kb.active = false;
+				TField.kb = null;
+			}
 		}
+		catch { }
 	}
 
 	public static void exit()

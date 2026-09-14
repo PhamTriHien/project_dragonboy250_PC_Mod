@@ -17,6 +17,7 @@ public partial class GameCanvas : IActionListener
 			}
 			currentDialog = null;
 			InfoDlg.hide();
+			DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.OnLoginFinished();
 		}
 
 	public static void startYesNoDlg(string info, int iYes, object pYes, int iNo, object pNo)

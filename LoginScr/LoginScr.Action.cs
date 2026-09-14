@@ -402,6 +402,35 @@ public partial class LoginScr : mScreen, IActionListener
 				string user = (tfUser != null && tfUser.getText() != null) ? tfUser.getText().Trim() : string.Empty;
 				string pass = (tfPass != null && tfPass.getText() != null) ? tfPass.getText() : string.Empty;
 
+				if (string.IsNullOrEmpty(user))
+				{
+					focus = 0;
+					if (tfUser != null)
+					{
+						tfUser.setFocusWithKb(true);
+					}
+					if (tfPass != null)
+					{
+						tfPass.setFocusWithKb(false);
+					}
+					GameCanvas.startOKDlg(mResources.userBlank);
+					break;
+				}
+				if (string.IsNullOrEmpty(pass))
+				{
+					focus = 1;
+					if (tfUser != null)
+					{
+						tfUser.setFocusWithKb(false);
+					}
+					if (tfPass != null)
+					{
+						tfPass.setFocusWithKb(true);
+					}
+					GameCanvas.startOKDlg(mResources.passwordBlank);
+					break;
+				}
+
 				Rms.saveRMSString(Rms.RMS_acc, user);
 				Rms.saveRMSString(Rms.RMS_pass, pass);
 				DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.SaveCredentials(user, pass, isCheck);
@@ -414,13 +443,13 @@ public partial class LoginScr : mScreen, IActionListener
 				{
 					ServerListScreen.ipSelect = savedSv2008;
 				}
-
-				if (GameCanvas.serverScreen == null)
+				if (ServerListScreen.address != null && ServerListScreen.ipSelect >= 0 && ServerListScreen.ipSelect < ServerListScreen.address.Length)
 				{
-					GameCanvas.serverScreen = new ServerListScreen();
+					GameMidlet.IP = ServerListScreen.address[ServerListScreen.ipSelect];
+					GameMidlet.PORT = ServerListScreen.port[ServerListScreen.ipSelect];
 				}
-				ServerListScreen.loadScreen = true;
-				GameCanvas.serverScreen.switchToMe();
+
+				doLogin();
 				break;
 			}
 			case 4000:

@@ -152,14 +152,22 @@ namespace DragonBoy_Net8_Native.Src.Mod.Security
 		public static bool CanAttemptLogin()
 		{
 			long now = mSystem.currentTimeMillis();
-			if (isLoggingIn && now - loginStartTime < LOGIN_TIMEOUT_MS)
+			// Nếu không có dialog nào đang hiển thị trên màn hình, giải phóng cờ chờ đăng nhập
+			if (GameCanvas.currentDialog == null)
 			{
-				GameScr.info1?.addInfo("Đang đăng nhập, vui lòng chờ...", 0);
+				isLoggingIn = false;
+				loginStartTime = 0;
+			}
+			else if (isLoggingIn && now - loginStartTime < LOGIN_TIMEOUT_MS)
+			{
+				if (GameScr.info1 != null)
+				{
+					GameScr.info1.addInfo("Đang đăng nhập, vui lòng chờ...", 0);
+				}
 				return false;
 			}
-			if (now - lastLoginAttemptTime < 1500)
+			if (now - lastLoginAttemptTime < 400)
 			{
-				GameScr.info1?.addInfo("Thao tác quá nhanh, vui lòng chờ 1s...", 0);
 				return false;
 			}
 			return true;
@@ -182,6 +190,12 @@ namespace DragonBoy_Net8_Native.Src.Mod.Security
 		{
 			if (isLoggingIn && loginStartTime > 0)
 			{
+				if (GameCanvas.currentDialog == null)
+				{
+					isLoggingIn = false;
+					loginStartTime = 0;
+					return;
+				}
 				long now = mSystem.currentTimeMillis();
 				if (now - loginStartTime > LOGIN_TIMEOUT_MS)
 				{

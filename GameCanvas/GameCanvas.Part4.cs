@@ -59,6 +59,7 @@ public partial class GameCanvas : IActionListener
 				currentDialog = null;
 				ServerListScreen.isAutoConect = false;
 				ServerListScreen.countDieConnect = 0;
+				DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.OnLoginFinished();
 				break;
 			case 8884:
 				endDlg();
