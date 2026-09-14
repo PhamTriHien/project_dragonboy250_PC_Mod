@@ -179,10 +179,7 @@ public partial class CreateCharScr
 			{
 				cmdSelectSv.paint(g);
 			}
-			if (!TouchScreenKeyboard.visible)
-			{
-				base.paint(g);
-			}
+			base.paint(g);
 		}
 
 }

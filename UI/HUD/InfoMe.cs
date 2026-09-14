@@ -139,12 +139,13 @@ public class InfoMe
 
 	public void update()
 	{
-		if (info != null && info.infoWaitToShow != null && info.infoWaitToShow.size() == 0 && cmy != -40)
+		if (info != null && info.infoWaitToShow != null && (info.infoWaitToShow.size() == 0 || (info.info != null && info.info.timeCount <= 0)) && cmy != -40)
 		{
 			info.timeW--;
-			if (info.timeW <= 0)
+			if (info.timeW <= 0 || (info.info != null && info.info.timeCount <= 0))
 			{
 				cmy = -40;
+				cmtoY = -40;
 				info.time = 0;
 				info.infoWaitToShow.removeAllElements();
 				info.says = null;

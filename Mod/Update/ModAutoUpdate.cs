@@ -12,7 +12,7 @@ using UnityEngine;
 
 public static class ModAutoUpdate
 {
-	public const string CurrentVersion = "2.5.8";
+	public const string CurrentVersion = "2.5.9";
 	public const string ManifestUrl = "https://raw.githubusercontent.com/PhamTriHien/project_dragonboy250_PC_Mod/main/version.json";
 
 	public static bool isChecking = false;
@@ -431,8 +431,8 @@ public static class ModAutoUpdate
 	{
 		if (!isDownloading) return;
 
-		// Phủ mờ nền đen mờ
-		g.setColor(0, 0.65f);
+		// Phủ mờ nền nhẹ
+		g.setColor(0, 0.45f);
 		g.fillRect(0, 0, GameCanvas.w, GameCanvas.h);
 
 		// Khung hộp thoại chính giữa
@@ -446,7 +446,7 @@ public static class ModAutoUpdate
 
 		// Tiêu đề
 		int titleY = boxY + 12;
-		mFont.tahoma_7b_yellow.drawString(g, "CẬP NHẬT TRỰC TIẾP", boxX + boxW / 2, titleY, mFont.CENTER);
+		mFont.tahoma_7b_red.drawString(g, "CẬP NHẬT TRỰC TIẾP", boxX + boxW / 2, titleY, mFont.CENTER);
 
 		// Tên phiên bản & Tốc độ tải
 		int infoY1 = titleY + 18;
@@ -455,14 +455,14 @@ public static class ModAutoUpdate
 		{
 			verStr += " (" + downloadSpeedStr + ")";
 		}
-		mFont.tahoma_7_white.drawString(g, verStr, boxX + boxW / 2, infoY1, mFont.CENTER);
+		mFont.tahoma_7b_dark.drawString(g, verStr, boxX + boxW / 2, infoY1, mFont.CENTER);
 
 		// Thông số dung lượng
 		int infoY2 = infoY1 + 16;
 		float downMB = downloadedBytes / (1024f * 1024f);
 		float totMB = totalBytes / (1024f * 1024f);
 		string sizeStr = downloadPercent + "% (" + downMB.ToString("0.0") + " MB / " + totMB.ToString("0.0") + " MB)";
-		mFont.tahoma_7b_white.drawString(g, sizeStr, boxX + boxW / 2, infoY2, mFont.CENTER);
+		mFont.tahoma_7b_dark.drawString(g, sizeStr, boxX + boxW / 2, infoY2, mFont.CENTER);
 
 		// Thanh tiến trình phong cách NRO
 		int barW = boxW - 40;
@@ -501,7 +501,7 @@ public static class ModAutoUpdate
 		int btnY = barY + 22;
 
 		PopUp.paintPopUp(g, btnX, btnY, btnW, btnH, 0, isButton: true);
-		mFont.tahoma_7b_white.drawString(g, "HỦY BỎ", btnX + btnW / 2, btnY + 5, mFont.CENTER);
+		mFont.tahoma_7b_dark.drawString(g, "HỦY BỎ", btnX + btnW / 2, btnY + 5, mFont.CENTER);
 	}
 
 	public static void UpdateDownloadInput()
@@ -586,7 +586,7 @@ public static class ModAutoUpdate
 		{
 			// Nút phiên bản chuẩn NRO (Style 0: normal button)
 			PopUp.paintPopUp(g, btnX, btnY, btnW, btnH, 0, isButton: true);
-			mFont.tahoma_7b_white.drawString(g, "v" + CurrentVersion, btnX + btnW / 2, btnY + 4, mFont.CENTER);
+			mFont.tahoma_7b_dark.drawString(g, "v" + CurrentVersion, btnX + btnW / 2, btnY + 4, mFont.CENTER);
 		}
 	}
 
@@ -610,28 +610,28 @@ public static class ModAutoUpdate
 		PopUp.paintPopUp(g, boxX, boxY, boxW, boxH, -1, isButton: false);
 
 		// 1. Tiêu đề
-		mFont.tahoma_7b_yellow.drawString(g, "THÔNG TIN CẬP NHẬT", boxX + boxW / 2, boxY + 10, mFont.CENTER);
+		mFont.tahoma_7b_red.drawString(g, "THÔNG TIN CẬP NHẬT", boxX + boxW / 2, boxY + 10, mFont.CENTER);
 
 		// Nút [X] đóng nhanh góc trên bên phải
 		int closeX = boxX + boxW - 22;
 		int closeY = boxY + 6;
 		PopUp.paintPopUp(g, closeX, closeY, 16, 16, 0, isButton: true);
-		mFont.tahoma_7b_white.drawString(g, "X", closeX + 8, closeY + 2, mFont.CENTER);
+		mFont.tahoma_7b_dark.drawString(g, "X", closeX + 8, closeY + 2, mFont.CENTER);
 
 		// 2. Dòng thông tin phiên bản
 		int infoY = boxY + 28;
 		if (hasNewVersion)
 		{
-			mFont.tahoma_7b_yellow.drawString(g, "Bản mới: v" + remoteVersion, boxX + 14, infoY, mFont.LEFT);
+			mFont.tahoma_7b_dark.drawString(g, "Bản mới: v" + remoteVersion, boxX + 14, infoY, mFont.LEFT);
 			mFont.tahoma_7_grey.drawString(g, "Hiện tại: v" + CurrentVersion, boxX + boxW - 14, infoY, mFont.RIGHT);
 			if (!string.IsNullOrEmpty(buildDate))
 			{
-				mFont.tahoma_7_white.drawString(g, "Ngày phát hành: " + buildDate, boxX + 14, infoY + 14, mFont.LEFT);
+				mFont.tahoma_7b_dark.drawString(g, "Ngày phát hành: " + buildDate, boxX + 14, infoY + 14, mFont.LEFT);
 			}
 		}
 		else
 		{
-			mFont.tahoma_7b_yellow.drawString(g, "Phiên bản hiện tại: v" + CurrentVersion, boxX + 14, infoY, mFont.LEFT);
+			mFont.tahoma_7b_dark.drawString(g, "Phiên bản hiện tại: v" + CurrentVersion, boxX + 14, infoY, mFont.LEFT);
 			mFont.tahoma_7_green.drawString(g, "Bạn đang sử dụng phiên bản mới nhất!", boxX + 14, infoY + 14, mFont.LEFT);
 		}
 
@@ -688,18 +688,18 @@ public static class ModAutoUpdate
 
 			// Nút CẬP NHẬT
 			PopUp.paintPopUp(g, btnUpdateX, btnY, btnW, btnH, 1, isButton: true);
-			mFont.tahoma_7b_yellow.drawString(g, "CẬP NHẬT", btnUpdateX + btnW / 2, btnY + 5, mFont.CENTER);
+			mFont.tahoma_7b_dark.drawString(g, "CẬP NHẬT", btnUpdateX + btnW / 2, btnY + 5, mFont.CENTER);
 
 			// Nút ĐÓNG
 			PopUp.paintPopUp(g, btnCloseX, btnY, btnW, btnH, 0, isButton: true);
-			mFont.tahoma_7b_white.drawString(g, "ĐÓNG", btnCloseX + btnW / 2, btnY + 5, mFont.CENTER);
+			mFont.tahoma_7b_dark.drawString(g, "ĐÓNG", btnCloseX + btnW / 2, btnY + 5, mFont.CENTER);
 		}
 		else
 		{
 			// Nút ĐÓNG chính giữa
 			int btnCloseX = (GameCanvas.w - btnW) / 2;
 			PopUp.paintPopUp(g, btnCloseX, btnY, btnW, btnH, 0, isButton: true);
-			mFont.tahoma_7b_white.drawString(g, "ĐÓNG", btnCloseX + btnW / 2, btnY + 5, mFont.CENTER);
+			mFont.tahoma_7b_dark.drawString(g, "ĐÓNG", btnCloseX + btnW / 2, btnY + 5, mFont.CENTER);
 		}
 	}
 

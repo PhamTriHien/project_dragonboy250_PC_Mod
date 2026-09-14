@@ -270,10 +270,7 @@ public partial class CreateCharScr
 					}
 				}
 			}
-			if (!TouchScreenKeyboard.visible)
-			{
-				base.updateKey();
-			}
+			base.updateKey();
 			GameCanvas.clearKeyHold();
 			GameCanvas.clearKeyPressed();
 		}

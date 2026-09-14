@@ -563,20 +563,21 @@ public partial class Char : IMapObject
 
 	public bool isCharBodyImageID(int id)
 			{
-				Part part = GameScr.parts[head];
-				Part part2 = GameScr.parts[leg];
-				Part part3 = GameScr.parts[body];
+				if (GameScr.parts == null) return false;
+				Part part = (head >= 0 && head < GameScr.parts.Length) ? GameScr.parts[head] : null;
+				Part part2 = (leg >= 0 && leg < GameScr.parts.Length) ? GameScr.parts[leg] : null;
+				Part part3 = (body >= 0 && body < GameScr.parts.Length) ? GameScr.parts[body] : null;
 				for (int i = 0; i < CharInfo.Length; i++)
 				{
-					if (id == part.pi[CharInfo[i][0][0]].id)
+					if (part != null && part.pi != null && CharInfo[i][0][0] < part.pi.Length && id == part.pi[CharInfo[i][0][0]].id)
 					{
 						return true;
 					}
-					if (id == part2.pi[CharInfo[i][1][0]].id)
+					if (part2 != null && part2.pi != null && CharInfo[i][1][0] < part2.pi.Length && id == part2.pi[CharInfo[i][1][0]].id)
 					{
 						return true;
 					}
-					if (id == part3.pi[CharInfo[i][2][0]].id)
+					if (part3 != null && part3.pi != null && CharInfo[i][2][0] < part3.pi.Length && id == part3.pi[CharInfo[i][2][0]].id)
 					{
 						return true;
 					}
@@ -586,21 +587,43 @@ public partial class Char : IMapObject
 
 	public void paintHead(mGraphics g, int cx, int cy, int look)
 			{
-				Part part = GameScr.parts[head];
-				SmallImage.drawSmallImage(g, part.pi[CharInfo[0][0][0]].id, cx, cy, (look != 0) ? 2 : 0, mGraphics.RIGHT | mGraphics.VCENTER);
+				if (GameScr.parts == null) return;
+				Part part = (head >= 0 && head < GameScr.parts.Length) ? GameScr.parts[head] : null;
+				if (part != null && part.pi != null && CharInfo[0][0][0] < part.pi.Length)
+				{
+					SmallImage.drawSmallImage(g, part.pi[CharInfo[0][0][0]].id, cx, cy, (look != 0) ? 2 : 0, mGraphics.RIGHT | mGraphics.VCENTER);
+				}
 			}
 
 	public void paintHeadWithXY(mGraphics g, int x, int y, int look)
 			{
-				Part part = GameScr.parts[head];
-				SmallImage.drawSmallImage(g, part.pi[CharInfo[0][0][0]].id, x + CharInfo[0][0][1] + part.pi[CharInfo[0][0][0]].dx - 3, y + 3, look, mGraphics.LEFT | mGraphics.BOTTOM);
+				if (GameScr.parts == null) return;
+				Part part = (head >= 0 && head < GameScr.parts.Length) ? GameScr.parts[head] : null;
+				if (part != null && part.pi != null && CharInfo[0][0][0] < part.pi.Length)
+				{
+					SmallImage.drawSmallImage(g, part.pi[CharInfo[0][0][0]].id, x + CharInfo[0][0][1] + part.pi[CharInfo[0][0][0]].dx - 3, y + 3, look, mGraphics.LEFT | mGraphics.BOTTOM);
+				}
 			}
 
 	public void paintCharBody(mGraphics g, int cx, int cy, int cdir, int cf, bool isPaintBag)
 			{
-				ph = GameScr.parts[head];
-				pl = GameScr.parts[leg];
-				pb = GameScr.parts[body];
+				if (GameScr.parts == null || GameScr.parts.Length == 0) return;
+				ph = (head >= 0 && head < GameScr.parts.Length) ? GameScr.parts[head] : null;
+				pl = (leg >= 0 && leg < GameScr.parts.Length) ? GameScr.parts[leg] : null;
+				pb = (body >= 0 && body < GameScr.parts.Length) ? GameScr.parts[body] : null;
+
+				// Fallback an toàn nếu thiếu part chân hoặc thân (tránh biến thành người vô hình chỉ còn mắt)
+				if ((pl == null || pl.pi == null) && GameScr.parts != null)
+				{
+					int fallbackLeg = (cgender == 1) ? 1 : ((cgender == 2) ? 2 : 0);
+					if (fallbackLeg < GameScr.parts.Length) pl = GameScr.parts[fallbackLeg];
+				}
+				if ((pb == null || pb.pi == null) && GameScr.parts != null)
+				{
+					int fallbackBody = (cgender == 1) ? 1 : ((cgender == 2) ? 2 : 0);
+					if (fallbackBody < GameScr.parts.Length) pb = GameScr.parts[fallbackBody];
+				}
+
 				if (bag >= 0 && statusMe != 14)
 				{
 					if (!ClanImage.idImages.containsKey(bag + string.Empty))
@@ -643,49 +666,82 @@ public partial class Char : IMapObject
 					{
 						num3 = 23;
 					}
-					SmallImage.drawSmallImage(g, 834, cx, cy - CharInfo[cf][2][2] + pb.pi[CharInfo[cf][2][0]].dy - 2 + num3, num, StaticObj.TOP_CENTER);
+					int pbDy = (pb != null && pb.pi != null && CharInfo[cf][2][0] < pb.pi.Length) ? pb.pi[CharInfo[cf][2][0]].dy : 0;
+					SmallImage.drawSmallImage(g, 834, cx, cy - CharInfo[cf][2][2] + pbDy - 2 + num3, num, StaticObj.TOP_CENTER);
 					SmallImage.drawSmallImage(g, 79, cx, cy - ch - 8, 0, mGraphics.HCENTER | mGraphics.BOTTOM);
-					SmallImage.drawSmallImage(g, ph.pi[CharInfo[cf][0][0]].id, cx + (CharInfo[cf][0][1] + ph.pi[CharInfo[cf][0][0]].dx) * num2, cy - CharInfo[cf][0][2] + ph.pi[CharInfo[cf][0][0]].dy, num, anchor);
-					paintHat_behind(g, cf, cy - CharInfo[cf][2][2] + pb.pi[CharInfo[cf][2][0]].dy);
-					if (isHead_2Fr(head))
-					{
-						Part part = GameScr.parts[getFHead(head)];
-						SmallImage.drawSmallImage(g, part.pi[CharInfo[cf][0][0]].id, cx + (CharInfo[cf][0][1] + part.pi[CharInfo[cf][0][0]].dx) * num2, cy - CharInfo[cf][0][2] + part.pi[CharInfo[cf][0][0]].dy, num, anchor);
-					}
-					else
+					if (ph != null && ph.pi != null && CharInfo[cf][0][0] < ph.pi.Length)
 					{
 						SmallImage.drawSmallImage(g, ph.pi[CharInfo[cf][0][0]].id, cx + (CharInfo[cf][0][1] + ph.pi[CharInfo[cf][0][0]].dx) * num2, cy - CharInfo[cf][0][2] + ph.pi[CharInfo[cf][0][0]].dy, num, anchor);
 					}
-					paintHat_front(g, cf, cy - CharInfo[cf][2][2] + pb.pi[CharInfo[cf][2][0]].dy);
-					paintRedEye(g, cx + (CharInfo[cf][0][1] + ph.pi[CharInfo[cf][0][0]].dx) * num2, cy - CharInfo[cf][0][2] + ph.pi[CharInfo[cf][0][0]].dy, num, anchor);
+					paintHat_behind(g, cf, cy - CharInfo[cf][2][2] + pbDy);
+					if (isHead_2Fr(head))
+					{
+						int fHead = getFHead(head);
+						Part part = (fHead >= 0 && fHead < GameScr.parts.Length) ? GameScr.parts[fHead] : null;
+						if (part != null && part.pi != null && CharInfo[cf][0][0] < part.pi.Length)
+						{
+							SmallImage.drawSmallImage(g, part.pi[CharInfo[cf][0][0]].id, cx + (CharInfo[cf][0][1] + part.pi[CharInfo[cf][0][0]].dx) * num2, cy - CharInfo[cf][0][2] + part.pi[CharInfo[cf][0][0]].dy, num, anchor);
+						}
+					}
+					else if (ph != null && ph.pi != null && CharInfo[cf][0][0] < ph.pi.Length)
+					{
+						SmallImage.drawSmallImage(g, ph.pi[CharInfo[cf][0][0]].id, cx + (CharInfo[cf][0][1] + ph.pi[CharInfo[cf][0][0]].dx) * num2, cy - CharInfo[cf][0][2] + ph.pi[CharInfo[cf][0][0]].dy, num, anchor);
+					}
+					paintHat_front(g, cf, cy - CharInfo[cf][2][2] + pbDy);
+					if (ph != null && ph.pi != null && CharInfo[cf][0][0] < ph.pi.Length)
+					{
+						paintRedEye(g, cx + (CharInfo[cf][0][1] + ph.pi[CharInfo[cf][0][0]].dx) * num2, cy - CharInfo[cf][0][2] + ph.pi[CharInfo[cf][0][0]].dy, num, anchor);
+					}
 				}
 				else
 				{
-					paintHat_behind(g, cf, cy - CharInfo[cf][2][2] + pb.pi[CharInfo[cf][2][0]].dy);
+					bool bodyDrawnSuccessfully = false;
+					if (pb != null && pb.pi != null && CharInfo[cf][2][0] < pb.pi.Length)
+					{
+						paintHat_behind(g, cf, cy - CharInfo[cf][2][2] + pb.pi[CharInfo[cf][2][0]].dy);
+					}
 					try
 					{
 						if (isHead_2Fr(head))
 						{
-							Part part2 = GameScr.parts[getFHead(head)];
-							SmallImage.drawSmallImage(g, part2.pi[CharInfo[cf][0][0]].id, cx + (CharInfo[cf][0][1] + part2.pi[CharInfo[cf][0][0]].dx) * num2, cy - CharInfo[cf][0][2] + part2.pi[CharInfo[cf][0][0]].dy, num, anchor);
+							int fHead = getFHead(head);
+							Part part2 = (fHead >= 0 && fHead < GameScr.parts.Length) ? GameScr.parts[fHead] : null;
+							if (part2 != null && part2.pi != null && CharInfo[cf][0][0] < part2.pi.Length)
+							{
+								SmallImage.drawSmallImage(g, part2.pi[CharInfo[cf][0][0]].id, cx + (CharInfo[cf][0][1] + part2.pi[CharInfo[cf][0][0]].dx) * num2, cy - CharInfo[cf][0][2] + part2.pi[CharInfo[cf][0][0]].dy, num, anchor);
+							}
 						}
-						else
+						else if (ph != null && ph.pi != null && CharInfo[cf][0][0] < ph.pi.Length)
 						{
 							SmallImage.drawSmallImage(g, ph.pi[CharInfo[cf][0][0]].id, cx + (CharInfo[cf][0][1] + ph.pi[CharInfo[cf][0][0]].dx) * num2, cy - CharInfo[cf][0][2] + ph.pi[CharInfo[cf][0][0]].dy, num, anchor);
 						}
-						SmallImage.drawSmallImage(g, pl.pi[CharInfo[cf][1][0]].id, cx + (CharInfo[cf][1][1] + pl.pi[CharInfo[cf][1][0]].dx) * num2, cy - CharInfo[cf][1][2] + pl.pi[CharInfo[cf][1][0]].dy, num, anchor);
-						SmallImage.drawSmallImage(g, pb.pi[CharInfo[cf][2][0]].id, cx + (CharInfo[cf][2][1] + pb.pi[CharInfo[cf][2][0]].dx) * num2, cy - CharInfo[cf][2][2] + pb.pi[CharInfo[cf][2][0]].dy, num, anchor);
-						paintRedEye(g, cx + (CharInfo[cf][0][1] + ph.pi[CharInfo[cf][0][0]].dx) * num2, cy - CharInfo[cf][0][2] + ph.pi[CharInfo[cf][0][0]].dy, num, anchor);
+
+						if (pl != null && pl.pi != null && CharInfo[cf][1][0] < pl.pi.Length)
+						{
+							SmallImage.drawSmallImage(g, pl.pi[CharInfo[cf][1][0]].id, cx + (CharInfo[cf][1][1] + pl.pi[CharInfo[cf][1][0]].dx) * num2, cy - CharInfo[cf][1][2] + pl.pi[CharInfo[cf][1][0]].dy, num, anchor);
+						}
+						if (pb != null && pb.pi != null && CharInfo[cf][2][0] < pb.pi.Length)
+						{
+							SmallImage.drawSmallImage(g, pb.pi[CharInfo[cf][2][0]].id, cx + (CharInfo[cf][2][1] + pb.pi[CharInfo[cf][2][0]].dx) * num2, cy - CharInfo[cf][2][2] + pb.pi[CharInfo[cf][2][0]].dy, num, anchor);
+						}
+
+						if (ph != null && ph.pi != null && CharInfo[cf][0][0] < ph.pi.Length)
+						{
+							paintRedEye(g, cx + (CharInfo[cf][0][1] + ph.pi[CharInfo[cf][0][0]].dx) * num2, cy - CharInfo[cf][0][2] + ph.pi[CharInfo[cf][0][0]].dy, num, anchor);
+						}
+						bodyDrawnSuccessfully = (pb != null && pl != null);
 					}
 					catch (Exception ex)
 					{
 						Debug.LogError(">>>>>>err: " + ex.ToString());
 					}
 				}
-				ch = ((isMonkey != 1 && !isFusion) ? (CharInfo[0][0][2] + ph.pi[CharInfo[0][0][0]].dy + 10) : 60);
-				int num4 = ((Res.abs(ph.pi[CharInfo[cf][0][0]].dy) < 22) ? ph.pi[CharInfo[cf][0][0]].dy : ((ph.pi[CharInfo[cf][0][0]].dy >= 0) ? (ph.pi[CharInfo[cf][0][0]].dy - 5) : (ph.pi[CharInfo[cf][0][0]].dy + 5)));
+				int phDyHead = (ph != null && ph.pi != null && ph.pi.Length > 0 && CharInfo[0][0][0] < ph.pi.Length) ? ph.pi[CharInfo[0][0][0]].dy : 0;
+				ch = ((isMonkey != 1 && !isFusion) ? (CharInfo[0][0][2] + phDyHead + 10) : 60);
+				int phCfDyHead = (ph != null && ph.pi != null && CharInfo[cf][0][0] < ph.pi.Length) ? ph.pi[CharInfo[cf][0][0]].dy : 0;
+				int num4 = ((Res.abs(phCfDyHead) < 22) ? phCfDyHead : ((phCfDyHead >= 0) ? (phCfDyHead - 5) : (phCfDyHead + 5)));
 				cH_new = cy - CharInfo[cf][0][2] + num4;
-				if (statusMe == 1 && charID > 0 && !isMask && !isUseChargeSkill() && !isWaitMonkey && skillPaint == null && cf != 23 && bag < 0 && ((GameCanvas.gameTick + charID) % 30 == 0 || isFreez))
+				if (pb != null && pl != null && statusMe == 1 && charID > 0 && !isMask && !isUseChargeSkill() && !isWaitMonkey && skillPaint == null && cf != 23 && bag < 0 && ((GameCanvas.gameTick + charID) % 30 == 0 || isFreez))
 				{
 					g.drawImage((cgender != 1) ? eyeTraiDat : eyeNamek, cx + -((cgender != 1) ? 2 : 2) * num2, cy - 32 + ((cgender != 1) ? 11 : 10) - cf, anchor2);
 				}

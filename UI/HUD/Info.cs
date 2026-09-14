@@ -75,6 +75,11 @@ public class Info : IActionListener
 		{
 			if (info != null && info.charInfo != null)
 			{
+				if (info.timeCount <= 0 || string.IsNullOrEmpty(info.s))
+				{
+					g.translate(-x, -y);
+					return;
+				}
 				paintWorldChatBar(g);
 				g.translate(-x, -y);
 				return;
@@ -265,7 +270,7 @@ public class Info : IActionListener
 
 	private void paintWorldChatBar(mGraphics g)
 	{
-		if (info == null || info.charInfo == null)
+		if (info == null || info.charInfo == null || info.timeCount <= 0 || string.IsNullOrEmpty(info.s))
 		{
 			return;
 		}
@@ -290,11 +295,6 @@ public class Info : IActionListener
 				g.setColor(43758);
 				g.fillRect(boxX + 2, barY, progW, 2);
 			}
-		}
-
-		if (info.timeCount == 0)
-		{
-			return;
 		}
 
 		// 3. Avatar đầu nhân vật bên trái (nhỏ gọn trong khung 18px)
