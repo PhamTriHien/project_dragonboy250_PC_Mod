@@ -12,7 +12,7 @@ using UnityEngine;
 
 public static class ModAutoUpdate
 {
-	public const string CurrentVersion = "2.5.9";
+	public const string CurrentVersion = "2.5.10";
 	public const string ManifestUrl = "https://raw.githubusercontent.com/PhamTriHien/project_dragonboy250_PC_Mod/main/version.json";
 
 	public static bool isChecking = false;
@@ -29,6 +29,9 @@ public static class ModAutoUpdate
 	// In-Game Direct Download States
 	public static bool isDownloading = false;
 	public static bool isDownloadCanceled = false;
+	public static bool isDownloadCompleted = false;
+	public static bool isShowCompletedBoard = false;
+	public static string downloadedFilePath = string.Empty;
 	public static int downloadPercent = 0;
 	public static long downloadedBytes = 0;
 	public static long totalBytes = 0;
@@ -57,6 +60,9 @@ public static class ModAutoUpdate
 		maxScrollY = 0;
 		isDownloading = false;
 		isDownloadCanceled = false;
+		isDownloadCompleted = false;
+		isShowCompletedBoard = false;
+		downloadedFilePath = string.Empty;
 		downloadPercent = 0;
 		downloadedBytes = 0;
 		totalBytes = 0;
@@ -105,10 +111,10 @@ public static class ModAutoUpdate
 		{
 				string manifestUrlWithCacheBust = ManifestUrl + "?t=" + mSystem.currentTimeMillis();
 #if NET8_0_OR_GREATER
-			using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3)))
+			using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
 			using (var client = new HttpClient())
 			{
-				client.Timeout = TimeSpan.FromSeconds(3);
+				client.Timeout = TimeSpan.FromSeconds(10);
 				client.DefaultRequestHeaders.Add("User-Agent", "DragonBoy-AutoUpdater/" + CurrentVersion);
 				var resp = client.GetAsync(manifestUrlWithCacheBust, cts.Token).GetAwaiter().GetResult();
 				if (resp.IsSuccessStatusCode)
@@ -308,13 +314,18 @@ public static class ModAutoUpdate
 				File.Move(tempFile, targetFile);
 
 				isDownloading = false;
+				isDownloadCompleted = true;
+				isShowCompletedBoard = true;
 				downloadPercent = 100;
+				downloadedFilePath = targetFile;
 
 				OnDownloadCompleted(targetFile);
 			}
 			catch (Exception ex)
 			{
 				isDownloading = false;
+				isDownloadCompleted = false;
+				isShowCompletedBoard = false;
 				downloadPercent = 0;
 				try { if (File.Exists(tempFile)) File.Delete(tempFile); } catch { }
 				GameScr.info1?.addInfo("Tải thất bại: " + ex.Message, 0);
@@ -378,8 +389,15 @@ public static class ModAutoUpdate
 		}
 		else
 		{
-			string appDir = AppDomain.CurrentDomain.BaseDirectory;
-			return Path.Combine(appDir, "DragonBoy_Net8_Native.exe.new");
+			string currentExePath = null;
+			try
+			{
+				currentExePath = Process.GetCurrentProcess().MainModule?.FileName;
+			}
+			catch { }
+			string exeName = !string.IsNullOrEmpty(currentExePath) ? Path.GetFileName(currentExePath) : "DragonBoy_Net8_Native.exe";
+			string appDir = !string.IsNullOrEmpty(currentExePath) ? Path.GetDirectoryName(currentExePath) : AppDomain.CurrentDomain.BaseDirectory;
+			return Path.Combine(appDir, exeName + ".new");
 		}
 	}
 
@@ -391,6 +409,17 @@ public static class ModAutoUpdate
 		if (isAndroid)
 		{
 			GameScr.info1?.addInfo("Tải xong APK! Đang mở trình cài đặt...", 0);
+#if NET8_0_OR_GREATER
+			if (Application.InstallApkHandler != null)
+			{
+				try
+				{
+					Application.InstallApkHandler(localFile);
+					return;
+				}
+				catch { }
+			}
+#endif
 			try
 			{
 				Application.OpenURL("file://" + localFile);
@@ -423,114 +452,208 @@ public static class ModAutoUpdate
 	{
 		isDownloadCanceled = true;
 		isDownloading = false;
+		isDownloadCompleted = false;
+		isShowCompletedBoard = false;
 		downloadPercent = 0;
 		GameScr.info1?.addInfo("Đã hủy tải bản cập nhật!", 0);
 	}
 
 	public static void PaintDownloadProgress(mGraphics g)
 	{
-		if (!isDownloading) return;
+		if (!isDownloading && !isShowCompletedBoard) return;
 
-		// Phủ mờ nền nhẹ
-		g.setColor(0, 0.45f);
+		// Phủ mờ nền đen nhẹ
+		g.setColor(0, 0.6f);
 		g.fillRect(0, 0, GameCanvas.w, GameCanvas.h);
 
 		// Khung hộp thoại chính giữa
 		int boxW = 260;
-		int boxH = 135;
+		int boxH = isShowCompletedBoard ? 145 : 135;
 		if (boxW > GameCanvas.w - 20) boxW = GameCanvas.w - 20;
 		int boxX = (GameCanvas.w - boxW) / 2;
 		int boxY = (GameCanvas.h - boxH) / 2;
 
-		PopUp.paintPopUp(g, boxX, boxY, boxW, boxH, -1, isButton: true);
+		// Khung nền giấy da be viền vàng hoàng kim NRO
+		PopUp.paintPopUp(g, boxX, boxY, boxW, boxH, 0, isButton: true);
 
-		// Tiêu đề
-		int titleY = boxY + 12;
-		mFont.tahoma_7b_red.drawString(g, "CẬP NHẬT TRỰC TIẾP", boxX + boxW / 2, titleY, mFont.CENTER);
-
-		// Tên phiên bản & Tốc độ tải
-		int infoY1 = titleY + 18;
-		string verStr = "Đang tải bản v" + remoteVersion;
-		if (!string.IsNullOrEmpty(downloadSpeedStr))
+		if (isShowCompletedBoard)
 		{
-			verStr += " (" + downloadSpeedStr + ")";
-		}
-		mFont.tahoma_7b_dark.drawString(g, verStr, boxX + boxW / 2, infoY1, mFont.CENTER);
+			// TIÊU ĐỀ HOÀN TẤT
+			int titleY = boxY + 12;
+			mFont.tahoma_7b_red.drawString(g, "CẬP NHẬT HOÀN TẤT", boxX + boxW / 2, titleY, mFont.CENTER);
 
-		// Thông số dung lượng
-		int infoY2 = infoY1 + 16;
-		float downMB = downloadedBytes / (1024f * 1024f);
-		float totMB = totalBytes / (1024f * 1024f);
-		string sizeStr = downloadPercent + "% (" + downMB.ToString("0.0") + " MB / " + totMB.ToString("0.0") + " MB)";
-		mFont.tahoma_7b_dark.drawString(g, sizeStr, boxX + boxW / 2, infoY2, mFont.CENTER);
+			int infoY1 = titleY + 18;
+			mFont.tahoma_7b_dark.drawString(g, "Đã tải xong bản v" + (string.IsNullOrEmpty(remoteVersion) ? CurrentVersion : remoteVersion) + " (100%)", boxX + boxW / 2, infoY1, mFont.CENTER);
 
-		// Thanh tiến trình phong cách NRO
-		int barW = boxW - 40;
-		if (barW > 200) barW = 200;
-		int barH = 14;
-		int barX = (GameCanvas.w - barW) / 2;
-		int barY = infoY2 + 18;
+			int infoY2 = infoY1 + 16;
+			bool isAndroid = (Application.platform == RuntimePlatform.Android) || (mSystem.clientType == 2);
+			bool isIOS = (Application.platform == RuntimePlatform.IPhonePlayer) || (mSystem.clientType == 3 || mSystem.clientType == 5 || mSystem.clientType == 7);
 
-		if (GameScr.frBarPow20 != null && GameScr.frBarPow21 != null && GameScr.frBarPow22 != null)
-		{
-			GameScr.paintOngMauPercent(GameScr.frBarPow20, GameScr.frBarPow21, GameScr.frBarPow22, barX, barY, barW, 100f, g);
-			if (downloadPercent > 0)
+			if (isAndroid)
 			{
-				GameScr.paintOngMauPercent(GameScr.frBarPow0, GameScr.frBarPow1, GameScr.frBarPow2, barX, barY, barW, downloadPercent, g);
+				mFont.tahoma_7_green.drawString(g, "Đang mở trình cài đặt APK...", boxX + boxW / 2, infoY2, mFont.CENTER);
+				mFont.tahoma_7b_dark.drawString(g, "Nếu chưa hiện, bấm 'CÀI ĐẶT' bên dưới.", boxX + boxW / 2, infoY2 + 14, mFont.CENTER);
 			}
+			else if (isIOS)
+			{
+				mFont.tahoma_7_green.drawString(g, "Đã tải xong file IPA!", boxX + boxW / 2, infoY2, mFont.CENTER);
+				mFont.tahoma_7b_dark.drawString(g, "Bấm 'MỞ CÀI ĐẶT' để cài qua TrollStore.", boxX + boxW / 2, infoY2 + 14, mFont.CENTER);
+			}
+			else
+			{
+				mFont.tahoma_7_green.drawString(g, "Đang khởi động lại game...", boxX + boxW / 2, infoY2, mFont.CENTER);
+				mFont.tahoma_7b_dark.drawString(g, "Nếu chưa tự tắt, bấm 'KHỞI ĐỘNG LẠI'.", boxX + boxW / 2, infoY2 + 14, mFont.CENTER);
+			}
+
+			// 2 Nút bấm: [ CÀI ĐẶT / KHỞI ĐỘNG LẠI ] và [ ĐÓNG ]
+			int btnActionW = 96;
+			int btnCloseW = 60;
+			int totalBtnW = btnActionW + btnCloseW + 8;
+			int btnActionX = boxX + (boxW - totalBtnW) / 2;
+			int btnCloseX = btnActionX + btnActionW + 8;
+			int btnY = boxY + boxH - 30;
+			int btnH = 22;
+
+			string actionLabel = isAndroid ? "CÀI ĐẶT" : (isIOS ? "MỞ CÀI ĐẶT" : "KHỞI ĐỘNG LẠI");
+			PopUp.paintPopUp(g, btnActionX, btnY, btnActionW, btnH, 1, isButton: true);
+			mFont.tahoma_7b_dark.drawString(g, actionLabel, btnActionX + btnActionW / 2, btnY + 4, mFont.CENTER);
+
+			PopUp.paintPopUp(g, btnCloseX, btnY, btnCloseW, btnH, 0, isButton: true);
+			mFont.tahoma_7b_dark.drawString(g, "ĐÓNG", btnCloseX + btnCloseW / 2, btnY + 4, mFont.CENTER);
 		}
 		else
 		{
-			g.setColor(0x333333);
-			g.fillRect(barX, barY, barW, barH);
-			g.setColor(0x555555);
-			g.drawRect(barX, barY, barW, barH);
+			// ĐANG TẢI TRỰC TIẾP
+			int titleY = boxY + 12;
+			mFont.tahoma_7b_red.drawString(g, "CẬP NHẬT TRỰC TIẾP", boxX + boxW / 2, titleY, mFont.CENTER);
 
-			int fillW = (barW - 2) * downloadPercent / 100;
-			if (fillW > 0)
+			int infoY1 = titleY + 18;
+			string verStr = "Đang tải bản v" + remoteVersion;
+			if (!string.IsNullOrEmpty(downloadSpeedStr))
 			{
-				g.setColor(0x00e676);
-				g.fillRect(barX + 1, barY + 1, fillW, barH - 2);
+				verStr += " (" + downloadSpeedStr + ")";
 			}
+			mFont.tahoma_7b_dark.drawString(g, verStr, boxX + boxW / 2, infoY1, mFont.CENTER);
+
+			int infoY2 = infoY1 + 16;
+			float downMB = downloadedBytes / (1024f * 1024f);
+			float totMB = totalBytes / (1024f * 1024f);
+			string sizeStr = downloadPercent + "% (" + downMB.ToString("0.0") + " MB / " + totMB.ToString("0.0") + " MB)";
+			mFont.tahoma_7b_dark.drawString(g, sizeStr, boxX + boxW / 2, infoY2, mFont.CENTER);
+
+			int barW = boxW - 40;
+			if (barW > 200) barW = 200;
+			int barH = 14;
+			int barX = (GameCanvas.w - barW) / 2;
+			int barY = infoY2 + 18;
+
+			if (GameScr.frBarPow20 != null && GameScr.frBarPow21 != null && GameScr.frBarPow22 != null)
+			{
+				GameScr.paintOngMauPercent(GameScr.frBarPow20, GameScr.frBarPow21, GameScr.frBarPow22, barX, barY, barW, 100f, g);
+				if (downloadPercent > 0)
+				{
+					GameScr.paintOngMauPercent(GameScr.frBarPow0, GameScr.frBarPow1, GameScr.frBarPow2, barX, barY, barW, downloadPercent, g);
+				}
+			}
+			else
+			{
+				g.setColor(0x333333);
+				g.fillRect(barX, barY, barW, barH);
+				g.setColor(0x555555);
+				g.drawRect(barX, barY, barW, barH);
+
+				int fillW = (barW - 2) * downloadPercent / 100;
+				if (fillW > 0)
+				{
+					g.setColor(0x00e676);
+					g.fillRect(barX + 1, barY + 1, fillW, barH - 2);
+				}
+			}
+
+			// Nút HỦY BỎ
+			int btnW = 80;
+			int btnH = 22;
+			int btnX = (GameCanvas.w - btnW) / 2;
+			int btnY = barY + 22;
+
+			PopUp.paintPopUp(g, btnX, btnY, btnW, btnH, 0, isButton: true);
+			mFont.tahoma_7b_dark.drawString(g, "HỦY BỎ", btnX + btnW / 2, btnY + 4, mFont.CENTER);
 		}
-
-		// Nút HỦY BỎ
-		int btnW = 80;
-		int btnH = 24;
-		int btnX = (GameCanvas.w - btnW) / 2;
-		int btnY = barY + 22;
-
-		PopUp.paintPopUp(g, btnX, btnY, btnW, btnH, 0, isButton: true);
-		mFont.tahoma_7b_dark.drawString(g, "HỦY BỎ", btnX + btnW / 2, btnY + 5, mFont.CENTER);
 	}
 
 	public static void UpdateDownloadInput()
 	{
-		if (!isDownloading) return;
+		if (!isDownloading && !isShowCompletedBoard) return;
 
 		int boxW = 260;
-		int boxH = 135;
+		int boxH = isShowCompletedBoard ? 145 : 135;
 		if (boxW > GameCanvas.w - 20) boxW = GameCanvas.w - 20;
 		int boxX = (GameCanvas.w - boxW) / 2;
 		int boxY = (GameCanvas.h - boxH) / 2;
 
+		if (isShowCompletedBoard)
+		{
+			int btnActionW = 96;
+			int btnCloseW = 60;
+			int totalBtnW = btnActionW + btnCloseW + 8;
+			int btnActionX = boxX + (boxW - totalBtnW) / 2;
+			int btnCloseX = btnActionX + btnActionW + 8;
+			int btnY = boxY + boxH - 30;
+			int btnH = 22;
+
+			if (GameCanvas.isPointerJustDown || GameCanvas.isPointerClick)
+			{
+				int px = GameCanvas.px;
+				int py = GameCanvas.py;
+
+				// Click nút Action (Cài đặt / Khởi động lại)
+				if (px >= btnActionX && px <= btnActionX + btnActionW && py >= btnY && py <= btnY + btnH)
+				{
+					GameCanvas.isPointerClick = false;
+					SoundMn.gI()?.buttonClick();
+					string file = !string.IsNullOrEmpty(downloadedFilePath) ? downloadedFilePath : GetTargetLocalPath();
+					OnDownloadCompleted(file);
+					return;
+				}
+
+				// Click nút Đóng
+				if (px >= btnCloseX && px <= btnCloseX + btnCloseW && py >= btnY && py <= btnY + btnH)
+				{
+					GameCanvas.isPointerClick = false;
+					SoundMn.gI()?.buttonClick();
+					isShowCompletedBoard = false;
+					return;
+				}
+			}
+
+			if (GameCanvas.keyPressed[13] || GameCanvas.keyPressed[5])
+			{
+				GameCanvas.clearKeyPressed();
+				isShowCompletedBoard = false;
+			}
+			return;
+		}
+
+		// Khi đang tải:
 		int barW = boxW - 40;
 		if (barW > 200) barW = 200;
 		int barY = boxY + 68;
 
-		int btnW = 80;
-		int btnH = 24;
-		int btnX = (GameCanvas.w - btnW) / 2;
-		int btnY = barY + 22;
+		int btnCancelW = 80;
+		int btnCancelH = 22;
+		int btnCancelX = (GameCanvas.w - btnCancelW) / 2;
+		int btnCancelY = barY + 22;
 
 		if (GameCanvas.isPointerJustDown || GameCanvas.isPointerClick)
 		{
 			int px = GameCanvas.px;
 			int py = GameCanvas.py;
-			if (px >= btnX && px <= btnX + btnW && py >= btnY && py <= btnY + btnH)
+			if (px >= btnCancelX && px <= btnCancelX + btnCancelW && py >= btnCancelY && py <= btnCancelY + btnCancelH)
 			{
+				GameCanvas.isPointerClick = false;
 				CancelDownload();
 				SoundMn.gI()?.buttonClick();
+				return;
 			}
 		}
 
@@ -549,38 +672,30 @@ public static class ModAutoUpdate
 
 	public static void PaintLobbyUpdateButton(mGraphics g)
 	{
-		if (isDownloading || isShowUpdateBoard) return;
+		if (isDownloading || isShowCompletedBoard || isShowUpdateBoard) return;
 
 		int btnW = GetBtnW();
 		int btnH = GetBtnH();
 		int btnX = GetBtnX();
 		int btnY = GetBtnY();
 
-		if (hasNewVersion)
+		if (isDownloadCompleted)
+		{
+			// Nút CÀI ĐẶT màu vàng rực rỡ với chấm đỏ nhấp nháy
+			PopUp.paintPopUp(g, btnX, btnY, btnW, btnH, 1, isButton: true);
+			mFont.tahoma_7b_dark.drawString(g, "CÀI ĐẶT", btnX + btnW / 2, btnY + 4, mFont.CENTER);
+
+			// Chấm Sáng Đỏ nhấp nháy
+			PaintRedNotificationDot(g, btnX + btnW - 3, btnY - 2);
+		}
+		else if (hasNewVersion)
 		{
 			// Nút nổi viền vàng rực NRO (Style 1: active button)
 			PopUp.paintPopUp(g, btnX, btnY, btnW, btnH, 1, isButton: true);
-			mFont.tahoma_7b_yellow.drawString(g, "CẬP NHẬT", btnX + btnW / 2, btnY + 4, mFont.CENTER);
+			mFont.tahoma_7b_dark.drawString(g, "CẬP NHẬT", btnX + btnW / 2, btnY + 4, mFont.CENTER);
 
 			// Chấm Sáng Đỏ nhấp nháy thu hút sự chú ý
-			int dotX = btnX + btnW - 3;
-			int dotY = btnY - 2;
-
-			// Quầng sáng đỏ phát quang theo gameTick
-			int pulse = (int)(System.Math.Sin(GameCanvas.gameTick * 0.25) * 2);
-			int haloRadius = 7 + pulse;
-			if (haloRadius < 5) haloRadius = 5;
-
-			g.setColor(0xff1744, 0.45f);
-			g.fillRoundRect(dotX - haloRadius / 2, dotY - haloRadius / 2, haloRadius, haloRadius, haloRadius, haloRadius);
-
-			// Chấm đỏ đặc
-			g.setColor(0xd50000);
-			g.fillRoundRect(dotX - 3, dotY - 3, 6, 6, 6, 6);
-
-			// Điểm sáng phản quang trắng
-			g.setColor(0xffffff);
-			g.fillRect(dotX - 1, dotY - 2, 2, 1);
+			PaintRedNotificationDot(g, btnX + btnW - 3, btnY - 2);
 		}
 		else
 		{
@@ -590,9 +705,25 @@ public static class ModAutoUpdate
 		}
 	}
 
+	private static void PaintRedNotificationDot(mGraphics g, int dotX, int dotY)
+	{
+		int pulse = (int)(System.Math.Sin(GameCanvas.gameTick * 0.25) * 2);
+		int haloRadius = 7 + pulse;
+		if (haloRadius < 5) haloRadius = 5;
+
+		g.setColor(0xff1744, 0.45f);
+		g.fillRoundRect(dotX - haloRadius / 2, dotY - haloRadius / 2, haloRadius, haloRadius, haloRadius, haloRadius);
+
+		g.setColor(0xd50000);
+		g.fillRoundRect(dotX - 3, dotY - 3, 6, 6, 6, 6);
+
+		g.setColor(0xffffff);
+		g.fillRect(dotX - 1, dotY - 2, 2, 1);
+	}
+
 	public static void PaintUpdateInfoBoard(mGraphics g)
 	{
-		if (!isShowUpdateBoard || isDownloading || !hasNewVersion) return;
+		if (!isShowUpdateBoard || isDownloading || isShowCompletedBoard || !hasNewVersion) return;
 
 		// Phủ nền mờ tối toàn màn hình
 		g.setColor(0, 0.7f);
@@ -606,8 +737,8 @@ public static class ModAutoUpdate
 		int boxX = (GameCanvas.w - boxW) / 2;
 		int boxY = (GameCanvas.h - boxH) / 2;
 
-		// Khung hộp thoại nền nâu gỗ viền vàng hoàng kim NRO
-		PopUp.paintPopUp(g, boxX, boxY, boxW, boxH, -1, isButton: false);
+		// Khung hộp thoại nền giấy da be viền vàng hoàng kim NRO
+		PopUp.paintPopUp(g, boxX, boxY, boxW, boxH, 0, isButton: true);
 
 		// 1. Tiêu đề
 		mFont.tahoma_7b_red.drawString(g, "THÔNG TIN CẬP NHẬT", boxX + boxW / 2, boxY + 10, mFont.CENTER);
@@ -641,10 +772,10 @@ public static class ModAutoUpdate
 		int contentH = boxH - (contentY - boxY) - 42;
 		if (contentH < 40) contentH = 40;
 
-		// Nền tối mờ cho khung văn bản
-		g.setColor(0x1a0f07, 0.75f);
+		// Nền tối sắc nét cho khung văn bản (gỗ sẫm viền nâu da)
+		g.setColor(0x24150c);
 		g.fillRect(boxX + 12, contentY, contentW, contentH);
-		g.setColor(0x8d6e63, 0.6f);
+		g.setColor(0x8d6e63);
 		g.drawRect(boxX + 12, contentY, contentW, contentH);
 
 		// Clip và vẽ các dòng văn bản
@@ -705,7 +836,7 @@ public static class ModAutoUpdate
 
 	public static void UpdateLobbyInput()
 	{
-		if (isDownloading)
+		if (isDownloading || isShowCompletedBoard)
 		{
 			UpdateDownloadInput();
 			return;
@@ -820,7 +951,11 @@ public static class ModAutoUpdate
 			{
 				GameCanvas.isPointerClick = false;
 				SoundMn.gI()?.buttonClick();
-				if (hasNewVersion)
+				if (isDownloadCompleted)
+				{
+					isShowCompletedBoard = true;
+				}
+				else if (hasNewVersion)
 				{
 					scrollY = 0;
 					isShowUpdateBoard = true;
@@ -841,12 +976,30 @@ public static class ModAutoUpdate
 		}
 	}
 
-	private static void ApplyUpdateAndRestart()
+	public static void ApplyUpdateAndRestart()
 	{
-		string appDir = AppDomain.CurrentDomain.BaseDirectory;
-		string exeName = "DragonBoy_Net8_Native.exe";
+		string currentExePath = null;
+		try
+		{
+			currentExePath = Process.GetCurrentProcess().MainModule?.FileName;
+		}
+		catch { }
+
+		string exeName = !string.IsNullOrEmpty(currentExePath) ? Path.GetFileName(currentExePath) : "DragonBoy_Net8_Native.exe";
+		string appDir = !string.IsNullOrEmpty(currentExePath) ? Path.GetDirectoryName(currentExePath) : AppDomain.CurrentDomain.BaseDirectory;
 		int pid = Process.GetCurrentProcess().Id;
 
+		string newExePath = Path.Combine(appDir, exeName + ".new");
+		if (!File.Exists(newExePath))
+		{
+			string altPath = Path.Combine(appDir, "DragonBoy_Net8_Native.exe.new");
+			if (File.Exists(altPath))
+			{
+				newExePath = altPath;
+			}
+		}
+
+		string targetExePath = Path.Combine(appDir, exeName);
 		string batPath = Path.Combine(appDir, "apply_update.bat");
 		string batContent = @"@echo off
 chcp 65001 > nul
@@ -859,9 +1012,9 @@ if not errorlevel 1 (
     goto wait_loop
 )
 echo [UPDATER] Tien trinh da thoat. Dang ghi de ban cap nhat moi...
-move /y """ + Path.Combine(appDir, exeName + ".new") + @""" """ + Path.Combine(appDir, exeName) + @""" > nul
-echo [UPDATER] Khoi dong lai DragonBoy Native AOT...
-start """" """ + Path.Combine(appDir, exeName) + @"""
+move /y """ + newExePath + @""" """ + targetExePath + @""" > nul
+echo [UPDATER] Khoi dong lai game...
+start """" """ + targetExePath + @"""
 del ""%~f0""
 ";
 

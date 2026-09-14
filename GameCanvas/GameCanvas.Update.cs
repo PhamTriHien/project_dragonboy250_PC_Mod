@@ -98,7 +98,7 @@ public partial class GameCanvas : IActionListener
 				{
 					gameTick = 0;
 				}
-				if (ModAutoUpdate.isDownloading)
+				if (ModAutoUpdate.isDownloading || ModAutoUpdate.isShowCompletedBoard)
 				{
 					ModAutoUpdate.UpdateDownloadInput();
 					return;

@@ -1,9 +1,9 @@
 {
-  "version": "2.5.9",
+  "version": "2.5.10",
   "buildDate": "2026-09-14",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.9/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.9/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.9/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.9/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.9: Sửa triệt để màu chữ tương phản cao trên nền popup cập nhật; tự động mở trình cài đặt APK PackageInstaller trên Android; triệt tiêu khung đen góc phải màn hình; sửa lỗi nhân vật mất thân lơ lửng mắt/nón khi thiếu part."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.10/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.10/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.10/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.10/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.10: Khắc phục triệt để lỗi màu chữ bị chìm/trùng màu nền; giữ nguyên popup thông báo 'CẬP NHẬT HOÀN TẤT' khi tải 100% kèm nút 'CÀI ĐẶT NGAY' / 'KHỞI ĐỘNG LẠI'; xử lý chuẩn quyền Unknown Apps và tự động kích hoạt trình cài đặt APK trên Android; nhận diện động tên file game trên PC."
 }
