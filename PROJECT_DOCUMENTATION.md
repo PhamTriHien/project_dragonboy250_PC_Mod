@@ -14975,3 +14975,55 @@ ull và length, tiềm ẩn lỗi sập client nếu danh sách máy chủ đang
    - Sảnh game hiển thị nút chuẩn `v2.5.11` nền be viền vàng kinh điển NRO (`v2511_lobby_verified.png`).
    - Nhấn nút phiên bản: Popup xác nhận *"Bạn đang ở phiên bản mới nhất (v2.5.11). Đã đồng bộ dữ liệu GitHub!"* (`v2511_manual_check.png`).
    - Thử nghiệm đăng nhập: Nhấn nút "Đổi tài khoản" $\rightarrow$ mở `LoginScr` $\rightarrow$ Nhấn "Đăng nhập" $\rightarrow$ Socket kết nối mượt mà tới máy chủ Teamobi, gửi gói tin -111 và nhận phản hồi mã hóa Message(-26) thành công tuyệt đối (`v2511_login_attempt.png`).
+
+---
+
+## 217. Lưu & Chuẩn Hóa Quy Tắc Toàn Hệ Thống: Quy Trình 8 Bước Bắt Buộc Khi Cập Nhật Bản Vá Git & Phát Hành Release (Mandatory Git Patch & Release Deployment Protocol)
+
+### 1. Bối Cảnh & Yêu Cầu Từ Người Dùng
+- **Yêu cầu từ người dùng**: *"lưu quy tắt rule project này khi update bản vá git"*.
+- **Mục đích**: Thiết lập quy chuẩn sắt đá, bắt buộc mọi Agent IDE trong tương lai phải tuân thủ nghiêm ngặt 100% khi phát hành bất kỳ bản vá hoặc bản cập nhật nào, triệt tiêu hoàn toàn tình trạng sót bước dẫn đến việc client cũ không nhận diện được bản cập nhật mới.
+
+---
+
+### 2. Nội Dung Quy Chuẩn 8 Bước Đã Lưu Vào `GEMINI.md`
+Quy tắc số 8 trong [`GEMINI.md`](file:///c:/ModNRO/GEMINI.md) được nâng cấp và chuẩn hóa toàn diện thành quy trình 8 bước bắt buộc:
+
+1. **Bước 1 - Nâng Số Hiệu Phiên Bản (Version Bump - Bắt Buộc Đồng Bộ Đủ 5 Vị Trí)**:
+   - Tăng số phiên bản Semantic Versioning (`X.Y.Z` $\rightarrow$ `X.Y.(Z+1)`, `versionCode` tăng 1).
+   - Nghiêm cấm giữ nguyên phiên bản cũ khi sửa code.
+   - Đồng bộ đủ 5 vị trí:
+     1. `version.json`: Cập nhật `version`, `buildDate`, các link `downloadUrl_*`, tóm tắt `changelog`.
+     2. `DragonBoy_Net8_Native/Src/Mod/Update/ModAutoUpdate.cs`: `CurrentVersion = "X.Y.Z"`.
+     3. `ModNRO_Tools/Decompiled/Dragonboy250_PC_projectbuild/Mod/Update/ModAutoUpdate.cs`: `CurrentVersion = "X.Y.Z"`.
+     4. `DragonBoy_Mobile/Android/DragonBoy_Android.csproj`: `<ApplicationVersion>` và `<ApplicationDisplayVersion>`.
+     5. `DragonBoy_Mobile/Android/AndroidManifest.xml`: `android:versionCode` và `android:versionName`.
+2. **Bước 2 - Biên Dịch Thành Phẩm Release Trên Cả 3 Nền Tảng (0 Error, 0 Warning)**:
+   - Android APK: `& "$sdk\dotnet.exe" build DragonBoy_Android.csproj -c Release` $\rightarrow$ Kiểm tra `aapt dump badging`.
+   - PC Native AOT: `dotnet publish DragonBoy_Net8_Native.csproj -c Release -r win-x64 --self-contained true`.
+   - PC Unity Mod: `dotnet build Dragonboy250_PC_projectbuild.csproj -c Release`.
+3. **Bước 3 - Đồng Bộ Ngay Lập Tức Ra Màn Hình Desktop**:
+   - Copy đè 100% các file nhị phân vào thư mục `Desktop`:
+     * `DragonBoy_Net8_Native.exe`
+     * `DragonBoy250_Mod_Android.apk`
+     * `DragonBoy_1Game_6Tabs.apk`
+     * `DragonBoy_Net8_Native_Android.apk`
+     * `DragonBoy250\DragonBoy250_Data\Managed\Assembly-CSharp.dll`
+4. **Bước 4 - Git Commit & Push Lên Nhánh Main**:
+   - `git add -A`, `git commit -m "vX.Y.Z: Chi tiết bản vá"`, `git push origin main`.
+5. **Bước 5 - Tạo & Đẩy Git Tag Phiên Bản**:
+   - `git tag -f vX.Y.Z`, `git push -f origin vX.Y.Z`.
+6. **Bước 6 - Triển Khai GitHub Release & Tải Lên Đầy Đủ Release Assets**:
+   - Lấy token xác thực từ `git credential fill`.
+   - Tạo Release với tag `vX.Y.Z`, upload đủ 3 assets (`DragonBoy_Net8_Native.exe`, `DragonBoy250_Mod_Android.apk`, `Assembly-CSharp.dll`). Nếu asset đã có từ trước, xóa và tải lại tệp mới.
+7. **Bước 7 - Kiểm Chứng Cập Nhật Thực Tế Trên Runtime (Live Verification)**:
+   - Kiểm tra link raw `version.json` trên GitHub đã nhảy số phiên bản mới.
+   - Mở client cũ trên giả lập/máy tính để chứng minh nút `[ CẬP NHẬT ]` và bảng thông tin cập nhật tự động bật lên, tải và cài đặt thành công.
+8. **Bước 8 - Bắt Buộc Đồng Bộ Đầy Đủ Vào Cả 2 Tệp Markdown**:
+   - Cập nhật chi tiết vào `PROJECT_DOCUMENTATION.md` và `walkthrough.md`.
+
+---
+
+### 3. Trạng Thái Lưu Trữ
+- Đã cập nhật trực tiếp vào file hệ thống: `C:\ModNRO\GEMINI.md`.
+- Đã đồng bộ và commit lên kho lưu trữ GitHub: `commit a10406f`.
