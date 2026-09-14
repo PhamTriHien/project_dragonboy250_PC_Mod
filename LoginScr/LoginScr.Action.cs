@@ -150,6 +150,10 @@ public partial class LoginScr : mScreen, IActionListener
 
 	public override void updateKey()
 		{
+			if (ModAutoUpdate.isShowUpdateBoard || ModAutoUpdate.isDownloading || ModAutoUpdate.isShowCompletedBoard)
+			{
+				return;
+			}
 			if (GameCanvas.isTouch)
 			{
 				if (cmdCallHotline != null && cmdCallHotline.isPointerPressInside())

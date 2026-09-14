@@ -42,6 +42,10 @@ public partial class ServerListScreen : mScreen, IActionListener
 
 	public override void updateKey()
 		{
+			if (ModAutoUpdate.isShowUpdateBoard || ModAutoUpdate.isDownloading || ModAutoUpdate.isShowCompletedBoard)
+			{
+				return;
+			}
 			if (GameCanvas.isTouch)
 			{
 				updateDeleteData();
