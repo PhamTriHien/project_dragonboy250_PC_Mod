@@ -1,9 +1,9 @@
 {
-  "version": "2.5.16",
+  "version": "2.5.17",
   "buildDate": "2026-09-15",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.16/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.16/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.16/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.16/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.16: Khắc phục triệt để 4 lỗi đồ hoạ cốt lõi (Player, Map, Ô Skill, Hành Trang): Tự động mở rộng tỉ lệ asset 1x (SmallImage) lên chuẩn 2x HD giúp đầu nhân vật gắn liền hoàn hảo vào cổ/thân, icon kỹ năng và vật phẩm hành trang hiển thị sắc nét đúng kích cỡ; thêm cơ chế fallback nạp từng mảnh gạch tilemap khi file gộp thiếu/lỗi giúp hiển thị 100% bản đồ mặt đất."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.17/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.17/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.17/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.17/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.17: Đột phá đồ họa và hiệu năng: Khắc phục triệt để lỗi mờ hình (chuyển sang Nearest-Neighbor Point Filtering sắc nét từng hạt pixel retro 100%), triệt tiêu bão FileNotFoundException và thêm frame pacing giúp FPS ổn định mượt mà không còn giật lag, sửa lỗi nuốt gói tin icon -67 và bảo vệ cache trang phục giúp toàn bộ player khác hiện hình đầy đủ."
 }

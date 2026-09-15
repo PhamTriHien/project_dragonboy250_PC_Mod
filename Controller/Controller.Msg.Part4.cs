@@ -30,15 +30,36 @@ public partial class Controller : IMessageHandler
 					{
 						array17 = NinjaUtil.readByteArray(msg);
 						Res.outz(">SIZE CHECK= " + array17.Length);
-						if (num154 == 3896)
+						if (num154 >= 0)
 						{
+							SmallImage.ensureImgNew(num154);
+							Image imgSmall = createImage(array17);
+							if (SmallImage.imgNew[num154] == null)
+							{
+								SmallImage.imgNew[num154] = new Small(imgSmall, num154);
+							}
+							else
+							{
+								SmallImage.imgNew[num154].img = imgSmall;
+							}
 						}
-						SmallImage.imgNew[num154].img = createImage(array17);
 					}
 					catch (Exception)
 					{
 						array17 = null;
-						SmallImage.imgNew[num154].img = Image.createRGBImage(new int[1], 1, 1, bl: true);
+						if (num154 >= 0)
+						{
+							SmallImage.ensureImgNew(num154);
+							Image emptyImg = Image.createRGBImage(new int[1], 1, 1, bl: true);
+							if (SmallImage.imgNew[num154] == null)
+							{
+								SmallImage.imgNew[num154] = new Small(emptyImg, num154);
+							}
+							else
+							{
+								SmallImage.imgNew[num154].img = emptyImg;
+							}
+						}
 					}
 					if (array17 != null && mGraphics.zoomLevel > 1)
 					{

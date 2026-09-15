@@ -39,6 +39,12 @@ public partial class GameCanvas : IActionListener
 				{
 				}
 			}
+			else if (currentScreen == GameScr.gI() && gameTick % 2 == 0 && SmallImage.vt_images_watingDowload.size() > 0)
+			{
+				Small small3 = (Small)SmallImage.vt_images_watingDowload.elementAt(0);
+				Service.gI().requestIcon(small3.id);
+				SmallImage.vt_images_watingDowload.removeElementAt(0);
+			}
 			if (mSystem.currentTimeMillis() > timefps)
 			{
 				timefps += 1000L;

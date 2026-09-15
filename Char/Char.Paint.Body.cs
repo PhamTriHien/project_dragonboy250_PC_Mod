@@ -612,16 +612,42 @@ public partial class Char : IMapObject
 				pl = (leg >= 0 && leg < GameScr.parts.Length) ? GameScr.parts[leg] : null;
 				pb = (body >= 0 && body < GameScr.parts.Length) ? GameScr.parts[body] : null;
 
-				// Fallback an toàn nếu thiếu part chân hoặc thân (tránh biến thành người vô hình chỉ còn mắt)
+				// Fallback an toàn nếu thiếu part đầu, chân hoặc thân (tránh biến thành người vô hình chỉ còn mắt)
+				if ((ph == null || ph.pi == null) && GameScr.parts != null)
+				{
+					int fallbackHead = (cgender == 1) ? 9 : ((cgender == 2) ? 6 : 64);
+					if (fallbackHead < GameScr.parts.Length && GameScr.parts[fallbackHead] != null)
+					{
+						ph = GameScr.parts[fallbackHead];
+					}
+					else if (GameScr.parts.Length > 0 && GameScr.parts[0] != null)
+					{
+						ph = GameScr.parts[0];
+					}
+				}
 				if ((pl == null || pl.pi == null) && GameScr.parts != null)
 				{
-					int fallbackLeg = (cgender == 1) ? 1 : ((cgender == 2) ? 2 : 0);
-					if (fallbackLeg < GameScr.parts.Length) pl = GameScr.parts[fallbackLeg];
+					int fallbackLeg = (cgender == 1) ? 13 : ((cgender == 2) ? 8 : 2);
+					if (fallbackLeg < GameScr.parts.Length && GameScr.parts[fallbackLeg] != null)
+					{
+						pl = GameScr.parts[fallbackLeg];
+					}
+					else if (fallbackLeg >= GameScr.parts.Length && GameScr.parts.Length > 2)
+					{
+						pl = GameScr.parts[2];
+					}
 				}
 				if ((pb == null || pb.pi == null) && GameScr.parts != null)
 				{
-					int fallbackBody = (cgender == 1) ? 1 : ((cgender == 2) ? 2 : 0);
-					if (fallbackBody < GameScr.parts.Length) pb = GameScr.parts[fallbackBody];
+					int fallbackBody = (cgender == 1) ? 12 : ((cgender == 2) ? 7 : 1);
+					if (fallbackBody < GameScr.parts.Length && GameScr.parts[fallbackBody] != null)
+					{
+						pb = GameScr.parts[fallbackBody];
+					}
+					else if (fallbackBody >= GameScr.parts.Length && GameScr.parts.Length > 1)
+					{
+						pb = GameScr.parts[1];
+					}
 				}
 
 				if (bag >= 0 && statusMe != 14)

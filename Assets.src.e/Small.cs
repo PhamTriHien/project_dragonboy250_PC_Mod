@@ -49,9 +49,32 @@ public class Small
 	public void update()
 	{
 		timeUpdate++;
-		if (timeUpdate - timePaint > 1 && !Char.myCharz().isCharBodyImageID(id))
+		if (timeUpdate - timePaint > 30 && !isUsedInMap(id))
 		{
 			SmallImage.imgNew[id] = null;
 		}
+	}
+
+	private static bool isUsedInMap(int imgId)
+	{
+		try
+		{
+			if (Char.myCharz() != null && Char.myCharz().isCharBodyImageID(imgId))
+			{
+				return true;
+			}
+			if (GameScr.vCharInMap != null)
+			{
+				for (int i = 0; i < GameScr.vCharInMap.size(); i++)
+				{
+					if (GameScr.vCharInMap.elementAt(i) is Char c && c.isCharBodyImageID(imgId))
+					{
+						return true;
+					}
+				}
+			}
+		}
+		catch { }
+		return false;
 	}
 }
