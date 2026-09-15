@@ -12,7 +12,7 @@ using UnityEngine;
 
 public static class ModAutoUpdate
 {
-	public const string CurrentVersion = "2.5.11";
+	public const string CurrentVersion = "2.5.12";
 	public const string ManifestUrl = "https://raw.githubusercontent.com/PhamTriHien/project_dragonboy250_PC_Mod/main/version.json";
 
 	public static bool isChecking = false;
@@ -550,12 +550,17 @@ public static class ModAutoUpdate
 			int barX = (GameCanvas.w - barW) / 2;
 			int barY = infoY2 + 18;
 
-			if (GameScr.frBarPow20 != null && GameScr.frBarPow21 != null && GameScr.frBarPow22 != null)
+			if (GameScr.frBarPow20 != null && GameScr.frBarPow21 != null && GameScr.frBarPow22 != null &&
+			    GameScr.frBarPow0 != null && GameScr.frBarPow1 != null && GameScr.frBarPow2 != null)
 			{
-				GameScr.paintOngMauPercent(GameScr.frBarPow20, GameScr.frBarPow21, GameScr.frBarPow22, barX, barY, barW, 100f, g);
+				// Nền rãnh thanh nạp (vàng/cam NRO): hiển thị trọn vẹn 100% chiều dài barW (pixelPercent = barW)
+				GameScr.paintOngMauPercent(GameScr.frBarPow20, GameScr.frBarPow21, GameScr.frBarPow22, barX, barY, barW, barW, g);
 				if (downloadPercent > 0)
 				{
-					GameScr.paintOngMauPercent(GameScr.frBarPow0, GameScr.frBarPow1, GameScr.frBarPow2, barX, barY, barW, downloadPercent, g);
+					// Thanh tiến độ nạp (xanh lục NRO): hiển thị chính xác theo tỉ lệ pixel thực tế
+					float fillW = (float)downloadPercent * (float)barW / 100f;
+					if (fillW > barW) fillW = barW;
+					GameScr.paintOngMauPercent(GameScr.frBarPow0, GameScr.frBarPow1, GameScr.frBarPow2, barX, barY, barW, fillW, g);
 				}
 			}
 			else
