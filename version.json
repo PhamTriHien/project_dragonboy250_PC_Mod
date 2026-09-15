@@ -1,9 +1,9 @@
 {
-  "version": "2.5.13",
+  "version": "2.5.14",
   "buildDate": "2026-09-15",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.13/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.13/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.13/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.13/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.13: Khắc phục triệt để lỗi bể pixel các nút UI khi mở cửa sổ game dạng PiP (Picture-in-Picture) trên Android; tích hợp Render Scale phần cứng GPU Hardware Canvas thích ứng mượt mà theo kích thước cửa sổ PiP; bảo toàn nguyên vẹn độ phân giải và texture mapping của toàn bộ nút bấm, thanh máu và joystick; tự động ẩn/hiển thị Floating Menu khi vào/thoát PiP."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.14/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.14/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.14/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.14/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.14: Bật chế độ LayoutInDisplayCutoutMode.ShortEdges tràn viền 100% qua nốt ruồi / tai thỏ trên Android (xóa bỏ hoàn toàn dải đen khuyết cạnh trái màn hình); đồng bộ thanh tiến trình nạp bản cập nhật trọn vẹn và hoàn thiện hiển thị trên mọi tỷ lệ màn hình."
 }

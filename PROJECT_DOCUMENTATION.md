@@ -15147,3 +15147,62 @@ Trích xuất và đối chiếu trực tiếp từ mã nguồn thực chiến:
    - Xác thực raw `version.json` trên GitHub trả về phiên bản mới `2.5.13`.
 8. **Bước 8 - Đồng Bộ Tài Liệu**:
    - Ghi lại toàn bộ kiến trúc và nghiệm thu vào `PROJECT_DOCUMENTATION.md` và `walkthrough.md`.
+
+
+---
+
+## 220. Tối Ưu Tràn Viền Toàn Màn Hình Android (Display Cutout ShortEdges) & Phát Hành Bản Vá v2.5.14
+
+### 1. Bối Cảnh & Vấn Đề
+- **Hiện tượng**: Trên các thiết bị Android có camera nốt ruồi / tai thỏ (Display Cutout), khi xoay ngang màn hình game xuất hiện dải đen letterbox ở cạnh trái chứa camera do Android mặc định chèn khoảng đen để tránh nội dung game đè lên cụm camera vật lý (`LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT`).
+- **Nguyên nhân gốc rễ**: 
+  - Trong `MainActivity.cs`, cửa sổ ứng dụng chưa được khai báo cờ `LayoutInDisplayCutoutMode.ShortEdges` cho `Window.Attributes`.
+- **Giải pháp kỹ thuật**:
+  - Tại `TabBaseActivity.OnCreate` và `ApplyFullScreen`: Bổ sung cấu hình:
+    ```csharp
+    if (Build.VERSION.SdkInt >= BuildVersionCodes.P)
+    {
+        var lp = Window?.Attributes;
+        if (lp != null)
+        {
+            lp.LayoutInDisplayCutoutMode = LayoutInDisplayCutoutMode.ShortEdges;
+            Window.Attributes = lp;
+        }
+    }
+    ```
+  - Cơ chế này cho phép cửa sổ đồ họa 2D tràn viền 100% diện tích màn hình thực tế của điện thoại, lấp đầy toàn bộ khu vực khuyết cạnh/nốt ruồi mà không bị cắt cụt hay xuất hiện dải đen.
+  - Đồng bộ và hoàn thiện giao diện thanh tiến trình nạp bản cập nhật (`ModAutoUpdate`) khớp 100% kích thước hộp thoại.
+  - Tăng số hiệu phiên bản lên `v2.5.14` (versionCode `264`).
+
+---
+
+### 2. Triển Khai Quy Trình 8 Bước Chuẩn (v2.5.14 - versionCode 264)
+1. **Bước 1 - Nâng Số Hiệu Phiên Bản Đủ 5 Vị Trí**:
+   - `version.json`: `version: "2.5.14"`.
+   - `DragonBoy_Net8_Native/Src/Mod/Update/ModAutoUpdate.cs`: `CurrentVersion = "2.5.14"`.
+   - `ModNRO_Tools/Decompiled/Dragonboy250_PC_projectbuild/Mod/Update/ModAutoUpdate.cs`: `CurrentVersion = "2.5.14"`.
+   - `DragonBoy_Mobile/Android/DragonBoy_Android.csproj`: `<ApplicationVersion>264</ApplicationVersion>`, `<ApplicationDisplayVersion>2.5.14</ApplicationDisplayVersion>`.
+   - `DragonBoy_Mobile/Android/AndroidManifest.xml`: `android:versionCode="264"`, `android:versionName="2.5.14"`.
+2. **Bước 2 - Biên Dịch Thành Phẩm Release Trên Cả 3 Nền Tảng**:
+   - Android APK: `com.trihienkun.dragonboy-Signed.apk` đạt `versionCode=264`, `versionName=2.5.14` qua `aapt dump badging` (0 Error, 0 Warning).
+   - PC Native AOT: `DragonBoy_Net8_Native.exe` biên dịch AOT Native thành công 100% (0 Error, 0 Warning).
+   - PC Unity Mod: `Assembly-CSharp.dll` biên dịch Release thành công 100% (0 Error, 0 Warning).
+3. **Bước 3 - Đồng Bộ Ra Desktop**:
+   - `Desktop\DragonBoy_Net8_Native.exe`
+   - `Desktop\DragonBoy250_Mod_Android.apk`
+   - `Desktop\DragonBoy_1Game_6Tabs.apk`
+   - `Desktop\DragonBoy_Net8_Native_Android.apk`
+   - `Desktop\DragonBoy250\DragonBoy250_Data\Managed\Assembly-CSharp.dll`
+4. **Bước 4 - Git Commit & Push Lên Main**:
+   - Commit: `v2.5.14: Bật chế độ Display Cutout ShortEdges tràn viền 100% qua tai thỏ/nốt ruồi Android; đồng bộ v2.5.14`.
+   - Push lên nhánh `main` kho GitHub.
+5. **Bước 5 - Tạo & Đẩy Git Tag Phiên Bản**:
+   - `git tag -f v2.5.14` và `git push -f origin v2.5.14`.
+6. **Bước 6 - Triển Khai GitHub Release & Upload 3 Assets Bắt Buộc**:
+   - `DragonBoy_Net8_Native.exe`
+   - `DragonBoy250_Mod_Android.apk`
+   - `Assembly-CSharp.dll`
+7. **Bước 7 - Kiểm Chứng Cập Nhật Thực Tế**:
+   - Deploy trực tiếp lên BlueStacks, chạy tự động kiểm thử toàn diện quy trình tự động cập nhật và sảnh game.
+8. **Bước 8 - Đồng Bộ Tài Liệu**:
+   - Ghi lại toàn bộ kiến trúc và nghiệm thu vào `PROJECT_DOCUMENTATION.md` và `walkthrough.md`.
