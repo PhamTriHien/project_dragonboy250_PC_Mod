@@ -49,10 +49,37 @@ public static class ModUIGraphics
 			mFont.tahoma_7b_green2.drawString(g, "* Super Low: Xóa cây cỏ trang trí, chỉ giữ base map.", uiX + 8, descY, mFont.LEFT);
 		}
 
-		// 4. Phần FPS
-		mFont.tahoma_7b_dark.drawString(g, "Auto FPS:", uiX + 8, uiY + 132, mFont.LEFT);
-		ModUI.PaintNativeButton(uiX + 68, uiY + 128, 48, 18, ModFps.isAutoFps ? "BẬT" : "TẮT", ModFps.isAutoFps, g);
-		mFont.tahoma_7_grey.drawString(g, "(Khớp tần số quét màn hình)", uiX + 122, uiY + 132, mFont.LEFT);
+		// 4. Độ Sâu Màu Render (Bit-Depth: 16-bit, 32-bit, 64-bit, 128-bit)
+		mFont.tahoma_7b_dark.drawString(g, "Độ sâu màu Render (Bit-Depth):", uiX + 8, uiY + 128, mFont.LEFT);
+		for (int b = 0; b < 4; b++)
+		{
+			int bx = uiX + 6 + b * (rBtnW + 3);
+			ModUI.PaintNativeButton(bx, uiY + 144, rBtnW, 18, ModGraphics.bitDepthNames[b], ModGraphics.renderBitDepth == b, g);
+		}
+
+		// Mô tả chi tiết Bit-Depth
+		int bdDescY = uiY + 166;
+		if (ModGraphics.renderBitDepth == 0)
+		{
+			mFont.tahoma_7_grey.drawString(g, "* 16-bit: Siêu nhẹ, tiết kiệm RAM/GPU, retro RGB565.", uiX + 8, bdDescY, mFont.LEFT);
+		}
+		else if (ModGraphics.renderBitDepth == 1)
+		{
+			mFont.tahoma_7b_green2.drawString(g, "* 32-bit: Chuẩn sắc nét HD (RGBA8888) - Mặc định.", uiX + 8, bdDescY, mFont.LEFT);
+		}
+		else if (ModGraphics.renderBitDepth == 2)
+		{
+			mFont.tahoma_7_grey.drawString(g, "* 64-bit: Dải màu rộng HDR (RGBA16F), chống banding.", uiX + 8, bdDescY, mFont.LEFT);
+		}
+		else if (ModGraphics.renderBitDepth == 3)
+		{
+			mFont.tahoma_7_grey.drawString(g, "* 128-bit: Độ chính xác cực đại (RGBA32F Ultra HDR).", uiX + 8, bdDescY, mFont.LEFT);
+		}
+
+		// 5. Phần FPS
+		mFont.tahoma_7b_dark.drawString(g, "Auto FPS:", uiX + 8, uiY + 184, mFont.LEFT);
+		ModUI.PaintNativeButton(uiX + 68, uiY + 180, 48, 18, ModFps.isAutoFps ? "BẬT" : "TẮT", ModFps.isAutoFps, g);
+		mFont.tahoma_7_grey.drawString(g, "(Khớp tần số quét màn hình)", uiX + 122, uiY + 184, mFont.LEFT);
 
 		// Mốc FPS cố định (2 hàng x 4 nút)
 		for (int f = 0; f < fpsOptions.Length; f++)
@@ -60,26 +87,26 @@ public static class ModUIGraphics
 			int col = f % 4;
 			int row = f / 4;
 			int fx = uiX + 6 + col * (rBtnW + 3);
-			int fy = uiY + 152 + row * 22;
+			int fy = uiY + 204 + row * 22;
 			bool isSel = (!ModFps.isAutoFps && ModFps.targetFps == fpsOptions[f]);
 			ModUI.PaintNativeButton(fx, fy, rBtnW, 18, fpsOptions[f] + " FPS", isSel, g);
 		}
 
-		mFont.tahoma_7b_green2.drawString(g, "FPS: " + Main.realFPS + " | Màn: " + ModFps.GetDeviceMaxRefreshRate() + "Hz | Cửa sổ: " + Screen.width + "x" + Screen.height, uiX + uiW / 2, uiY + 202, mFont.CENTER);
+		mFont.tahoma_7b_green2.drawString(g, "FPS: " + Main.realFPS + " | Màn: " + ModFps.GetDeviceMaxRefreshRate() + "Hz | Cửa sổ: " + Screen.width + "x" + Screen.height, uiX + uiW / 2, uiY + 254, mFont.CENTER);
 
-		// 5. Việt Hoá Server Data, Logo & Bàn phím ảo Analog
-		mFont.tahoma_7b_dark.drawString(g, "Việt Hoá:", uiX + 8, uiY + 224, mFont.LEFT);
-		ModUI.PaintNativeButton(uiX + 58, uiY + 220, 42, 18, ModConfig.isTranslate ? "BẬT" : "TẮT", ModConfig.isTranslate, g);
+		// 6. Việt Hoá Server Data, Logo & Bàn phím ảo Analog
+		mFont.tahoma_7b_dark.drawString(g, "Việt Hoá:", uiX + 8, uiY + 276, mFont.LEFT);
+		ModUI.PaintNativeButton(uiX + 58, uiY + 272, 42, 18, ModConfig.isTranslate ? "BẬT" : "TẮT", ModConfig.isTranslate, g);
 
-		mFont.tahoma_7b_dark.drawString(g, "Logo:", uiX + 110, uiY + 224, mFont.LEFT);
-		ModUI.PaintNativeButton(uiX + 144, uiY + 220, 42, 18, ModLogo.isShowLogoInGame ? "BẬT" : "TẮT", ModLogo.isShowLogoInGame, g);
+		mFont.tahoma_7b_dark.drawString(g, "Logo:", uiX + 110, uiY + 276, mFont.LEFT);
+		ModUI.PaintNativeButton(uiX + 144, uiY + 272, 42, 18, ModLogo.isShowLogoInGame ? "BẬT" : "TẮT", ModLogo.isShowLogoInGame, g);
 
-		mFont.tahoma_7b_dark.drawString(g, "Analog:", uiX + 196, uiY + 224, mFont.LEFT);
-		ModUI.PaintNativeButton(uiX + 242, uiY + 220, 42, 18, (GameScr.isAnalog == 1) ? "BẬT" : "TẮT", GameScr.isAnalog == 1, g);
+		mFont.tahoma_7b_dark.drawString(g, "Analog:", uiX + 196, uiY + 276, mFont.LEFT);
+		ModUI.PaintNativeButton(uiX + 242, uiY + 272, 42, 18, (GameScr.isAnalog == 1) ? "BẬT" : "TẮT", GameScr.isAnalog == 1, g);
 
-		// 6. Phong Cảnh Nền Game (Git)
+		// 7. Phong Cảnh Nền Game (Git)
 		string bgBtnText = "🌌 HÌNH NỀN PHONG CẢNH (GIT)" + (ModBackground.isCustomBGActive ? " [ĐANG BẬT]" : "");
-		ModUI.PaintNativeButton(uiX + 8, uiY + 246, uiW - 16, 20, bgBtnText, ModBackground.isCustomBGActive, g);
+		ModUI.PaintNativeButton(uiX + 8, uiY + 298, uiW - 16, 20, bgBtnText, ModBackground.isCustomBGActive, g);
 	}
 
 	public static bool HandleTap(int px, int py, int uiX, int uiY, int uiW, int uiH)
@@ -117,8 +144,21 @@ public static class ModUIGraphics
 			}
 		}
 
-		// 4. Auto FPS
-		if (px >= uiX + 68 && px <= uiX + 116 && py >= uiY + 128 && py <= uiY + 146)
+		// 4. Chọn Độ Sâu Màu Render (Bit-Depth)
+		for (int b = 0; b < 4; b++)
+		{
+			int bx = uiX + 6 + b * (rBtnW + 3);
+			if (px >= bx && px <= bx + rBtnW && py >= uiY + 144 && py <= uiY + 162)
+			{
+				ModGraphics.SetBitDepth(b);
+				GameScr.info1.addInfo("Độ sâu màu: " + ModGraphics.bitDepthNames[b], 0);
+				SoundMn.gI().buttonClick();
+				return true;
+			}
+		}
+
+		// 5. Auto FPS
+		if (px >= uiX + 68 && px <= uiX + 116 && py >= uiY + 180 && py <= uiY + 198)
 		{
 			if (ModFps.isAutoFps)
 			{
@@ -132,13 +172,13 @@ public static class ModUIGraphics
 			return true;
 		}
 
-		// 5. Chọn Mốc FPS
+		// 6. Chọn Mốc FPS
 		for (int f = 0; f < fpsOptions.Length; f++)
 		{
 			int col = f % 4;
 			int row = f / 4;
 			int fx = uiX + 6 + col * (rBtnW + 3);
-			int fy = uiY + 152 + row * 22;
+			int fy = uiY + 204 + row * 22;
 			if (px >= fx && px <= fx + rBtnW && py >= fy && py <= fy + 20)
 			{
 				ModFps.SetFPS(fpsOptions[f]);
@@ -147,8 +187,8 @@ public static class ModUIGraphics
 			}
 		}
 
-		// 6. Bật / Tắt Việt Hoá Server Data
-		if (px >= uiX + 58 && px <= uiX + 100 && py >= uiY + 220 && py <= uiY + 238)
+		// 7. Bật / Tắt Việt Hoá Server Data
+		if (px >= uiX + 58 && px <= uiX + 100 && py >= uiY + 272 && py <= uiY + 290)
 		{
 			ModConfig.isTranslate = !ModConfig.isTranslate;
 			ModConfig.SaveConfig();
@@ -158,8 +198,8 @@ public static class ModUIGraphics
 			return true;
 		}
 
-		// 7. Bật / Tắt Logo TriHienKun trong game
-		if (px >= uiX + 144 && px <= uiX + 186 && py >= uiY + 220 && py <= uiY + 238)
+		// 8. Bật / Tắt Logo TriHienKun trong game
+		if (px >= uiX + 144 && px <= uiX + 186 && py >= uiY + 272 && py <= uiY + 290)
 		{
 			ModLogo.isShowLogoInGame = !ModLogo.isShowLogoInGame;
 			ModConfig.SaveConfig();
@@ -167,8 +207,8 @@ public static class ModUIGraphics
 			return true;
 		}
 
-		// 8. Bật / Tắt Bàn Phím Ảo & Analog
-		if (px >= uiX + 242 && px <= uiX + 284 && py >= uiY + 220 && py <= uiY + 238)
+		// 9. Bật / Tắt Bàn Phím Ảo & Analog
+		if (px >= uiX + 242 && px <= uiX + 284 && py >= uiY + 272 && py <= uiY + 290)
 		{
 			GameScr.isAnalog = (GameScr.isAnalog == 1) ? 0 : 1;
 			GameScr.setSkillBarPosition();
@@ -179,8 +219,8 @@ public static class ModUIGraphics
 			return true;
 		}
 
-		// 9. Mở Giao diện Hình Nền Phong Cảnh
-		if (px >= uiX + 8 && px <= uiX + uiW - 8 && py >= uiY + 246 && py <= uiY + 268)
+		// 10. Mở Giao diện Hình Nền Phong Cảnh
+		if (px >= uiX + 8 && px <= uiX + uiW - 8 && py >= uiY + 298 && py <= uiY + 320)
 		{
 			ModUIBackground.isOpen = true;
 			ModUI.detailScrollY = 0;

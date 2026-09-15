@@ -1,9 +1,9 @@
 {
-  "version": "2.5.17",
-  "buildDate": "2026-09-15",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.17/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.17/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.17/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.17/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.17: Đột phá đồ họa và hiệu năng: Khắc phục triệt để lỗi mờ hình (chuyển sang Nearest-Neighbor Point Filtering sắc nét từng hạt pixel retro 100%), triệt tiêu bão FileNotFoundException và thêm frame pacing giúp FPS ổn định mượt mà không còn giật lag, sửa lỗi nuốt gói tin icon -67 và bảo vệ cache trang phục giúp toàn bộ player khác hiện hình đầy đủ."
+  "version": "2.5.18",
+  "buildDate": "2026-09-16",
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.18/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.18/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.18/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.18/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.18: Chuan hoa camera UI Android mac dinh dung chung PC (1024x600, GameCanvas 512x300), do hoa sac net native 100% (Nearest-Neighbor, MathF.Round, InDensity=0) va bo sung 4 tuy chon Render Bit-Depth (16, 32, 64, 128 bit) tai Tab 4 Do Hoa."
 }

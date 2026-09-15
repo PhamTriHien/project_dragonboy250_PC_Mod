@@ -62,6 +62,7 @@ public static class ModConfig
 
 			// Đồ Họa & FPS
 			sb.AppendLine("graphicsQuality=" + ModGraphics.graphicsQuality);
+			sb.AppendLine("renderBitDepth=" + ModGraphics.renderBitDepth);
 			sb.AppendLine("resolutionIndex=" + ModGraphics.resolutionIndex);
 			sb.AppendLine("isFullscreen=" + ModGraphics.isFullscreen);
 			sb.AppendLine("targetFps=" + ModFps.targetFps);
@@ -262,6 +263,12 @@ public static class ModConfig
 						break;
 					case "graphicsQuality":
 						int.TryParse(val, out ModGraphics.graphicsQuality);
+						break;
+					case "renderBitDepth":
+						if (int.TryParse(val, out int bd))
+						{
+							ModGraphics.SetBitDepth(bd);
+						}
 						break;
 					case "resolutionIndex":
 						int.TryParse(val, out ModGraphics.resolutionIndex);

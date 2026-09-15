@@ -435,7 +435,7 @@ public static class ModUI
 				int itemStep = 24;
 				int colContentH = tabNames.Length * itemStep + 6;
 				int maxColScroll = (colContentH > colH - 4) ? (colContentH - (colH - 4)) : 0;
-				int maxDetailScroll = (275 - (detailH - 4) > 0) ? (275 - (detailH - 4)) : 0;
+				int maxDetailScroll = (345 - (detailH - 4) > 0) ? (345 - (detailH - 4)) : 0;
 
 				// Đọc trạng thái chuột & cảm ứng đáng tin cậy
 				bool isDown = Input.GetMouseButton(0) || GameCanvas.isPointerDown;

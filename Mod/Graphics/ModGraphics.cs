@@ -7,6 +7,10 @@ public static class ModGraphics
 	public static int graphicsQuality = 0;
 	public static readonly string[] graphicsNames = new string[4] { "Ultra", "Medium", "Low", "Super Low" };
 
+	// Độ sâu màu render (Render Bit-Depth): 0: 16-bit, 1: 32-bit (mặc định), 2: 64-bit, 3: 128-bit
+	public static int renderBitDepth = 1;
+	public static readonly string[] bitDepthNames = new string[4] { "16-bit", "32-bit", "64-bit", "128-bit" };
+
 	// 0: 1024x600 (Gốc), 1: 1280x720 (HD 16:9), 2: 1600x900 (HD+), 3: 1920x1080 (Full HD)
 	public static int resolutionIndex = 0;
 	public static readonly int[,] resolutionList = new int[4, 2]
@@ -140,5 +144,27 @@ public static class ModGraphics
 	{
 		graphicsQuality = (graphicsQuality + 1) % graphicsNames.Length;
 		ModConfig.SaveConfig();
+	}
+
+	public static void SetBitDepth(int depth)
+	{
+		if (depth < 0 || depth >= bitDepthNames.Length) depth = 1;
+		renderBitDepth = depth;
+		ApplyBitDepth();
+		ModConfig.SaveConfig();
+	}
+
+	public static void ApplyBitDepth()
+	{
+		try
+		{
+			Type gameViewType = Type.GetType("DragonBoy_Android_Host.GameView, DragonBoy_Android");
+			if (gameViewType != null)
+			{
+				var method = gameViewType.GetMethod("ApplyHardwareBitDepth", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+				method?.Invoke(null, new object[] { renderBitDepth });
+			}
+		}
+		catch { }
 	}
 }
