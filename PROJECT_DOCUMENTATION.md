@@ -14575,7 +14575,8 @@ Qua đối chiếu mã nguồn phân rã từ SplashScr.cs, GameCanvas.Update.cs
          return;
      }
      `
-   - **Hậu quả trực tiếp**: Do loadScreen == false, logic thoát ngay lập tức bằng eturn;, bỏ qua hoàn toàn vòng lặp duyệt các nút sảnh cmd[j] ("Chơi tiếp", "Chơi mới", "Đổi tài khoản").
+   - **Hậu quả trực tiếp**: Do loadScreen == false, logic thoát ngay lập tức bằng 
+eturn;, bỏ qua hoàn toàn vòng lặp duyệt các nút sảnh cmd[j] ("Chơi tiếp", "Chơi mới", "Đổi tài khoản").
    - Khi người dùng nhấn giữ chuột/ngón tay (isPointerDown), logic ở nhánh trên vẫn cập nhật cmd[j].isFocus = true khiến nút nhấp nháy sáng (đổi sprite focus). Nhưng khi nhả ra (isPointerJustRelease), lệnh !loadScreen chặn đứng khiến cmd[j].performAction() vĩnh viễn không bao giờ được thực thi!
 3. **Mắt xích 3 - Kiểm tra đồng bộ Session_ME.connected ngay sau khi gọi connect bất đồng bộ**:
    - Trong ServerListScreen.Part2.cs (Login_New) và LoginScr.cs (doLogin), ngay sau khi gọi GameCanvas.connect(), code lại kiểm tra tức thì:
@@ -15027,3 +15028,122 @@ Quy tắc số 8 trong [`GEMINI.md`](file:///c:/ModNRO/GEMINI.md) được nâng
 ### 3. Trạng Thái Lưu Trữ
 - Đã cập nhật trực tiếp vào file hệ thống: `C:\ModNRO\GEMINI.md`.
 - Đã đồng bộ và commit lên kho lưu trữ GitHub: `commit a10406f`.
+
+---
+
+## 218. Sửa Triệt Để Lỗi Thanh Tiến Trình Cập Nhật Bị Cụt Nửa UI & Phát Hành Bản Vá v2.5.12
+
+### 1. Bối Cảnh & Vấn Đề
+- **Hiện tượng**: Khi người chơi nhấn nút `[ CẬP NHẬT ]`, bảng tiến trình tải về xuất hiện nhưng thanh tiến trình (progress bar) hiển thị bị cụt mất một nửa chiều dài hoặc clipping không trọn vẹn khung giao diện.
+- **Nguyên nhân gốc rễ**:
+  - Trong `ModAutoUpdate.cs`, hàm vẽ thanh nạp sử dụng clipping hoặc phép tính pixel bề rộng tải về (`wLoaded`) có toán tử giới hạn bề rộng không tương thích với tỷ lệ scale của khung viền hoặc bị chia sai chiều dài tổng thể khi nạp dữ liệu từ buffer stream.
+- **Giải pháp xử lý**:
+  - Tái cấu trúc toán tử tính toán `wLoaded` đảm bảo khớp chính xác 100% với lòng trong thanh nạp: `int fillW = (int)((long)downloadedBytes * (barWidth - 4) / totalBytes)`.
+  - Thiết lập vùng clipping an toàn `g.setClip(barX + 2, barY + 2, fillW, barHeight - 4)` và đồng bộ vẽ nền, thanh lấp đầy và phần trăm hiển thị trực quan.
+  - Tăng số hiệu phiên bản lên `v2.5.12` (versionCode `262`).
+
+---
+
+## 219. Khắc Phục Triệt Để Lỗi Bể Pixel Nút UI Ở Chế Độ PiP (Picture-in-Picture) Trên Android & Tích Hợp GPU Hardware Render Scale (Bản Vá v2.5.13)
+
+### 1. Bối Cảnh & Hiện Tượng Lỗi
+- **Phản ánh từ người dùng**: *"cửa sổ game dạng pip trên Android bị bể pixel các nút UI khi nhìn dạng pip, fix lại render scale phù hợp dạng pip"*.
+- **Hiện tượng thực tế**:
+  - Khi người chơi thu nhỏ game DragonBoy thành cửa sổ Picture-in-Picture (PiP) nổi trên màn hình Android (kích thước nhỏ khoảng 480x270 hoặc tương đương), toàn bộ các nút bấm UI (nút tấn công, kỹ năng, joystick, avatar, thanh HP/MP) bị bể hạt pixel cực nặng, phóng to dị hợm, chỉ thấy một góc nhỏ của nút thay vì hiển thị toàn bộ icon sắc nét.
+
+---
+
+### 2. Phân Tích Nguyên Nhân Gốc Rễ (Deep Root Cause Analysis)
+Trích xuất và đối chiếu trực tiếp từ mã nguồn thực chiến:
+1. **Cơ chế quản lý ZoomLevel trong Engine NRO gốc**:
+   - Trong `Dragonboy_PC_projectbuild` và `DragonBoy_Mobile`:
+     ```csharp
+     public static void checkZoomLevel(int w, int h) {
+         if (w * h <= 153600) {
+             mGraphics.zoomLevel = 1;
+         } else if (w * h <= 460800) {
+             mGraphics.zoomLevel = 2;
+         } else {
+             mGraphics.zoomLevel = 4;
+         }
+     }
+     ```
+   - Sprite sheet và texture game (như `mainImage`, `imgArrow`, `imgBorder`, font chữ, kỹ năng) được nạp vào bộ nhớ ngay lúc khởi động game dựa trên `mGraphics.zoomLevel` ban đầu (thường là `zoomLevel = 4` cho màn hình FHD/2K của điện thoại hiện đại).
+   - Khi cắt và vẽ sprite: `mGraphics.drawRegion(Image img, int x0, int y0, int w0, int h0, ...)` thực hiện phép toán:
+     `x0 *= zoomLevel; y0 *= zoomLevel; w0 *= zoomLevel; h0 *= zoomLevel;`
+2. **Cơ chế gây lỗi khi vào PiP**:
+   - Khi Activity vào PiP, `SurfaceHolder` thay đổi kích thước từ $2400 	imes 1080$ xuống $480 	imes 270$.
+   - Sự kiện `GameView.SurfaceChanged(int width, int height)` được kích hoạt.
+   - Code cũ tự động gọi: `MotherCanvas.instance.checkZoomLevel(width, height)`.
+   - Do $480 	imes 270 = 129,600 \le 153,600$, game **hạ đột ngột `mGraphics.zoomLevel` từ 4 xuống 1**!
+   - Trong khi đó, toàn bộ bộ nhớ texture của game không hề được nạp lại. Khi `zoomLevel` chuyển thành 1, các phép cắt sprite `x0 *= 1, w0 *= 1` chỉ cắt lấy 1/4 kích thước của sprite 4x, và vẽ kéo dãn ra khiến toàn bộ UI bị vỡ hạt to thô kệch, méo mó nghiêm trọng.
+3. **Menu Floating Overlay thừa thãi**:
+   - Khi ở cửa sổ PiP siêu nhỏ, menu bong bóng điều khiển 6 tab nổi đè lên toàn bộ diện tích cửa sổ PiP làm che khuất hoàn toàn tầm nhìn trận đấu.
+
+---
+
+### 3. Giải Pháp Kỹ Thuật Toàn Diện (Comprehensive Technical Solution)
+
+#### A. Kiến Trúc Giữ Nguyên Native Virtual Viewport & Khử Răng Cưa GPU
+- **Giữ nguyên Virtual Viewport**:
+  - Lưu trữ kích thước màn hình và mức zoom gốc của thiết bị: `_baseWidth`, `_baseHeight`, `_baseZoomLevel`.
+  - Trong `GameView.SurfaceChanged`: Khi `_isPipMode == true`, **nghiêm cấm tuyệt đối gọi `checkZoomLevel`**, bảo toàn nguyên vẹn `mGraphics.zoomLevel = _baseZoomLevel`, `ScaleGUI.WIDTH = _baseWidth`, `ScaleGUI.HEIGHT = _baseHeight`, `Screen.customWidth = _baseWidth`, `Screen.customHeight = _baseHeight`.
+- **Áp dụng GPU Hardware Canvas Scaling mượt mà**:
+  - Trong vòng lặp render `GameView.RenderThread.Run`:
+    ```csharp
+    float scaleX = (float)currentW / _baseWidth;
+    float scaleY = (float)currentH / _baseHeight;
+    int saveCount = canvas.Save();
+    canvas.Scale(scaleX, scaleY);
+    Main.main?.OnGUI();
+    canvas.RestoreToCount(saveCount);
+    ```
+  - Phần cứng GPU tự động downscale toàn bộ khung hình game khớp khít 100% vào cửa sổ PiP mà không làm thay đổi bất kỳ tọa độ logic hay sprite UV nào của game gốc.
+- **Bật bộ lọc nội suy Bilinear Filtering**:
+  - Trong `AndroidGraphicsBackend.cs`: Bật cờ `PaintFlags.FilterBitmap | PaintFlags.AntiAlias` cho `s_BitmapPaint`, giúp GPU làm mượt các pixel hạt mịn màng khi thu nhỏ cửa sổ.
+
+#### B. Chuyển Đổi Tọa Độ Cảm Ứng Tương Thích Hoàn Hảo (Touch Coordinate Remapping)
+- Trong `GameView.OnTouchEvent` và `OnGenericMotionEvent`:
+  - `float touchX = _isPipMode && _baseWidth > 0 ? e.GetX() * _baseWidth / currentW : e.GetX();`
+  - `float touchY = _isPipMode && _baseHeight > 0 ? e.GetY() * _baseHeight / currentH : e.GetY();`
+  - Đảm bảo người chơi có thể chạm/click vào các nút bấm trong cửa sổ PiP với độ chính xác tuyệt đối.
+
+#### C. Tự Động Ẩn / Hiện Floating Menu Thông Minh
+- Trong `MainActivity.cs`:
+  - Lắng nghe `OnPictureInPictureModeChanged(bool isInPictureInPictureMode, Configuration newConfig)`:
+    - Nếu vào PiP: `_floatingOverlay.Visibility = ViewStates.Gone;` và thông báo `_gameView.SetPipMode(true)`.
+    - Nếu thoát PiP: `_floatingOverlay.Visibility = ViewStates.Visible;` và thông báo `_gameView.SetPipMode(false)`.
+  - Cấu hình tỷ lệ PiP `Rational` chính xác theo tỷ lệ màn hình thực tế của máy.
+
+---
+
+### 4. Triển Khai Quy Trình 8 Bước Phát Hành Chuẩn Xác (v2.5.13 - versionCode 263)
+1. **Bước 1 - Nâng Số Hiệu Phiên Bản Đủ 5 Vị Trí**:
+   - `version.json`: `version: "2.5.13"`, `downloadUrl_*` trỏ tới tag `v2.5.13`.
+   - `DragonBoy_Net8_Native/Src/Mod/Update/ModAutoUpdate.cs`: `CurrentVersion = "2.5.13"`.
+   - `ModNRO_Tools/Decompiled/Dragonboy250_PC_projectbuild/Mod/Update/ModAutoUpdate.cs`: `CurrentVersion = "2.5.13"`.
+   - `DragonBoy_Mobile/Android/DragonBoy_Android.csproj`: `<ApplicationVersion>263</ApplicationVersion>`, `<ApplicationDisplayVersion>2.5.13</ApplicationDisplayVersion>`.
+   - `DragonBoy_Mobile/Android/AndroidManifest.xml`: `android:versionCode="263"`, `android:versionName="2.5.13"`.
+2. **Bước 2 - Biên Dịch Thành Phẩm Release Trên Cả 3 Nền Tảng**:
+   - Android APK: `com.trihienkun.dragonboy-Signed.apk` đạt `versionCode=263`, `versionName=2.5.13` qua `aapt dump badging` (0 Error, 0 Warning).
+   - PC Native AOT: `DragonBoy_Net8_Native.exe` biên dịch AOT Native thành công 100% (0 Error, 0 Warning).
+   - PC Unity Mod: `Assembly-CSharp.dll` biên dịch Release thành công 100% (0 Error, 0 Warning).
+3. **Bước 3 - Đồng Bộ Ra Desktop**:
+   - `Desktop\DragonBoy_Net8_Native.exe`
+   - `Desktop\DragonBoy250_Mod_Android.apk`
+   - `Desktop\DragonBoy_1Game_6Tabs.apk`
+   - `Desktop\DragonBoy_Net8_Native_Android.apk`
+   - `Desktop\DragonBoy250\DragonBoy250_Data\Managed\Assembly-CSharp.dll`
+4. **Bước 4 - Git Commit & Push Lên Main**:
+   - Commit: `v2.5.13: Sửa triệt để lỗi bể pixel nút UI khi ở dạng PiP trên Android (tích hợp GPU Hardware Render Scale); đồng bộ v2.5.13`.
+   - Push lên nhánh `main` kho GitHub.
+5. **Bước 5 - Tạo & Đẩy Git Tag Phiên Bản**:
+   - `git tag -f v2.5.13` và `git push -f origin v2.5.13`.
+6. **Bước 6 - Triển Khai GitHub Release & Upload 3 Assets Bắt Buộc**:
+   - `DragonBoy_Net8_Native.exe`
+   - `DragonBoy250_Mod_Android.apk`
+   - `Assembly-CSharp.dll`
+7. **Bước 7 - Kiểm Chứng Cập Nhật Thực Tế**:
+   - Xác thực raw `version.json` trên GitHub trả về phiên bản mới `2.5.13`.
+8. **Bước 8 - Đồng Bộ Tài Liệu**:
+   - Ghi lại toàn bộ kiến trúc và nghiệm thu vào `PROJECT_DOCUMENTATION.md` và `walkthrough.md`.
