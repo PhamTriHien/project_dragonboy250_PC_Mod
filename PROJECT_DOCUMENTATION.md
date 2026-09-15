@@ -15206,3 +15206,37 @@ Trích xuất và đối chiếu trực tiếp từ mã nguồn thực chiến:
    - Deploy trực tiếp lên BlueStacks, chạy tự động kiểm thử toàn diện quy trình tự động cập nhật và sảnh game.
 8. **Bước 8 - Đồng Bộ Tài Liệu**:
    - Ghi lại toàn bộ kiến trúc và nghiệm thu vào `PROJECT_DOCUMENTATION.md` và `walkthrough.md`.
+
+---
+
+### 3. Kết Quả Kiểm Thử Thực Tế Trên Giả Lập BlueStacks (Live In-Game Verification)
+- **Môi trường thử nghiệm**: BlueStacks Android Emulator (Thiết bị 1920x1080 Landscape, API 28+).
+- **Quy trình kiểm thử tự động trực tiếp**:
+  1. **Tự động nhận diện bản cập nhật**:
+     - Client chạy bản cũ v2.5.13 khởi động vào sảnh game.
+     - Hệ thống tự động kích hoạt truy vấn `version.json` từ GitHub qua nền tảng HTTP Client.
+     - Hộp thoại **`THÔNG TIN CẬP NHẬT`** tự động hiển thị với tiêu đề đỏ nổi bật, thông báo:
+       + Bản mới: `v2.5.14` | Hiện tại: `v2.5.13`
+       + Ngày phát hành: `2026-09-15`
+       + Nội dung: Bật chế độ `LayoutInDisplayCutoutMode.ShortEdges` tràn viền 100% qua nốt ruồi / tai thỏ trên Android (xóa bỏ hoàn toàn dải đen khuyết cạnh trái màn hình); đồng bộ thanh tiến trình nạp bản cập nhật trọn vẹn và hoàn thiện hiển thị trên mọi tỷ lệ màn hình.
+     - Minh chứng ảnh: `v2514_auto_detect_board.png`.
+  2. **Tải xuống trực tiếp với thanh tiến trình trọn vẹn**:
+     - Nhấn nút `[ CẬP NHẬT ]`.
+     - Hộp thoại **`CẬP NHẬT TRỰC TIẾP`** mở ra, hiển thị dung lượng file APK `(107.6 MB)`.
+     - Thanh tiến trình nạp dạng ống màu hoàng kim viền NRO hiển thị trải dài 100% toàn bộ chiều rộng hộp thoại (khắc phục hoàn toàn lỗi cụt một nửa ở giữa của bản cũ `v2.5.11`).
+     - Minh chứng ảnh: `v2514_download_progress.png`.
+  3. **Hoàn tất tải xuống & Kích hoạt PackageInstaller**:
+     - Hộp thoại **`CẬP NHẬT HOÀN TẤT`** hiển thị thông báo "Đã tải xong bản v2.5.14 (100%) - Đang mở trình cài đặt APK...".
+     - Trình cài đặt hệ thống Android PackageInstaller tự động mở lên với thông điệp: "DragonBoy Mod - Do you want to install an update to this existing application? Your existing data will not be lost.".
+     - Minh chứng ảnh: `v2514_completed_board.png` và `v2514_system_install_prompt.png`.
+  4. **Cài đặt thành công & Xác nhận phiên bản**:
+     - Thực thi cập nhật gói ứng dụng.
+     - Kiểm tra trực tiếp qua hệ thống Android Package Manager:
+       `dumpsys package com.trihienkun.dragonboy | Select-String "versionName|versionCode"`
+       -> Kết quả ghi nhận: `versionCode=264`, `versionName=2.5.14`.
+  5. **Khởi chạy phiên bản mới v2.5.14**:
+     - Khởi chạy ứng dụng: Sảnh game hiển thị nút góc phải `v2.5.14` ở trạng thái ổn định, không còn chấm đỏ thông báo vì client đã đạt phiên bản cao nhất.
+     - Màn hình tràn viền 100% toàn bộ chiều ngang 1920x1080, không còn dải đen letterbox cạnh trái.
+     - Bấm nút phiên bản `v2.5.14`: Hộp thoại xác nhận hiển thị thông báo: "Bạn đang ở phiên bản mới nhất (v2.5.14). Đã đồng bộ dữ liệu GitHub!".
+     - Vào màn hình chọn máy chủ và tạo nhân vật hoạt động mượt mà, ổn định 60 FPS.
+     - Minh chứng ảnh: `v2514_lobby_verified.png`, `v2514_manual_check.png`, `v2514_server_selected.png`, `v2514_login_form.png`, `v2514_ingame_play.png`.
