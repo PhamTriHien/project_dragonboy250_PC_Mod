@@ -393,7 +393,7 @@ public partial class TileMap
 				return;
 			}
 			Image image = GameCanvas.loadImageRMS("/t/" + tileID + ".png");
-			if (image != null)
+			if (image != null && image.texture != null)
 			{
 				Rms.DeleteStorage("$");
 				imgTile = new Image[1];
@@ -402,7 +402,7 @@ public partial class TileMap
 				return;
 			}
 			image = GameCanvas.loadImageRMS("/t/" + tileID + "$1.png");
-			if (image != null)
+			if (image != null && image.texture != null)
 			{
 				Rms.DeleteStorage("x" + mGraphics.zoomLevel + "t" + tileID);
 				imgTile = new Image[100];
@@ -411,7 +411,20 @@ public partial class TileMap
 					imgTile[l] = GameCanvas.loadImageRMS("/t/" + tileID + "$" + (l + 1) + ".png");
 				}
 				tileDataCache[tileID] = imgTile;
+				return;
 			}
+			imgTile = new Image[100];
+			for (int m = 0; m < 100; m++)
+			{
+				string p = ((m >= 9) ? ("/t/" + tileID + "/t_" + (m + 1)) : ("/t/" + tileID + "/t_0" + (m + 1)));
+				Image tileImg = GameCanvas.loadImage(p);
+				if (tileImg == null)
+				{
+					tileImg = GameCanvas.loadImage("/t/" + tileID + "/" + (m + 1) + ".png");
+				}
+				imgTile[m] = tileImg;
+			}
+			tileDataCache[tileID] = imgTile;
 		}
 
 	public static bool isWaterEff()

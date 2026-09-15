@@ -8,11 +8,17 @@ public partial class TileMap
 			{
 				if (imgTile.Length == 1)
 				{
-					g.drawRegion(imgTile[0], 0, frame * size, size, size, 0, indexX * size, indexY * size, 0);
+					if (imgTile[0] != null)
+					{
+						g.drawRegion(imgTile[0], 0, frame * size, size, size, 0, indexX * size, indexY * size, 0);
+					}
 				}
 				else
 				{
-					g.drawImage(imgTile[frame], indexX * size, indexY * size, 0);
+					if (frame >= 0 && frame < imgTile.Length && imgTile[frame] != null)
+					{
+						g.drawImage(imgTile[frame], indexX * size, indexY * size, 0);
+					}
 				}
 			}
 		}
@@ -23,11 +29,17 @@ public partial class TileMap
 			{
 				if (imgTile.Length == 1)
 				{
-					g.drawRegion(imgTile[0], 0, frame * w, w, w, 0, x, y, 0);
+					if (imgTile[0] != null)
+					{
+						g.drawRegion(imgTile[0], 0, frame * w, w, w, 0, x, y, 0);
+					}
 				}
 				else
 				{
-					g.drawImage(imgTile[frame], x, y, 0);
+					if (frame >= 0 && frame < imgTile.Length && imgTile[frame] != null)
+					{
+						g.drawImage(imgTile[frame], x, y, 0);
+					}
 				}
 			}
 		}
