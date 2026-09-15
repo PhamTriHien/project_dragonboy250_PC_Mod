@@ -15240,3 +15240,112 @@ Trích xuất và đối chiếu trực tiếp từ mã nguồn thực chiến:
      - Bấm nút phiên bản `v2.5.14`: Hộp thoại xác nhận hiển thị thông báo: "Bạn đang ở phiên bản mới nhất (v2.5.14). Đã đồng bộ dữ liệu GitHub!".
      - Vào màn hình chọn máy chủ và tạo nhân vật hoạt động mượt mà, ổn định 60 FPS.
      - Minh chứng ảnh: `v2514_lobby_verified.png`, `v2514_manual_check.png`, `v2514_server_selected.png`, `v2514_login_form.png`, `v2514_ingame_play.png`.
+
+---
+
+## 221. Khắc Phục Triệt Để Lỗi Render Khi Vào Game Trên Android & Phát Hành Bản Vá v2.5.15
+
+### 1. Bối Cảnh Lỗi & Phân Tích Kỹ Thuật Sâu
+- **Hiện tượng lỗi ghi nhận**:
+  Khi người chơi đăng nhập vào thế giới game trên các thiết bị Android màn hình độ phân giải Full HD (1080p) trở lên (hoặc giả lập BlueStacks 1920x1080):
+  1. **Nhân vật bị xé rách, phân mảnh các bộ phận**: Đầu nhân vật nằm một nơi, thân mình biến mất, chân/quần nằm cách xa ở phía dưới, bóng đổ lơ lửng dưới gốc cây; quái vật rồng bay bị đứt khúc với bóng cách xa 250px.
+  2. **Giao diện người dùng (UI) bị phình to**: Thanh 10 ô skill, thanh máu/KI, cụm phím điều hướng D-pad, nút Attack chiếm gần trọn màn hình, che khuất toàn bộ không gian quan sát.
+  3. **Gạch bản đồ mặt đất (tilemap) bị vỡ**: Một vệt gạch viền lặp đi lặp lại kéo dài khắp chiều ngang đáy màn hình thay vì kết cấu đất đá thông thường.
+  4. **Mất ảnh nền trời**: Bầu trời bị thay bằng mảng màu đơn sắc lục lam (`#255E71`).
+- **Nguyên nhân gốc rễ (Root Cause)**:
+  1. Trong `DragonBoy_Net8_Native/Src/Core/App/MotherCanvas.cs`:
+     ```csharp
+     public void checkZoomLevel(int w, int h)
+     {
+         if (!Main.isPC)
+         {
+             if (w * h >= 1800000)
+             {
+                 mGraphics.zoomLevel = 4;
+             }
+             else if (w * h >= 691200)
+             {
+                 mGraphics.zoomLevel = 3;
+             }
+             else if (w * h > 153600)
+             {
+                 mGraphics.zoomLevel = 2;
+             }
+             else
+             {
+                 mGraphics.zoomLevel = 1;
+             }
+         }
+         ...
+     }
+     ```
+  2. Trên Android, do độ phân giải $1920 	imes 1080 = 2.073.600 \ge 1.800.000$, `checkZoomLevel` đã tự ý gán `mGraphics.zoomLevel = 4`.
+  3. Trong khi đó, toàn bộ tài nguyên đồ họa của DragonBoy Native được đồng bộ và chuẩn hóa độc quyền theo gói tài nguyên HD x2 (`Assets/x2/`). Thư mục `Assets/x4/` hoàn toàn **không chứa** thư mục `t/` (gạch tilemap) và bảng offset nhân vật (`CharInfo`, `SmallImage`) từ Server được thiết kế và tính toán chuẩn cho hệ số $2$.
+  4. Hệ quả khi `mGraphics.zoomLevel = 4`:
+     - Trong `mGraphics.drawRegion(...)`: Tọa độ vẽ và khung cắt sprite bị nhân 4 lần (`x0 *= 4; y0 *= 4; w0 *= 4; h0 *= 4; x *= 4; y *= 4;`). Do texture chỉ có kích thước HD x2, việc nhân 4 đã cắt sai hoàn toàn vùng ảnh và đẩy khoảng cách ghép nối các bộ phận cơ thể ra xa gấp đôi.
+     - Trong `TileMap.cs`: Đường dẫn tìm nạp gạch ghép prefix `Main.res + "/x" + mGraphics.zoomLevel + "/t/" + tileID + ".png"` thành `/x4/t/...`. Do file không tồn tại, hình ảnh bị null và engine kích hoạt cơ chế fallback vẽ lặp gạch viền.
+     - Kích thước màn hình ảo `GameCanvas.w = 1920 / 4 = 480` và `GameCanvas.h = 1080 / 4 = 270`, làm tất cả các thành phần UI hiển thị phình to gấp 2 lần bình thường.
+     - `GameCanvas.loadBG` cố tìm ảnh nền `/x4/bg/...` bị lỗi, khiến màn hình chỉ đổ màu nền lót (`0x255E71`).
+     - `Service.Auth` gửi `zoomLevel = 4` lên máy chủ, gây lệch pha dữ liệu packet.
+
+---
+
+### 2. Giải Pháp Kỹ Thuật Đã Triển Khai
+1. **Cố định `mGraphics.zoomLevel = 2` trên toàn bộ engine**:
+   - `DragonBoy_Net8_Native/Src/Core/App/MotherCanvas.cs`:
+     - Đặt `public int zoomLevel = 2;`.
+     - Cập nhật `checkZoomLevel(int w, int h)` cố định:
+       ```csharp
+       // DragonBoy Native su dung bo tai nguyen goc HD x2, zoomLevel co dinh = 2
+       mGraphics.zoomLevel = 2;
+       ```
+   - `DragonBoy_Net8_Native/Src/mGraphics/mGraphics.cs`:
+     - Đặt `public static int zoomLevel = 2;`.
+   - `DragonBoy_Mobile/Android/GameView.cs`:
+     - Khởi tạo `private int _baseZoomLevel = 2;`.
+     - Trong `SurfaceChanged` và `SetPipMode`: Đảm bảo luôn duy trì `mGraphics.zoomLevel = 2;` và `_baseZoomLevel = 2;` trong cả chế độ toàn màn hình và chế độ PiP (Picture-in-Picture).
+
+---
+
+### 3. Thực Hiện Quy Trình Chuẩn 8 Bước Phát Hành Git & Release Protocol (v2.5.15)
+1. **Bước 1 - Nâng Số Hiệu Phiên Bản Đủ 5 Vị Trí**:
+   - `version.json`: `version: "2.5.15"`.
+   - `DragonBoy_Net8_Native/Src/Mod/Update/ModAutoUpdate.cs`: `CurrentVersion = "2.5.15"`.
+   - `ModNRO_Tools/Decompiled/Dragonboy250_PC_projectbuild/Mod/Update/ModAutoUpdate.cs`: `CurrentVersion = "2.5.15"`.
+   - `DragonBoy_Mobile/Android/DragonBoy_Android.csproj`: `<ApplicationVersion>265</ApplicationVersion>`, `<ApplicationDisplayVersion>2.5.15</ApplicationDisplayVersion>`.
+   - `DragonBoy_Mobile/Android/AndroidManifest.xml`: `android:versionCode="265"`, `android:versionName="2.5.15"`.
+2. **Bước 2 - Biên Dịch Thành Phẩm Release Trên Cả 3 Nền Tảng (0 Error, 0 Warning)**:
+   - Android APK: `com.trihienkun.dragonboy-Signed.apk` đạt `versionCode=265`, `versionName=2.5.15` qua `aapt dump badging` (0 Error, 0 Warning).
+   - PC Native AOT: `DragonBoy_Net8_Native.exe` biên dịch AOT Native thành công 100% (0 Error, 0 Warning).
+   - PC Unity Mod: `Assembly-CSharp.dll` biên dịch Release thành công 100% (0 Error, 0 Warning).
+3. **Bước 3 - Đồng Bộ Ra Màn Hình Desktop**:
+   - `Desktop\DragonBoy_Net8_Native.exe`
+   - `Desktop\DragonBoy250_Mod_Android.apk`
+   - `Desktop\DragonBoy_1Game_6Tabs.apk`
+   - `Desktop\DragonBoy_Net8_Native_Android.apk`
+4. **Bước 4 - Git Commit & Push Lên Main**:
+   - Commit: `v2.5.15: Khac phuc triet de loi render trong game tren Android (co dinh zoomLevel = 2 HD x2, sua tach roi bo phan nhan vat, sua vo tilemap, khoi phuc nen troi, can doi UI)`.
+   - Push thành công lên nhánh `main` kho GitHub `PhamTriHien/project_dragonboy250_PC_Mod`.
+5. **Bước 5 - Tạo & Đẩy Git Tag Phiên Bản**:
+   - `git tag -f v2.5.15` và `git push -f origin v2.5.15`.
+6. **Bước 6 - Triển Khai GitHub Release & Upload 3 Assets Bắt Buộc**:
+   - GitHub Release `v2.5.15` (ID: `388914843`) tạo thành công.
+   - Upload đủ 3 assets: `DragonBoy_Net8_Native.exe` (7.4 MB), `DragonBoy250_Mod_Android.apk` (112.8 MB), `Assembly-CSharp.dll` (1.2 MB).
+7. **Bước 7 - Kiểm Chứng Cập Nhật Thực Tế (Live In-Game Verification)**:
+   - Cài đặt APK v2.5.15 trực tiếp trên BlueStacks (`emulator-5554`).
+   - Sảnh game hiển thị phiên bản `v2.5.0(2)` (xác nhận zoomLevel = 2) và badge `v2.5.15`.
+   - Vào game điều khiển nhân vật `kakarot1ts`: Nhân vật liền khối 100% không tách rời, tilemap đất đá hoàn chỉnh, cảnh nền chân trời sắc nét, UI cân đối chuẩn xác.
+8. **Bước 8 - Đồng Bộ Tài Liệu**:
+   - Cập nhật đầy đủ chi tiết vào `PROJECT_DOCUMENTATION.md` và `walkthrough.md`.
+
+---
+
+### 4. Kết Quả Nghiệm Thu Thực Tế Trên BlueStacks (Proof of Quality)
+| Hạng Mục Kiểm Thử | Trạng Thái Trước Khi Sửa (v2.5.14) | Trạng Thái Đã Sửa (v2.5.15) | Đánh Giá |
+| :--- | :--- | :--- | :---: |
+| **Cấu Trúc Nhân Vật** | Đầu, thân, chân, bóng bị tách rời thành từng mảnh cách xa hàng trăm px (`media_1789452450019.png`) | Đầu, thân, quần áo, giày dép gắn liền 100%, bóng đổ ngay dưới chân (`v2515_verified_ingame.png`) | ✅ HOÀN HẢO |
+| **Tỉ Lệ Giao Diện (UI)** | Skill bar, HP/KI bar chiếm trọn màn hình do canvas ảo bị bóp nhỏ $480 	imes 270$ | Skill bar, HP/KI bar, Attack button cân đối tuyệt đẹp trên canvas ảo $960 	imes 540$ | ✅ HOÀN HẢO |
+| **Bản Đồ Gạch (Tilemap)** | Bị vỡ gạch, vệt biên lặp lại vô tận khắp đáy màn hình | Toàn bộ 17 bộ gạch HD nạp trọn vẹn từ `Assets/x2/t/`, địa hình tự nhiên, mỏm đá sắc nét | ✅ HOÀN HẢO |
+| **Bầu Trời & Hậu Cảnh** | Chỉ hiển thị một mảng màu đơn sắc lục lam (`#255E71`) | Nạp đầy đủ mây trời, dải sáng thiên văn, biển và núi non từ `Assets/x2/bg/` | ✅ HOÀN HẢO |
+| **Cắt Cạnh Màn Hình (Cutout)** | Đã tràn viền qua nốt ruồi / tai thỏ, loại bỏ dải đen | Giữ nguyên tràn viền 100% không dải đen trên toàn màn hình Full HD | ✅ HOÀN HẢO |
+| **Chế Độ PiP (Picture-in-Picture)** | Tự động thích ứng GPU Hardware Render Scale mượt mà | Tiếp tục duy trì độ sắc nét cực cao, không bể pixel ở dạng cửa sổ nhỏ | ✅ HOÀN HẢO |
