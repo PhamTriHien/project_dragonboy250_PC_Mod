@@ -6,7 +6,7 @@ public static class ModAutoLogin
 	public static bool isReconnecting = false;
 	public static int retryCount = 0;
 	public static long lastRetryTime = 0;
-	public static int reconnectDelayMs = 3000;
+	public static int reconnectDelayMs = 8000;
 	public static string statusMessage = "";
 
 	public static bool wasTanSatActive = false;
@@ -54,6 +54,10 @@ public static class ModAutoLogin
 	public static void OnDisconnected()
 	{
 		if (!isEnabled) return;
+		if (GameCanvas.currentScreen == GameCanvas.loginScr || GameCanvas.currentScreen == GameCanvas.serverScreen)
+		{
+			return;
+		}
 
 		SnapshotAutoState();
 		isReconnecting = true;
@@ -78,14 +82,22 @@ public static class ModAutoLogin
 		}
 
 		long now = mSystem.currentTimeMillis();
-		if (now - lastRetryTime < reconnectDelayMs)
+		int currentBackoff = reconnectDelayMs * (retryCount + 1);
+		if (now - lastRetryTime < currentBackoff)
 		{
 			return;
 		}
 
 		lastRetryTime = now;
+		if (retryCount >= 3)
+		{
+			Res.outz("[ModAutoLogin] Max reconnect attempts reached (3). Pausing auto-reconnect to prevent server rate limiting.");
+			isReconnecting = false;
+			statusMessage = "";
+			return;
+		}
 		retryCount++;
-		statusMessage = "Tự động kết nối lại lần " + retryCount + "...";
+		statusMessage = "Tự động kết nối lại lần " + retryCount + "/3...";
 		Res.outz("[ModAutoLogin] " + statusMessage);
 
 		// 1. Dong cac popup thong bao loi (MsgDlg / Dialog OK)

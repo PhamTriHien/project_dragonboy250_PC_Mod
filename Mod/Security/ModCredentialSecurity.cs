@@ -166,7 +166,7 @@ namespace DragonBoy_Net8_Native.Src.Mod.Security
 				}
 				return false;
 			}
-			if (now - lastLoginAttemptTime < 400)
+			if (now - lastLoginAttemptTime < 2500)
 			{
 				return false;
 			}

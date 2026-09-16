@@ -172,6 +172,7 @@ public partial class Controller : IMessageHandler
 					GameCanvas.startOKDlg(msg.reader().readUTF());
 					InfoDlg.hide();
 					LoginScr.isContinueToLogin = false;
+					ModAutoLogin.isReconnecting = false;
 					Char.isLoadingMap = false;
 					Char.ischangingMap = false;
 					Char.isLockKey = false;
