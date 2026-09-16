@@ -1,9 +1,9 @@
 {
-  "version": "2.5.18",
+  "version": "2.5.19",
   "buildDate": "2026-09-16",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.18/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.18/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.18/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.18/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.18: Chuan hoa camera UI Android mac dinh dung chung PC (1024x600, GameCanvas 512x300), do hoa sac net native 100% (Nearest-Neighbor, MathF.Round, InDensity=0) va bo sung 4 tuy chon Render Bit-Depth (16, 32, 64, 128 bit) tai Tab 4 Do Hoa."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.19/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.19/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.19/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.19/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.19: Sua loi map render sai pixel va lan lon hanh tinh: trich xuat 31 bo tile x2 chuan 48x48 tu resources.assets, sua loi clipping drawRegion w/h tai paintTile, loai bo double paint cho T_DOWN1PIXEL (512), sua loi phan manh border ngoai bien map, cach ly blendKey cho BgItem theo tileID va lam sach bo nho khi doi map."
 }

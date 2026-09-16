@@ -136,16 +136,17 @@ public class BgItemMn
 		for (int i = 0; i < TileMap.vCurrItem.size(); i++)
 		{
 			BgItem bgItem = (BgItem)TileMap.vCurrItem.elementAt(i);
-			if (bgItem.idImage == id && !bgItem.isNotBlend() && bgItem.layer != 2 && bgItem.layer != 4 && !BgItem.imgNew.containsKey(bgItem.idImage + "blend" + bgItem.layer))
+			string blendKey = bgItem.idImage + "blend" + bgItem.layer + "_t" + TileMap.tileID;
+			if (bgItem.idImage == id && !bgItem.isNotBlend() && bgItem.layer != 2 && bgItem.layer != 4 && !BgItem.imgNew.containsKey(blendKey))
 			{
-				sbyte[] array = Rms.loadRMS("x" + mGraphics.zoomLevel + "blend" + id + "layer" + bgItem.layer);
+				sbyte[] array = Rms.loadRMS("x" + mGraphics.zoomLevel + "blend" + id + "layer" + bgItem.layer + "_t" + TileMap.tileID);
 				if (array == null)
 				{
-					BgItem.imgNew.put(bgItem.idImage + "blend" + bgItem.layer, blendImage(img, bgItem.layer, bgItem.idImage));
+					BgItem.imgNew.put(blendKey, blendImage(img, bgItem.layer, bgItem.idImage));
 					continue;
 				}
 				Image v = Image.createImage(array, 0, array.Length);
-				BgItem.imgNew.put(bgItem.idImage + "blend" + bgItem.layer, v);
+				BgItem.imgNew.put(blendKey, v);
 			}
 		}
 	}

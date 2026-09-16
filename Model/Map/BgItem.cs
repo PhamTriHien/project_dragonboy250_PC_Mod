@@ -55,6 +55,8 @@ public class BgItem
 
 	public static void clearHashTable()
 	{
+		imgNew.clear();
+		vKeysNew.removeAllElements();
 	}
 
 	public static bool isExistKeyNews(string keyNew)
@@ -117,21 +119,22 @@ public class BgItem
 
 	public void changeColor()
 	{
-		if (isNotBlend() || layer == 2 || layer == 4 || imgNew.containsKey(idImage + "blend" + layer))
+		string blendKey = idImage + "blend" + layer + "_t" + TileMap.tileID;
+		if (isNotBlend() || layer == 2 || layer == 4 || imgNew.containsKey(blendKey))
 		{
 			return;
 		}
 		Image image = (Image)imgNew.get(idImage + string.Empty);
 		if (image != null && image.getRealImageWidth() > 4)
 		{
-			sbyte[] array = Rms.loadRMS("x" + mGraphics.zoomLevel + "blend" + idImage + "layer" + layer);
+			sbyte[] array = Rms.loadRMS("x" + mGraphics.zoomLevel + "blend" + idImage + "layer" + layer + "_t" + TileMap.tileID);
 			if (array == null)
 			{
-				imgNew.put(idImage + "blend" + layer, BgItemMn.blendImage(image, layer, idImage));
+				imgNew.put(blendKey, BgItemMn.blendImage(image, layer, idImage));
 				return;
 			}
 			Image v = Image.createImage(array, 0, array.Length);
-			imgNew.put(idImage + "blend" + layer, v);
+			imgNew.put(blendKey, v);
 		}
 	}
 
@@ -144,7 +147,8 @@ public class BgItem
 		int cmx = GameScr.cmx;
 		int cmy = GameScr.cmy;
 		Image image = null;
-		image = ((layer == 2 || layer == 4) ? ((Image)imgNew.get(idImage + string.Empty)) : (isNotBlend() ? ((Image)imgNew.get(idImage + string.Empty)) : ((Image)imgNew.get(idImage + "blend" + layer))));
+		string blendKey = idImage + "blend" + layer + "_t" + TileMap.tileID;
+		image = ((layer == 2 || layer == 4) ? ((Image)imgNew.get(idImage + string.Empty)) : (isNotBlend() ? ((Image)imgNew.get(idImage + string.Empty)) : ((Image)imgNew.get(blendKey))));
 		if (image == null || idImage == 96)
 		{
 			return;

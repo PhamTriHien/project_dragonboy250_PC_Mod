@@ -44,6 +44,7 @@ public partial class TileMap
 
 	public static void loadMap(int tileId)
 		{
+			tileID = tileId;
 			pxh = tmh * size;
 			pxw = tmw * size;
 			Res.outz("load tile ID= " + tileID);
