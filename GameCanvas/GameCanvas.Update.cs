@@ -296,17 +296,6 @@ public partial class GameCanvas : IActionListener
 						}
 					}
 				}
-				if (currentScreen != null && currentScreen.Equals(GameScr.gI()))
-				{
-					if (GameScr.info1 != null)
-					{
-						GameScr.info1.update();
-					}
-					if (GameScr.info2 != null)
-					{
-						GameScr.info2.update();
-					}
-				}
 				isPointerSelect = false;
 			}
 			catch (Exception)

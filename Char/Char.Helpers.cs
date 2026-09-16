@@ -355,11 +355,11 @@ public partial class Char : IMapObject
 
 	public bool isOutX()
 			{
-				if (cx < GameScr.cmx)
+				if (cx < GameScr.cmx - 60)
 				{
 					return true;
 				}
-				if (cx > GameScr.cmx + GameScr.gW)
+				if (cx > GameScr.cmx + GameScr.gW + 60)
 				{
 					return true;
 				}

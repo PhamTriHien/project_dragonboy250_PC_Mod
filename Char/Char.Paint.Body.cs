@@ -724,7 +724,7 @@ public partial class Char : IMapObject
 					bool bodyDrawnSuccessfully = false;
 					if (pb != null && pb.pi != null && CharInfo[cf][2][0] < pb.pi.Length)
 					{
-						paintHat_behind(g, cf, cy - CharInfo[cf][2][2] + pb.pi[CharInfo[cf][2][0]].dy);
+						try { paintHat_behind(g, cf, cy - CharInfo[cf][2][2] + pb.pi[CharInfo[cf][2][0]].dy); } catch { }
 					}
 					try
 					{
@@ -741,26 +741,36 @@ public partial class Char : IMapObject
 						{
 							SmallImage.drawSmallImage(g, ph.pi[CharInfo[cf][0][0]].id, cx + (CharInfo[cf][0][1] + ph.pi[CharInfo[cf][0][0]].dx) * num2, cy - CharInfo[cf][0][2] + ph.pi[CharInfo[cf][0][0]].dy, num, anchor);
 						}
+					}
+					catch { }
 
+					try
+					{
 						if (pl != null && pl.pi != null && CharInfo[cf][1][0] < pl.pi.Length)
 						{
 							SmallImage.drawSmallImage(g, pl.pi[CharInfo[cf][1][0]].id, cx + (CharInfo[cf][1][1] + pl.pi[CharInfo[cf][1][0]].dx) * num2, cy - CharInfo[cf][1][2] + pl.pi[CharInfo[cf][1][0]].dy, num, anchor);
 						}
+					}
+					catch { }
+
+					try
+					{
 						if (pb != null && pb.pi != null && CharInfo[cf][2][0] < pb.pi.Length)
 						{
 							SmallImage.drawSmallImage(g, pb.pi[CharInfo[cf][2][0]].id, cx + (CharInfo[cf][2][1] + pb.pi[CharInfo[cf][2][0]].dx) * num2, cy - CharInfo[cf][2][2] + pb.pi[CharInfo[cf][2][0]].dy, num, anchor);
 						}
+					}
+					catch { }
 
+					try
+					{
 						if (ph != null && ph.pi != null && CharInfo[cf][0][0] < ph.pi.Length)
 						{
 							paintRedEye(g, cx + (CharInfo[cf][0][1] + ph.pi[CharInfo[cf][0][0]].dx) * num2, cy - CharInfo[cf][0][2] + ph.pi[CharInfo[cf][0][0]].dy, num, anchor);
 						}
-						bodyDrawnSuccessfully = (pb != null && pl != null);
 					}
-					catch (Exception ex)
-					{
-						Debug.LogError(">>>>>>err: " + ex.ToString());
-					}
+					catch { }
+					bodyDrawnSuccessfully = (pb != null && pl != null);
 				}
 				int phDyHead = (ph != null && ph.pi != null && ph.pi.Length > 0 && CharInfo[0][0][0] < ph.pi.Length) ? ph.pi[CharInfo[0][0][0]].dy : 0;
 				ch = ((isMonkey != 1 && !isFusion) ? (CharInfo[0][0][2] + phDyHead + 10) : 60);

@@ -138,95 +138,120 @@ public class SmallImage
 		imgNew[id] = s;
 	}
 
+	public static void queueDownload(int id)
+	{
+		if (id < 0) return;
+		Small s = getSmall(id);
+		if (s == null)
+		{
+			setSmall(id, new Small(imgEmpty, id));
+			s = getSmall(id);
+		}
+		if (GameCanvas.currentScreen == GameCanvas._SelectCharScr)
+		{
+			Service.gI().requestIcon(id);
+			return;
+		}
+		if (vt_images_watingDowload == null)
+		{
+			vt_images_watingDowload = new MyVector();
+		}
+		for (int i = 0; i < vt_images_watingDowload.size(); i++)
+		{
+			if (vt_images_watingDowload.elementAt(i) is Small existing && existing.id == id)
+			{
+				return;
+			}
+		}
+		vt_images_watingDowload.addElement(s);
+	}
+
 	public static void createImage(int id)
 	{
 		if (id < 0) return;
-		Res.outz("is request =" + id + " zoom=" + mGraphics.zoomLevel);
 		ensureImgNew(id);
-		if (mGraphics.zoomLevel == 1)
+		if (imgEmpty == null)
 		{
-			Image image = GameCanvas.loadImage("/SmallImage/Small" + id + ".png");
-			if (image == null)
-			{
-				image = GameCanvas.loadImageRMS("/x1/SmallImage/Small" + id + ".png");
-			}
-			if (image == null)
-			{
-				image = Image.createImage("x1/SmallImage/Small" + id + ".png");
-			}
-			if (image != null)
-			{
-				setSmall(id, new Small(image, id));
-				return;
-			}
-			setSmall(id, new Small(imgEmpty, id));
-			if (GameCanvas.currentScreen == GameCanvas._SelectCharScr)
-			{
-				Service.gI().requestIcon(id);
-			}
-			else
-			{
-				vt_images_watingDowload.addElement(getSmall(id));
-			}
-			return;
+			loadBigImage();
 		}
-		Image image2 = GameCanvas.loadImage("/SmallImage/Small" + id + ".png");
-		if (image2 != null)
+		try
 		{
-			setSmall(id, new Small(image2, id));
-			return;
-		}
-
-		bool flag = false;
-		sbyte[] array = Rms.loadRMS(mGraphics.zoomLevel + "Small" + id);
-		if (array != null)
-		{
-			if (newSmallVersion != null && id < newSmallVersion.Length && array.Length % 127 != newSmallVersion[id])
+			if (mGraphics.zoomLevel == 1)
 			{
-				flag = true;
-			}
-			if (!flag)
-			{
-				Image image3 = Image.createImage(array, 0, array.Length);
-				if (image3 != null)
+				Image image = GameCanvas.loadImage("/SmallImage/Small" + id + ".png");
+				if (image == null)
 				{
-					setSmall(id, new Small(image3, id));
+					image = GameCanvas.loadImageRMS("/x1/SmallImage/Small" + id + ".png");
+				}
+				if (image == null)
+				{
+					try { image = Image.createImage("x1/SmallImage/Small" + id + ".png"); } catch { }
+				}
+				if (image != null)
+				{
+					setSmall(id, new Small(image, id));
 					return;
 				}
-				else
+				setSmall(id, new Small(imgEmpty, id));
+				queueDownload(id);
+				return;
+			}
+			Image image2 = GameCanvas.loadImage("/SmallImage/Small" + id + ".png");
+			if (image2 != null)
+			{
+				setSmall(id, new Small(image2, id));
+				return;
+			}
+
+			bool flag = false;
+			sbyte[] array = Rms.loadRMS(mGraphics.zoomLevel + "Small" + id);
+			if (array != null)
+			{
+				if (newSmallVersion != null && id < newSmallVersion.Length && array.Length % 127 != newSmallVersion[id])
 				{
 					flag = true;
 				}
-			}
-		}
-		else
-		{
-			flag = true;
-		}
-
-		// Fallback ve asset x1 neu chua co x2
-		Image imageFallback = GameCanvas.loadImageRMS("/x1/SmallImage/Small" + id + ".png");
-		if (imageFallback == null)
-		{
-			imageFallback = Image.createImage("x1/SmallImage/Small" + id + ".png");
-		}
-		if (imageFallback != null)
-		{
-			setSmall(id, new Small(imageFallback, id));
-			return;
-		}
-
-		if (flag)
-		{
-			setSmall(id, new Small(imgEmpty, id));
-			if (GameCanvas.currentScreen == GameCanvas._SelectCharScr)
-			{
-				Service.gI().requestIcon(id);
+				if (!flag)
+				{
+					Image image3 = null;
+					try { image3 = Image.createImage(array, 0, array.Length); } catch { }
+					if (image3 != null)
+					{
+						setSmall(id, new Small(image3, id));
+						return;
+					}
+					else
+					{
+						flag = true;
+					}
+				}
 			}
 			else
 			{
-				vt_images_watingDowload.addElement(getSmall(id));
+				flag = true;
 			}
+
+			// Fallback ve asset x1 neu chua co x2
+			Image imageFallback = GameCanvas.loadImageRMS("/x1/SmallImage/Small" + id + ".png");
+			if (imageFallback == null)
+			{
+				try { imageFallback = Image.createImage("x1/SmallImage/Small" + id + ".png"); } catch { }
+			}
+			if (imageFallback != null)
+			{
+				setSmall(id, new Small(imageFallback, id));
+				return;
+			}
+
+			if (flag)
+			{
+				setSmall(id, new Small(imgEmpty, id));
+				queueDownload(id);
+			}
+		}
+		catch (Exception)
+		{
+			setSmall(id, new Small(imgEmpty, id));
 		}
 	}
 
@@ -252,7 +277,7 @@ public class SmallImage
 			}
 			else
 			{
-				g.drawRegion(small, 0, 0, mGraphics.getImageWidth(small.img), mGraphics.getImageHeight(small.img), transform, x, y, anchor);
+				small.paint(g, transform, x, y, anchor);
 			}
 		}
 		else if (smallImg != null)
@@ -272,6 +297,18 @@ public class SmallImage
 			else if (smallImg[id][0] < imgbig.Length && imgbig[smallImg[id][0]] != null)
 			{
 				g.drawRegion(imgbig[smallImg[id][0]], smallImg[id][1], smallImg[id][2], smallImg[id][3], smallImg[id][4], transform, x, y, anchor);
+			}
+			else
+			{
+				Small small2 = getSmall(id);
+				if (small2 == null)
+				{
+					createImage(id);
+				}
+				else
+				{
+					small2.paint(g, transform, x, y, anchor);
+				}
 			}
 		}
 		else if (GameCanvas.currentScreen != GameScr.gI())
@@ -376,7 +413,7 @@ public class SmallImage
 		}
 		if (num > 200 && GameCanvas.lowGraphic)
 		{
-			imgNew = new Small[maxSmall];
+			imgNew = new Small[System.Math.Max((int)maxSmall, 10000)];
 		}
 	}
 }

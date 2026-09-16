@@ -317,7 +317,7 @@ public class Image
 		TextAsset textAsset = (TextAsset)Resources.Load(filename, typeof(TextAsset));
 		if (textAsset == null || textAsset.bytes == null || textAsset.bytes.Length == 0)
 		{
-			throw new Exception("NULL POINTER EXCEPTION AT Image __createImage " + filename);
+			return null;
 		}
 		sbyte[] array = ArrayCast.cast(textAsset.bytes);
 		Debug.LogError("CHIEU DAI MANG BYTE IMAGE CREAT = " + array.Length);
@@ -329,7 +329,7 @@ public class Image
 		Texture2D texture2D = Resources.Load(filename) as Texture2D;
 		if (texture2D == null)
 		{
-			throw new Exception("NULL POINTER EXCEPTION AT Image __createImage " + filename);
+			return null;
 		}
 		Image image = new Image();
 		image.texture = texture2D;

@@ -105,30 +105,37 @@ public class InfoMe
 	{
 		if (cmy != cmtoY)
 		{
-			cmvy = cmtoY - cmy << 2;
-			cmdy += cmvy;
-			cmy += cmdy >> 4;
-			cmdy &= 15;
+			int dy = cmtoY - cmy;
+			int vy = dy / 4;
+			if (vy == 0)
+			{
+				vy = (dy > 0) ? 1 : -1;
+			}
+			cmy += vy;
+			if ((dy > 0 && cmy > cmtoY) || (dy < 0 && cmy < cmtoY))
+			{
+				cmy = cmtoY;
+			}
 		}
 		if (cmx != cmtoX)
 		{
-			cmvx = cmtoX - cmx << 2;
-			cmdx += cmvx;
-			cmx += cmdx >> 4;
-			cmdx &= 15;
+			int dx = cmtoX - cmx;
+			int vx = dx / 4;
+			if (vx == 0)
+			{
+				vx = (dx > 0) ? 1 : -1;
+			}
+			cmx += vx;
+			if ((dx > 0 && cmx > cmtoX) || (dx < 0 && cmx < cmtoX))
+			{
+				cmx = cmtoX;
+			}
 		}
 		tF++;
-		if (tF == 5)
+		if (tF >= 5)
 		{
 			tF = 0;
-			if (f == 0)
-			{
-				f = 1;
-			}
-			else
-			{
-				f = 0;
-			}
+			f = (f == 0) ? 1 : 0;
 		}
 	}
 
@@ -176,46 +183,40 @@ public class InfoMe
 					}
 				}
 			}
-			if (GameCanvas.gameTick % 3 == 0)
+			if (Char.myCharz().cdir == 1)
 			{
-				if (Char.myCharz().cdir == 1)
-				{
-					cmtoX = Char.myCharz().cx - 20 - GameScr.cmx;
-				}
-				if (Char.myCharz().cdir == -1)
-				{
-					cmtoX = Char.myCharz().cx + 20 - GameScr.cmx;
-				}
-				if (cmtoX <= 24)
-				{
-					cmtoX += info.sayWidth / 2;
-				}
-				if (cmtoX >= GameCanvas.w - 24)
-				{
-					cmtoX -= info.sayWidth / 2;
-				}
-				cmtoY = Char.myCharz().cy - 40 - GameScr.cmy;
-				if (info.says != null && cmtoY < (info.says.Length + 1) * 12 + 10)
-				{
-					cmtoY = (info.says.Length + 1) * 12 + 10;
-				}
-				if (info.info != null && info.info.charInfo != null)
-				{
-					cmtoX = GameCanvas.w - info.W - 36;
-					if (cmtoX < 5)
-					{
-						cmtoX = 5;
-					}
-					cmtoY = 5;
-				}
+				cmtoX = Char.myCharz().cx - 20 - GameScr.cmx;
 			}
-			if (cmx > Char.myCharz().cx - GameScr.cmx)
+			if (Char.myCharz().cdir == -1)
 			{
-				dir = -1;
+				cmtoX = Char.myCharz().cx + 20 - GameScr.cmx;
 			}
-			else
+			if (cmtoX <= 24)
 			{
-				dir = 1;
+				cmtoX += info.sayWidth / 2;
+			}
+			if (cmtoX >= GameCanvas.w - 24)
+			{
+				cmtoX -= info.sayWidth / 2;
+			}
+			cmtoY = Char.myCharz().cy - 40 - GameScr.cmy;
+			if (info.says != null && cmtoY < (info.says.Length + 1) * 12 + 10)
+			{
+				cmtoY = (info.says.Length + 1) * 12 + 10;
+			}
+			if (info.info != null && info.info.charInfo != null)
+			{
+				cmtoX = GameCanvas.w - info.W - 36;
+				if (cmtoX < 5)
+				{
+					cmtoX = 5;
+				}
+				cmtoY = 5;
+			}
+			int diffX = cmtoX - cmx;
+			if (Res.abs(diffX) > 2)
+			{
+				dir = (diffX > 0) ? 1 : -1;
 			}
 		}
 		if (info.info == null)

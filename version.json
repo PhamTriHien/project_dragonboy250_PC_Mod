@@ -1,9 +1,9 @@
 {
-  "version": "2.5.21",
+  "version": "2.5.22",
   "buildDate": "2026-09-16",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.21/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.21/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.21/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.21/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.21: Sua triet de loi dang nhap that bai do ModAutoLogin spam ket noi qua nhanh (anti-rate limit server), tu dong huy ket noi lai khi server bao loi -26 (sai pass, khoa tai khoan, bao tri), tang thoi gian cho len 8s kem exponential backoff va gioi han toi da 3 lan thu."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.22/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.22/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.22/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.22/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.22: Sua triet de loi player khac bi tan hinh va lag drop FPS (ngan chan nem Exception NULL POINTER khi thieu asset SmallImage/costume/icon, bo sung fallback giu nguyen co the, co che hang doi icon an toan, mo rong vung render isPaint tranh mat hinh khi nhay/bay); Sua triet de loi chim Chipi thong bao bi giat rung lac (khu bo loi bitwise &= 15 lam dao chieu dot ngot, noi suy vi tri muot ma theo frame, them vung dem chong lat huong lien tuc, loai bo goi duplicate update)."
 }

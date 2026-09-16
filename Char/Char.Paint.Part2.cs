@@ -256,11 +256,11 @@ public partial class Char : IMapObject
 			}
 	public bool isPaint()
 			{
-				if (cy < GameScr.cmy)
+				if (cy < GameScr.cmy - 80)
 				{
 					return false;
 				}
-				if (cy > GameScr.cmy + GameScr.gH + 30)
+				if (cy > GameScr.cmy + GameScr.gH + 50)
 				{
 					return false;
 				}
