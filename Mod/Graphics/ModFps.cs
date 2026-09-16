@@ -138,7 +138,7 @@ public static class ModFps
 			g.translate(-g.getTranslateX(), -g.getTranslateY());
 			g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
 
-			int curFps = (int)(1f / Time.unscaledDeltaTime);
+			int curFps = (Main.realFPS > 0) ? Main.realFPS : targetFps;
 			if (curFps > 999) curFps = 999;
 			if (curFps < 0) curFps = 0;
 

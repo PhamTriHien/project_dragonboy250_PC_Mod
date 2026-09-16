@@ -171,19 +171,12 @@ public class SmallImage
 			return;
 		}
 		Image image2 = GameCanvas.loadImage("/SmallImage/Small" + id + ".png");
-		if (image2 == null)
-		{
-			image2 = GameCanvas.loadImageRMS("/x1/SmallImage/Small" + id + ".png");
-		}
-		if (image2 == null)
-		{
-			image2 = Image.createImage("x1/SmallImage/Small" + id + ".png");
-		}
 		if (image2 != null)
 		{
 			setSmall(id, new Small(image2, id));
 			return;
 		}
+
 		bool flag = false;
 		sbyte[] array = Rms.loadRMS(mGraphics.zoomLevel + "Small" + id);
 		if (array != null)
@@ -198,6 +191,7 @@ public class SmallImage
 				if (image3 != null)
 				{
 					setSmall(id, new Small(image3, id));
+					return;
 				}
 				else
 				{
@@ -209,6 +203,19 @@ public class SmallImage
 		{
 			flag = true;
 		}
+
+		// Fallback ve asset x1 neu chua co x2
+		Image imageFallback = GameCanvas.loadImageRMS("/x1/SmallImage/Small" + id + ".png");
+		if (imageFallback == null)
+		{
+			imageFallback = Image.createImage("x1/SmallImage/Small" + id + ".png");
+		}
+		if (imageFallback != null)
+		{
+			setSmall(id, new Small(imageFallback, id));
+			return;
+		}
+
 		if (flag)
 		{
 			setSmall(id, new Small(imgEmpty, id));
