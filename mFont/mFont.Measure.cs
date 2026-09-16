@@ -12,6 +12,15 @@ public partial class mFont
 	public MyVector splitFontVector(string src, int lineWidth)
 		{
 			MyVector myVector = new MyVector();
+			if (string.IsNullOrEmpty(src))
+			{
+				return myVector;
+			}
+			if (src.IndexOf('\n') < 0 && src.IndexOf('\b') < 0 && getWidth(src) <= lineWidth)
+			{
+				myVector.addElement(src);
+				return myVector;
+			}
 			string text = string.Empty;
 			for (int i = 0; i < src.Length; i++)
 			{
@@ -193,15 +202,28 @@ public partial class mFont
 			return getWidthExactOf(s);
 		}
 
+	private readonly System.Collections.Generic.Dictionary<string, int> widthCache = new System.Collections.Generic.Dictionary<string, int>(128);
+	private static readonly GUIStyle s_CachedMeasureStyle = new GUIStyle();
+	private static readonly GUIContent s_CachedMeasureContent = new GUIContent(string.Empty);
+
 	public int getWidthExactOf(string s)
 		{
 			try
 			{
 				if (string.IsNullOrEmpty(s)) return 0;
-				GUIStyle gUIStyle = new GUIStyle();
-				gUIStyle.font = myFont;
+				if (widthCache.TryGetValue(s, out int cachedWidth))
+				{
+					return cachedWidth;
+				}
+				s_CachedMeasureStyle.font = myFont;
+				s_CachedMeasureContent.text = s;
 				int zoom = (mGraphics.zoomLevel > 0) ? mGraphics.zoomLevel : 1;
-				return (int)(gUIStyle.CalcSize(new GUIContent(s)).x / (float)zoom + 0.5f);
+				int calculated = (int)(s_CachedMeasureStyle.CalcSize(s_CachedMeasureContent).x / (float)zoom + 0.5f);
+				if (widthCache.Count < 512)
+				{
+					widthCache[s] = calculated;
+				}
+				return calculated;
 			}
 			catch (Exception ex)
 			{

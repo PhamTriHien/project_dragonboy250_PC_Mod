@@ -357,20 +357,6 @@ public partial class Panel : IActionListener, IChatable
 				}
 			}
 			string fullName = item.template.name + plus;
-			try
-			{
-				if (nameFont.getWidth(fullName) > textW - 6)
-				{
-					string[] sp = nameFont.splitFontArray(fullName, textW - 6);
-					if (sp != null && sp.Length > 0)
-					{
-						fullName = sp[0];
-					}
-				}
-			}
-			catch
-			{
-			}
 			nameFont.drawString(g, fullName, textX + 3, y + 1, 0);
 			string optStr = string.Empty;
 			if (item.itemOption != null)
@@ -393,20 +379,6 @@ public partial class Panel : IActionListener, IChatable
 							optStr = optStr + "," + item.itemOption[n].getOptionString();
 						}
 					}
-				}
-				try
-				{
-					if (optFont.getWidth(optStr) > textW - 6)
-					{
-						string[] sp2 = optFont.splitFontArray(optStr, textW - 6);
-						if (sp2 != null && sp2.Length > 0)
-						{
-							optStr = sp2[0];
-						}
-					}
-				}
-				catch
-				{
 				}
 				optFont.drawString(g, optStr, textX + 3, y + 11, mFont.LEFT);
 			}
