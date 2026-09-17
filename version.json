@@ -1,9 +1,9 @@
 {
-  "version": "2.5.23",
-  "buildDate": "2026-09-16",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.23/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.23/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.23/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.23/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.23: Khac phuc triet de loi background map bi render mo (dong bo 304 background x2 goc do phan giai cao sac net tu du lieu game chuan goc, bo sung asset chan dung cac hanh tinh); Toi uu hoa triet de loi drop FPS khi mo hanh trang (loai bo do dac chuoi splitFontArray ky tu theo frame, cache do dac chuoi MeasureText va tai su dung JNI Paint, bo qua phep do JNI khi can le UpperLeft mac dinh giup duy tri on dinh 60 FPS)."
+  "version": "2.5.24",
+  "buildDate": "2026-09-17",
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.24/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.24/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.24/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.24/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.24: Toi uu hoa toan dien giao dien Menu Mod (tinh gon kich thuoc nut bam ve 16-18px, ap dung font chu thanh manh tahoma_7 compact chuan phong cach pixel art goc cua game, thu gon cot danh muc giup hien thi menu nho gon, tinh te va toi uu khong gian hien thi noi dung chi tiet)."
 }

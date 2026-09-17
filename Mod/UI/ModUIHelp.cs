@@ -65,12 +65,12 @@ public static class ModUIHelp
 	public static void OnMouseScroll(float wheel)
 	{
 		int listH = 186;
-		int itemH = 24;
-		int contentH = commands.Length * itemH + 6;
-		int maxScroll = (contentH > listH - 6) ? (contentH - (listH - 6)) : 0;
+		int itemH = 20;
+		int contentH = commands.Length * itemH + 4;
+		int maxScroll = (contentH > listH - 4) ? (contentH - (listH - 4)) : 0;
 		if (maxScroll <= 0) return;
 
-		int step = 28;
+		int step = 24;
 		if (wheel > 0)
 		{
 			scrollY -= step;
@@ -85,14 +85,14 @@ public static class ModUIHelp
 
 	public static void UpdateDragScroll(int px, int py, int uiX, int uiY, int uiW, int uiH)
 	{
-		int listX = uiX + 6;
-		int listY = uiY + 24;
-		int listW = uiW - 12;
-		int listH = uiH - 30;
+		int listX = uiX + 5;
+		int listY = uiY + 20;
+		int listW = uiW - 10;
+		int listH = uiH - 24;
 
-		int itemH = 24;
-		int contentH = commands.Length * itemH + 6;
-		int maxScroll = (contentH > listH - 6) ? (contentH - (listH - 6)) : 0;
+		int itemH = 20;
+		int contentH = commands.Length * itemH + 4;
+		int maxScroll = (contentH > listH - 4) ? (contentH - (listH - 4)) : 0;
 
 		bool isDown = Input.GetMouseButton(0) || GameCanvas.isPointerDown;
 
@@ -132,22 +132,22 @@ public static class ModUIHelp
 
 	public static void Paint(int uiX, int uiY, int uiW, int uiH, mGraphics g)
 	{
-		int listX = uiX + 6;
-		int listY = uiY + 24;
-		int listW = uiW - 12;
-		int listH = uiH - 30;
+		int listX = uiX + 5;
+		int listY = uiY + 20;
+		int listW = uiW - 10;
+		int listH = uiH - 24;
 
 		// Tiêu đề danh sách
-		mFont.tahoma_7b_dark.drawString(g, "LỆNH CHAT & PHÍM TẮT (" + commands.Length + " mục - Chạm kéo trượt):", listX, uiY + 8, mFont.LEFT);
+		mFont.tahoma_7_grey.drawString(g, "LỆNH CHAT & PHÍM TẮT (" + commands.Length + " mục - Chạm kéo trượt):", listX, uiY + 6, mFont.LEFT);
 
 		// Khung chứa danh sách
 		GameCanvas.paintz.paintFrameSimple(listX, listY, listW, listH, g);
 		g.setColor(15196114);
 		g.fillRect(listX + 2, listY + 2, listW - 4, listH - 4);
 
-		int itemH = 24;
-		int contentH = commands.Length * itemH + 6;
-		int maxScroll = (contentH > listH - 6) ? (contentH - (listH - 6)) : 0;
+		int itemH = 20;
+		int contentH = commands.Length * itemH + 4;
+		int maxScroll = (contentH > listH - 4) ? (contentH - (listH - 4)) : 0;
 		if (scrollY > maxScroll) scrollY = maxScroll;
 		if (scrollY < 0) scrollY = 0;
 
@@ -156,7 +156,7 @@ public static class ModUIHelp
 		for (int i = 0; i < commands.Length; i++)
 		{
 			CommandInfo info = commands[i];
-			int rowY = listY + 4 + i * itemH - scrollY;
+			int rowY = listY + 3 + i * itemH - scrollY;
 
 			if (rowY + itemH < listY || rowY > listY + listH)
 			{
@@ -172,22 +172,21 @@ public static class ModUIHelp
 
 			// Tag loại lệnh
 			g.setColor(info.tagColor);
-			g.fillRect(listX + 6, rowY + 3, 3, 14);
+			g.fillRect(listX + 5, rowY + 3, 3, 12);
 
 			// Tên lệnh / Phím tắt
-			mFont.tahoma_7b_green2.drawString(g, info.cmd, listX + 14, rowY + 3, mFont.LEFT);
+			mFont.tahoma_7_green2.drawString(g, info.cmd, listX + 12, rowY + 2, mFont.LEFT);
 
 			// Nhãn loại
-			int tagW = mFont.tahoma_7_grey.getWidth(info.tag);
-			mFont.tahoma_7_grey.drawString(g, "[" + info.tag + "]", listX + 85, rowY + 3, mFont.LEFT);
+			mFont.tahoma_7_grey.drawString(g, "[" + info.tag + "]", listX + 78, rowY + 2, mFont.LEFT);
 
 			// Mô tả chức năng
-			mFont.tahoma_7_grey.drawString(g, info.desc, listX + 130, rowY + 3, mFont.LEFT);
+			mFont.tahoma_7_grey.drawString(g, info.desc, listX + 122, rowY + 2, mFont.LEFT);
 
 			// Phím thử ngay
 			if (info.tag.Equals("Chat") || info.tag.Equals("Hệ thống"))
 			{
-				ModUI.PaintNativeButton(listX + listW - 54, rowY + 2, 48, 17, "Thử", false, g);
+				ModUI.PaintNativeButton(listX + listW - 46, rowY + 2, 40, 15, "Thử", false, g);
 			}
 		}
 
@@ -202,28 +201,28 @@ public static class ModUIHelp
 			return false;
 		}
 
-		int listX = uiX + 6;
-		int listY = uiY + 24;
-		int listW = uiW - 12;
-		int listH = uiH - 30;
+		int listX = uiX + 5;
+		int listY = uiY + 20;
+		int listW = uiW - 10;
+		int listH = uiH - 24;
 
 		if (px < listX || px > listX + listW || py < listY || py > listY + listH)
 		{
 			return false;
 		}
 
-		int itemH = 24;
+		int itemH = 20;
 
 		for (int i = 0; i < commands.Length; i++)
 		{
-			int rowY = listY + 4 + i * itemH - scrollY;
+			int rowY = listY + 3 + i * itemH - scrollY;
 			if (rowY + itemH < listY || rowY > listY + listH)
 			{
 				continue;
 			}
 
-			int btnX = listX + listW - 54;
-			if (px >= btnX && px <= btnX + 48 && py >= rowY + 2 && py <= rowY + 19)
+			int btnX = listX + listW - 46;
+			if (px >= btnX && px <= btnX + 42 && py >= rowY + 1 && py <= rowY + 18)
 			{
 				ExecuteCommand(commands[i].cmd);
 				SoundMn.gI().buttonClick();

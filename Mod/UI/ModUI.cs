@@ -191,7 +191,7 @@ public static class ModUI
 			}
 
 			int textY = y + (h - 10) / 2;
-			(isFocus ? mFont.tahoma_7b_green2 : mFont.tahoma_7b_dark).drawString(g, text, x + w / 2, textY, mFont.CENTER);
+			(isFocus ? (mFont.tahoma_7_green2 ?? mFont.tahoma_7b_green2) : (mFont.tahoma_7_grey ?? mFont.tahoma_7b_dark)).drawString(g, text, x + w / 2, textY, mFont.CENTER);
 		}
 		catch
 		{
@@ -200,7 +200,7 @@ public static class ModUI
 
 	public static void PaintNativeButton(int x, int y, int w, string text, bool isFocus, mGraphics g)
 	{
-		PaintNativeButton(x, y, w, 20, text, isFocus, g);
+		PaintNativeButton(x, y, w, 18, text, isFocus, g);
 	}
 
 	public static void PaintArrowButton(int x, int y, int w, int h, bool isUp, bool isFocus, mGraphics g)
@@ -288,19 +288,19 @@ public static class ModUI
 			}
 
 			// 2. Cột Danh Mục Bên Trái (Chạm kéo trực tiếp - Không thanh cuộn)
-			int colW = (uiW > 380) ? 96 : 82;
-			int colH = uiH - 62;
-			int colX = uiX + 8;
-			int colY = uiY + 28;
-			int closeBtnY = uiY + uiH - 30;
+			int colW = (uiW > 380) ? 82 : 74;
+			int colH = uiH - 56;
+			int colX = uiX + 7;
+			int colY = uiY + 25;
+			int closeBtnY = uiY + uiH - 26;
 
 			GameCanvas.paintz.paintFrameSimple(colX, colY, colW, colH, g);
 			g.setColor(15196114);
 			g.fillRect(colX + 2, colY + 2, colW - 4, colH - 4);
 
-			int itemH = 22;
-			int itemStep = 24;
-			int colContentH = tabNames.Length * itemStep + 6;
+			int itemH = 18;
+			int itemStep = 20;
+			int colContentH = tabNames.Length * itemStep + 4;
 			int maxColScroll = (colContentH > colH - 4) ? (colContentH - (colH - 4)) : 0;
 			if (colScrollY > maxColScroll) colScrollY = maxColScroll;
 			if (colScrollY < 0) colScrollY = 0;
@@ -308,21 +308,21 @@ public static class ModUI
 			g.setClip(colX + 2, colY + 2, colW - 4, colH - 4);
 			for (int t = 0; t < tabNames.Length; t++)
 			{
-				int btnY = colY + 3 + t * itemStep - colScrollY;
+				int btnY = colY + 2 + t * itemStep - colScrollY;
 				if (btnY + itemH < colY || btnY > colY + colH) continue;
 				bool isSel = (selectedTab == t);
-				PaintNativeButton(colX + 3, btnY, colW - 6, itemH, tabNames[t], isSel, g);
+				PaintNativeButton(colX + 2, btnY, colW - 4, itemH, tabNames[t], isSel, g);
 			}
 			g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
 
 			// Nút ĐÓNG cố định ở đáy Cột Trái
-			PaintNativeButton(colX, closeBtnY, colW, 22, "ĐÓNG", false, g);
+			PaintNativeButton(colX + 2, closeBtnY, colW - 4, 18, "ĐÓNG", false, g);
 
 			// 3. Vùng Nội Dung Chi Tiết Bên Phải (Chạm kéo trực tiếp - Không thanh cuộn)
-			int detailX = colX + colW + 6;
-			int detailY = uiY + 28;
-			int detailW = uiW - (colW + 20);
-			int detailH = uiH - 36;
+			int detailX = colX + colW + 5;
+			int detailY = uiY + 25;
+			int detailW = uiW - (colW + 17);
+			int detailH = uiH - 32;
 
 			GameCanvas.paintz.paintFrameSimple(detailX, detailY, detailW, detailH, g);
 			g.setColor(15787715);
@@ -564,7 +564,7 @@ public static class ModUI
 						isColDragging = false;
 						if (!hasColDragged && px >= colX + 2 && px <= colX + colW - 2 && py >= colY + 2 && py <= colY + colH - 2)
 						{
-							int relY = py - (colY + 3) + colScrollY;
+							int relY = py - (colY + 2) + colScrollY;
 							if (relY >= 0)
 							{
 								int clickedIdx = relY / itemStep;
@@ -610,7 +610,7 @@ public static class ModUI
 					}
 
 					// Nút [ĐÓNG] ở đáy Cột Trái
-					if (px >= colX && px <= colX + colW && py >= closeBtnY && py <= closeBtnY + 26)
+					if (px >= colX && px <= colX + colW && py >= closeBtnY && py <= closeBtnY + 22)
 					{
 						uiCustomOpen = false;
 						ModUIBackground.isOpen = false;
