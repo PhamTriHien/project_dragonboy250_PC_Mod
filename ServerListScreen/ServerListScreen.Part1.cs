@@ -182,13 +182,17 @@ public partial class ServerListScreen : mScreen, IActionListener
 				cmd[i].y = num;
 				cmd[i].setType();
 				cmd[i].x = (GameCanvas.w - cmd[i].w) / 2;
-				cmd[i].h = 30;
+				cmd[i].h = 24;
 				num += 30;
 			}
 			if (cmd.Length > 2 + nCmdPlay && cmd[2 + nCmdPlay] != null)
 			{
 				string sName = (nameServer != null && ipSelect >= 0 && ipSelect < nameServer.Length) ? nameServer[ipSelect] : string.Empty;
 				cmd[2 + nCmdPlay].caption = mResources.server + ": " + sName;
+			}
+			if (cmd.Length > 1 + nCmdPlay && cmd[1 + nCmdPlay] != null)
+			{
+				cmd[1 + nCmdPlay].caption = mResources.change_account;
 			}
 			if (selected < 0 || selected >= cmd.Length)
 			{

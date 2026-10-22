@@ -20,6 +20,10 @@ public partial class GameScr : mScreen, IChatable
 				{
 					return;
 				}
+				if (ModMapEntityHUD.CheckClick(GameCanvas.px, GameCanvas.py))
+				{
+					return;
+				}
 				if (cmdMenu != null)
 				{
 					int menuW = (cmdMenu.w > 0) ? cmdMenu.w : 64;
@@ -47,6 +51,22 @@ public partial class GameScr : mScreen, IChatable
 						return;
 					}
 				}
+				if (Char.myCharz().cmdMenu != null)
+				{
+					if (GameCanvas.isPointerHoldIn(Char.myCharz().cmdMenu.x - 17, Char.myCharz().cmdMenu.y - 17, 34, 34))
+					{
+						if (GameCanvas.isPointerClick || GameCanvas.isPointerJustRelease)
+						{
+							GameCanvas.clearAllPointerEvent();
+							Char.myCharz().currentMovePoint = null;
+							Char.myCharz().vMovePoints.removeAllElements();
+							clickMoving = false;
+							Char.myCharz().cmdMenu.performAction();
+							return;
+						}
+						return;
+					}
+				}
 				if (popUpYesNo != null && popUpYesNo.cmdYes != null && popUpYesNo.cmdYes.isPointerPressInside())
 				{
 					popUpYesNo.cmdYes.performAction();
@@ -62,24 +82,14 @@ public partial class GameScr : mScreen, IChatable
 						int worldX = GameCanvas.px + cmx;
 						int worldY = GameCanvas.py + cmy;
 
-						// 1. Kiểm tra click vào Waypoint (cổng chuyển map trên mặt đất)
-						Waypoint wp = findClickToWaypoint(worldX, worldY);
-						if (wp != null)
-						{
-							GameCanvas.clearAllPointerEvent();
-							ModWaypoint.StepToWaypoint(wp);
-							GameScr.info1.addInfo("Di chuyển qua cổng " + (wp.name ?? "kế tiếp"), 0);
-							return;
-						}
-
-						// 2. Kiểm tra click vào PopUp trên bản đồ
+						// 1. Kiểm tra click vào PopUp trên bản đồ (biển báo, bảng thông tin)
 						if (checkClickToPopup(worldX, worldY) || checkClipTopChatPopUp(worldX, worldY))
 						{
 							GameCanvas.clearAllPointerEvent();
 							return;
 						}
 
-						// 3. Kiểm tra click vào thực thể trong game (Mob, NPC, Item, Nhân vật)
+						// 2. Kiểm tra click vào thực thể trong game (Mob, NPC, Item, Nhân vật)
 						IMapObject mapObject = findClickToItem(worldX, worldY);
 						if (mapObject != null)
 						{
@@ -326,6 +336,36 @@ public partial class GameScr : mScreen, IChatable
 					Char.myCharz().cancelAttack();
 					Service.gI().pickItem(item.itemMapID);
 					return;
+				}
+				if (obj is Char targetChar && targetChar.charID >= 0)
+				{
+					Char me2 = Char.myCharz();
+					if (me2 != null && !me2.isMeCanAttackOtherPlayer(targetChar) && !me2.isSelectingSkillBuffToPlayer())
+					{
+						int dx = Math.abs(me2.cx - targetChar.cx);
+						int dy = Math.abs(me2.cy - targetChar.cy);
+						if (dx < 60 && dy < 40)
+						{
+							if (GameCanvas.panel.vPlayerMenu.size() <= 0)
+							{
+								playerMenu(targetChar);
+							}
+							GameCanvas.panel.setTypePlayerMenu(targetChar);
+							GameCanvas.panel.show();
+							Service.gI().getPlayerMenu(targetChar.charID);
+							Service.gI().messagePlayerMenu(targetChar.charID);
+							return;
+						}
+						else
+						{
+							int dir = (me2.cx > targetChar.cx) ? 1 : (-1);
+							me2.currentMovePoint = new MovePoint(targetChar.cx + (20 + Res.r.nextInt(20)) * dir, targetChar.cy);
+							me2.endMovePointCommand = new Command(null, null, 8002, null);
+							GameCanvas.clearKeyHold();
+							GameCanvas.clearKeyPressed();
+							return;
+						}
+					}
 				}
 				if ((obj.Equals(Char.myCharz().npcFocus) || mobCapcha == null) && !checkClickToBotton(obj))
 				{

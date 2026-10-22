@@ -112,9 +112,10 @@ public partial class ServerListScreen : mScreen, IActionListener
 		}
 	public override void switchToMe()
 		{
-			Res.outz(">>>>switchToMe  ServerListScreen: ");
+			Res.outz(">>>>switchToMe  ServerListScreen:\n" + Environment.StackTrace);
 			GameCanvas.clearAllPointerEvent();
 			GameCanvas.clearKeyPressed();
+			GameCanvas.endDlg();
 			EffectManager.remove();
 			GameScr.cmy = 0;
 			GameScr.cmx = 0;
@@ -131,16 +132,23 @@ public partial class ServerListScreen : mScreen, IActionListener
 			bigOk = true;
 			selected = 0;
 			string sName = (nameServer != null && ipSelect >= 0 && ipSelect < nameServer.Length) ? nameServer[ipSelect] : string.Empty;
-			cmd[2 + nCmdPlay].caption = mResources.server + ": " + sName;
+			if (cmd != null && cmd.Length > 2 + nCmdPlay && cmd[2 + nCmdPlay] != null)
+			{
+				cmd[2 + nCmdPlay].caption = mResources.server + ": " + sName;
+			}
 			center = new Command(string.Empty, this, cmd[selected].idAction, null);
-			cmd[1 + nCmdPlay].caption = mResources.change_account;
-			if (cmd.Length == 4 + nCmdPlay)
+			if (cmd != null && cmd.Length > 1 + nCmdPlay && cmd[1 + nCmdPlay] != null)
+			{
+				cmd[1 + nCmdPlay].caption = mResources.change_account;
+			}
+			if (cmd != null && cmd.Length == 4 + nCmdPlay && cmd[3 + nCmdPlay] != null)
 			{
 				cmd[3 + nCmdPlay].caption = mResources.option;
 			}
 			Char.isLoadingMap = false;
 			mSystem.resetCurInapp();
 			count_reConnect = 0;
+			DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.OnLoginFinished();
 			if (!Session_ME.gI().isConnected() && !Session_ME.connecting)
 			{
 				ConnectIP();
@@ -149,6 +157,7 @@ public partial class ServerListScreen : mScreen, IActionListener
 		}
 	public void switchToMe2()
 		{
+			GameCanvas.endDlg();
 			GameScr.cmy = 0;
 			GameScr.cmx = 0;
 			int savedSv = Rms.loadRMSInt(RMS_svselect);
@@ -163,14 +172,21 @@ public partial class ServerListScreen : mScreen, IActionListener
 			GameCanvas.loadBG(0);
 			bigOk = true;
 			string sName = (nameServer != null && ipSelect >= 0 && ipSelect < nameServer.Length) ? nameServer[ipSelect] : string.Empty;
-			cmd[2 + nCmdPlay].caption = mResources.server + ": " + sName;
+			if (cmd != null && cmd.Length > 2 + nCmdPlay && cmd[2 + nCmdPlay] != null)
+			{
+				cmd[2 + nCmdPlay].caption = mResources.server + ": " + sName;
+			}
 			center = new Command(string.Empty, this, cmd[selected].idAction, null);
-			cmd[1 + nCmdPlay].caption = mResources.change_account;
-			if (cmd.Length == 4 + nCmdPlay)
+			if (cmd != null && cmd.Length > 1 + nCmdPlay && cmd[1 + nCmdPlay] != null)
+			{
+				cmd[1 + nCmdPlay].caption = mResources.change_account;
+			}
+			if (cmd != null && cmd.Length == 4 + nCmdPlay && cmd[3 + nCmdPlay] != null)
 			{
 				cmd[3 + nCmdPlay].caption = mResources.option;
 			}
 			mSystem.resetCurInapp();
+			DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.OnLoginFinished();
 			base.switchToMe();
 		}
 	public void connectOk()
@@ -192,15 +208,74 @@ public partial class ServerListScreen : mScreen, IActionListener
 		}
 	public void init()
 		{
+			if (cmd != null)
+			{
+				int numY = GameCanvas.hh - 15 * cmd.Length + 28;
+				for (int i = 0; i < cmd.Length; i++)
+				{
+					if (cmd[i] != null)
+					{
+						cmd[i].x = (GameCanvas.w - cmd[i].w) / 2;
+						cmd[i].y = numY + i * 30;
+					}
+				}
+			}
+			if (cmd_New_Ui != null)
+			{
+				int num = GameCanvas.hh - 15 * cmd_New_Ui.Length + 28;
+				for (int i = 0; i < cmd_New_Ui.Length; i++)
+				{
+					if (cmd_New_Ui[i] != null)
+					{
+						cmd_New_Ui[i].x = (GameCanvas.w - cmd_New_Ui[i].w) / 2;
+						cmd_New_Ui[i].y = num;
+						num += 30;
+					}
+				}
+			}
+			if (cmdCallHotline != null)
+			{
+				cmdCallHotline.x = GameCanvas.w - 75;
+				if (mSystem.clientType == 1 && !GameCanvas.isTouch)
+				{
+					cmdCallHotline.y = GameCanvas.h - 20;
+				}
+				else
+				{
+					cmdCallHotline.y = 8;
+				}
+			}
+			if (cmdDeleteRMS != null)
+			{
+				cmdDeleteRMS.x = GameCanvas.w - 78;
+				cmdDeleteRMS.y = GameCanvas.h - 26;
+			}
 			if (!loadScreen)
 			{
-				cmdDownload = new Command(mResources.taidulieu, this, 2, null);
-				cmdDownload.isFocus = true;
-				cmdDownload.x = GameCanvas.w / 2 - mScreen.cmdW / 2;
-				cmdDownload.y = GameCanvas.hh + 45;
-				if (cmdDownload.y > GameCanvas.h - 26)
+				if (isGetData)
 				{
-					cmdDownload.y = GameCanvas.h - 26;
+					cmdDownload = new Command(mResources.huy, this, 4, null);
+					cmdDownload.x = GameCanvas.w / 2 - mScreen.cmdW / 2;
+					cmdDownload.y = GameCanvas.hh + 56;
+					if (!GameCanvas.isTouch)
+					{
+						cmdDownload.y = GameCanvas.h - mScreen.cmdH - 1;
+					}
+					else if (cmdDownload.y > GameCanvas.h - mScreen.cmdH - 2)
+					{
+						cmdDownload.y = GameCanvas.h - mScreen.cmdH - 2;
+					}
+				}
+				else
+				{
+					cmdDownload = new Command(mResources.taidulieu, this, 2, null);
+					cmdDownload.isFocus = true;
+					cmdDownload.x = GameCanvas.w / 2 - mScreen.cmdW / 2;
+					cmdDownload.y = GameCanvas.hh + 45;
+					if (cmdDownload.y > GameCanvas.h - mScreen.cmdH - 2)
+					{
+						cmdDownload.y = GameCanvas.h - mScreen.cmdH - 2;
+					}
 				}
 			}
 			if (!GameCanvas.isTouch)
@@ -289,21 +364,23 @@ public partial class ServerListScreen : mScreen, IActionListener
 		}
 	public void Login_New()
 		{
-			if (GameCanvas.loginScr == null)
-			{
-				GameCanvas.loginScr = new LoginScr();
-			}
-			GameCanvas.loginScr.switchToMe();
+			ModNextMap.StopNextMap();
 			bool flag = false;
 			bool flag2 = false;
 			string text = Rms.loadRMSString(Rms.RMS_userAo + ipSelect);
 			try
 			{
-				if (!Rms.loadRMSString(Rms.RMS_acc).Equals(string.Empty))
+				string acc = Rms.loadRMSString(Rms.RMS_acc);
+				string pass = DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.LoadSavedPassword();
+				if (string.IsNullOrEmpty(pass))
+				{
+					pass = Rms.loadRMSString(Rms.RMS_pass);
+				}
+				if (!string.IsNullOrEmpty(acc) && !string.IsNullOrEmpty(pass))
 				{
 					flag = true;
 				}
-				if (!text.Equals(string.Empty))
+				if (!string.IsNullOrEmpty(text))
 				{
 					flag2 = true;
 				}
@@ -311,13 +388,18 @@ public partial class ServerListScreen : mScreen, IActionListener
 			catch (Exception)
 			{
 			}
-			if (!Session_ME.gI().isConnected())
-			{
-				GameCanvas.connect();
-			}
-			Service.gI().setClientType();
 			if (!flag && !flag2)
 			{
+				if (GameCanvas.loginScr == null)
+				{
+					GameCanvas.loginScr = new LoginScr();
+				}
+				GameCanvas.loginScr.switchToMe();
+				if (!Session_ME.gI().isConnected())
+				{
+					GameCanvas.connect();
+				}
+				Service.gI().setClientType();
 				if (text == null || text.Equals(string.Empty))
 				{
 					Debug.LogError(">>>>Login_New: login2: ");
@@ -331,9 +413,30 @@ public partial class ServerListScreen : mScreen, IActionListener
 				Rms.saveRMSInt(RMS_svselect, ipSelect);
 				GameCanvas.startWaitDlg(mResources.PLEASEWAIT);
 			}
-			else
+			else if (flag)
 			{
+				if (GameCanvas.loginScr == null)
+				{
+					GameCanvas.loginScr = new LoginScr();
+				}
 				GameCanvas.loginScr.doLogin();
+			}
+			else if (flag2)
+			{
+				if (GameCanvas.loginScr == null)
+				{
+					GameCanvas.loginScr = new LoginScr();
+				}
+				GameCanvas.loginScr.switchToMe();
+				if (!Session_ME.gI().isConnected())
+				{
+					GameCanvas.connect();
+				}
+				Service.gI().setClientType();
+				GameCanvas.loginScr.isLogin2 = true;
+				Service.gI().login(text, string.Empty, GameMidlet.VERSION, 1);
+				Rms.saveRMSInt(RMS_svselect, ipSelect);
+				GameCanvas.startWaitDlg(mResources.PLEASEWAIT);
 			}
 			if (nameServer != null && ipSelect >= 0 && ipSelect < nameServer.Length)
 			{

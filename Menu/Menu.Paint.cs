@@ -26,20 +26,21 @@ public partial class Menu
 				{
 					array = new string[1] { ((Command)menuItems.elementAt(i)).caption };
 				}
-				int num = menuTemY[i] + (menuH - array.Length * 14) / 2 + 1;
+				int fontH = (mFont.tahoma_7b_dark != null) ? mFont.tahoma_7b_dark.getHeight() : 12;
+				int num = menuTemY[i] + (menuH - array.Length * fontH) / 2;
 				for (int j = 0; j < array.Length; j++)
 				{
 					if (i == menuSelectedItem)
 					{
-						mFont.tahoma_7b_green2.drawString(g, array[j], menuX + i * menuW + menuW / 2, num + j * 14, 2);
+						mFont.tahoma_7b_green2.drawString(g, array[j], menuX + i * menuW + menuW / 2, num + j * fontH, mFont.CENTER);
 					}
 					else if (command.isDisplay)
 					{
-						mFont.tahoma_7b_red.drawString(g, array[j], menuX + i * menuW + menuW / 2, num + j * 14, 2);
+						mFont.tahoma_7b_red.drawString(g, array[j], menuX + i * menuW + menuW / 2, num + j * fontH, mFont.CENTER);
 					}
 					else
 					{
-						mFont.tahoma_7b_dark.drawString(g, array[j], menuX + i * menuW + menuW / 2, num + j * 14, 2);
+						mFont.tahoma_7b_dark.drawString(g, array[j], menuX + i * menuW + menuW / 2, num + j * fontH, mFont.CENTER);
 					}
 				}
 			}

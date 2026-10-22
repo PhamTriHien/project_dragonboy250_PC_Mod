@@ -84,27 +84,35 @@ public partial class TField
 		{
 			return;
 		}
-		if ((inputType == INPUT_TYPE_PASSWORD || inputType == INPUT_ALPHA_NUMBER_ONLY) && (keyCode < 48 || keyCode > 57) && (keyCode < 65 || keyCode > 90) && (keyCode < 97 || keyCode > 122))
-			{
-				return;
-			}
-			if (this.text.Length < maxTextLenght)
-			{
-				string text = this.text.Substring(0, caretPos) + (char)keyCode;
-				if (caretPos < this.text.Length)
-				{
-					text += this.text.Substring(caretPos, this.text.Length - caretPos);
-				}
-				this.text = text;
-				caretPos++;
-				setPasswordTest();
-				setOffset(0);
-			}
-			if (kb != null)
-			{
-				kb.text = this.text;
-			}
+		if (inputType == INPUT_ALPHA_NUMBER_ONLY && (keyCode < 48 || keyCode > 57) && (keyCode < 65 || keyCode > 90) && (keyCode < 97 || keyCode > 122))
+		{
+			return;
 		}
+		if (inputType == INPUT_TYPE_PASSWORD && (keyCode < 32 || keyCode > 126))
+		{
+			return;
+		}
+		if (inputType == INPUT_TYPE_NUMERIC && (keyCode < 48 || keyCode > 57))
+		{
+			return;
+		}
+		if (this.text.Length < maxTextLenght)
+		{
+			string text = this.text.Substring(0, caretPos) + (char)keyCode;
+			if (caretPos < this.text.Length)
+			{
+				text += this.text.Substring(caretPos, this.text.Length - caretPos);
+			}
+			this.text = text;
+			caretPos++;
+			setPasswordTest();
+			setOffset(0);
+		}
+		if (kb != null)
+		{
+			kb.text = this.text;
+		}
+	}
 
 	public static void setMode()
 		{
@@ -272,7 +280,7 @@ public partial class TField
 			{
 				if (kb.text != null && kb.text != text && isFocus)
 				{
-					setText(kb.text);
+					kb.text = text;
 				}
 				if (kb.done && cmdDoneAction != null)
 				{
@@ -381,6 +389,7 @@ public partial class TField
 		{
 			return;
 		}
+		bool prevSuspend = suspendTelex;
 		suspendTelex = true;
 		try
 		{
@@ -395,7 +404,7 @@ public partial class TField
 		}
 		finally
 		{
-			suspendTelex = false;
+			suspendTelex = prevSuspend;
 		}
 	}
 }

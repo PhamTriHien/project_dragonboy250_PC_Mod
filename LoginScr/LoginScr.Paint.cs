@@ -27,12 +27,6 @@ public partial class LoginScr : mScreen, IActionListener
 			{
 				int h = 105;
 				int w = ((GameCanvas.w < 200) ? 160 : 180);
-				PopUp.paintPopUp(g, xLog, yLog - 10, w, h, -1, isButton: true);
-				if (GameCanvas.h > 160 && imgTitle != null)
-				{
-					g.drawImage(imgTitle, GameCanvas.hw, num, 3);
-				}
-				GameCanvas.debug("PLG4", 1);
 				int num2 = 4;
 				int num3 = num2 * 32 + 23 + 33;
 				if (num3 >= GameCanvas.w)
@@ -41,6 +35,12 @@ public partial class LoginScr : mScreen, IActionListener
 					num3 = num2 * 32 + 23 + 33;
 				}
 				xLog = GameCanvas.w / 2 - num3 / 2;
+				PopUp.paintPopUp(g, xLog, yLog - 10, w, h, -1, isButton: true);
+				if (GameCanvas.h > 160 && imgTitle != null)
+				{
+					g.drawImage(imgTitle, GameCanvas.hw, num, 3);
+				}
+				GameCanvas.debug("PLG4", 1);
 				tfUser.x = xLog + 10;
 				tfUser.y = yLog + 15;
 				tfPass.x = xLog + 10;

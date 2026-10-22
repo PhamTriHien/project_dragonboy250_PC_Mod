@@ -177,43 +177,75 @@ public class PopUp
 	{
 		if (!isButton)
 		{
+			if (goc == null)
+			{
+				try
+				{
+					goc = GameCanvas.loadImage("/mainImage/myTexture2dbd3.png");
+				}
+				catch { }
+			}
+
+			// 1. Viền ngoài đen (Khung chữ nhật bo góc)
 			g.setColor(0);
-			g.fillRect(x + 6, y, w - 14 + 1, h);
-			g.fillRect(x, y + 6, w, h - 12 + 1);
+			g.fillRect(x + 6, y, w - 12, h);
+			g.fillRect(x, y + 6, w, h - 12);
+
+			// 2. Ruột nền bên trong
 			g.setColor(color);
 			g.fillRect(x + 6, y + 1, w - 12, h - 2);
 			g.fillRect(x + 1, y + 6, w - 2, h - 12);
-			g.drawRegion(goc, 0, 0, 7, 6, 0, x, y, 0);
-			g.drawRegion(goc, 0, 0, 7, 6, 2, x + w - 7, y, 0);
-			g.drawRegion(goc, 0, 0, 7, 6, 1, x, y + h - 6, 0);
-			g.drawRegion(goc, 0, 0, 7, 6, 3, x + w - 7, y + h - 6, 0);
+			g.fillRect(x + 6, y + 6, w - 12, h - 12);
+
+			// 3. 4 Góc bo tròn 7x6 px
+			if (goc != null)
+			{
+				g.drawRegion(goc, 0, 0, 7, 6, 0, x, y, 0);
+				g.drawRegion(goc, 0, 0, 7, 6, 2, x + w - 7, y, 0);
+				g.drawRegion(goc, 0, 0, 7, 6, 1, x, y + h - 6, 0);
+				g.drawRegion(goc, 0, 0, 7, 6, 3, x + w - 7, y + h - 6, 0);
+			}
 			return;
 		}
+
+		if (imgPopUp == null)
+		{
+			try { imgPopUp = GameCanvas.loadImage("/mainImage/myTexture2dimgPopup.png"); } catch { }
+		}
+		if (imgPopUp2 == null)
+		{
+			try { imgPopUp2 = GameCanvas.loadImage("/mainImage/myTexture2dimgPopup2.png"); } catch { }
+		}
+
 		Image arg = ((color != 1) ? imgPopUp : imgPopUp2);
-		g.drawRegion(arg, 0, 0, 10, 10, 0, x, y, 0);
-		g.drawRegion(arg, 0, 20, 10, 10, 0, x + w - 10, y, 0);
-		g.drawRegion(arg, 0, 50, 10, 10, 0, x, y + h - 10, 0);
-		g.drawRegion(arg, 0, 70, 10, 10, 0, x + w - 10, y + h - 10, 0);
-		int num = (((w - 20) % 10 != 0) ? ((w - 20) / 10 + 1) : ((w - 20) / 10));
-		int num2 = (((h - 20) % 10 != 0) ? ((h - 20) / 10 + 1) : ((h - 20) / 10));
-		for (int i = 0; i < num; i++)
+		if (arg != null)
 		{
-			g.drawRegion(arg, 0, 10, 10, 10, 0, x + 10 + i * 10, y, 0);
+			// 4 góc 10x10 px
+			g.drawRegion(arg, 0, 0, 10, 10, 0, x, y, 0);
+			g.drawRegion(arg, 0, 20, 10, 10, 0, x + w - 10, y, 0);
+			g.drawRegion(arg, 0, 50, 10, 10, 0, x, y + h - 10, 0);
+			g.drawRegion(arg, 0, 70, 10, 10, 0, x + w - 10, y + h - 10, 0);
+
+			int remW = w - 20;
+			int remH = h - 20;
+			int num = (remW % 10 != 0) ? (remW / 10 + 1) : (remW / 10);
+			int num2 = (remH % 10 != 0) ? (remH / 10 + 1) : (remH / 10);
+
+			for (int i = 0; i < num; i++)
+			{
+				int segW = (i == num - 1 && remW % 10 != 0) ? (remW % 10) : 10;
+				g.drawRegion(arg, 0, 10, segW, 10, 0, x + 10 + i * 10, y, 0);
+				g.drawRegion(arg, 0, 60, segW, 10, 0, x + 10 + i * 10, y + h - 10, 0);
+			}
+			for (int j = 0; j < num2; j++)
+			{
+				int segH = (j == num2 - 1 && remH % 10 != 0) ? (remH % 10) : 10;
+				g.drawRegion(arg, 0, 30, 10, segH, 0, x, y + 10 + j * 10, 0);
+				g.drawRegion(arg, 0, 40, 10, segH, 0, x + w - 10, y + 10 + j * 10, 0);
+			}
+			g.setColor((color != 1) ? 16770503 : 12052656);
+			g.fillRect(x + 10, y + 10, w - 20, h - 20);
 		}
-		for (int j = 0; j < num2; j++)
-		{
-			g.drawRegion(arg, 0, 30, 10, 10, 0, x, y + 10 + j * 10, 0);
-		}
-		for (int k = 0; k < num; k++)
-		{
-			g.drawRegion(arg, 0, 60, 10, 10, 0, x + 10 + k * 10, y + h - 10, 0);
-		}
-		for (int l = 0; l < num2; l++)
-		{
-			g.drawRegion(arg, 0, 40, 10, 10, 0, x + w - 10, y + 10 + l * 10, 0);
-		}
-		g.setColor((color != 1) ? 16770503 : 12052656);
-		g.fillRect(x + 10, y + 10, w - 20, h - 20);
 	}
 
 	public void paint(mGraphics g)
@@ -221,9 +253,12 @@ public class PopUp
 		if (isPaint && says != null && ChatPopup.currChatPopup == null && !isHide)
 		{
 			paintClipPopUp(g, cx, cy - GameCanvas.transY, cw, ch, (timeDelay != 0) ? 1 : 0, isFocus: true);
+			mFont font = (timeDelay != 0) ? mFont.tahoma_7b_green2 : mFont.tahoma_7b_white;
+			int fontH = (font != null) ? font.getHeight() : 12;
+			int startY = cy + (ch - says.Length * fontH) / 2 - GameCanvas.transY;
 			for (int i = 0; i < says.Length; i++)
 			{
-				((timeDelay != 0) ? mFont.tahoma_7b_green2 : mFont.tahoma_7b_white).drawString(g, says[i], cx + cw / 2, cy + (ch / 2 - says.Length * 12 / 2) + i * 12 - GameCanvas.transY, 2);
+				font.drawString(g, says[i], cx + cw / 2, startY + i * fontH, mFont.CENTER);
 			}
 		}
 	}

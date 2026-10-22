@@ -4,7 +4,7 @@ public class MotherCanvas
 
 	public GameCanvas tCanvas;
 
-	public int zoomLevel = 1;
+	public int zoomLevel = 2;
 
 	public Image imgCache;
 
@@ -25,7 +25,6 @@ public class MotherCanvas
 
 	public void checkZoomLevel(int w, int h)
 	{
-		// DragonBoy Native su dung bo tai nguyen goc HD x2, zoomLevel co dinh = 2
 		mGraphics.zoomLevel = 2;
 	}
 

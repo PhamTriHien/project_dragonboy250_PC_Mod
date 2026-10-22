@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -12,7 +12,7 @@ using UnityEngine;
 
 public static class ModAutoUpdate
 {
-	public const string CurrentVersion = "2.5.24";
+	public const string CurrentVersion = "2.5.25";
 	public const string ManifestUrl = "https://raw.githubusercontent.com/PhamTriHien/project_dragonboy250_PC_Mod/main/version.json";
 
 	public static bool isChecking = false;
@@ -37,7 +37,7 @@ public static class ModAutoUpdate
 	public static long totalBytes = 0;
 	public static string downloadSpeedStr = string.Empty;
 
-	// State cho Nút Sảnh & Bảng Thông Tin Cập Nhật
+	// State cho NÃºt Sáº£nh & Báº£ng ThÃ´ng Tin Cáº­p Nháº­t
 	public static bool isShowUpdateBoard = false;
 	public static int scrollY = 0;
 	public static int maxScrollY = 0;
@@ -78,7 +78,7 @@ public static class ModAutoUpdate
 		isChecking = true;
 		if (isManual)
 		{
-			manualStatusMsg = "Đang kiểm tra cập nhật...";
+			manualStatusMsg = "Äang kiá»ƒm tra cáº­p nháº­t...";
 		}
 
 		Thread thread = new Thread((ThreadStart)delegate
@@ -91,7 +91,7 @@ public static class ModAutoUpdate
 			{
 				if (isManual)
 				{
-					manualStatusMsg = "Kiểm tra thất bại: " + ex.Message;
+					manualStatusMsg = "Kiá»ƒm tra tháº¥t báº¡i: " + ex.Message;
 				}
 			}
 			finally
@@ -134,7 +134,7 @@ public static class ModAutoUpdate
 		{
 			if (isManual)
 			{
-				manualStatusMsg = "Không thể kết nối máy chủ cập nhật (Timeout/Mất mạng).";
+				manualStatusMsg = "KhÃ´ng thá»ƒ káº¿t ná»‘i mÃ¡y chá»§ cáº­p nháº­t (Timeout/Máº¥t máº¡ng).";
 			}
 			return;
 		}
@@ -151,7 +151,7 @@ public static class ModAutoUpdate
 			hasNewVersion = true;
 			if (isManual)
 			{
-				manualStatusMsg = "Phát hiện bản mới v" + remoteVersion + "!";
+				manualStatusMsg = "PhÃ¡t hiá»‡n báº£n má»›i v" + remoteVersion + "!";
 			}
 		}
 		else
@@ -159,7 +159,7 @@ public static class ModAutoUpdate
 			hasNewVersion = false;
 			if (isManual)
 			{
-				manualStatusMsg = "Bạn đang dùng bản mới nhất (v" + CurrentVersion + ").";
+				manualStatusMsg = "Báº¡n Ä‘ang dÃ¹ng báº£n má»›i nháº¥t (v" + CurrentVersion + ").";
 			}
 		}
 	}
@@ -222,7 +222,7 @@ public static class ModAutoUpdate
 	{
 		if (isChecking)
 		{
-			GameCanvas.startOK("Đang kiểm tra cập nhật, vui lòng chờ...", 8882, null);
+			GameCanvas.startOK("Äang kiá»ƒm tra cáº­p nháº­t, vui lÃ²ng chá»...", 8882, null);
 			return;
 		}
 		if (hasChecked)
@@ -231,7 +231,7 @@ public static class ModAutoUpdate
 		}
 		else
 		{
-			GameCanvas.startOK("Đang kết nối GitHub kiểm tra cập nhật...", 8882, null);
+			GameCanvas.startOK("Äang káº¿t ná»‘i GitHub kiá»ƒm tra cáº­p nháº­t...", 8882, null);
 			StartCheckAsync(force: true, isManual: true);
 		}
 	}
@@ -241,7 +241,7 @@ public static class ModAutoUpdate
 		if (isDownloading) return;
 		if (string.IsNullOrEmpty(downloadUrl))
 		{
-			GameScr.info1?.addInfo("Không tìm thấy đường dẫn tải bản cập nhật!", 0);
+			GameScr.info1?.addInfo("KhÃ´ng tÃ¬m tháº¥y Ä‘Æ°á»ng dáº«n táº£i báº£n cáº­p nháº­t!", 0);
 			return;
 		}
 
@@ -331,7 +331,7 @@ public static class ModAutoUpdate
 				isShowCompletedBoard = false;
 				downloadPercent = 0;
 				try { if (File.Exists(tempFile)) File.Delete(tempFile); } catch { }
-				GameScr.info1?.addInfo("Tải thất bại: " + ex.Message, 0);
+				GameScr.info1?.addInfo("Táº£i tháº¥t báº¡i: " + ex.Message, 0);
 			}
 		});
 		thread.IsBackground = true;
@@ -411,7 +411,7 @@ public static class ModAutoUpdate
 
 		if (isAndroid)
 		{
-			GameScr.info1?.addInfo("Tải xong APK! Đang mở trình cài đặt...", 0);
+			GameScr.info1?.addInfo("Táº£i xong APK! Äang má»Ÿ trÃ¬nh cÃ i Ä‘áº·t...", 0);
 #if NET8_0_OR_GREATER
 			if (Application.InstallApkHandler != null)
 			{
@@ -434,7 +434,7 @@ public static class ModAutoUpdate
 		}
 		else if (isIOS)
 		{
-			GameScr.info1?.addInfo("Tải xong IPA! Đang mở TrollStore...", 0);
+			GameScr.info1?.addInfo("Táº£i xong IPA! Äang má»Ÿ TrollStore...", 0);
 			try
 			{
 				Application.OpenURL("trollstore://install?url=" + localFile);
@@ -446,7 +446,7 @@ public static class ModAutoUpdate
 		}
 		else
 		{
-			GameScr.info1?.addInfo("Tải hoàn tất! Tự động khởi động lại game...", 0);
+			GameScr.info1?.addInfo("Táº£i hoÃ n táº¥t! Tá»± Ä‘á»™ng khá»Ÿi Ä‘á»™ng láº¡i game...", 0);
 			ApplyUpdateAndRestart();
 		}
 	}
@@ -458,35 +458,35 @@ public static class ModAutoUpdate
 		isDownloadCompleted = false;
 		isShowCompletedBoard = false;
 		downloadPercent = 0;
-		GameScr.info1?.addInfo("Đã hủy tải bản cập nhật!", 0);
+		GameScr.info1?.addInfo("ÄÃ£ há»§y táº£i báº£n cáº­p nháº­t!", 0);
 	}
 
 	public static void PaintDownloadProgress(mGraphics g)
 	{
 		if (!isDownloading && !isShowCompletedBoard) return;
 
-		// Phủ mờ nền đen nhẹ
+		// Phá»§ má» ná»n Ä‘en nháº¹
 		g.setColor(0, 0.6f);
 		g.fillRect(0, 0, GameCanvas.w, GameCanvas.h);
 
-		// Khung hộp thoại chính giữa
+		// Khung há»™p thoáº¡i chÃ­nh giá»¯a
 		int boxW = 260;
 		int boxH = isShowCompletedBoard ? 145 : 135;
 		if (boxW > GameCanvas.w - 20) boxW = GameCanvas.w - 20;
 		int boxX = (GameCanvas.w - boxW) / 2;
 		int boxY = (GameCanvas.h - boxH) / 2;
 
-		// Khung nền giấy da be viền vàng hoàng kim NRO
+		// Khung ná»n giáº¥y da be viá»n vÃ ng hoÃ ng kim NRO
 		PopUp.paintPopUp(g, boxX, boxY, boxW, boxH, 0, isButton: true);
 
 		if (isShowCompletedBoard)
 		{
-			// TIÊU ĐỀ HOÀN TẤT
+			// TIÃŠU Äá»€ HOÃ€N Táº¤T
 			int titleY = boxY + 12;
-			mFont.tahoma_7b_red.drawString(g, "CẬP NHẬT HOÀN TẤT", boxX + boxW / 2, titleY, mFont.CENTER);
+			mFont.tahoma_7b_red.drawString(g, "Cáº¬P NHáº¬T HOÃ€N Táº¤T", boxX + boxW / 2, titleY, mFont.CENTER);
 
 			int infoY1 = titleY + 18;
-			mFont.tahoma_7b_dark.drawString(g, "Đã tải xong bản v" + (string.IsNullOrEmpty(remoteVersion) ? CurrentVersion : remoteVersion) + " (100%)", boxX + boxW / 2, infoY1, mFont.CENTER);
+			mFont.tahoma_7b_dark.drawString(g, "ÄÃ£ táº£i xong báº£n v" + (string.IsNullOrEmpty(remoteVersion) ? CurrentVersion : remoteVersion) + " (100%)", boxX + boxW / 2, infoY1, mFont.CENTER);
 
 			int infoY2 = infoY1 + 16;
 			bool isAndroid = (Application.platform == RuntimePlatform.Android) || (mSystem.clientType == 2);
@@ -494,21 +494,21 @@ public static class ModAutoUpdate
 
 			if (isAndroid)
 			{
-				mFont.tahoma_7_green.drawString(g, "Đang mở trình cài đặt APK...", boxX + boxW / 2, infoY2, mFont.CENTER);
-				mFont.tahoma_7b_dark.drawString(g, "Nếu chưa hiện, bấm 'CÀI ĐẶT' bên dưới.", boxX + boxW / 2, infoY2 + 14, mFont.CENTER);
+				mFont.tahoma_7_green.drawString(g, "Äang má»Ÿ trÃ¬nh cÃ i Ä‘áº·t APK...", boxX + boxW / 2, infoY2, mFont.CENTER);
+				mFont.tahoma_7b_dark.drawString(g, "Náº¿u chÆ°a hiá»‡n, báº¥m 'CÃ€I Äáº¶T' bÃªn dÆ°á»›i.", boxX + boxW / 2, infoY2 + 14, mFont.CENTER);
 			}
 			else if (isIOS)
 			{
-				mFont.tahoma_7_green.drawString(g, "Đã tải xong file IPA!", boxX + boxW / 2, infoY2, mFont.CENTER);
-				mFont.tahoma_7b_dark.drawString(g, "Bấm 'MỞ CÀI ĐẶT' để cài qua TrollStore.", boxX + boxW / 2, infoY2 + 14, mFont.CENTER);
+				mFont.tahoma_7_green.drawString(g, "ÄÃ£ táº£i xong file IPA!", boxX + boxW / 2, infoY2, mFont.CENTER);
+				mFont.tahoma_7b_dark.drawString(g, "Báº¥m 'Má»ž CÃ€I Äáº¶T' Ä‘á»ƒ cÃ i qua TrollStore.", boxX + boxW / 2, infoY2 + 14, mFont.CENTER);
 			}
 			else
 			{
-				mFont.tahoma_7_green.drawString(g, "Đang khởi động lại game...", boxX + boxW / 2, infoY2, mFont.CENTER);
-				mFont.tahoma_7b_dark.drawString(g, "Nếu chưa tự tắt, bấm 'KHỞI ĐỘNG LẠI'.", boxX + boxW / 2, infoY2 + 14, mFont.CENTER);
+				mFont.tahoma_7_green.drawString(g, "Äang khá»Ÿi Ä‘á»™ng láº¡i game...", boxX + boxW / 2, infoY2, mFont.CENTER);
+				mFont.tahoma_7b_dark.drawString(g, "Náº¿u chÆ°a tá»± táº¯t, báº¥m 'KHá»žI Äá»˜NG Láº I'.", boxX + boxW / 2, infoY2 + 14, mFont.CENTER);
 			}
 
-			// 2 Nút bấm: [ CÀI ĐẶT / KHỞI ĐỘNG LẠI ] và [ ĐÓNG ]
+			// 2 NÃºt báº¥m: [ CÃ€I Äáº¶T / KHá»žI Äá»˜NG Láº I ] vÃ  [ ÄÃ“NG ]
 			int btnActionW = 96;
 			int btnCloseW = 60;
 			int totalBtnW = btnActionW + btnCloseW + 8;
@@ -517,21 +517,21 @@ public static class ModAutoUpdate
 			int btnY = boxY + boxH - 30;
 			int btnH = 22;
 
-			string actionLabel = isAndroid ? "CÀI ĐẶT" : (isIOS ? "MỞ CÀI ĐẶT" : "KHỞI ĐỘNG LẠI");
+			string actionLabel = isAndroid ? "CÃ€I Äáº¶T" : (isIOS ? "Má»ž CÃ€I Äáº¶T" : "KHá»žI Äá»˜NG Láº I");
 			PopUp.paintPopUp(g, btnActionX, btnY, btnActionW, btnH, 1, isButton: true);
 			mFont.tahoma_7b_dark.drawString(g, actionLabel, btnActionX + btnActionW / 2, btnY + 4, mFont.CENTER);
 
 			PopUp.paintPopUp(g, btnCloseX, btnY, btnCloseW, btnH, 0, isButton: true);
-			mFont.tahoma_7b_dark.drawString(g, "ĐÓNG", btnCloseX + btnCloseW / 2, btnY + 4, mFont.CENTER);
+			mFont.tahoma_7b_dark.drawString(g, "ÄÃ“NG", btnCloseX + btnCloseW / 2, btnY + 4, mFont.CENTER);
 		}
 		else
 		{
-			// ĐANG TẢI TRỰC TIẾP
+			// ÄANG Táº¢I TRá»°C TIáº¾P
 			int titleY = boxY + 12;
-			mFont.tahoma_7b_red.drawString(g, "CẬP NHẬT TRỰC TIẾP", boxX + boxW / 2, titleY, mFont.CENTER);
+			mFont.tahoma_7b_red.drawString(g, "Cáº¬P NHáº¬T TRá»°C TIáº¾P", boxX + boxW / 2, titleY, mFont.CENTER);
 
 			int infoY1 = titleY + 18;
-			string verStr = "Đang tải bản v" + remoteVersion;
+			string verStr = "Äang táº£i báº£n v" + remoteVersion;
 			if (!string.IsNullOrEmpty(downloadSpeedStr))
 			{
 				verStr += " (" + downloadSpeedStr + ")";
@@ -553,11 +553,11 @@ public static class ModAutoUpdate
 			if (GameScr.frBarPow20 != null && GameScr.frBarPow21 != null && GameScr.frBarPow22 != null &&
 			    GameScr.frBarPow0 != null && GameScr.frBarPow1 != null && GameScr.frBarPow2 != null)
 			{
-				// Nền rãnh thanh nạp (vàng/cam NRO): hiển thị trọn vẹn 100% chiều dài barW (pixelPercent = barW)
+				// Ná»n rÃ£nh thanh náº¡p (vÃ ng/cam NRO): hiá»ƒn thá»‹ trá»n váº¹n 100% chiá»u dÃ i barW (pixelPercent = barW)
 				GameScr.paintOngMauPercent(GameScr.frBarPow20, GameScr.frBarPow21, GameScr.frBarPow22, barX, barY, barW, barW, g);
 				if (downloadPercent > 0)
 				{
-					// Thanh tiến độ nạp (xanh lục NRO): hiển thị chính xác theo tỉ lệ pixel thực tế
+					// Thanh tiáº¿n Ä‘á»™ náº¡p (xanh lá»¥c NRO): hiá»ƒn thá»‹ chÃ­nh xÃ¡c theo tá»‰ lá»‡ pixel thá»±c táº¿
 					float fillW = (float)downloadPercent * (float)barW / 100f;
 					if (fillW > barW) fillW = barW;
 					GameScr.paintOngMauPercent(GameScr.frBarPow0, GameScr.frBarPow1, GameScr.frBarPow2, barX, barY, barW, fillW, g);
@@ -578,14 +578,14 @@ public static class ModAutoUpdate
 				}
 			}
 
-			// Nút HỦY BỎ
+			// NÃºt Há»¦Y Bá»Ž
 			int btnW = 80;
 			int btnH = 22;
 			int btnX = (GameCanvas.w - btnW) / 2;
 			int btnY = barY + 22;
 
 			PopUp.paintPopUp(g, btnX, btnY, btnW, btnH, 0, isButton: true);
-			mFont.tahoma_7b_dark.drawString(g, "HỦY BỎ", btnX + btnW / 2, btnY + 4, mFont.CENTER);
+			mFont.tahoma_7b_dark.drawString(g, "Há»¦Y Bá»Ž", btnX + btnW / 2, btnY + 4, mFont.CENTER);
 		}
 	}
 
@@ -614,7 +614,7 @@ public static class ModAutoUpdate
 				int px = GameCanvas.px;
 				int py = GameCanvas.py;
 
-				// Click nút Action (Cài đặt / Khởi động lại)
+				// Click nÃºt Action (CÃ i Ä‘áº·t / Khá»Ÿi Ä‘á»™ng láº¡i)
 				if (px >= btnActionX && px <= btnActionX + btnActionW && py >= btnY && py <= btnY + btnH)
 				{
 					GameCanvas.isPointerClick = false;
@@ -624,7 +624,7 @@ public static class ModAutoUpdate
 					return;
 				}
 
-				// Click nút Đóng
+				// Click nÃºt ÄÃ³ng
 				if (px >= btnCloseX && px <= btnCloseX + btnCloseW && py >= btnY && py <= btnY + btnH)
 				{
 					GameCanvas.isPointerClick = false;
@@ -642,7 +642,7 @@ public static class ModAutoUpdate
 			return;
 		}
 
-		// Khi đang tải:
+		// Khi Ä‘ang táº£i:
 		int barW = boxW - 40;
 		if (barW > 200) barW = 200;
 		int barY = boxY + 68;
@@ -689,25 +689,25 @@ public static class ModAutoUpdate
 
 		if (isDownloadCompleted)
 		{
-			// Nút CÀI ĐẶT màu vàng rực rỡ với chấm đỏ nhấp nháy
+			// NÃºt CÃ€I Äáº¶T mÃ u vÃ ng rá»±c rá»¡ vá»›i cháº¥m Ä‘á» nháº¥p nhÃ¡y
 			PopUp.paintPopUp(g, btnX, btnY, btnW, btnH, 1, isButton: true);
-			mFont.tahoma_7b_dark.drawString(g, "CÀI ĐẶT", btnX + btnW / 2, btnY + 4, mFont.CENTER);
+			mFont.tahoma_7b_dark.drawString(g, "CÃ€I Äáº¶T", btnX + btnW / 2, btnY + 4, mFont.CENTER);
 
-			// Chấm Sáng Đỏ nhấp nháy
+			// Cháº¥m SÃ¡ng Äá» nháº¥p nhÃ¡y
 			PaintRedNotificationDot(g, btnX + btnW - 3, btnY - 2);
 		}
 		else if (hasNewVersion)
 		{
-			// Nút nổi viền vàng rực NRO (Style 1: active button)
+			// NÃºt ná»•i viá»n vÃ ng rá»±c NRO (Style 1: active button)
 			PopUp.paintPopUp(g, btnX, btnY, btnW, btnH, 1, isButton: true);
-			mFont.tahoma_7b_dark.drawString(g, "CẬP NHẬT", btnX + btnW / 2, btnY + 4, mFont.CENTER);
+			mFont.tahoma_7b_dark.drawString(g, "Cáº¬P NHáº¬T", btnX + btnW / 2, btnY + 4, mFont.CENTER);
 
-			// Chấm Sáng Đỏ nhấp nháy thu hút sự chú ý
+			// Cháº¥m SÃ¡ng Äá» nháº¥p nhÃ¡y thu hÃºt sá»± chÃº Ã½
 			PaintRedNotificationDot(g, btnX + btnW - 3, btnY - 2);
 		}
 		else
 		{
-			// Nút phiên bản chuẩn NRO (Style 0: normal button)
+			// NÃºt phiÃªn báº£n chuáº©n NRO (Style 0: normal button)
 			PopUp.paintPopUp(g, btnX, btnY, btnW, btnH, 0, isButton: true);
 			mFont.tahoma_7b_dark.drawString(g, "v" + CurrentVersion, btnX + btnW / 2, btnY + 4, mFont.CENTER);
 		}
@@ -733,11 +733,11 @@ public static class ModAutoUpdate
 	{
 		if (!isShowUpdateBoard || isDownloading || isShowCompletedBoard || !hasNewVersion) return;
 
-		// Phủ nền mờ tối toàn màn hình
+		// Phá»§ ná»n má» tá»‘i toÃ n mÃ n hÃ¬nh
 		g.setColor(0, 0.7f);
 		g.fillRect(0, 0, GameCanvas.w, GameCanvas.h);
 
-		// Kích thước bảng
+		// KÃ­ch thÆ°á»›c báº£ng
 		int boxW = 300;
 		int boxH = 195;
 		if (boxW > GameCanvas.w - 16) boxW = GameCanvas.w - 16;
@@ -745,56 +745,56 @@ public static class ModAutoUpdate
 		int boxX = (GameCanvas.w - boxW) / 2;
 		int boxY = (GameCanvas.h - boxH) / 2;
 
-		// Khung hộp thoại nền giấy da be viền vàng hoàng kim NRO
+		// Khung há»™p thoáº¡i ná»n giáº¥y da be viá»n vÃ ng hoÃ ng kim NRO
 		PopUp.paintPopUp(g, boxX, boxY, boxW, boxH, 0, isButton: true);
 
-		// 1. Tiêu đề
-		mFont.tahoma_7b_red.drawString(g, "THÔNG TIN CẬP NHẬT", boxX + boxW / 2, boxY + 10, mFont.CENTER);
+		// 1. TiÃªu Ä‘á»
+		mFont.tahoma_7b_red.drawString(g, "THÃ”NG TIN Cáº¬P NHáº¬T", boxX + boxW / 2, boxY + 10, mFont.CENTER);
 
-		// Nút [X] đóng nhanh góc trên bên phải
+		// NÃºt [X] Ä‘Ã³ng nhanh gÃ³c trÃªn bÃªn pháº£i
 		int closeX = boxX + boxW - 22;
 		int closeY = boxY + 6;
 		PopUp.paintPopUp(g, closeX, closeY, 16, 16, 0, isButton: true);
 		mFont.tahoma_7b_dark.drawString(g, "X", closeX + 8, closeY + 2, mFont.CENTER);
 
-		// 2. Dòng thông tin phiên bản
+		// 2. DÃ²ng thÃ´ng tin phiÃªn báº£n
 		int infoY = boxY + 28;
 		if (hasNewVersion)
 		{
-			mFont.tahoma_7b_dark.drawString(g, "Bản mới: v" + remoteVersion, boxX + 14, infoY, mFont.LEFT);
-			mFont.tahoma_7_grey.drawString(g, "Hiện tại: v" + CurrentVersion, boxX + boxW - 14, infoY, mFont.RIGHT);
+			mFont.tahoma_7b_dark.drawString(g, "Báº£n má»›i: v" + remoteVersion, boxX + 14, infoY, mFont.LEFT);
+			mFont.tahoma_7_grey.drawString(g, "Hiá»‡n táº¡i: v" + CurrentVersion, boxX + boxW - 14, infoY, mFont.RIGHT);
 			if (!string.IsNullOrEmpty(buildDate))
 			{
-				mFont.tahoma_7b_dark.drawString(g, "Ngày phát hành: " + buildDate, boxX + 14, infoY + 14, mFont.LEFT);
+				mFont.tahoma_7b_dark.drawString(g, "NgÃ y phÃ¡t hÃ nh: " + buildDate, boxX + 14, infoY + 14, mFont.LEFT);
 			}
 		}
 		else
 		{
-			mFont.tahoma_7b_dark.drawString(g, "Phiên bản hiện tại: v" + CurrentVersion, boxX + 14, infoY, mFont.LEFT);
-			mFont.tahoma_7_green.drawString(g, "Bạn đang sử dụng phiên bản mới nhất!", boxX + 14, infoY + 14, mFont.LEFT);
+			mFont.tahoma_7b_dark.drawString(g, "PhiÃªn báº£n hiá»‡n táº¡i: v" + CurrentVersion, boxX + 14, infoY, mFont.LEFT);
+			mFont.tahoma_7_green.drawString(g, "Báº¡n Ä‘ang sá»­ dá»¥ng phiÃªn báº£n má»›i nháº¥t!", boxX + 14, infoY + 14, mFont.LEFT);
 		}
 
-		// 3. Khung nội dung chi tiết (Changelog Box)
+		// 3. Khung ná»™i dung chi tiáº¿t (Changelog Box)
 		int contentY = infoY + 30;
 		int contentW = boxW - 24;
 		int contentH = boxH - (contentY - boxY) - 42;
 		if (contentH < 40) contentH = 40;
 
-		// Nền tối sắc nét cho khung văn bản (gỗ sẫm viền nâu da)
+		// Ná»n tá»‘i sáº¯c nÃ©t cho khung vÄƒn báº£n (gá»— sáº«m viá»n nÃ¢u da)
 		g.setColor(0x24150c);
 		g.fillRect(boxX + 12, contentY, contentW, contentH);
 		g.setColor(0x8d6e63);
 		g.drawRect(boxX + 12, contentY, contentW, contentH);
 
-		// Clip và vẽ các dòng văn bản
+		// Clip vÃ  váº½ cÃ¡c dÃ²ng vÄƒn báº£n
 		g.setClip(boxX + 14, contentY + 3, contentW - 4, contentH - 6);
 
 		string textToDisplay = changelog;
 		if (string.IsNullOrEmpty(textToDisplay))
 		{
 			textToDisplay = hasNewVersion 
-				? ("Phát hiện bản cập nhật mới v" + remoteVersion + "! Hãy bấm 'Cập nhật' để tải trực tiếp bản mới nhất.")
-				: ("Bạn đang sử dụng phiên bản mới nhất của Mod DragonBoy. Không có bản cập nhật nào mới hơn.");
+				? ("PhÃ¡t hiá»‡n báº£n cáº­p nháº­t má»›i v" + remoteVersion + "! HÃ£y báº¥m 'Cáº­p nháº­t' Ä‘á»ƒ táº£i trá»±c tiáº¿p báº£n má»›i nháº¥t.")
+				: ("Báº¡n Ä‘ang sá»­ dá»¥ng phiÃªn báº£n má»›i nháº¥t cá»§a Mod DragonBoy. KhÃ´ng cÃ³ báº£n cáº­p nháº­t nÃ o má»›i hÆ¡n.");
 		}
 
 		string[] lines = mFont.tahoma_7_white.splitFontArray(textToDisplay, contentW - 12);
@@ -815,7 +815,7 @@ public static class ModAutoUpdate
 		}
 		g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
 
-		// 4. Các nút thao tác bên dưới
+		// 4. CÃ¡c nÃºt thao tÃ¡c bÃªn dÆ°á»›i
 		int btnY = boxY + boxH - 32;
 		int btnW = 86;
 		int btnH = 24;
@@ -825,20 +825,20 @@ public static class ModAutoUpdate
 			int btnUpdateX = boxX + boxW / 2 - btnW - 8;
 			int btnCloseX = boxX + boxW / 2 + 8;
 
-			// Nút CẬP NHẬT
+			// NÃºt Cáº¬P NHáº¬T
 			PopUp.paintPopUp(g, btnUpdateX, btnY, btnW, btnH, 1, isButton: true);
-			mFont.tahoma_7b_dark.drawString(g, "CẬP NHẬT", btnUpdateX + btnW / 2, btnY + 5, mFont.CENTER);
+			mFont.tahoma_7b_dark.drawString(g, "Cáº¬P NHáº¬T", btnUpdateX + btnW / 2, btnY + 5, mFont.CENTER);
 
-			// Nút ĐÓNG
+			// NÃºt ÄÃ“NG
 			PopUp.paintPopUp(g, btnCloseX, btnY, btnW, btnH, 0, isButton: true);
-			mFont.tahoma_7b_dark.drawString(g, "ĐÓNG", btnCloseX + btnW / 2, btnY + 5, mFont.CENTER);
+			mFont.tahoma_7b_dark.drawString(g, "ÄÃ“NG", btnCloseX + btnW / 2, btnY + 5, mFont.CENTER);
 		}
 		else
 		{
-			// Nút ĐÓNG chính giữa
+			// NÃºt ÄÃ“NG chÃ­nh giá»¯a
 			int btnCloseX = (GameCanvas.w - btnW) / 2;
 			PopUp.paintPopUp(g, btnCloseX, btnY, btnW, btnH, 0, isButton: true);
-			mFont.tahoma_7b_dark.drawString(g, "ĐÓNG", btnCloseX + btnW / 2, btnY + 5, mFont.CENTER);
+			mFont.tahoma_7b_dark.drawString(g, "ÄÃ“NG", btnCloseX + btnW / 2, btnY + 5, mFont.CENTER);
 		}
 	}
 
@@ -855,7 +855,7 @@ public static class ModAutoUpdate
 		int btnX = GetBtnX();
 		int btnY = GetBtnY();
 
-		// 1. Khi đang mở Bảng Thông Tin Cập Nhật
+		// 1. Khi Ä‘ang má»Ÿ Báº£ng ThÃ´ng Tin Cáº­p Nháº­t
 		if (isShowUpdateBoard)
 		{
 			int boxW = 300;
@@ -879,7 +879,7 @@ public static class ModAutoUpdate
 			int contentW = boxW - 24;
 			int contentH = boxH - (contentY - boxY) - 42;
 
-			// Xử lý vuốt cuộn cảm ứng hoặc kéo chuột
+			// Xá»­ lÃ½ vuá»‘t cuá»™n cáº£m á»©ng hoáº·c kÃ©o chuá»™t
 			if (GameCanvas.isPointerJustDown)
 			{
 				lastPointerY = GameCanvas.py;
@@ -904,7 +904,7 @@ public static class ModAutoUpdate
 				int px = GameCanvas.px;
 				int py = GameCanvas.py;
 
-				// Click nút [X] đóng
+				// Click nÃºt [X] Ä‘Ã³ng
 				if (px >= closeX && px <= closeX + 16 && py >= closeY && py <= closeY + 16)
 				{
 					isShowUpdateBoard = false;
@@ -913,7 +913,7 @@ public static class ModAutoUpdate
 					return;
 				}
 
-				// Click nút [ ĐÓNG ]
+				// Click nÃºt [ ÄÃ“NG ]
 				if (px >= btnCloseX && px <= btnCloseX + btnActionW && py >= btnActionY && py <= btnActionY + btnActionH)
 				{
 					isShowUpdateBoard = false;
@@ -922,7 +922,7 @@ public static class ModAutoUpdate
 					return;
 				}
 
-				// Click nút [ CẬP NHẬT ]
+				// Click nÃºt [ Cáº¬P NHáº¬T ]
 				if (hasNewVersion && px >= btnUpdateX && px <= btnUpdateX + btnActionW && py >= btnActionY && py <= btnActionY + btnActionH)
 				{
 					isShowUpdateBoard = false;
@@ -932,7 +932,7 @@ public static class ModAutoUpdate
 					return;
 				}
 
-				// Click ra ngoài vùng bảng -> Đóng bảng
+				// Click ra ngoÃ i vÃ¹ng báº£ng -> ÄÃ³ng báº£ng
 				if (px < boxX || px > boxX + boxW || py < boxY || py > boxY + boxH)
 				{
 					isShowUpdateBoard = false;
@@ -941,7 +941,7 @@ public static class ModAutoUpdate
 				}
 			}
 
-			// Phím Back / ESC / Đóng
+			// PhÃ­m Back / ESC / ÄÃ³ng
 			if (GameCanvas.keyPressed[13] || GameCanvas.keyPressed[5])
 			{
 				GameCanvas.clearKeyPressed();
@@ -950,7 +950,7 @@ public static class ModAutoUpdate
 			return;
 		}
 
-		// 2. Khi ở sảnh game (chưa mở bảng), xử lý click nút ở góc trên bên phải
+		// 2. Khi á»Ÿ sáº£nh game (chÆ°a má»Ÿ báº£ng), xá»­ lÃ½ click nÃºt á»Ÿ gÃ³c trÃªn bÃªn pháº£i
 		if (GameCanvas.isPointerClick)
 		{
 			int px = GameCanvas.px;
@@ -970,11 +970,11 @@ public static class ModAutoUpdate
 				}
 				else if (isChecking)
 				{
-					GameCanvas.startOK("Đang kết nối GitHub kiểm tra cập nhật...", 8882, null);
+					GameCanvas.startOK("Äang káº¿t ná»‘i GitHub kiá»ƒm tra cáº­p nháº­t...", 8882, null);
 				}
 				else if (hasChecked)
 				{
-					GameCanvas.startOK("Bạn đang ở phiên bản mới nhất (v" + CurrentVersion + ").\nĐã đồng bộ dữ liệu GitHub!", 8882, null);
+					GameCanvas.startOK("Báº¡n Ä‘ang á»Ÿ phiÃªn báº£n má»›i nháº¥t (v" + CurrentVersion + ").\nÄÃ£ Ä‘á»“ng bá»™ dá»¯ liá»‡u GitHub!", 8882, null);
 				}
 				else
 				{
@@ -1041,7 +1041,7 @@ del ""%~f0""
 		}
 		catch (Exception ex)
 		{
-			GameScr.info1?.addInfo("Lỗi khởi động updater: " + ex.Message, 0);
+			GameScr.info1?.addInfo("Lá»—i khá»Ÿi Ä‘á»™ng updater: " + ex.Message, 0);
 		}
 	}
 
@@ -1121,11 +1121,11 @@ public class AutoUpdateActionListener : IActionListener
 	public void perform(int idAction, object p)
 	{
 		GameCanvas.endDlg();
-		if (idAction == 1) // Cập nhật ngay -> Tải trực tiếp trong game
+		if (idAction == 1) // Cáº­p nháº­t ngay -> Táº£i trá»±c tiáº¿p trong game
 		{
 			ModAutoUpdate.StartInGameDownload();
 		}
-		else if (idAction == 2) // Để sau
+		else if (idAction == 2) // Äá»ƒ sau
 		{
 			ModAutoUpdate.hasPrompted = true;
 		}

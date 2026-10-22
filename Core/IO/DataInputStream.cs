@@ -44,41 +44,7 @@ public class DataInputStream
 
 	private static DataInputStream _getResourceAsStream(string filename)
 	{
-		if (status != 0)
-		{
-			for (int i = 0; i < 500; i++)
-			{
-				Thread.Sleep(5);
-				if (status == 0)
-				{
-					break;
-				}
-			}
-			if (status != 0)
-			{
-				Debug.LogError("CANNOT GET INPUTSTREAM " + filename + " WHEN GETTING " + filenametemp);
-				return null;
-			}
-		}
-		istemp = null;
-		filenametemp = filename;
-		status = 2;
-		int j;
-		for (j = 0; j < 500; j++)
-		{
-			Thread.Sleep(5);
-			if (status == 0)
-			{
-				break;
-			}
-		}
-		if (j == 500)
-		{
-			Debug.LogError("TOO LONG FOR CREATE INPUTSTREAM " + filename);
-			status = 0;
-			return null;
-		}
-		return istemp;
+		return __getResourceAsStream(filename);
 	}
 
 	private static DataInputStream __getResourceAsStream(string filename)

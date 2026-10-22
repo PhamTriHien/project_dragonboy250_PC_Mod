@@ -491,9 +491,9 @@ public partial class Char : IMapObject
 						}
 						return;
 					}
-					if (me && GameCanvas.isTouch)
+					if (me && (GameCanvas.isTouch || Main.isPC))
 					{
-						if (charFocus != null && charFocus.charID >= 0 && charFocus.cx > 100 && charFocus.cx < TileMap.pxw - 100 && isInEnterOnlinePoint() == null && isInEnterOfflinePoint() == null && !isAttacPlayerStatus() && TileMap.mapID != 51 && TileMap.mapID != 52 && GameCanvas.panel.vPlayerMenu.size() > 0 && GameScr.gI().popUpYesNo == null)
+						if (charFocus != null && charFocus.charID >= 0 && charFocus.cx > 100 && charFocus.cx < TileMap.pxw - 100 && isInEnterOnlinePoint() == null && isInEnterOfflinePoint() == null && !isAttacPlayerStatus() && TileMap.mapID != 51 && TileMap.mapID != 52 && GameScr.gI().popUpYesNo == null)
 						{
 							int num5 = Math.abs(cx - charFocus.cx);
 							int num6 = Math.abs(cy - charFocus.cy);

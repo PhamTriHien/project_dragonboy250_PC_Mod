@@ -166,32 +166,33 @@ public partial class mFont
 			}
 		}
 
+	private static readonly GUIStyle s_StyleLeft = new GUIStyle { alignment = TextAnchor.UpperLeft };
+	private static readonly GUIStyle s_StyleRight = new GUIStyle { alignment = TextAnchor.UpperRight };
+	private static readonly GUIStyle s_StyleCenter = new GUIStyle { alignment = TextAnchor.UpperCenter };
+
 	public void _drawString(mGraphics g, string st, int x0, int y0, int align)
 		{
+			if (string.IsNullOrEmpty(st)) return;
 			y0 += yAddFont;
-			GUIStyle gUIStyle = new GUIStyle(GUI.skin.label);
-			gUIStyle.font = myFont;
+			GUIStyle gUIStyle;
 			float num = 0f;
-			float num2 = 0f;
+			float num2 = y0;
 			switch (align)
 			{
 			case 0:
 				num = x0;
-				num2 = y0;
-				gUIStyle.alignment = TextAnchor.UpperLeft;
+				gUIStyle = s_StyleLeft;
 				break;
 			case 1:
 				num = x0 - GameCanvas.w;
-				num2 = y0;
-				gUIStyle.alignment = TextAnchor.UpperRight;
+				gUIStyle = s_StyleRight;
 				break;
-			case 2:
-			case 3:
+			default:
 				num = x0 - GameCanvas.w / 2;
-				num2 = y0;
-				gUIStyle.alignment = TextAnchor.UpperCenter;
+				gUIStyle = s_StyleCenter;
 				break;
 			}
+			gUIStyle.font = myFont;
 			gUIStyle.normal.textColor = color1;
 			g.drawString(st, (int)num, (int)num2, gUIStyle);
 		}

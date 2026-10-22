@@ -167,12 +167,16 @@ public partial class Controller : IMessageHandler
 					break;
 				}
 				case -26:
+				{
 					ServerListScreen.testConnect = 2;
 					GameCanvas.debug("SA2", 2);
-					GameCanvas.startOKDlg(msg.reader().readUTF());
+					string serverErr = msg.reader().readUTF();
+					Res.outz("[SERVER ERROR MSG -26] " + serverErr);
+					ModAutoLogin.isReconnecting = false;
+					ModAutoLogin.statusMessage = "";
+					GameCanvas.startOKDlg(serverErr);
 					InfoDlg.hide();
 					LoginScr.isContinueToLogin = false;
-					ModAutoLogin.isReconnecting = false;
 					Char.isLoadingMap = false;
 					Char.ischangingMap = false;
 					Char.isLockKey = false;
@@ -188,6 +192,7 @@ public partial class Controller : IMessageHandler
 						GameCanvas.serverScreen.switchToMe();
 					}
 					break;
+				}
 				case -25:
 				{
 					GameCanvas.debug("SA3", 2);

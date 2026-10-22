@@ -41,24 +41,29 @@ public static class ModUITanSat
 
 	public static void UpdateDragScroll(int px, int py, int uiX, int uiY, int uiW, int uiH)
 	{
-		int listX = uiX + 5;
-		int listY = uiY + 59;
-		int listW = uiW - 10;
-		int listH = 132;
+		int row2Y = uiY + 45;
+		int row2H = 17;
+		int listX = uiX + 4;
+		int listY = row2Y + row2H + 3;
+		int listW = uiW - 8;
+		int footerH = 18;
+		int footerY = uiY + uiH - footerH - 4;
+		int listH = (footerY - 4) - listY;
+		if (listH < 40) listH = 40;
 
 		int maxScroll = 0;
 		if (ModUI.tanSatTab == 0)
 		{
 			List<int> mobIds = ModUI.GetUniqueMobTemplateIds();
 			int totalRows = (mobIds.Count + 1 + 1) / 2;
-			int contentH = totalRows * 19 + 4;
+			int contentH = totalRows * 18 + 4;
 			maxScroll = (contentH > listH - 4) ? (contentH - (listH - 4)) : 0;
 		}
 		else
 		{
 			List<Skill> skills = ModUI.GetPlayerAttackSkills();
 			int totalRows = (skills.Count + 1 + 1) / 2;
-			int contentH = totalRows * 19 + 4;
+			int contentH = totalRows * 18 + 4;
 			maxScroll = (contentH > listH - 4) ? (contentH - (listH - 4)) : 0;
 		}
 
@@ -108,30 +113,46 @@ public static class ModUITanSat
 
 	public static void Paint(int uiX, int uiY, int uiW, int uiH, mGraphics g)
 	{
-		mFont.tahoma_7_grey.drawString(g, "Trạng thái:", uiX + 6, uiY + 6, mFont.LEFT);
-		ModUI.PaintNativeButton(uiX + 58, uiY + 3, 44, 16, ModTanSat.autoTanSat ? "BẬT" : "TẮT", ModTanSat.autoTanSat, g);
+		// Hàng 0: Trạng thái & Tiếp cận
+		int row0Y = uiY + 4;
+		int row0H = 17;
+		mFont.tahoma_7_grey.drawString(g, "Trạng thái:", uiX + 5, row0Y + 3, mFont.LEFT);
+		ModUI.PaintNativeButton(uiX + 58, row0Y, 42, row0H, ModTanSat.autoTanSat ? "BẬT" : "TẮT", ModTanSat.autoTanSat, g);
 
-		int tpBtnW = 74;
-		int tpBtnX = uiX + uiW - tpBtnW - 6;
-		mFont.tahoma_7_grey.drawString(g, "Tiếp cận:", tpBtnX - 48, uiY + 6, mFont.LEFT);
-		ModUI.PaintNativeButton(tpBtnX, uiY + 3, tpBtnW, 16, ModTanSat.useTeleport ? "Dịch chuyển" : "Chạy bộ", ModTanSat.useTeleport, g);
+		int tpBtnW = 72;
+		int tpBtnX = uiX + uiW - tpBtnW - 4;
+		mFont.tahoma_7_grey.drawString(g, "Tiếp cận:", tpBtnX - 46, row0Y + 3, mFont.LEFT);
+		ModUI.PaintNativeButton(tpBtnX, row0Y, tpBtnW, row0H, ModTanSat.useTeleport ? "Dịch chuyển" : "Chạy bộ", ModTanSat.useTeleport, g);
 
-		int tabBtnW = (uiW - 14) / 2;
-		ModUI.PaintNativeButton(uiX + 5, uiY + 22, tabBtnW, 17, "1. Chọn Quái", ModUI.tanSatTab == 0, g);
-		ModUI.PaintNativeButton(uiX + 9 + tabBtnW, uiY + 22, tabBtnW, 17, "2. Chọn Kỹ Năng", ModUI.tanSatTab == 1, g);
+		// Hàng 1: 2 Sub-Tabs (1. Chọn Quái / 2. Chọn Kỹ Năng)
+		int row1Y = row0Y + row0H + 3;
+		int row1H = 18;
+		int subTabW = (uiW - 12) / 2;
+		ModUI.PaintNativeButton(uiX + 4, row1Y, subTabW, row1H, "1. Chọn Quái", ModUI.tanSatTab == 0, g);
+		ModUI.PaintNativeButton(uiX + 8 + subTabW, row1Y, subTabW, row1H, "2. Chọn Kỹ Năng", ModUI.tanSatTab == 1, g);
 
-		int listX = uiX + 5;
-		int listY = uiY + 59;
-		int listW = uiW - 10;
-		int listH = 132;
+		// Hàng 2: Tiêu đề danh sách & Nút Chọn tất cả / Bỏ chọn hết
+		int row2Y = row1Y + row1H + 3;
+		int row2H = 17;
+		int allBtnW = 74;
+		int allBtnX = uiX + uiW - allBtnW - 4;
+
+		// Hàng 4 (Đáy): Thiết lập Time Attack
+		int footerH = 18;
+		int footerY = uiY + uiH - footerH - 4;
+
+		// Hàng 3 (Giữa): Khung danh sách Quái / Skill co dãn động 100%
+		int listX = uiX + 4;
+		int listY = row2Y + row2H + 3;
+		int listW = uiW - 8;
+		int listH = (footerY - 4) - listY;
+		if (listH < 40) listH = 40;
 		int colW = (listW - 10) / 2;
-		int allBtnW = 76;
-		int allBtnX = uiX + uiW - allBtnW - 6;
 
 		if (ModUI.tanSatTab == 0)
 		{
-			mFont.tahoma_7_grey.drawString(g, "Quái map (Tick để đánh):", uiX + 6, uiY + 44, mFont.LEFT);
-			ModUI.PaintNativeButton(allBtnX, uiY + 41, allBtnW, 16, ModTanSat.selectAllMobs ? "Bỏ chọn hết" : "Chọn tất cả", ModTanSat.selectAllMobs, g);
+			mFont.tahoma_7_grey.drawString(g, "Quái map (Tick để đánh):", uiX + 5, row2Y + 3, mFont.LEFT);
+			ModUI.PaintNativeButton(allBtnX, row2Y, allBtnW, row2H, ModTanSat.selectAllMobs ? "Bỏ chọn hết" : "Chọn tất cả", ModTanSat.selectAllMobs, g);
 
 			GameCanvas.paintz.paintFrameSimple(listX, listY, listW, listH, g);
 			g.setColor(15196114);
@@ -139,14 +160,14 @@ public static class ModUITanSat
 
 			List<int> mobIds = ModUI.GetUniqueMobTemplateIds();
 			int totalRows = (mobIds.Count + 1 + 1) / 2;
-			int contentH = totalRows * 19 + 4;
+			int contentH = totalRows * 18 + 4;
 			int maxScroll = (contentH > listH - 4) ? (contentH - (listH - 4)) : 0;
 			if (scrollMobY > maxScroll) scrollMobY = maxScroll;
 			if (scrollMobY < 0) scrollMobY = 0;
 
 			if (mobIds.Count == 0)
 			{
-				mFont.tahoma_7_grey.drawString(g, "(Chưa thấy quái nào trong map)", listX + listW / 2, listY + 58, mFont.CENTER);
+				mFont.tahoma_7_grey.drawString(g, "(Chưa thấy quái nào trong map)", listX + listW / 2, listY + listH / 2 - 4, mFont.CENTER);
 			}
 			else
 			{
@@ -156,9 +177,9 @@ public static class ModUITanSat
 					int col = idx % 2;
 					int row = idx / 2;
 					int itemX = listX + 4 + col * (colW + 4);
-					int itemY = listY + 3 + row * 19 - scrollMobY;
+					int itemY = listY + 3 + row * 18 - scrollMobY;
 
-					if (itemY + 19 < listY || itemY > listY + listH) continue;
+					if (itemY + 18 < listY || itemY > listY + listH) continue;
 
 					if (idx == 0)
 					{
@@ -180,8 +201,8 @@ public static class ModUITanSat
 		}
 		else
 		{
-			mFont.tahoma_7_grey.drawString(g, "Kỹ năng nhân vật (Tick để dùng):", uiX + 6, uiY + 44, mFont.LEFT);
-			ModUI.PaintNativeButton(allBtnX, uiY + 41, allBtnW, 16, ModTanSat.selectAllSkills ? "Tự động chiêu" : "Tất cả chiêu", ModTanSat.selectAllSkills, g);
+			mFont.tahoma_7_grey.drawString(g, "Kỹ năng nhân vật (Tick để dùng):", uiX + 5, row2Y + 3, mFont.LEFT);
+			ModUI.PaintNativeButton(allBtnX, row2Y, allBtnW, row2H, ModTanSat.selectAllSkills ? "Tự động chiêu" : "Tất cả chiêu", ModTanSat.selectAllSkills, g);
 
 			GameCanvas.paintz.paintFrameSimple(listX, listY, listW, listH, g);
 			g.setColor(15196114);
@@ -189,14 +210,14 @@ public static class ModUITanSat
 
 			List<Skill> skills = ModUI.GetPlayerAttackSkills();
 			int totalRows = (skills.Count + 1 + 1) / 2;
-			int contentH = totalRows * 19 + 4;
+			int contentH = totalRows * 18 + 4;
 			int maxScroll = (contentH > listH - 4) ? (contentH - (listH - 4)) : 0;
 			if (scrollSkillY > maxScroll) scrollSkillY = maxScroll;
 			if (scrollSkillY < 0) scrollSkillY = 0;
 
 			if (skills.Count == 0)
 			{
-				mFont.tahoma_7_grey.drawString(g, "(Nhân vật chưa học kỹ năng nào)", listX + listW / 2, listY + 58, mFont.CENTER);
+				mFont.tahoma_7_grey.drawString(g, "(Nhân vật chưa học kỹ năng nào)", listX + listW / 2, listY + listH / 2 - 4, mFont.CENTER);
 			}
 			else
 			{
@@ -206,9 +227,9 @@ public static class ModUITanSat
 					int col = idx % 2;
 					int row = idx / 2;
 					int itemX = listX + 4 + col * (colW + 4);
-					int itemY = listY + 3 + row * 19 - scrollSkillY;
+					int itemY = listY + 3 + row * 18 - scrollSkillY;
 
-					if (itemY + 19 < listY || itemY > listY + listH) continue;
+					if (itemY + 18 < listY || itemY > listY + listH) continue;
 
 					if (idx == 0)
 					{
@@ -230,17 +251,17 @@ public static class ModUITanSat
 			}
 		}
 
-		// Thiết lập Time Attack
-		mFont.tahoma_7_grey.drawString(g, "Time attack:", uiX + 6, uiY + 198, mFont.LEFT);
-		ModUI.PaintNativeButton(uiX + 66, uiY + 194, 18, 16, "-", false, g);
-		ModUI.PaintNativeButton(uiX + 86, uiY + 194, 46, 16, ModTanSat.timeAttack + "ms", true, g);
-		ModUI.PaintNativeButton(uiX + 134, uiY + 194, 18, 16, "+", false, g);
+		// Vẽ Hàng 4: Time Attack
+		mFont.tahoma_7_grey.drawString(g, "Time attack:", uiX + 5, footerY + 3, mFont.LEFT);
+		ModUI.PaintNativeButton(uiX + 65, footerY, 16, footerH, "-", false, g);
+		ModUI.PaintNativeButton(uiX + 83, footerY, 46, footerH, ModTanSat.timeAttack + "ms", true, g);
+		ModUI.PaintNativeButton(uiX + 131, footerY, 16, footerH, "+", false, g);
 
 		// Các preset nhanh
-		ModUI.PaintNativeButton(uiX + 156, uiY + 194, 28, 16, "100", ModTanSat.timeAttack == 100, g);
-		ModUI.PaintNativeButton(uiX + 186, uiY + 194, 28, 16, "200", ModTanSat.timeAttack == 200, g);
-		ModUI.PaintNativeButton(uiX + 216, uiY + 194, 28, 16, "300", ModTanSat.timeAttack == 300, g);
-		ModUI.PaintNativeButton(uiX + 246, uiY + 194, 28, 16, "500", ModTanSat.timeAttack == 500, g);
+		ModUI.PaintNativeButton(uiX + 151, footerY, 26, footerH, "100", ModTanSat.timeAttack == 100, g);
+		ModUI.PaintNativeButton(uiX + 180, footerY, 26, footerH, "200", ModTanSat.timeAttack == 200, g);
+		ModUI.PaintNativeButton(uiX + 209, footerY, 26, footerH, "300", ModTanSat.timeAttack == 300, g);
+		ModUI.PaintNativeButton(uiX + 238, footerY, 26, footerH, "500", ModTanSat.timeAttack == 500, g);
 	}
 
 	public static bool HandleTap(int px, int py, int uiX, int uiY, int uiW, int uiH)
@@ -251,8 +272,17 @@ public static class ModUITanSat
 			return true;
 		}
 
-		// Bật/Tắt Tàn sát
-		if (px >= uiX + 58 && px <= uiX + 102 && py >= uiY + 2 && py <= uiY + 20)
+		int row0Y = uiY + 4;
+		int row0H = 17;
+		int row1Y = row0Y + row0H + 3;
+		int row1H = 18;
+		int row2Y = row1Y + row1H + 3;
+		int row2H = 17;
+		int footerH = 18;
+		int footerY = uiY + uiH - footerH - 4;
+
+		// 1. Bật/Tắt Tàn sát
+		if (px >= uiX + 58 && px <= uiX + 100 && py >= row0Y - 1 && py <= row0Y + row0H + 1)
 		{
 			ModTanSat.autoTanSat = !ModTanSat.autoTanSat;
 			ModConfig.SaveConfig();
@@ -260,10 +290,10 @@ public static class ModUITanSat
 			return true;
 		}
 
-		// Nút Tiếp cận
-		int tpBtnW = 74;
-		int tpBtnX = uiX + uiW - tpBtnW - 6;
-		if (px >= tpBtnX && px <= tpBtnX + tpBtnW && py >= uiY + 2 && py <= uiY + 20)
+		// 2. Nút Tiếp cận
+		int tpBtnW = 72;
+		int tpBtnX = uiX + uiW - tpBtnW - 4;
+		if (px >= tpBtnX && px <= tpBtnX + tpBtnW && py >= row0Y - 1 && py <= row0Y + row0H + 1)
 		{
 			ModTanSat.useTeleport = !ModTanSat.useTeleport;
 			ModConfig.SaveConfig();
@@ -271,17 +301,17 @@ public static class ModUITanSat
 			return true;
 		}
 
-		// Sub tabs (1. Chọn Quái / 2. Chọn Kỹ Năng)
-		int tabBtnW = (uiW - 14) / 2;
-		if (py >= uiY + 21 && py <= uiY + 40)
+		// 3. Sub tabs (1. Chọn Quái / 2. Chọn Kỹ Năng)
+		int subTabW = (uiW - 12) / 2;
+		if (py >= row1Y - 1 && py <= row1Y + row1H + 1)
 		{
-			if (px >= uiX + 5 && px <= uiX + 5 + tabBtnW)
+			if (px >= uiX + 4 && px <= uiX + 4 + subTabW)
 			{
 				ModUI.tanSatTab = 0;
 				SoundMn.gI().buttonClick();
 				return true;
 			}
-			if (px >= uiX + 9 + tabBtnW && px <= uiX + 9 + tabBtnW * 2)
+			if (px >= uiX + 8 + subTabW && px <= uiX + 8 + subTabW * 2)
 			{
 				ModUI.tanSatTab = 1;
 				SoundMn.gI().buttonClick();
@@ -289,10 +319,10 @@ public static class ModUITanSat
 			}
 		}
 
-		// Nút Chọn tất cả / Bỏ chọn hết
-		int allBtnW = 76;
-		int allBtnX = uiX + uiW - allBtnW - 6;
-		if (px >= allBtnX && px <= allBtnX + allBtnW && py >= uiY + 40 && py <= uiY + 58)
+		// 4. Nút Chọn tất cả / Bỏ chọn hết
+		int allBtnW = 74;
+		int allBtnX = uiX + uiW - allBtnW - 4;
+		if (px >= allBtnX && px <= allBtnX + allBtnW && py >= row2Y - 1 && py <= row2Y + row2H + 1)
 		{
 			if (ModUI.tanSatTab == 0)
 			{
@@ -307,13 +337,14 @@ public static class ModUITanSat
 			return true;
 		}
 
-		int listX = uiX + 5;
-		int listY = uiY + 59;
-		int listW = uiW - 10;
-		int listH = 132;
+		int listX = uiX + 4;
+		int listY = row2Y + row2H + 3;
+		int listW = uiW - 8;
+		int listH = (footerY - 4) - listY;
+		if (listH < 40) listH = 40;
 		int colW = (listW - 10) / 2;
 
-		// Checklist quái / skill
+		// 5. Checklist quái / skill trong khung cuộn
 		if (px >= listX && px <= listX + listW && py >= listY && py <= listY + listH)
 		{
 			if (ModUI.tanSatTab == 0)
@@ -324,11 +355,11 @@ public static class ModUITanSat
 					int col = idx % 2;
 					int row = idx / 2;
 					int itemX = listX + 4 + col * (colW + 4);
-					int itemY = listY + 3 + row * 19 - scrollMobY;
+					int itemY = listY + 3 + row * 18 - scrollMobY;
 
-					if (itemY + 19 < listY || itemY > listY + listH) continue;
+					if (itemY + 18 < listY || itemY > listY + listH) continue;
 
-					if (px >= itemX && px <= itemX + colW && py >= itemY && py <= itemY + 19)
+					if (px >= itemX && px <= itemX + colW && py >= itemY && py <= itemY + 18)
 					{
 						if (idx == 0)
 						{
@@ -351,11 +382,11 @@ public static class ModUITanSat
 					int col = idx % 2;
 					int row = idx / 2;
 					int itemX = listX + 4 + col * (colW + 4);
-					int itemY = listY + 3 + row * 19 - scrollSkillY;
+					int itemY = listY + 3 + row * 18 - scrollSkillY;
 
-					if (itemY + 19 < listY || itemY > listY + listH) continue;
+					if (itemY + 18 < listY || itemY > listY + listH) continue;
 
-					if (px >= itemX && px <= itemX + colW && py >= itemY && py <= itemY + 19)
+					if (px >= itemX && px <= itemX + colW && py >= itemY && py <= itemY + 18)
 					{
 						if (idx == 0)
 						{
@@ -372,11 +403,11 @@ public static class ModUITanSat
 			}
 		}
 
-		// Điều chỉnh Time Attack (Y: uiY + 192 đến uiY + 212)
-		if (py >= uiY + 192 && py <= uiY + 212)
+		// 6. Điều chỉnh Time Attack ở Footer
+		if (py >= footerY - 1 && py <= footerY + footerH + 1)
 		{
 			// Nút [-]
-			if (px >= uiX + 66 && px <= uiX + 84)
+			if (px >= uiX + 65 && px <= uiX + 81)
 			{
 				ModTanSat.timeAttack -= 50;
 				if (ModTanSat.timeAttack < 50) ModTanSat.timeAttack = 50;
@@ -385,7 +416,7 @@ public static class ModUITanSat
 				return true;
 			}
 			// Nút current [ xxx ms ]
-			if (px >= uiX + 86 && px <= uiX + 132)
+			if (px >= uiX + 83 && px <= uiX + 129)
 			{
 				int[] cycle = new int[] { 100, 200, 300, 400, 500, 700, 1000 };
 				int nextVal = 300;
@@ -407,7 +438,7 @@ public static class ModUITanSat
 				return true;
 			}
 			// Nút [+]
-			if (px >= uiX + 134 && px <= uiX + 152)
+			if (px >= uiX + 131 && px <= uiX + 147)
 			{
 				ModTanSat.timeAttack += 50;
 				if (ModTanSat.timeAttack > 3000) ModTanSat.timeAttack = 3000;
@@ -416,7 +447,7 @@ public static class ModUITanSat
 				return true;
 			}
 			// Preset 100
-			if (px >= uiX + 156 && px <= uiX + 184)
+			if (px >= uiX + 151 && px <= uiX + 177)
 			{
 				ModTanSat.timeAttack = 100;
 				ModConfig.SaveConfig();
@@ -424,7 +455,7 @@ public static class ModUITanSat
 				return true;
 			}
 			// Preset 200
-			if (px >= uiX + 186 && px <= uiX + 214)
+			if (px >= uiX + 180 && px <= uiX + 206)
 			{
 				ModTanSat.timeAttack = 200;
 				ModConfig.SaveConfig();
@@ -432,7 +463,7 @@ public static class ModUITanSat
 				return true;
 			}
 			// Preset 300
-			if (px >= uiX + 216 && px <= uiX + 244)
+			if (px >= uiX + 209 && px <= uiX + 235)
 			{
 				ModTanSat.timeAttack = 300;
 				ModConfig.SaveConfig();
@@ -440,7 +471,7 @@ public static class ModUITanSat
 				return true;
 			}
 			// Preset 500
-			if (px >= uiX + 246 && px <= uiX + 274)
+			if (px >= uiX + 238 && px <= uiX + 264)
 			{
 				ModTanSat.timeAttack = 500;
 				ModConfig.SaveConfig();

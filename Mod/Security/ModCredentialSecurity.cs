@@ -152,21 +152,7 @@ namespace DragonBoy_Net8_Native.Src.Mod.Security
 		public static bool CanAttemptLogin()
 		{
 			long now = mSystem.currentTimeMillis();
-			// Nếu không có dialog nào đang hiển thị trên màn hình, giải phóng cờ chờ đăng nhập
-			if (GameCanvas.currentDialog == null)
-			{
-				isLoggingIn = false;
-				loginStartTime = 0;
-			}
-			else if (isLoggingIn && now - loginStartTime < LOGIN_TIMEOUT_MS)
-			{
-				if (GameScr.info1 != null)
-				{
-					GameScr.info1.addInfo("Đang đăng nhập, vui lòng chờ...", 0);
-				}
-				return false;
-			}
-			if (now - lastLoginAttemptTime < 2500)
+			if (now - lastLoginAttemptTime < 800)
 			{
 				return false;
 			}
@@ -191,6 +177,13 @@ namespace DragonBoy_Net8_Native.Src.Mod.Security
 			if (isLoggingIn && loginStartTime > 0)
 			{
 				if (GameCanvas.currentDialog == null)
+				{
+					isLoggingIn = false;
+					loginStartTime = 0;
+					return;
+				}
+				// Nếu dialog hiện tại không phải là dialog chờ ("Xin chờ"), tức là đã nhận phản hồi / thông báo từ server
+				if (GameCanvas.msgdlg != null && !GameCanvas.msgdlg.isWait)
 				{
 					isLoggingIn = false;
 					loginStartTime = 0;
@@ -260,13 +253,18 @@ namespace DragonBoy_Net8_Native.Src.Mod.Security
 					{
 						LoginScr.serverName = ServerListScreen.nameServer[newIpSelect];
 					}
+					sbyte area = (sbyte)(ServerListScreen.language[newIpSelect] == 0 ? 0 : 1);
+					Rms.saveRMS("area_select", new sbyte[2] { area, 0 });
 				}
 
 				if (GameCanvas.serverScreen == null)
 				{
 					GameCanvas.serverScreen = new ServerListScreen();
 				}
+				ServerListScreen.loadScreen = true;
+				ServerListScreen.isAutoConect = true;
 				GameCanvas.serverScreen.switchToMe();
+				ServerListScreen.ConnectIP();
 			}
 			catch (Exception ex)
 			{

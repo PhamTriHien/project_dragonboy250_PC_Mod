@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Assets.src.e;
 using Assets.src.f;
 using Assets.src.g;
@@ -317,6 +317,10 @@ public partial class Controller : IMessageHandler
 					{
 						GameCanvas.startOKDlg(msg.reader().readUTF());
 						break;
+					}
+					if (GameCanvas.loginScr == null)
+					{
+						GameCanvas.loginScr = new LoginScr();
 					}
 					GameCanvas.loginScr.isLogin2 = false;
 					Rms.saveRMSString(Rms.RMS_userAo + ServerListScreen.ipSelect, string.Empty);

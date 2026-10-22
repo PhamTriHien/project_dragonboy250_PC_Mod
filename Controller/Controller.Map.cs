@@ -4,22 +4,34 @@ using Assets.src.f;
 using Assets.src.g;
 using UnityEngine;
 
+/// <summary>
+/// Thành phần phân mảnh (partial) của lớp Controller: Quản lý dữ liệu bản đồ, toạ độ di chuyển, chuyển cảnh và nạp địa hình ().
+/// </summary>
 public partial class Controller : IMessageHandler
 {
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ createMap.
+	/// </summary>
 	private void createMap(myReader d)
 		{
 			GameScr.vcMap = d.readByte();
 			TileMap.mapNames = new string[d.readShort()];
+			ModTranslate.rawMapNames = new string[TileMap.mapNames.Length];
 			for (int i = 0; i < TileMap.mapNames.Length; i++)
 			{
-				TileMap.mapNames[i] = d.readUTF();
+				string rawMapName = d.readUTF();
+				ModTranslate.rawMapNames[i] = rawMapName;
+				TileMap.mapNames[i] = ModTranslate.GetMapName(i, rawMapName);
 			}
 			Npc.arrNpcTemplate = new NpcTemplate[d.readByte()];
+			ModTranslate.rawNpcNames = new string[Npc.arrNpcTemplate.Length];
 			for (sbyte b = 0; b < Npc.arrNpcTemplate.Length; b++)
 			{
 				Npc.arrNpcTemplate[b] = new NpcTemplate();
 				Npc.arrNpcTemplate[b].npcTemplateId = b;
-				Npc.arrNpcTemplate[b].name = d.readUTF();
+				string rawNpcName = d.readUTF();
+				ModTranslate.rawNpcNames[b] = rawNpcName;
+				Npc.arrNpcTemplate[b].name = ModTranslate.GetNpcName(b, rawNpcName);
 				Npc.arrNpcTemplate[b].headId = d.readShort();
 				Npc.arrNpcTemplate[b].bodyId = d.readShort();
 				Npc.arrNpcTemplate[b].legId = d.readShort();
@@ -34,12 +46,15 @@ public partial class Controller : IMessageHandler
 				}
 			}
 			Mob.arrMobTemplate = new MobTemplate[d.readShort()];
+			ModTranslate.rawMobNames = new string[Mob.arrMobTemplate.Length];
 			for (int l = 0; l < Mob.arrMobTemplate.Length; l++)
 			{
 				Mob.arrMobTemplate[l] = new MobTemplate();
 				Mob.arrMobTemplate[l].mobTemplateId = l;
 				Mob.arrMobTemplate[l].type = d.readByte();
-				Mob.arrMobTemplate[l].name = d.readUTF();
+				string rawMobName = d.readUTF();
+				ModTranslate.rawMobNames[l] = rawMobName;
+				Mob.arrMobTemplate[l].name = ModTranslate.GetMobName(l, rawMobName);
 				Mob.arrMobTemplate[l].hp = d.readLong();
 				Mob.arrMobTemplate[l].rangeMove = d.readByte();
 				Mob.arrMobTemplate[l].speed = d.readByte();
@@ -47,6 +62,9 @@ public partial class Controller : IMessageHandler
 			}
 		}
 
+	/// <summary>
+	/// Khởi tạo và nạp dữ liệu cấu hình cho loadCurrMap.
+	/// </summary>
 	public void loadCurrMap(sbyte teleport3)
 		{
 			Res.outz("[CONTROLER] start load map " + teleport3);
@@ -117,6 +135,7 @@ public partial class Controller : IMessageHandler
 					}
 				}
 			}
+			ModNextMapData.SyncLiveWaypointsForCurrentMap();
 			GameScr.gI().switchToMe();
 			if (ModAutoLogin.isReconnecting)
 			{
@@ -156,6 +175,9 @@ public partial class Controller : IMessageHandler
 			Res.outz("[CONTROLLER] loadMap DONE!!!!!!!!!");
 		}
 
+	/// <summary>
+	/// Khởi tạo và nạp dữ liệu cấu hình cho loadInfoMap.
+	/// </summary>
 	public void loadInfoMap(Message msg)
 		{
 			try
@@ -173,7 +195,7 @@ public partial class Controller : IMessageHandler
 				{
 					Char.myCharz().cdir = 1;
 				}
-				else if (Char.myCharz().cx >= TileMap.tmw - 100 && Char.myCharz().cx <= TileMap.tmw)
+				else if (Char.myCharz().cx >= TileMap.pxw - 100 && Char.myCharz().cx <= TileMap.pxw)
 				{
 					Char.myCharz().cdir = -1;
 				}
@@ -497,6 +519,9 @@ public partial class Controller : IMessageHandler
 			Res.err(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Loadmap thanh cong");
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ messageNotMap.
+	/// </summary>
 	public void messageNotMap(Message msg)
 		{
 			GameCanvas.debug("SA6", 2);
@@ -548,6 +573,10 @@ public partial class Controller : IMessageHandler
 				case 4:
 				{
 					GameCanvas.debug("SA8", 2);
+					if (GameCanvas.loginScr == null)
+					{
+						GameCanvas.loginScr = new LoginScr();
+					}
 					GameCanvas.loginScr.savePass();
 					GameScr.isAutoPlay = false;
 					GameScr.canAutoPlay = false;

@@ -12,7 +12,16 @@ public partial class LoginScr : mScreen, IActionListener
 			if (timeLogin > 0)
 			{
 				timeLogin = 0;
-				GameCanvas.loginScr.doLogin();
+			}
+			if (tfPass != null && tfPass.isFocus)
+			{
+				focus = 1;
+				if (tfUser != null && tfUser.isFocus) tfUser.isFocus = false;
+			}
+			else if (tfUser != null && tfUser.isFocus)
+			{
+				focus = 0;
+				if (tfPass != null && tfPass.isFocus) tfPass.isFocus = false;
 			}
 			if (isLogin2 && !isRes)
 			{
@@ -99,11 +108,13 @@ public partial class LoginScr : mScreen, IActionListener
 				{
 					center = cmdRes;
 					left = cmdBackFromRegister;
+					right = cmdPaste;
 				}
 				else
 				{
 					center = cmdOK;
 					left = cmdFogetPass;
+					right = cmdPaste;
 				}
 				if (cmdBack != null && cmdBack.isPointerPressInside())
 				{
@@ -114,11 +125,13 @@ public partial class LoginScr : mScreen, IActionListener
 			{
 				center = cmdRes;
 				left = cmdBackFromRegister;
+				right = cmdPaste;
 			}
 			else
 			{
 				center = cmdOK;
 				left = cmdFogetPass;
+				right = cmdPaste;
 			}
 			// Legacy auto-login removed to allow normal typing and Enter/button submission across all platforms
 			DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.UpdateLoginWatchdog();
@@ -137,13 +150,43 @@ public partial class LoginScr : mScreen, IActionListener
 
 	public override void keyPress(int keyCode)
 		{
-			if (tfUser.isFocus)
+			if (keyCode == -26 || keyCode == 9)
+			{
+				focus = (focus == 0) ? 1 : 0;
+				if (tfUser != null) tfUser.setFocusWithKb(focus == 0);
+				if (tfPass != null) tfPass.setFocusWithKb(focus == 1);
+				return;
+			}
+			if (keyCode == -5 || keyCode == 10 || keyCode == 13)
+			{
+				if (focus == 0)
+				{
+					focus = 1;
+					if (tfUser != null) tfUser.setFocusWithKb(false);
+					if (tfPass != null) tfPass.setFocusWithKb(true);
+					return;
+				}
+				else if (focus == 1)
+				{
+					perform(2008, null);
+					return;
+				}
+			}
+			if (tfPass != null && tfPass.isFocus)
+			{
+				tfPass.keyPressed(keyCode);
+			}
+			else if (tfUser != null && tfUser.isFocus)
 			{
 				tfUser.keyPressed(keyCode);
 			}
-			else if (tfPass.isFocus)
+			else if (focus == 1 && tfPass != null)
 			{
 				tfPass.keyPressed(keyCode);
+			}
+			else if (tfUser != null)
+			{
+				tfUser.keyPressed(keyCode);
 			}
 			base.keyPress(keyCode);
 		}
@@ -225,26 +268,30 @@ public partial class LoginScr : mScreen, IActionListener
 				{
 					center = cmdRes;
 					left = cmdBackFromRegister;
+					right = cmdPaste;
 				}
 				else
 				{
 					center = cmdOK;
 					left = cmdFogetPass;
+					right = cmdPaste;
 				}
 			}
 			else if (isRes)
 			{
 				center = cmdRes;
 				left = cmdBackFromRegister;
+				right = cmdPaste;
 			}
 			else
 			{
 				center = cmdOK;
 				left = cmdFogetPass;
+				right = cmdPaste;
 			}
-			if (GameCanvas.isPointerJustRelease && (!isLogin2 || isRes))
+			if ((GameCanvas.isPointerJustRelease || GameCanvas.isPointerClick) && (!isLogin2 || isRes))
 			{
-				if (GameCanvas.isPointerHoldIn(tfUser.x, tfUser.y, tfUser.width, tfUser.height))
+				if (GameCanvas.isPointerHoldIn(tfUser.x, tfUser.y, tfUser.width, tfUser.height) || GameCanvas.isPointer(tfUser.x, tfUser.y, tfUser.width, tfUser.height))
 				{
 					focus = 0;
 					tfUser.setFocusWithKb(true);
@@ -253,7 +300,7 @@ public partial class LoginScr : mScreen, IActionListener
 					GameCanvas.isPointerClick = false;
 					GameCanvas.clearKeyPressed();
 				}
-				else if (GameCanvas.isPointerHoldIn(tfPass.x, tfPass.y, tfPass.width, tfPass.height))
+				else if (GameCanvas.isPointerHoldIn(tfPass.x, tfPass.y, tfPass.width, tfPass.height) || GameCanvas.isPointer(tfPass.x, tfPass.y, tfPass.width, tfPass.height))
 				{
 					focus = 1;
 					tfUser.setFocusWithKb(false);
@@ -262,7 +309,7 @@ public partial class LoginScr : mScreen, IActionListener
 					GameCanvas.isPointerClick = false;
 					GameCanvas.clearKeyPressed();
 				}
-				else if (GameCanvas.isPointerHoldIn(xLog + 10, yLog + 72, 130, 22))
+				else if (GameCanvas.isPointerHoldIn(xLog + 10, yLog + 72, 130, 22) || GameCanvas.isPointer(xLog + 10, yLog + 72, 130, 22))
 				{
 					isCheck = !isCheck;
 					DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.SaveCredentials(tfUser.getText(), tfPass.getText(), isCheck);
@@ -288,7 +335,7 @@ public partial class LoginScr : mScreen, IActionListener
 
 	public void perform(int idAction, object p)
 		{
-			Debug.LogError(">>>>Loginscr perform: " + idAction);
+			Res.outz(">>>>Loginscr perform: " + idAction);
 			switch (idAction)
 			{
 			case 101:
@@ -453,7 +500,39 @@ public partial class LoginScr : mScreen, IActionListener
 					GameMidlet.PORT = ServerListScreen.port[ServerListScreen.ipSelect];
 				}
 
-				doLogin();
+				if (GameCanvas.serverScreen == null)
+				{
+					GameCanvas.serverScreen = new ServerListScreen();
+				}
+				GameCanvas.serverScreen.switchToMe();
+				break;
+			}
+			case 2009:
+			{
+				string clip = GUIUtility.systemCopyBuffer;
+				if (!string.IsNullOrEmpty(clip))
+				{
+					if (tfPass != null && tfPass.isFocus)
+					{
+						tfPass.clearAllText();
+						tfPass.paste(clip);
+					}
+					else if (tfUser != null && tfUser.isFocus)
+					{
+						tfUser.clearAllText();
+						tfUser.paste(clip);
+					}
+					else if (focus == 1 && tfPass != null)
+					{
+						tfPass.clearAllText();
+						tfPass.paste(clip);
+					}
+					else if (tfUser != null)
+					{
+						tfUser.clearAllText();
+						tfUser.paste(clip);
+					}
+				}
 				break;
 			}
 			case 4000:

@@ -35,6 +35,8 @@ public partial class LoginScr : mScreen, IActionListener
 
 	public Command cmdBack;
 
+	public Command cmdPaste;
+
 	public string listFAQ = string.Empty;
 
 	public string titleFAQ;
@@ -164,10 +166,12 @@ public partial class LoginScr : mScreen, IActionListener
 			tfUser.height = mScreen.ITEM_HEIGHT + 2;
 			tfUser.isFocus = true;
 			tfUser.setIputType(TField.INPUT_TYPE_ANY);
+			tfUser.suspendTelex = true;
 			tfUser.name = ((mResources.language != 2) ? (mResources.phone + "/") : string.Empty) + mResources.email;
 			tfPass = new TField();
 			tfPass.y = GameCanvas.hh - 4;
 			tfPass.setIputType(TField.INPUT_TYPE_PASSWORD);
+			tfPass.suspendTelex = true;
 			tfPass.width = wC;
 			tfPass.height = mScreen.ITEM_HEIGHT + 2;
 			yt += 35;
@@ -198,7 +202,7 @@ public partial class LoginScr : mScreen, IActionListener
 				}
 			}
 			focus = 0;
-			cmdLogin = new Command((GameCanvas.w <= 200) ? mResources.login2 : mResources.login, GameCanvas.instance, 888393, null);
+			cmdLogin = new Command(mResources.OK, GameCanvas.instance, 888393, null);
 			cmdCheck = new Command(mResources.remember, this, 2001, null);
 			cmdRes = new Command(mResources.register, this, 2002, null);
 			cmdBackFromRegister = new Command(mResources.CANCEL, this, 10021, null);
@@ -239,14 +243,16 @@ public partial class LoginScr : mScreen, IActionListener
 			tfUser.y = yLog + 15;
 			tfPass.x = xLog + 10;
 			tfPass.y = yLog + 46;
-			cmdOK = new Command((GameCanvas.w <= 200) ? mResources.login2 : mResources.login, this, 2008, null);
+			cmdOK = new Command(mResources.OK, this, 2008, null);
 			cmdOK.x = GameCanvas.w / 2 - 84;
 			cmdOK.y = yLog + 105;
 			cmdFogetPass = new Command(mResources.forgetPass, this, 1003, null);
 			cmdFogetPass.x = GameCanvas.w / 2 + 3;
 			cmdFogetPass.y = yLog + 105;
+			cmdPaste = new Command("Dán", this, 2009, null);
 			center = cmdOK;
 			left = cmdFogetPass;
+			right = cmdPaste;
 			updatePosition();
 		}
 
@@ -292,20 +298,30 @@ public partial class LoginScr : mScreen, IActionListener
 
 	public override void switchToMe()
 		{
-			isRegistering = false;
-			SoundMn.gI().stopAll();
-			tfUser.isFocus = true;
-			tfPass.isFocus = false;
-			if (GameCanvas.isTouch && !Main.isPC)
+			Res.outz(">>>> LoginScr.switchToMe ENTER");
+			try
 			{
-				tfUser.isFocus = false;
+				isRegistering = false;
+				isLogin2 = false;
+				SoundMn.gI().stopAll();
+				setUserPass();
+				tfUser.suspendTelex = true;
+				tfPass.suspendTelex = true;
+				tfUser.isFocus = true;
+				tfPass.isFocus = false;
+				focus = 0;
+				GameCanvas.loadBG(0);
+				left = new Command(mResources.BACK, this, 101, null);
+				GameCanvas.clearAllPointerEvent();
+				GameCanvas.clearKeyPressed();
+				base.switchToMe();
+				updatePosition();
+				Res.outz(">>>> LoginScr.switchToMe LEAVE, currentScreen=" + GameCanvas.currentScreen);
 			}
-			GameCanvas.loadBG(0);
-			left = new Command(mResources.BACK, this, 101, null);
-			GameCanvas.clearAllPointerEvent();
-			GameCanvas.clearKeyPressed();
-			base.switchToMe();
-			updatePosition();
+			catch (Exception ex)
+			{
+				Res.outz(">>>> EXCEPTION in LoginScr.switchToMe: " + ex);
+			}
 		}
 
 	public void setUserPass()
@@ -454,6 +470,7 @@ public partial class LoginScr : mScreen, IActionListener
 
 	public void doLogin()
 		{
+			ModNextMap.StopNextMap();
 			string text = (tfUser != null && !string.IsNullOrEmpty(tfUser.getText())) ? tfUser.getText().Trim() : Rms.loadRMSString(Rms.RMS_acc);
 			string text2 = (tfPass != null && !string.IsNullOrEmpty(tfPass.getText())) ? tfPass.getText() : DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.LoadSavedPassword();
 			if (text != null && !text.Equals(string.Empty))
@@ -521,6 +538,7 @@ public partial class LoginScr : mScreen, IActionListener
 		{
 			GameCanvas.connect();
 		}
+			Service.gI().setClientType();
 			Service.gI().login(text, text2, GameMidlet.VERSION, (sbyte)(isLogin2 ? 1 : 0));
 			Res.outz(Controller.isEXTRA_LINK + " = Controller.isEXTRA_LINK " + text + " " + text2 + " " + GameMidlet.VERSION + " " + (sbyte)(isLogin2 ? 1 : 0));
 			Rms.saveRMSInt(ServerListScreen.RMS_svselect, ServerListScreen.ipSelect);
@@ -620,11 +638,11 @@ public partial class LoginScr : mScreen, IActionListener
 			}
 			if (cmdLogin != null)
 			{
-				cmdLogin.caption = (GameCanvas.w <= 200) ? mResources.login2 : mResources.login;
+				cmdLogin.caption = mResources.OK;
 			}
 			if (cmdOK != null)
 			{
-				cmdOK.caption = (GameCanvas.w <= 200) ? mResources.login2 : mResources.login;
+				cmdOK.caption = mResources.OK;
 			}
 			if (GameCanvas.isTouch)
 			{
@@ -668,20 +686,33 @@ public partial class LoginScr : mScreen, IActionListener
 				cmdRes.x = GameCanvas.w / 2 - 84;
 				cmdRes.y = cmdMenu.y;
 			}
-			if (cmdOK != null && cmdLogin != null)
+			if (cmdOK != null)
 			{
 				cmdOK.x = GameCanvas.w / 2 - 84;
-				cmdOK.y = cmdLogin.y;
+				cmdOK.y = (cmdLogin != null) ? cmdLogin.y : (yLog + 105);
+				cmdOK.w = 64;
+				cmdOK.h = 26;
 			}
-			if (cmdFogetPass != null && cmdLogin != null)
+			if (cmdFogetPass != null)
 			{
 				cmdFogetPass.x = GameCanvas.w / 2 + 3;
-				cmdFogetPass.y = cmdLogin.y;
+				cmdFogetPass.y = (cmdLogin != null) ? cmdLogin.y : (yLog + 105);
+				cmdFogetPass.w = 80;
+				cmdFogetPass.h = 26;
 			}
 			if (cmdBack != null)
 			{
 				cmdBack.x = 2;
 				cmdBack.y = GameCanvas.h - mScreen.cmdH;
+				cmdBack.w = mScreen.cmdW;
+				cmdBack.h = mScreen.cmdH;
+			}
+			if (cmdPaste != null)
+			{
+				cmdPaste.x = GameCanvas.w - mScreen.cmdW - 2;
+				cmdPaste.y = GameCanvas.h - mScreen.cmdH;
+				cmdPaste.w = mScreen.cmdW;
+				cmdPaste.h = mScreen.cmdH;
 			}
 		}
 

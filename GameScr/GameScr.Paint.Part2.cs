@@ -149,7 +149,7 @@ public partial class GameScr : mScreen, IChatable
 					{
 						Cout.LogError("Loi ham paint char gamesc: " + ex.ToString());
 					}
-					if (char2 != null && (!GameCanvas.panel.isShow || !GameCanvas.panel.isTypeShop()) && char2.isShadown)
+					if (char2 != null && char2.isPaint() && (!GameCanvas.panel.isShow || !GameCanvas.panel.isTypeShop()) && char2.isShadown)
 					{
 						char2.paintShadow(g);
 					}
@@ -199,7 +199,7 @@ public partial class GameScr : mScreen, IChatable
 					{
 						Cout.LogError("Loi ham paint char gamescr: " + ex3.ToString());
 					}
-					if (char4 != null && (!GameCanvas.panel.isShow || !GameCanvas.panel.isTypeShop()) && char4.skillPaint != null && char4.skillInfoPaint() != null && char4.indexSkill < char4.skillInfoPaint().Length)
+					if (char4 != null && char4.isPaint() && (!GameCanvas.panel.isShow || !GameCanvas.panel.isTypeShop()) && char4.skillPaint != null && char4.skillInfoPaint() != null && char4.indexSkill < char4.skillInfoPaint().Length)
 					{
 						char4.paintCharWithSkill(g);
 						char4.paintMount2(g);
@@ -247,7 +247,7 @@ public partial class GameScr : mScreen, IChatable
 					catch (Exception)
 					{
 					}
-					if (char5 != null && char5.chatInfo != null)
+					if (char5 != null && char5.isPaint() && char5.chatInfo != null)
 					{
 						char5.chatInfo.paint(g, char5.cx, char5.cy - char5.ch, char5.cdir);
 					}

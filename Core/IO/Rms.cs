@@ -100,53 +100,12 @@ public class Rms
 
 	private static void _saveRMS(string filename, sbyte[] data)
 	{
-		if (status != 0)
-		{
-			Debug.LogError("Cannot save RMS " + filename + " because current is saving " + Rms.filename);
-			return;
-		}
-		Rms.filename = filename;
-		Rms.data = data;
-		status = 2;
-		int i;
-		for (i = 0; i < 500; i++)
-		{
-			Thread.Sleep(5);
-			if (status == 0)
-			{
-				break;
-			}
-		}
-		if (i == 500)
-		{
-			Debug.LogError("TOO LONG TO SAVE RMS " + filename);
-		}
+		__saveRMS(filename, data);
 	}
 
 	private static sbyte[] _loadRMS(string filename)
 	{
-		if (status != 0)
-		{
-			Debug.LogError("Cannot load RMS " + filename + " because current is loading " + Rms.filename);
-			return null;
-		}
-		Rms.filename = filename;
-		data = null;
-		status = 3;
-		int i;
-		for (i = 0; i < 500; i++)
-		{
-			Thread.Sleep(5);
-			if (status == 0)
-			{
-				break;
-			}
-		}
-		if (i == 500)
-		{
-			Debug.LogError("TOO LONG TO LOAD RMS " + filename);
-		}
-		return data;
+		return __loadRMS(filename);
 	}
 
 	public static void update()

@@ -83,6 +83,7 @@ public partial class ServerListScreen : mScreen, IActionListener
 							 (GameCanvas.isPointer(cmd[j].x, cmd[j].y, cmd[j].w, cmd[j].h) ||
 							  GameCanvas.isPointerHoldIn(cmd[j].x, cmd[j].y, cmd[j].w, cmd[j].h)))))
 						{
+							Res.outz(">>>>ServerListScreen cmd[" + j + "] pressed, action=" + cmd[j].idAction);
 							GameCanvas.clearAllPointerEvent();
 							cmd[j].performAction();
 							return;
@@ -157,7 +158,7 @@ public partial class ServerListScreen : mScreen, IActionListener
 				stopDownload = false;
 				cmdDownload = new Command(mResources.huy, this, 4, null);
 				cmdDownload.x = GameCanvas.w / 2 - mScreen.cmdW / 2;
-				cmdDownload.y = GameCanvas.hh + 65;
+				cmdDownload.y = GameCanvas.hh + 56;
 				right = null;
 				if (!GameCanvas.isTouch)
 				{
@@ -184,11 +185,22 @@ public partial class ServerListScreen : mScreen, IActionListener
 			}
 			if (idAction == 10100)
 			{
+				try
+				{
+					Rms.deleteRecord(Rms.RMS_userAo + ipSelect);
+					Rms.deleteRecord("passAo" + ipSelect);
+					Rms.saveRMSString(Rms.RMS_userAo + ipSelect, string.Empty);
+					Rms.saveRMSString("passAo" + ipSelect, string.Empty);
+				}
+				catch (Exception)
+				{
+				}
 				if (GameCanvas.loginScr == null)
 				{
 					GameCanvas.loginScr = new LoginScr();
 				}
-				GameCanvas.loginScr.switchToMe();
+				GameCanvas.loginScr.isLogin2 = true;
+				SmallImage.loadBigRMS();
 				if (!Session_ME.gI().isConnected())
 				{
 					GameCanvas.connect();
@@ -227,11 +239,22 @@ public partial class ServerListScreen : mScreen, IActionListener
 			}
 			if (idAction == 7)
 			{
-				if (GameCanvas.loginScr == null)
+				Res.outz(">>>> idAction == 7 TRIGGERED");
+				try
 				{
-					GameCanvas.loginScr = new LoginScr();
+					if (GameCanvas.loginScr == null)
+					{
+						Res.outz(">>>> new LoginScr()");
+						GameCanvas.loginScr = new LoginScr();
+					}
+					Res.outz(">>>> calling loginScr.switchToMe()");
+					GameCanvas.loginScr.switchToMe();
+					Res.outz(">>>> done loginScr.switchToMe(), currentScreen=" + GameCanvas.currentScreen);
 				}
-				GameCanvas.loginScr.switchToMe();
+				catch (Exception ex)
+				{
+					Res.outz(">>>> EXCEPTION in action 7: " + ex);
+				}
 			}
 			if (idAction == 8)
 			{

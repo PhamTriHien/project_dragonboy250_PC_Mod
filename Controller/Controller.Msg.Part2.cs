@@ -340,7 +340,7 @@ public partial class Controller : IMessageHandler
 				{
 					InfoDlg.hide();
 					int num62 = msg.reader().readInt();
-					Char charMenu = GameCanvas.panel.charMenu;
+					Char charMenu = GameCanvas.panel.charMenu ?? Char.myCharz().charFocus ?? GameScr.findCharInMap(num62);
 					if (charMenu == null)
 					{
 						return true;
@@ -434,23 +434,25 @@ public partial class Controller : IMessageHandler
 						string text2 = Rms.loadRMSString(Rms.RMS_ResVersion);
 						int num23 = ((text2 == null || !(text2 != string.Empty)) ? (-1) : int.Parse(text2));
 						Res.outz("4>>>GET_IMAGE_SOURCE: version>> " + text2 + " <> " + num23 + "!=" + num22);
-						if (num23 == -1 || num23 != num22)
+						Rms.saveRMSString(Rms.RMS_ResVersion, num22.ToString());
+
+						if (GameCanvas.currentScreen is SplashScr || GameCanvas.currentScreen == null)
 						{
-							GameCanvas.serverScreen.show2();
-						}
-						else
-						{
-							SmallImage.loadBigRMS();
-							SplashScr.imgLogo = null;
-							ServerListScreen.loadScreen = true;
-							Res.outz(">>>vo ne: " + GameCanvas.currentScreen);
-							ServerListScreen.bigOk = true;
-							if (ServerListScreen.cmdDownload != null)
+							if (num23 == -1 || num23 != num22)
 							{
-								ServerListScreen.cmdDownload = null;
+								GameCanvas.serverScreen.show2();
 							}
-							if (GameCanvas.currentScreen is SplashScr || GameCanvas.currentScreen == null)
+							else
 							{
+								SmallImage.loadBigRMS();
+								SplashScr.imgLogo = null;
+								ServerListScreen.loadScreen = true;
+								Res.outz(">>>vo ne: " + GameCanvas.currentScreen);
+								ServerListScreen.bigOk = true;
+								if (ServerListScreen.cmdDownload != null)
+								{
+									ServerListScreen.cmdDownload = null;
+								}
 								if (GameCanvas.serverScreen == null)
 								{
 									GameCanvas.serverScreen = new ServerListScreen();
@@ -521,6 +523,7 @@ public partial class Controller : IMessageHandler
 					sbyte where = msg.reader().readByte();
 					sbyte index = msg.reader().readByte();
 					string info = msg.reader().readUTF();
+					ModTdltLogger.LogItemResponse(itemAction, where, index, info);
 					GameCanvas.panel.itemRequest(itemAction, info, where, index);
 					break;
 				}

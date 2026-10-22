@@ -348,39 +348,37 @@ public partial class Session_ME : ISession
 		}
 
 	public void connect(string host, int port)
+	{
+		if (connected || connecting)
 		{
-			if (connected || connecting)
+			if (this.host == host && this.port == port)
 			{
-				Debug.Log(">>>return connect ...!" + connected + "  ::  " + connecting);
 				return;
 			}
-			if (mSystem.currentTimeMillis() < timeWaitConnect)
-			{
-				Debug.LogError(">>>>chặn việc nó kết nối 2 3 lần liên tục");
-				return;
-			}
-			timeWaitConnect = mSystem.currentTimeMillis() + 50;
-			if (isMainSession)
-			{
-				ServerListScreen.testConnect = -1;
-			}
-			this.host = host;
-			this.port = port;
-			getKeyComplete = false;
 			close();
-			Debug.Log("connecting...!");
-			Debug.Log("host: " + host);
-			Debug.Log("port: " + port);
-			initThread = new Thread(NetworkInit);
-			initThread.Start();
 		}
+		timeWaitConnect = mSystem.currentTimeMillis() + 300;
+		if (isMainSession)
+		{
+			ServerListScreen.testConnect = -1;
+		}
+		this.host = host;
+		this.port = port;
+		getKeyComplete = false;
+		close();
+		Debug.Log("connecting...!");
+		Debug.Log("host: " + host);
+		Debug.Log("port: " + port);
+		initThread = new Thread(NetworkInit);
+		initThread.Start();
+	}
 
 	private void NetworkInit()
 		{
 			isCancel = false;
 			connecting = true;
-			Thread.CurrentThread.Priority = System.Threading.ThreadPriority.Highest;
 			connected = true;
+			Thread.CurrentThread.Priority = System.Threading.ThreadPriority.Highest;
 			try
 			{
 				doConnect(host, port);
@@ -388,6 +386,8 @@ public partial class Session_ME : ISession
 			}
 			catch (Exception)
 			{
+				connected = false;
+				connecting = false;
 				if (messageHandler != null)
 				{
 					close();

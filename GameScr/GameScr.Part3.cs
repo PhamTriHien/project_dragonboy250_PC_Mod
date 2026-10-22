@@ -373,8 +373,11 @@ public partial class GameScr : mScreen, IChatable
 				}
 				if (num14 < 60 && num15 < 40)
 				{
-					playerMenu(Char.myCharz().charFocus);
-					if (!GameCanvas.isTouch && Char.myCharz().charFocus.charID >= 0 && TileMap.mapID != 51 && TileMap.mapID != 52 && popUpYesNo == null)
+					if (GameCanvas.panel.vPlayerMenu.size() <= 0)
+					{
+						playerMenu(Char.myCharz().charFocus);
+					}
+					if ((Main.isPC || !GameCanvas.isTouch) && Char.myCharz().charFocus.charID >= 0 && TileMap.mapID != 51 && TileMap.mapID != 52 && popUpYesNo == null)
 					{
 						GameCanvas.panel.setTypePlayerMenu(Char.myCharz().charFocus);
 						GameCanvas.panel.show();

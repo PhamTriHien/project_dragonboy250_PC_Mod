@@ -173,142 +173,27 @@ public class Image
 
 	private static Image _createEmptyImage()
 	{
-		if (status != 0)
-		{
-			Cout.LogError("CANNOT CREATE EMPTY IMAGE WHEN CREATING OTHER IMAGE");
-			return null;
-		}
-		imgTemp = null;
-		status = 2;
-		int i;
-		for (i = 0; i < 500; i++)
-		{
-			Thread.Sleep(5);
-			if (status == 0)
-			{
-				break;
-			}
-		}
-		if (i == 500)
-		{
-			Cout.LogError("TOO LONG FOR CREATE EMPTY IMAGE");
-			status = 0;
-		}
-		return imgTemp;
+		return __createEmptyImage();
 	}
 
 	private static Image _createImage(string filename)
 	{
-		if (status != 0)
-		{
-			Cout.LogError("CANNOT CREATE IMAGE " + filename + " WHEN CREATING OTHER IMAGE");
-			return null;
-		}
-		imgTemp = null;
-		filenametemp = filename;
-		status = 3;
-		int i;
-		for (i = 0; i < 500; i++)
-		{
-			Thread.Sleep(5);
-			if (status == 0)
-			{
-				break;
-			}
-		}
-		if (i == 500)
-		{
-			Cout.LogError("TOO LONG FOR CREATE IMAGE " + filename);
-			status = 0;
-		}
-		return imgTemp;
+		return __createImage(filename);
 	}
 
 	private static Image _createImage(byte[] imageData)
 	{
-		if (status != 0)
-		{
-			Cout.LogError("CANNOT CREATE IMAGE(FromArray) WHEN CREATING OTHER IMAGE");
-			return null;
-		}
-		imgTemp = null;
-		datatemp = imageData;
-		status = 4;
-		int i;
-		for (i = 0; i < 500; i++)
-		{
-			Thread.Sleep(5);
-			if (status == 0)
-			{
-				break;
-			}
-		}
-		if (i == 500)
-		{
-			Cout.LogError("TOO LONG FOR CREATE IMAGE(FromArray)");
-			status = 0;
-		}
-		return imgTemp;
+		return __createImage(imageData);
 	}
 
 	private static Image _createImage(Image src, int x, int y, int w, int h, int transform)
 	{
-		if (status != 0)
-		{
-			Cout.LogError("CANNOT CREATE IMAGE(FromSrcPart) WHEN CREATING OTHER IMAGE");
-			return null;
-		}
-		imgTemp = null;
-		imgSrcTemp = src;
-		xtemp = x;
-		ytemp = y;
-		wtemp = w;
-		htemp = h;
-		transformtemp = transform;
-		status = 5;
-		int i;
-		for (i = 0; i < 500; i++)
-		{
-			Thread.Sleep(5);
-			if (status == 0)
-			{
-				break;
-			}
-		}
-		if (i == 500)
-		{
-			Cout.LogError("TOO LONG FOR CREATE IMAGE(FromSrcPart)");
-			status = 0;
-		}
-		return imgTemp;
+		return __createImage(src, x, y, w, h, transform);
 	}
 
 	private static Image _createImage(int w, int h)
 	{
-		if (status != 0)
-		{
-			Cout.LogError("CANNOT CREATE IMAGE(w,h) WHEN CREATING OTHER IMAGE");
-			return null;
-		}
-		imgTemp = null;
-		wtemp = w;
-		htemp = h;
-		status = 6;
-		int i;
-		for (i = 0; i < 500; i++)
-		{
-			Thread.Sleep(5);
-			if (status == 0)
-			{
-				break;
-			}
-		}
-		if (i == 500)
-		{
-			Cout.LogError("TOO LONG FOR CREATE IMAGE(w,h)");
-			status = 0;
-		}
-		return imgTemp;
+		return __createImage(w, h);
 	}
 
 	public static byte[] loadData(string filename)

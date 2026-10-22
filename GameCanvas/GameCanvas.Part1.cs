@@ -28,24 +28,7 @@ public partial class GameCanvas : IActionListener
 		}
 	public static string getPlatformName()
 		{
-			string text = Rms.loadRMSString("sys_dev_id");
-			if (string.IsNullOrEmpty(text) || text.Equals("Pc platform xxx") || text.Equals("n/a"))
-			{
-				try
-				{
-					text = SystemInfo.deviceUniqueIdentifier;
-				}
-				catch
-				{
-					text = Guid.NewGuid().ToString("N");
-				}
-				if (string.IsNullOrEmpty(text) || text.Equals("n/a") || text.Equals("Pc platform xxx"))
-				{
-					text = Guid.NewGuid().ToString("N");
-				}
-				Rms.saveRMSString("sys_dev_id", text);
-			}
-			return "PC_" + (text.Length > 16 ? text.Substring(0, 16) : text);
+			return "Pc platform xxx";
 		}
 	public void initGame()
 		{

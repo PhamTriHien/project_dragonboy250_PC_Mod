@@ -12,6 +12,19 @@ public partial class GameScr : mScreen, IChatable
 				{
 					updateKeyTouchControl();
 				}
+				if (ModNextMap.isNextMapActive)
+				{
+					if (GameCanvas.keyHold[(!Main.isPC) ? 2 : 21] ||
+						GameCanvas.keyHold[(!Main.isPC) ? 4 : 23] ||
+						GameCanvas.keyHold[(!Main.isPC) ? 6 : 24] ||
+						GameCanvas.keyHold[(!Main.isPC) ? 8 : 22] ||
+						GameCanvas.keyHold[1] || GameCanvas.keyHold[3] ||
+						(GameScr.gamePad != null && GameScr.gamePad.disableCheckDrag()))
+					{
+						ModNextMap.StopNextMap();
+						GameScr.info1.addInfo("Đã dừng Next Map!", 0);
+					}
+				}
 				checkAuto();
 				GameCanvas.debug("F2", 0);
 				if (ChatPopup.currChatPopup != null)

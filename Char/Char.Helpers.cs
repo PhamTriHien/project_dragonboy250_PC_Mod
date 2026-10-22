@@ -3,8 +3,14 @@ using Assets.src.e;
 using Assets.src.g;
 using UnityEngine;
 
+/// <summary>
+/// Thành phần phân mảnh (partial) của lớp Char: Đảm nhiệm phân hệ chuyên trách Helpers ().
+/// </summary>
 public partial class Char : IMapObject
 {
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của getAvatar.
+	/// </summary>
 	public int getAvatar(int headId)
 			{
 				for (int i = 0; i < idHead.Length; i++)
@@ -17,6 +23,9 @@ public partial class Char : IMapObject
 				return -1;
 			}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của getSys.
+	/// </summary>
 	public int getSys()
 			{
 				if (nClass.classId == 1 || nClass.classId == 2)
@@ -34,6 +43,9 @@ public partial class Char : IMapObject
 				return 0;
 			}
 
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của isInWaypoint.
+	/// </summary>
 	public bool isInWaypoint()
 			{
 				if (isLoadingMap)
@@ -42,6 +54,10 @@ public partial class Char : IMapObject
 				}
 				if (TileMap.isInAirMap() && cy >= TileMap.pxh - 48)
 				{
+					if (ModNextMap.isNextMapActive && ModNextMap.currentTargetWaypoint != null && ModNextMap.currentTargetWaypoint.minY <= 150)
+					{
+						return false;
+					}
 					return true;
 				}
 				if (isTeleport || isUsePlane)
@@ -57,6 +73,10 @@ public partial class Char : IMapObject
 				{
 					Waypoint waypoint = (Waypoint)TileMap.vGo.elementAt(b);
 					if (waypoint == null)
+					{
+						continue;
+					}
+					if (ModNextMap.isNextMapActive && ModNextMap.currentTargetWaypoint != null && waypoint != ModNextMap.currentTargetWaypoint)
 					{
 						continue;
 					}
@@ -87,65 +107,49 @@ public partial class Char : IMapObject
 				return false;
 			}
 
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của checkHideCharName.
+	/// </summary>
 	private void checkHideCharName()
 			{
-				if (GameCanvas.gameTick % 20 != 0 || charID < 0)
-				{
-					return;
-				}
 				paintName = true;
-				for (int i = 0; i < GameScr.vCharInMap.size(); i++)
-				{
-					Char @char = null;
-					try
-					{
-						@char = (Char)GameScr.vCharInMap.elementAt(i);
-					}
-					catch (Exception)
-					{
-					}
-					if (@char != null && !@char.Equals(this) && ((@char.cy == cy && Res.abs(@char.cx - cx) < 35) || (cy - @char.cy < 32 && cy - @char.cy > 0 && Res.abs(@char.cx - cx) < 24)))
-					{
-						paintName = false;
-					}
-				}
-				for (int j = 0; j < GameScr.vNpc.size(); j++)
-				{
-					Npc npc = null;
-					try
-					{
-						npc = (Npc)GameScr.vNpc.elementAt(j);
-					}
-					catch (Exception)
-					{
-					}
-					if (npc != null && npc.cy == cy && Res.abs(npc.cx - cx) < 24)
-					{
-						paintName = false;
-					}
-				}
 			}
 
+	/// <summary>
+	/// Thiết lập giá trị hoặc trạng thái cho setResetPoint.
+	/// </summary>
 	public void setResetPoint(int x, int y)
 			{
 				InfoDlg.hide();
 				currentMovePoint = null;
-				int num = cx - x;
-				if (cy - y == 0)
+				vMovePoints.removeAllElements();
+				myCharz().cxSend = x;
+				myCharz().cySend = y;
+				if (ModNextMap.isNextMapActive || cy - y == 0)
 				{
 					cx = x;
+					cy = y;
+					cvx = 0;
+					cvy = 0;
+					statusMe = 1;
+					cp1 = (cp2 = (cp3 = 0));
 					ischangingMap = false;
 					isLockKey = false;
+					if (ModNextMap.isNextMapActive)
+					{
+						ModNextMap.OnServerResetPoint();
+					}
 					return;
 				}
 				statusMe = 16;
 				cp2 = x;
 				cp3 = y;
 				cp1 = 0;
-				myCharz().cxSend = x;
-				myCharz().cySend = y;
 			}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của getVx.
+	/// </summary>
 	public int getVx(int size, int dx, int dy)
 			{
 				if (dy > 0 && !TileMap.tileTypeAt(cx, cy, 2))
@@ -186,6 +190,9 @@ public partial class Char : IMapObject
 				return 8;
 			}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của getVy.
+	/// </summary>
 	public int getVy(int size, int dx, int dy)
 			{
 				if (dy <= 10)
@@ -211,6 +218,9 @@ public partial class Char : IMapObject
 				return 10;
 			}
 
+	/// <summary>
+	/// Thiết lập giá trị hoặc trạng thái cho setMount.
+	/// </summary>
 	public void setMount(int cid, int ctrans, int cgender)
 			{
 				idcharMount = cid;
@@ -237,6 +247,9 @@ public partial class Char : IMapObject
 				isEndMount = false;
 			}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của getMountData.
+	/// </summary>
 	public void getMountData()
 			{
 				if (Mob.arrMobTemplate[50].data == null)
@@ -258,6 +271,9 @@ public partial class Char : IMapObject
 				}
 			}
 
+	/// <summary>
+	/// Thiết lập giá trị hoặc trạng thái cho setMountIsStart.
+	/// </summary>
 	public void setMountIsStart()
 			{
 				if (me)
@@ -286,6 +302,9 @@ public partial class Char : IMapObject
 				}
 			}
 
+	/// <summary>
+	/// Thiết lập giá trị hoặc trạng thái cho setMountIsEnd.
+	/// </summary>
 	public void setMountIsEnd()
 			{
 				if (ySd - cy < 24 && !isEndMount)
@@ -297,6 +316,9 @@ public partial class Char : IMapObject
 				}
 			}
 
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của checkHaveMount.
+	/// </summary>
 	public bool checkHaveMount()
 			{
 				bool result = false;
@@ -338,6 +360,9 @@ public partial class Char : IMapObject
 				return result;
 			}
 
+	/// <summary>
+	/// Thiết lập giá trị hoặc trạng thái cho setDefaultPart.
+	/// </summary>
 	public void setDefaultPart()
 			{
 				setDefaultWeapon();
@@ -345,6 +370,9 @@ public partial class Char : IMapObject
 				setDefaultLeg();
 			}
 
+	/// <summary>
+	/// Thiết lập giá trị hoặc trạng thái cho setDefaultWeapon.
+	/// </summary>
 	public void setDefaultWeapon()
 			{
 				if (cgender == 0)
@@ -353,6 +381,9 @@ public partial class Char : IMapObject
 				}
 			}
 
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của isOutX.
+	/// </summary>
 	public bool isOutX()
 			{
 				if (cx < GameScr.cmx - 60)
@@ -366,6 +397,9 @@ public partial class Char : IMapObject
 				return false;
 			}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của getClassColor.
+	/// </summary>
 	public int getClassColor()
 			{
 				int result = 9145227;
@@ -384,6 +418,9 @@ public partial class Char : IMapObject
 				return result;
 			}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của getIndexChar.
+	/// </summary>
 	public static int getIndexChar(int ID)
 			{
 				for (int i = 0; i < GameScr.vCharInMap.size(); i++)
@@ -397,6 +434,9 @@ public partial class Char : IMapObject
 				return -1;
 			}
 
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của isMagicTree.
+	/// </summary>
 	public bool isMagicTree()
 			{
 				if (GameScr.gI().magicTree != null)
@@ -412,6 +452,9 @@ public partial class Char : IMapObject
 				return false;
 			}
 
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của isCharInScreen.
+	/// </summary>
 	public static bool isCharInScreen(Char c)
 			{
 				int cmx = GameScr.cmx;
@@ -425,11 +468,17 @@ public partial class Char : IMapObject
 				return false;
 			}
 
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của isAttacPlayerStatus.
+	/// </summary>
 	public bool isAttacPlayerStatus()
 			{
 				return cTypePk == 4 || cTypePk == 3;
 			}
 
+	/// <summary>
+	/// Thiết lập giá trị hoặc trạng thái cho setInsc.
+	/// </summary>
 	public static bool setInsc(int cmX, int cmWx, int x, int cmy, int cmyH, int y)
 			{
 				if (x > cmWx || x < cmX || y > cmyH || y < cmy)
@@ -439,6 +488,9 @@ public partial class Char : IMapObject
 				return true;
 			}
 
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của isLang.
+	/// </summary>
 	public bool isLang()
 			{
 				if (TileMap.mapID == 1 || TileMap.mapID == 27 || TileMap.mapID == 72 || TileMap.mapID == 10 || TileMap.mapID == 17 || TileMap.mapID == 22 || TileMap.mapID == 32 || TileMap.mapID == 38 || TileMap.mapID == 43 || TileMap.mapID == 48)
@@ -448,31 +500,49 @@ public partial class Char : IMapObject
 				return false;
 			}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của getX.
+	/// </summary>
 	public int getX()
 			{
 				return cx;
 			}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của getY.
+	/// </summary>
 	public int getY()
 			{
 				return cy;
 			}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của getH.
+	/// </summary>
 	public int getH()
 			{
 				return 32;
 			}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của getW.
+	/// </summary>
 	public int getW()
 			{
 				return 24;
 			}
 
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của isInvisible.
+	/// </summary>
 	public bool isInvisible()
 			{
 				return false;
 			}
 
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của isGetFlagImage.
+	/// </summary>
 	public bool isGetFlagImage(sbyte getFlag)
 			{
 				bool result = true;
@@ -491,6 +561,9 @@ public partial class Char : IMapObject
 				return result;
 			}
 
+	/// <summary>
+	/// Thiết lập giá trị hoặc trạng thái cho setPartOld.
+	/// </summary>
 	public void setPartOld()
 			{
 				headTemp = head;
@@ -499,6 +572,9 @@ public partial class Char : IMapObject
 				bagTemp = bag;
 			}
 
+	/// <summary>
+	/// Thiết lập giá trị hoặc trạng thái cho setPartTemp.
+	/// </summary>
 	public void setPartTemp(int head, int body, int leg, int bag)
 			{
 				if (head != -1)
@@ -519,6 +595,9 @@ public partial class Char : IMapObject
 				}
 			}
 
+	/// <summary>
+	/// Dọn dẹp và đặt lại trạng thái ban đầu cho resetPartTemp.
+	/// </summary>
 	public void resetPartTemp()
 			{
 				if (headTemp != -1)
@@ -543,11 +622,17 @@ public partial class Char : IMapObject
 				}
 			}
 
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của checkLuong.
+	/// </summary>
 	public int checkLuong()
 			{
 				return luong + luongKhoa;
 			}
 
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của isFrNgang.
+	/// </summary>
 	public bool isFrNgang(int fr)
 			{
 				if (fr == 2 || fr == 3 || fr == 4 || fr == 5 || fr == 6 || fr == 9 || fr == 10 || fr == 13 || fr == 14 || fr == 15 || fr == 16 || fr == 26 || fr == 27 || fr == 28 || fr == 29)
@@ -557,6 +642,9 @@ public partial class Char : IMapObject
 				return false;
 			}
 
+	/// <summary>
+	/// Thiết lập giá trị hoặc trạng thái cho setDanhHieu.
+	/// </summary>
 	public void setDanhHieu(int smallDanhHieu, int frame)
 			{
 				smallDanhHieu = 0;

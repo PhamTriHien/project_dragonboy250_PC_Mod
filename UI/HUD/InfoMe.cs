@@ -77,21 +77,20 @@ public class InfoMe
 		{
 			return;
 		}
+		if (info == null || info.infoWaitToShow == null || info.infoWaitToShow.size() == 0 || info.info == null)
+		{
+			return;
+		}
+		if (cmy <= -40)
+		{
+			return;
+		}
 		g.translate(-g.getTranslateX(), -g.getTranslateY());
 		g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
-		if (info != null)
-		{
-			info.paint(g, cmx, cmy, dir);
-			if (info.info == null || info.info.charInfo == null || cmdChat != null || !GameCanvas.isTouch)
-			{
-			}
-			if (info.info != null && info.info.charInfo != null && cmdChat == null)
-			{
-			}
-		}
+		info.paint(g, cmx, cmy, dir);
 		if (info.info != null && info.info.charInfo == null && charId != null)
 		{
-			SmallImage.drawSmallImage(g, charId[Char.myCharz().cgender][f], cmx, cmy + 3 + ((GameCanvas.gameTick % 10 > 5) ? 1 : 0), (dir != 1) ? 2 : 0, StaticObj.VCENTER_HCENTER);
+			SmallImage.drawSmallImage(g, charId[Char.myCharz().cgender][f], cmx, cmy + 3, (dir != 1) ? 2 : 0, StaticObj.VCENTER_HCENTER);
 		}
 		g.translate(-g.getTranslateX(), -g.getTranslateY());
 	}
@@ -99,6 +98,11 @@ public class InfoMe
 	public void hide()
 	{
 		info.hide();
+		info.info = null;
+		info.says = null;
+		isDone = true;
+		cmy = -50;
+		cmtoY = -50;
 	}
 
 	public void moveCamera()
@@ -146,28 +150,31 @@ public class InfoMe
 
 	public void update()
 	{
-		if (info != null && info.infoWaitToShow != null && (info.infoWaitToShow.size() == 0 || (info.info != null && info.info.timeCount <= 0)) && cmy != -40)
+		if (info == null)
 		{
-			info.timeW--;
-			if (info.timeW <= 0 || (info.info != null && info.info.timeCount <= 0))
+			return;
+		}
+		if (info.infoWaitToShow == null || info.infoWaitToShow.size() == 0 || info.info == null)
+		{
+			if (cmy > -50)
 			{
-				cmy = -40;
-				cmtoY = -40;
-				info.time = 0;
-				info.infoWaitToShow.removeAllElements();
-				info.says = null;
-				info.timeW = 200;
+				cmtoY = -50;
+				moveCamera();
+				if (cmy <= -45)
+				{
+					cmy = -50;
+					info.info = null;
+					info.says = null;
+					isDone = true;
+				}
 			}
+			return;
 		}
 		if ((Equals(GameScr.info2) && GameScr.gI().popUpYesNo != null) || !isUpdate)
 		{
 			return;
 		}
 		moveCamera();
-		if (info == null || (info != null && info.info == null))
-		{
-			return;
-		}
 		if (!isDone)
 		{
 			if (timeDelay > 0)
@@ -183,26 +190,32 @@ public class InfoMe
 					}
 				}
 			}
-			if (Char.myCharz().cdir == 1)
+			if (Char.myCharz() != null)
 			{
-				cmtoX = Char.myCharz().cx - 20 - GameScr.cmx;
-			}
-			if (Char.myCharz().cdir == -1)
-			{
-				cmtoX = Char.myCharz().cx + 20 - GameScr.cmx;
-			}
-			if (cmtoX <= 24)
-			{
-				cmtoX += info.sayWidth / 2;
-			}
-			if (cmtoX >= GameCanvas.w - 24)
-			{
-				cmtoX -= info.sayWidth / 2;
-			}
-			cmtoY = Char.myCharz().cy - 40 - GameScr.cmy;
-			if (info.says != null && cmtoY < (info.says.Length + 1) * 12 + 10)
-			{
-				cmtoY = (info.says.Length + 1) * 12 + 10;
+				int targetX = Char.myCharz().cx - GameScr.cmx + ((Char.myCharz().cdir == 1) ? -20 : 20);
+				if (targetX < 24 + info.sayWidth / 2)
+				{
+					targetX = 24 + info.sayWidth / 2;
+				}
+				if (targetX > GameCanvas.w - 24 - info.sayWidth / 2)
+				{
+					targetX = GameCanvas.w - 24 - info.sayWidth / 2;
+				}
+				cmtoX = targetX;
+
+				int targetY = Char.myCharz().cy - 40 - GameScr.cmy;
+				int minY = (info.says != null) ? ((info.says.Length + 1) * 12 + 10) : 25;
+				if (targetY < minY)
+				{
+					targetY = minY;
+				}
+				cmtoY = targetY;
+
+				int diffX = cmtoX - cmx;
+				if (Res.abs(diffX) > 4)
+				{
+					dir = (diffX > 0) ? 1 : -1;
+				}
 			}
 			if (info.info != null && info.info.charInfo != null)
 			{
@@ -212,11 +225,6 @@ public class InfoMe
 					cmtoX = 5;
 				}
 				cmtoY = 5;
-			}
-			int diffX = cmtoX - cmx;
-			if (Res.abs(diffX) > 2)
-			{
-				dir = (diffX > 0) ? 1 : -1;
 			}
 		}
 		if (info.info == null)
@@ -232,9 +240,12 @@ public class InfoMe
 				{
 					info.time = 0;
 					info.infoWaitToShow.removeElementAt(0);
-					InfoItem infoItem = (InfoItem)info.infoWaitToShow.firstElement();
-					info.info = infoItem;
-					info.getInfo();
+					if (info.infoWaitToShow.size() > 0)
+					{
+						InfoItem infoItem = (InfoItem)info.infoWaitToShow.firstElement();
+						info.info = infoItem;
+						info.getInfo();
+					}
 				}
 				return;
 			}
@@ -255,30 +266,25 @@ public class InfoMe
 				}
 			}
 		}
-		else
+		else if (info.infoWaitToShow.size() == 1)
 		{
-			if (info.infoWaitToShow.size() != 1)
-			{
-				return;
-			}
 			if (info.info.timeCount == 0)
 			{
 				info.time++;
 				if (info.time >= info.info.speed)
 				{
 					isDone = true;
+					cmtoY = -50;
 				}
-				if (info.time == info.info.speed)
-				{
-					cmtoY = -40;
-					cmtoX = Char.myCharz().cx - GameScr.cmx + ((Char.myCharz().cdir != 1) ? 20 : (-20));
-				}
-				if (info.time >= info.info.speed + 20)
+				if (info.time >= info.info.speed + 15)
 				{
 					info.time = 0;
 					info.infoWaitToShow.removeAllElements();
+					info.info = null;
 					info.says = null;
 					info.timeW = 200;
+					cmy = -50;
+					cmtoY = -50;
 				}
 			}
 			else
@@ -292,12 +298,13 @@ public class InfoMe
 				if (info.info.timeCount == 0)
 				{
 					isDone = true;
-					cmtoY = -40;
-					cmtoX = Char.myCharz().cx - GameScr.cmx + ((Char.myCharz().cdir != 1) ? 20 : (-20));
+					cmtoY = -50;
 					info.time = 0;
 					info.infoWaitToShow.removeAllElements();
+					info.info = null;
 					info.says = null;
 					cmdChat = null;
+					cmy = -50;
 				}
 			}
 		}

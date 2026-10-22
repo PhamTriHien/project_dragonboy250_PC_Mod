@@ -101,9 +101,18 @@ public class Info : IActionListener
 			}
 			if (info.charInfo == null)
 			{
-				g.drawRegion(gocnhon, 0, 0, 9, 8, (dir != 1) ? 2 : 0, cx - 3 + ((dir != 1) ? 20 : (-15)), cy - ch - 20 + sayRun + 2, mGraphics.TOP | mGraphics.HCENTER);
+				if (gocnhon == null)
+				{
+					try { gocnhon = GameCanvas.loadImage("/mainImage/myTexture2dgocnhon.png"); } catch { }
+				}
+				if (gocnhon != null)
+				{
+					int tailX = X + W / 2 + ((dir != 1) ? 6 : (-6));
+					g.drawRegion(gocnhon, 0, 0, 9, 8, (dir != 1) ? 2 : 0, tailX, Y + H - 1, mGraphics.TOP | mGraphics.HCENTER);
+				}
 			}
 			int num2 = -1;
+			int fontH = (mFont.tahoma_7 != null) ? mFont.tahoma_7.getHeight() : 12;
 			for (int i = 0; i < says.Length; i++)
 			{
 				mFont mFont2 = mFont.tahoma_7;
@@ -158,7 +167,7 @@ public class Info : IActionListener
 				}
 				if (info.charInfo == null)
 				{
-					mFont2.drawString(g, text, cx, cy - ch - 15 + sayRun + i * 12 - says.Length * 12 - 9, 2);
+					mFont2.drawString(g, text, X + W / 2, Y + 6 + i * fontH, mFont.CENTER);
 					continue;
 				}
 				int num5 = X - 23;
@@ -261,11 +270,12 @@ public class Info : IActionListener
 			says = mFont.tahoma_7.splitFontArray(info.s, sayWidth - 10);
 			num = says.Length;
 		}
+		int fontH = (mFont.tahoma_7 != null) ? mFont.tahoma_7.getHeight() : 12;
 		sayRun = 7;
 		X = cx - sayWidth / 2 - 1;
-		Y = cy - ch - 15 + sayRun - num * 12 - 15;
+		H = num * fontH + 12;
+		Y = cy - ch - 15 + sayRun - H - 3;
 		W = sayWidth + 2;
-		H = (num + 1) * 12 + 1;
 	}
 
 	private void paintWorldChatBar(mGraphics g)

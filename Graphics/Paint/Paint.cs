@@ -110,8 +110,12 @@ public class Paint
 
 	public void paintCmdBar(mGraphics g, Command left, Command center, Command right)
 	{
-		mFont mFont2 = ((!GameCanvas.isTouch) ? mFont.tahoma_7b_dark : mFont.tahoma_7b_dark);
-		int num = 3;
+		mFont mFont2 = mFont.tahoma_7b_dark;
+		int fontH = (mFont2 != null) ? mFont2.getHeight() : 12;
+		int btnH = mScreen.cmdH;
+		int btnY = GameCanvas.h - btnH - 1;
+		int textY = btnY + (btnH - fontH) / 2;
+
 		if (left != null)
 		{
 			lenCaption = mFont2.getWidth(left.caption);
@@ -123,8 +127,8 @@ public class Paint
 				}
 				else
 				{
-					g.drawImage((mScreen.keyTouch != 0) ? GameScr.imgLbtn : GameScr.imgLbtnFocus, 1, GameCanvas.h - mScreen.cmdH - 1, 0);
-					mFont2.drawString(g, left.caption, 35, GameCanvas.h - mScreen.cmdH + 3 + num, 2);
+					g.drawImage((mScreen.keyTouch != 0) ? GameScr.imgLbtn : GameScr.imgLbtnFocus, 1, btnY, 0);
+					mFont2.drawString(g, left.caption, 35, textY, mFont.CENTER);
 				}
 			}
 		}
@@ -139,8 +143,8 @@ public class Paint
 				}
 				else
 				{
-					g.drawImage((mScreen.keyTouch != 1) ? GameScr.imgLbtn : GameScr.imgLbtnFocus, GameCanvas.hw - 35, GameCanvas.h - mScreen.cmdH - 1, 0);
-					mFont2.drawString(g, center.caption, GameCanvas.hw, GameCanvas.h - mScreen.cmdH + 3 + num, 2);
+					g.drawImage((mScreen.keyTouch != 1) ? GameScr.imgLbtn : GameScr.imgLbtnFocus, GameCanvas.hw - 35, btnY, 0);
+					mFont2.drawString(g, center.caption, GameCanvas.hw, textY, mFont.CENTER);
 				}
 			}
 		}
@@ -156,8 +160,8 @@ public class Paint
 				right.paint(g);
 				return;
 			}
-			g.drawImage((mScreen.keyTouch != 2) ? GameScr.imgLbtn : GameScr.imgLbtnFocus, GameCanvas.w - 71, GameCanvas.h - mScreen.cmdH - 1, 0);
-			mFont2.drawString(g, right.caption, GameCanvas.w - 35, GameCanvas.h - mScreen.cmdH + 3 + num, 2);
+			g.drawImage((mScreen.keyTouch != 2) ? GameScr.imgLbtn : GameScr.imgLbtnFocus, GameCanvas.w - 71, btnY, 0);
+			mFont2.drawString(g, right.caption, GameCanvas.w - 35, textY, mFont.CENTER);
 		}
 	}
 

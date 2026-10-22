@@ -322,7 +322,7 @@ public partial class ServerScr : mScreen, IActionListener
 				}
 				num = list.cmx;
 			}
-			if (GameCanvas.isPointer(xsub, ysub, wsub, hsub))
+			if (GameCanvas.isPointer(xsub, ysub, wsub, hsub) || GameCanvas.isPointerHoldIn(xsub, ysub, wsub, hsub))
 			{
 				int num2 = (GameCanvas.px - xsubpaint) / (wc + w2c) + (GameCanvas.py - ysubpaint + num) / (hc + w2c) * numw;
 				int num3 = vecServer.size();
@@ -350,7 +350,7 @@ public partial class ServerScr : mScreen, IActionListener
 					}
 				}
 			}
-			if (GameCanvas.isPointer(xinfo - 2, yinfo + hinfo, wCheck + 4, wCheck + 4) && GameCanvas.isPointerJustRelease)
+			if ((GameCanvas.isPointer(xinfo - 2, yinfo + hinfo, wCheck + 4, wCheck + 4) || GameCanvas.isPointerHoldIn(xinfo - 2, yinfo + hinfo, wCheck + 4, wCheck + 4)) && GameCanvas.isPointerJustRelease)
 			{
 				isShowSv_HaveChar = !isShowSv_HaveChar;
 				GetVecTypeSv(select_Area, select_typeSv);
@@ -362,7 +362,7 @@ public partial class ServerScr : mScreen, IActionListener
 			for (sbyte b = 0; b < ntypeSv; b++)
 			{
 				int num4 = yPop + b * (hPop + 5);
-				if (GameCanvas.isPointerHoldIn(xPop, num4, wPop, hPop) && GameCanvas.isPointerDown)
+				if ((GameCanvas.isPointerHoldIn(xPop, num4, wPop, hPop) || GameCanvas.isPointer(xPop, num4, wPop, hPop)) && (GameCanvas.isPointerDown || GameCanvas.isPointerJustRelease))
 				{
 					GetVecTypeSv(select_Area, b);
 					break;

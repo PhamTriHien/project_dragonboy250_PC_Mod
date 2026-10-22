@@ -1,9 +1,9 @@
 {
-  "version": "2.5.24",
-  "buildDate": "2026-09-17",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.24/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.24/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.24/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.24/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.24: Toi uu hoa toan dien giao dien Menu Mod (tinh gon kich thuoc nut bam ve 16-18px, ap dung font chu thanh manh tahoma_7 compact chuan phong cach pixel art goc cua game, thu gon cot danh muc giup hien thi menu nho gon, tinh te va toi uu khong gian hien thi noi dung chi tiet)."
+  "version": "2.5.25",
+  "buildDate": "2026-10-22",
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.25/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.25/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.25/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.25/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.25: Khac phuc triet de loi Next Map khong tim duoc toa do/cong tren mot so ban do (dong bo do thi World Map va tu dong cap nhat truc tiep tu TileMap.vGo, ho tro day du ten ban do da ngon ngu NRmap, sua loi tinh toa do mat dat GetGroundY va ket nhay o mep ban do); sua loi bam phim ESC bi thoat game tren PC va ho tro dong nhanh Mod Menu bang ESC; ra soat va sua toan bo loi logic ngam cua he thong Auto (Tan Sat, Auto Point, Auto Pick, Auto Heal, GoBack, Auto Item, Auto Fusion, Set Activator, Auto Buy Bua)."
 }

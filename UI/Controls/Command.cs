@@ -136,8 +136,13 @@ public class Command
 
 	public void paint(mGraphics g)
 	{
+		int btnW = (w > 0) ? w : mScreen.cmdW;
+		int btnH = (h > 0) ? h : 24;
+
 		if (img != null)
 		{
+			int imgW = mGraphics.getImageWidth(img);
+			int imgH = mGraphics.getImageHeight(img);
 			g.drawImage(img, x, y + mGraphics.addYWhenOpenKeyBoard, 0);
 			if (isFocus)
 			{
@@ -157,32 +162,47 @@ public class Command
 					g.drawImage(imgFocus, x, y + mGraphics.addYWhenOpenKeyBoard, 0);
 				}
 			}
-			if (caption != "menu" && caption != null)
+			if (caption != "menu" && caption != null && caption != string.Empty)
 			{
-				if (!isFocus)
-				{
-					mFont.tahoma_7b_dark.drawString(g, caption, x + mGraphics.getImageWidth(img) / 2, y + mGraphics.getImageHeight(img) / 2 - 5, 2);
-				}
-				else
-				{
-					mFont.tahoma_7b_green2.drawString(g, caption, x + mGraphics.getImageWidth(img) / 2, y + mGraphics.getImageHeight(img) / 2 - 5, 2);
-				}
+				mFont font = isFocus ? mFont.tahoma_7b_green2 : mFont.tahoma_7b_dark;
+				int fontH = (font != null) ? font.getHeight() : 12;
+				int textY = y + mGraphics.addYWhenOpenKeyBoard + (imgH - fontH) / 2;
+				font.drawString(g, caption, x + imgW / 2, textY, mFont.CENTER);
 			}
 			return;
 		}
-		if (caption != string.Empty)
+
+		if (caption != null && caption != string.Empty)
 		{
-			if (!isFocus)
+			if (btn0left == null)
 			{
-				paintOngMau(btn0left, btn0mid, btn0right, x, y, w, g);
+				try
+				{
+					btn0left = GameCanvas.loadImage("/mainImage/btn0left.png");
+					btn0mid = GameCanvas.loadImage("/mainImage/btn0mid.png");
+					btn0right = GameCanvas.loadImage("/mainImage/btn0right.png");
+					btn1left = GameCanvas.loadImage("/mainImage/btn1left.png");
+					btn1mid = GameCanvas.loadImage("/mainImage/btn1mid.png");
+					btn1right = GameCanvas.loadImage("/mainImage/btn1right.png");
+				}
+				catch { }
 			}
-			else
+
+			if (btn0left != null && btn0mid != null && btn0right != null)
 			{
-				paintOngMau(btn1left, btn1mid, btn1right, x, y, w, g);
+				if (!isFocus)
+				{
+					paintOngMau(btn0left, btn0mid, btn0right, x, y, btnW, g);
+				}
+				else
+				{
+					paintOngMau(btn1left, btn1mid, btn1right, x, y, btnW, g);
+				}
 			}
 		}
+
 		int num = 0;
-		int num2 = x + w / 2;
+		int num2 = x + btnW / 2;
 		if (imgBtn != null)
 		{
 			num = imgBtn.getWidth();
@@ -196,13 +216,13 @@ public class Command
 				g.drawImage(imgBtn, x, y + 1, 0);
 			}
 		}
-		if (!isFocus)
+
+		if (caption != null && caption != string.Empty)
 		{
-			mFont.tahoma_7b_dark.drawString(g, caption, num2, y + 7, (num == 0) ? 2 : 0);
-		}
-		else
-		{
-			mFont.tahoma_7b_green2.drawString(g, caption, num2, y + 7, (num == 0) ? 2 : 0);
+			mFont font = isFocus ? mFont.tahoma_7b_green2 : mFont.tahoma_7b_dark;
+			int fontH = (font != null) ? font.getHeight() : 12;
+			int textY = y + (btnH - fontH) / 2;
+			font.drawString(g, caption, num2, textY, (num == 0) ? mFont.CENTER : mFont.LEFT);
 		}
 	}
 
@@ -224,7 +244,9 @@ public class Command
 	public bool isPointerPressInside()
 	{
 		isFocus = false;
-		if (GameCanvas.isPointerHoldIn(x, y, w, h) || GameCanvas.isPointer(x, y, w, h))
+		int cw = (w > 0) ? w : mScreen.cmdW;
+		int ch = (h > 0) ? h : ((img != null) ? mGraphics.getImageHeight(img) : 24);
+		if (GameCanvas.isPointerHoldIn(x, y, cw, ch) || GameCanvas.isPointer(x, y, cw, ch))
 		{
 			if (GameCanvas.isPointerDown)
 			{
@@ -241,14 +263,15 @@ public class Command
 	public bool isPointerPressInsideCamera(int cmx, int cmy)
 	{
 		isFocus = false;
-		if (GameCanvas.isPointerHoldIn(x - cmx, y - cmy, w, h))
+		int cw = (w > 0) ? w : mScreen.cmdW;
+		int ch = (h > 0) ? h : mScreen.cmdH;
+		if (GameCanvas.isPointerHoldIn(x - cmx, y - cmy, cw, ch) || GameCanvas.isPointer(x - cmx, y - cmy, cw, ch))
 		{
-			Res.outz("w= " + w);
 			if (GameCanvas.isPointerDown)
 			{
 				isFocus = true;
 			}
-			if (GameCanvas.isPointerJustRelease)
+			if (GameCanvas.isPointerJustRelease || GameCanvas.isPointerClick)
 			{
 				return true;
 			}

@@ -1,6 +1,9 @@
 using System;
 using System.Collections;
 
+/// <summary>
+/// Module Việt Hoá Dữ Liệu Máy Chủ: Tự động chuyển đổi các đoạn chat, tên vật phẩm và thông điệp server sang tiếng Việt chuẩn.
+/// </summary>
 public static partial class ModTranslate
 {
 	// Lưu trữ dữ liệu thô nhận từ server để hỗ trợ khôi phục khi tắt dịch
@@ -8,6 +11,9 @@ public static partial class ModTranslate
 	public static string[] rawNpcNames;
 	public static string[] rawMobNames;
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của GetMapName.
+	/// </summary>
 	public static string GetMapName(int id, string defaultName)
 	{
 		if (!ModConfig.isTranslate)
@@ -21,6 +27,47 @@ public static partial class ModTranslate
 		return defaultName;
 	}
 
+	/// <summary>
+	/// Dịch tên cổng chuyển map (Waypoint) theo đúng bảng tên bản đồ trước khi fallback sang dịch từ đơn lẻ.
+	/// </summary>
+	public static string TranslateWaypointName(string rawName)
+	{
+		if (string.IsNullOrEmpty(rawName))
+		{
+			return rawName;
+		}
+		if (!ModConfig.isTranslate)
+		{
+			return rawName;
+		}
+		try
+		{
+			string trimmed = rawName.Trim();
+			if (rawMapNames != null)
+			{
+				for (int i = 0; i < rawMapNames.Length; i++)
+				{
+					if (!string.IsNullOrEmpty(rawMapNames[i]) && string.Equals(rawMapNames[i].Trim(), trimmed, StringComparison.OrdinalIgnoreCase))
+					{
+						return GetMapName(i, rawName);
+					}
+				}
+			}
+			int matchedMapId = ModNextMapData.FindMapIdByName(trimmed);
+			if (matchedMapId >= 0)
+			{
+				return GetMapName(matchedMapId, rawName);
+			}
+		}
+		catch (Exception)
+		{
+		}
+		return Res.changeString(rawName);
+	}
+
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của GetNpcName.
+	/// </summary>
 	public static string GetNpcName(int id, string defaultName)
 	{
 		if (!ModConfig.isTranslate)
@@ -34,6 +81,9 @@ public static partial class ModTranslate
 		return defaultName;
 	}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của GetMobName.
+	/// </summary>
 	public static string GetMobName(int id, string defaultName)
 	{
 		if (!ModConfig.isTranslate)
@@ -47,6 +97,9 @@ public static partial class ModTranslate
 		return defaultName;
 	}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của GetOptionTemplate.
+	/// </summary>
 	public static string GetOptionTemplate(int id, string defaultName)
 	{
 		if (!ModConfig.isTranslate)
@@ -60,6 +113,9 @@ public static partial class ModTranslate
 		return TranslateString(defaultName);
 	}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của GetItemName.
+	/// </summary>
 	public static string GetItemName(int templateId, string rawName, string rawDescription)
 	{
 		if (!ModConfig.isTranslate || string.IsNullOrEmpty(rawName))
@@ -75,6 +131,9 @@ public static partial class ModTranslate
 		return TranslateItemNamePattern(rawName, rawDescription);
 	}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ TranslateItemNamePattern.
+	/// </summary>
 	private static string TranslateItemNamePattern(string name, string desc)
 	{
 		if (string.IsNullOrEmpty(name))
@@ -150,6 +209,9 @@ public static partial class ModTranslate
 		return TranslateString(name);
 	}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của GetItemDescription.
+	/// </summary>
 	public static string GetItemDescription(int templateId, string rawDescription)
 	{
 		if (!ModConfig.isTranslate || string.IsNullOrEmpty(rawDescription))
@@ -165,6 +227,9 @@ public static partial class ModTranslate
 		return TranslateItemDescriptionPattern(rawDescription);
 	}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ TranslateItemDescriptionPattern.
+	/// </summary>
 	private static string TranslateItemDescriptionPattern(string desc)
 	{
 		if (string.IsNullOrEmpty(desc))
@@ -204,6 +269,9 @@ public static partial class ModTranslate
 		return TranslateString(desc);
 	}
 
+	/// <summary>
+	/// Áp dụng các thay đổi cấu hình hoặc hiệu ứng của ApplyAllTranslations.
+	/// </summary>
 	public static void ApplyAllTranslations()
 	{
 		try
@@ -260,12 +328,28 @@ public static partial class ModTranslate
 					}
 				}
 			}
+
+			// 5. Cập nhật Waypoint names hiện tại trong map
+			if (TileMap.vGo != null)
+			{
+				for (int i = 0; i < TileMap.vGo.size(); i++)
+				{
+					Waypoint wp = (Waypoint)TileMap.vGo.elementAt(i);
+					if (wp != null && !string.IsNullOrEmpty(wp.rawName))
+					{
+						wp.name = TranslateWaypointName(wp.rawName);
+					}
+				}
+			}
 		}
 		catch (Exception)
 		{
 		}
 	}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ TranslateString.
+	/// </summary>
 	public static string TranslateString(string str)
 	{
 		if (!ModConfig.isTranslate || string.IsNullOrEmpty(str))
@@ -290,6 +374,9 @@ public static partial class ModTranslate
 		return str;
 	}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ ReplaceWordIgnoreCase.
+	/// </summary>
 	public static string ReplaceWordIgnoreCase(string input, string pattern, string replacement)
 	{
 		if (string.IsNullOrEmpty(input) || string.IsNullOrEmpty(pattern))
@@ -317,6 +404,9 @@ public static partial class ModTranslate
 		return input;
 	}
 
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của IsWordBoundary.
+	/// </summary>
 	public static bool IsWordBoundary(string text, int index, int length)
 	{
 		if (index > 0 && char.IsLetterOrDigit(text[index - 1]))

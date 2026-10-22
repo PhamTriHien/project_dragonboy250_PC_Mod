@@ -1,3 +1,6 @@
+/// <summary>
+/// CLASS Waypoint: Định nghĩa và điều phối logic trong hệ thống game.
+/// </summary>
 public class Waypoint : IActionListener
 {
 	public short minX;
@@ -14,15 +17,21 @@ public class Waypoint : IActionListener
 
 	public string name;
 
+	public string rawName;
+
 	public PopUp popup;
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ Waypoint.
+	/// </summary>
 	public Waypoint(short minX, short minY, short maxX, short maxY, bool isEnter, bool isOffline, string name)
 	{
 		this.minX = minX;
 		this.minY = minY;
 		this.maxX = maxX;
 		this.maxY = maxY;
-		name = Res.changeString(name);
+		this.rawName = name;
+		name = ModTranslate.TranslateWaypointName(name);
 		this.name = name;
 		this.isEnter = isEnter;
 		this.isOffline = isOffline;
@@ -70,6 +79,9 @@ public class Waypoint : IActionListener
 		TileMap.vGo.addElement(this);
 	}
 
+	/// <summary>
+	/// Thực thi hành động tương tác khi người dùng kích hoạt lệnh hoặc nút bấm.
+	/// </summary>
 	public void perform(int idAction, object p)
 	{
 		switch (idAction)

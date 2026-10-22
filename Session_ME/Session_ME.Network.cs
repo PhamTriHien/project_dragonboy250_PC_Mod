@@ -42,7 +42,8 @@ public partial class Session_ME
 					}
 					else
 					{
-						dos.Write((ushort)num);
+						dos.Write((sbyte)(num >> 8));
+						dos.Write((sbyte)(num & 0xFF));
 					}
 					if (getKeyComplete)
 					{
@@ -50,6 +51,13 @@ public partial class Session_ME
 						{
 							sbyte value2 = writeKey(data[i]);
 							dos.Write(value2);
+						}
+					}
+					else
+					{
+						for (int i = 0; i < data.Length; i++)
+						{
+							dos.Write(data[i]);
 						}
 					}
 					sendByteCount += 5 + data.Length;
@@ -66,7 +74,8 @@ public partial class Session_ME
 					}
 					else
 					{
-						dos.Write((ushort)0);
+						dos.Write((sbyte)0);
+						dos.Write((sbyte)0);
 					}
 					sendByteCount += 5;
 				}

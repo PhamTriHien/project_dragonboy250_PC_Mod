@@ -18,23 +18,26 @@ public partial class Controller : IMessageHandler
 				case 63:
 				{
 					sbyte b5 = msg.reader().readByte();
+					InfoDlg.hide();
 					if (b5 > 0)
 					{
 						GameCanvas.panel.vPlayerMenu_id.removeAllElements();
-						InfoDlg.showWait();
 						MyVector vPlayerMenu = GameCanvas.panel.vPlayerMenu;
+						Char targetChar = GameCanvas.panel.charMenu ?? Char.myCharz().charFocus;
 						for (int j = 0; j < b5; j++)
 						{
 							string caption = msg.reader().readUTF();
 							string caption2 = msg.reader().readUTF();
 							short num5 = msg.reader().readShort();
 							GameCanvas.panel.vPlayerMenu_id.addElement(num5 + string.Empty);
-							Char.myCharz().charFocus.menuSelect = num5;
-							Command command = new Command(caption, 11115, Char.myCharz().charFocus);
+							if (targetChar != null)
+							{
+								targetChar.menuSelect = num5;
+							}
+							Command command = new Command(caption, 11115, targetChar);
 							command.caption2 = caption2;
 							vPlayerMenu.addElement(command);
 						}
-						InfoDlg.hide();
 						GameCanvas.panel.setTabPlayerMenu();
 					}
 					break;
