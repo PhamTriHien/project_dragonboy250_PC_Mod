@@ -23,6 +23,9 @@ public static class ModBossNotice
 	public static bool isShowBossNotice = true;
 	public static bool isAutoScanBossZone = false;
 	public static bool isAutoAttackBoss = false;
+	public static bool isAutoFocusBoss = false;
+	public static bool isKsSuperBroly1Hp = false;
+	public static string filterBossNamesRaw = "";
 	public static int hudStartY = 38;
 	public static readonly List<BossNoticeEntry> listBossNotices = new List<BossNoticeEntry>();
 	public const int MAX_BOSS_NOTICES = 6;
@@ -30,6 +33,51 @@ public static class ModBossNotice
 	private static long lastScanZoneTime = 0;
 	private static int currentScanZoneIdx = 0;
 	private static long lastAutoAttackBossTime = 0;
+
+	public static bool MatchesBossFilter(string bossName)
+	{
+		if (string.IsNullOrEmpty(filterBossNamesRaw)) return true;
+		if (string.IsNullOrEmpty(bossName)) return false;
+		string[] tokens = filterBossNamesRaw.Split(new char[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries);
+		if (tokens.Length == 0) return true;
+		for (int i = 0; i < tokens.Length; i++)
+		{
+			string t = tokens[i].Trim();
+			if (t.Length > 0 && bossName.IndexOf(t, StringComparison.OrdinalIgnoreCase) >= 0)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private class BossFilterChatListener : IChatable
+	{
+		public void onChatFromMe(string text, string to)
+		{
+			filterBossNamesRaw = (text ?? string.Empty).Trim();
+			ModConfig.SaveConfig();
+			ChatTextField.gI().isShow = false;
+			ChatTextField.gI().parentScreen = GameScr.gI();
+			GameScr.info1.addInfo(string.IsNullOrEmpty(filterBossNamesRaw) ? "Đã tắt lọc tên Boss (dò tất cả)" : ("Lọc Boss: " + filterBossNamesRaw), 0);
+		}
+		public void onCancelChat()
+		{
+			ChatTextField.gI().isShow = false;
+			ChatTextField.gI().parentScreen = GameScr.gI();
+		}
+	}
+
+	private static readonly BossFilterChatListener filterChatListener = new BossFilterChatListener();
+
+	public static void ShowInputFilterBoss()
+	{
+		ChatTextField.gI().strChat = "Nhập tên Boss lọc (cách nhau dấu ;)";
+		ChatTextField.gI().tfChat.name = "Tên Boss (để trống = tất cả)";
+		ChatTextField.gI().tfChat.setIputType(TField.INPUT_TYPE_ANY);
+		ChatTextField.gI().startChat2(filterChatListener, string.Empty);
+		ChatTextField.gI().tfChat.setText(filterBossNamesRaw ?? string.Empty);
+	}
 
 	/// <summary>
 	/// Bật hoặc tắt tự động dò khu tìm Boss trong map hiện tại.
@@ -73,7 +121,7 @@ public static class ModBossNotice
 			Char c = (Char)GameScr.vCharInMap.elementAt(i);
 			if (c != null && c.charID < 0 && c.cHP > 0 && !c.isDie && c.statusMe != 14 && c.statusMe != 5)
 			{
-				if (c.cTypePk == 5 || IsBossName(c.cName))
+				if ((c.cTypePk == 5 || IsBossName(c.cName)) && MatchesBossFilter(c.cName))
 				{
 					return c;
 				}
@@ -87,7 +135,7 @@ public static class ModBossNotice
 	/// </summary>
 	public static void UpdateAutoBoss()
 	{
-		if ((!isAutoScanBossZone && !isAutoAttackBoss) || !ModMenu.IsInGame())
+		if ((!isAutoScanBossZone && !isAutoAttackBoss && !isAutoFocusBoss && !isKsSuperBroly1Hp) || !ModMenu.IsInGame())
 		{
 			return;
 		}
@@ -114,23 +162,33 @@ public static class ModBossNotice
 				SoundMn.gI().buttonClick();
 			}
 
-			if (isAutoAttackBoss)
+			if (isAutoFocusBoss || isAutoAttackBoss || isKsSuperBroly1Hp)
 			{
 				me.charFocus = liveBoss;
 				me.mobFocus = null;
 				me.npcFocus = null;
 				me.itemFocus = null;
+			}
 
+			bool shouldAttack = isAutoAttackBoss;
+			if (isKsSuperBroly1Hp && liveBoss.cName != null && liveBoss.cName.IndexOf("Broly", StringComparison.OrdinalIgnoreCase) >= 0)
+			{
+				shouldAttack = (liveBoss.cHP <= 500 || (liveBoss.cHPFull > 0 && liveBoss.cHP * 100L / liveBoss.cHPFull <= 1));
+			}
+
+			if (shouldAttack)
+			{
 				int dist = Res.distance(me.cx, me.cy, liveBoss.cx, liveBoss.cy);
 				if (dist > 48 && now - lastAutoAttackBossTime >= 350)
 				{
 					ModTeleport.TeleportTo(liveBoss.cx, liveBoss.cy);
 				}
 
-				if (now - lastAutoAttackBossTime >= 250)
+				long attackInterval = isKsSuperBroly1Hp ? 60 : 250;
+				if (now - lastAutoAttackBossTime >= attackInterval)
 				{
 					Skill sk = me.myskill;
-					if (sk != null && !sk.paintCanNotUseSkill && now - sk.lastTimeUseThisSkill >= sk.coolDown)
+					if (sk != null && !sk.paintCanNotUseSkill && (isKsSuperBroly1Hp || now - sk.lastTimeUseThisSkill >= sk.coolDown))
 					{
 						lastAutoAttackBossTime = now;
 						sk.lastTimeUseThisSkill = now;
@@ -677,7 +735,7 @@ public static class ModBossNotice
 						int rowW = bossW + mapW + timeW + goW;
 
 						// Thụt lùi sát mép phải màn hình (cách mép 2px) có tính toán Safe Area
-						int lineX = GameCanvas.w - rowW - 2;
+						int lineX = GameCanvas.w - rowW - 2 - SafeArea.Right;
 						if (lineX < 2)
 						{
 							lineX = 2;
@@ -752,10 +810,10 @@ public static class ModBossNotice
 						{
 							rowW = bossF.getWidth(bossPart) + mapF.getWidth(mapPart) + timeF.getWidth(timePart) + goF.getWidth(goPart);
 						}
-						int lineX = GameCanvas.w - rowW - 2;
+						int lineX = GameCanvas.w - rowW - 2 - SafeArea.Right;
 						if (lineX < 2) lineX = 2;
 
-						if (px >= lineX && px <= GameCanvas.w)
+						if (px >= lineX && px <= GameCanvas.w - SafeArea.Right)
 						{
 							int targetMapId = ModNextMapData.FindMapIdByName(entry.mapName);
 							if (targetMapId >= 0)

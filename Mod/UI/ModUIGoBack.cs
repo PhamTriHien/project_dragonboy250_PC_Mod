@@ -1,19 +1,19 @@
 using System;
 
+/// <summary>
+/// CLASS ModUIGoBack: Định nghĩa và điều phối logic trong hệ thống game.
+/// </summary>
 public static class ModUIGoBack
 {
+	/// <summary>
+	/// Thực hiện vẽ toàn bộ đối tượng và các lớp hiển thị lên canvas mGraphics.
+	/// </summary>
 	public static void Paint(int uiX, int uiY, int uiW, int uiH, mGraphics g)
 	{
-		int halfW = (uiW - 14) / 2;
-		int item1X = uiX + 4;
-		int item2X = uiX + 8 + halfW;
-
-		// Hàng 1: Công tắc Bật/Tắt GoBack & Tự định toạ độ khi chết
-		mFont.tahoma_7_grey.drawString(g, "GoBack Map:", item1X + 2, uiY + 7, mFont.LEFT);
-		ModUI.PaintNativeButton(item1X + halfW - 38, uiY + 4, 38, 17, ModGoBack.isGoBackActive ? "BẬT" : "TẮT", ModGoBack.isGoBackActive, g);
-
-		mFont.tahoma_7_grey.drawString(g, "Tự lưu khi chết:", item2X + 2, uiY + 7, mFont.LEFT);
-		ModUI.PaintNativeButton(item2X + halfW - 38, uiY + 4, 38, 17, ModGoBack.isAutoRecordOnDeath ? "BẬT" : "TẮT", ModGoBack.isAutoRecordOnDeath, g);
+		int r1W = (uiW - 16) / 3;
+		ModUI.PaintNativeButton(uiX + 4, uiY + 4, r1W, 17, "GoBack: " + (ModGoBack.isGoBackActive ? "BẬT" : "TẮT"), ModGoBack.isGoBackActive, g);
+		ModUI.PaintNativeButton(uiX + 8 + r1W, uiY + 4, r1W, 17, "Lưu Chết: " + (ModGoBack.isAutoRecordOnDeath ? "BẬT" : "TẮT"), ModGoBack.isAutoRecordOnDeath, g);
+		ModUI.PaintNativeButton(uiX + 12 + r1W * 2, uiY + 4, r1W, 17, "Về KI<" + ModGoBack.lowMpPercent + "%: " + (ModGoBack.gobackOnLowMp ? "BẬT" : "TẮT"), ModGoBack.gobackOnLowMp, g);
 
 		int footerH = 18;
 		int footerY = uiY + uiH - footerH - 4;
@@ -32,11 +32,11 @@ public static class ModUIGoBack
 		mFont.tahoma_7_green2.drawString(g, "VỊ TRÍ GOBACK ĐÃ LƯU:", uiX + 10, listY + 4, mFont.LEFT);
 
 		// Bản đồ
-		string mapText = (ModGoBack.savedMapId > 0)
+		string mapText = (ModGoBack.savedMapId >= 0)
 			? (ModNextMap.GetMapName(ModGoBack.savedMapId) + " (" + ModGoBack.savedMapId + ")")
 			: "(Chưa lưu - sẽ tự định khi chết)";
 		mFont.tahoma_7_grey.drawString(g, "- Bản đồ: ", uiX + 10, listY + 20, mFont.LEFT);
-		(ModGoBack.savedMapId > 0 ? mFont.tahoma_7_green2 : mFont.tahoma_7_grey).drawString(g, mapText, uiX + 56, listY + 20, mFont.LEFT);
+		(ModGoBack.savedMapId >= 0 ? mFont.tahoma_7_green2 : mFont.tahoma_7_grey).drawString(g, mapText, uiX + 56, listY + 20, mFont.LEFT);
 
 		// Khu vực
 		string zoneText = (ModGoBack.savedZoneId >= 0)
@@ -63,68 +63,69 @@ public static class ModUIGoBack
 		string curPosText = "Hiện tại: " + TileMap.mapName + " [K." + TileMap.zoneID + "] (" + curX + ", " + curY + ")";
 		mFont.tahoma_7_grey.drawString(g, curPosText, uiX + 10, listY + 94, mFont.LEFT);
 
-		// Hàng 3 nút chức năng ở đáy
-		int b1W = (uiW - 16) / 3;
-		int b2W = (uiW - 16) / 3;
-		int b3W = uiW - 8 - b1W - b2W - 6;
-		int b1X = uiX + 4;
-		int b2X = b1X + b1W + 3;
-		int b3X = b2X + b2W + 3;
-		ModUI.PaintNativeButton(b1X, footerY, b1W, footerH, "Lưu Vị Trí", false, g);
-		ModUI.PaintNativeButton(b2X, footerY, b2W, footerH, "Xóa Vị Trí", false, g);
-		ModUI.PaintNativeButton(b3X, footerY, b3W, footerH, "Về Ngay", false, g);
+		// Hàng 4 nút chức năng ở đáy
+		int btnW = (uiW - 20) / 4;
+		ModUI.PaintNativeButton(uiX + 4, footerY, btnW, footerH, "Lưu Vị Trí", false, g);
+		ModUI.PaintNativeButton(uiX + 8 + btnW, footerY, btnW, footerH, "Nhập TĐ", false, g);
+		ModUI.PaintNativeButton(uiX + 12 + btnW * 2, footerY, btnW, footerH, "Xóa Vị Trí", false, g);
+		ModUI.PaintNativeButton(uiX + 16 + btnW * 3, footerY, btnW, footerH, "Về Ngay", false, g);
 	}
 
+	/// <summary>
+	/// Xử lý nghiệp vụ logic chuyên trách cho HandleTap.
+	/// </summary>
 	public static bool HandleTap(int px, int py, int uiX, int uiY, int uiW, int uiH)
 	{
-		int halfW = (uiW - 14) / 2;
-		int item1X = uiX + 4;
-		int item2X = uiX + 8 + halfW;
-
-		// 1. Nút Bật/Tắt GoBack Map
-		if (px >= item1X + halfW - 40 && px <= item1X + halfW + 2 && py >= uiY + 2 && py <= uiY + 22)
+		int r1W = (uiW - 16) / 3;
+		if (py >= uiY + 2 && py <= uiY + 22)
 		{
-			ModGoBack.ToggleGoBack();
-			return true;
-		}
-
-		// 2. Nút Bật/Tắt Tự định khi chết
-		if (px >= item2X + halfW - 40 && px <= item2X + halfW + 2 && py >= uiY + 2 && py <= uiY + 22)
-		{
-			ModGoBack.isAutoRecordOnDeath = !ModGoBack.isAutoRecordOnDeath;
-			ModConfig.SaveConfig();
-			GameScr.info1.addInfo("Tự định khi chết: " + (ModGoBack.isAutoRecordOnDeath ? "BẬT" : "TẮT"), 0);
-			SoundMn.gI().buttonClick();
-			return true;
+			if (px >= uiX + 4 && px <= uiX + 4 + r1W)
+			{
+				ModGoBack.ToggleGoBack();
+				return true;
+			}
+			if (px >= uiX + 8 + r1W && px <= uiX + 8 + r1W * 2)
+			{
+				ModGoBack.isAutoRecordOnDeath = !ModGoBack.isAutoRecordOnDeath;
+				ModConfig.SaveConfig();
+				GameScr.info1.addInfo("Tự định khi chết: " + (ModGoBack.isAutoRecordOnDeath ? "BẬT" : "TẮT"), 0);
+				SoundMn.gI().buttonClick();
+				return true;
+			}
+			if (px >= uiX + 12 + r1W * 2 && px <= uiX + 12 + r1W * 3)
+			{
+				ModGoBack.gobackOnLowMp = !ModGoBack.gobackOnLowMp;
+				ModConfig.SaveConfig();
+				GameScr.info1.addInfo("Về nhà hồi KI khi KI < " + ModGoBack.lowMpPercent + "%: " + (ModGoBack.gobackOnLowMp ? "BẬT" : "TẮT"), 0);
+				SoundMn.gI().buttonClick();
+				return true;
+			}
 		}
 
 		int footerH = 18;
 		int footerY = uiY + uiH - footerH - 4;
-		int b1W = (uiW - 16) / 3;
-		int b2W = (uiW - 16) / 3;
-		int b3W = uiW - 8 - b1W - b2W - 6;
-		int b1X = uiX + 4;
-		int b2X = b1X + b1W + 3;
-		int b3X = b2X + b2W + 3;
+		int btnW = (uiW - 20) / 4;
 
 		if (py >= footerY - 1 && py <= footerY + footerH + 1)
 		{
-			// 3. Nút "Lưu Vị Trí"
-			if (px >= b1X && px <= b1X + b1W)
+			if (px >= uiX + 4 && px <= uiX + 4 + btnW)
 			{
 				ModGoBack.SaveCurrentPosition();
 				return true;
 			}
-
-			// 4. Nút "Xóa Vị Trí"
-			if (px >= b2X && px <= b2X + b2W)
+			if (px >= uiX + 8 + btnW && px <= uiX + 8 + btnW * 2)
+			{
+				ModUI.uiCustomOpen = false;
+				ModGoBack.ShowInputCustomGoBack();
+				SoundMn.gI().buttonClick();
+				return true;
+			}
+			if (px >= uiX + 12 + btnW * 2 && px <= uiX + 12 + btnW * 3)
 			{
 				ModGoBack.ResetPosition();
 				return true;
 			}
-
-			// 5. Nút "Về Chỗ Này Ngay"
-			if (px >= b3X && px <= b3X + b3W)
+			if (px >= uiX + 16 + btnW * 3 && px <= uiX + 16 + btnW * 4)
 			{
 				ModGoBack.StartGoBackNow();
 				return true;

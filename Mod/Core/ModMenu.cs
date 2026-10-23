@@ -337,6 +337,15 @@ public static class ModMenu
 
 			// Tự động kết nối lại & đăng nhập lại khi mất kết nối mạng
 			ModAutoLogin.Update();
+			ModAutoChat.Update();
+			ModAutoBoxSort.Update();
+			ModAutoPoint.Update();
+			ModAutoItem.Update();
+			ModSchedule.Update();
+			ModAutoRevive.Update();
+			ModAutoPet.Update();
+			ModAutoFusion.Update();
+			ModAutoNewAccount.Update();
 
 			if (!IsInGame())
 			{
@@ -399,27 +408,26 @@ public static class ModMenu
 							GameCanvas.clearKeyPressed();
 							mapChangeWatchdogTime = 0;
 
-						// Đặt cờ entranceWaypoint nếu nhân vật vẫn đứng trong cổng để không bị re-trigger lặp lại (chỉ áp dụng cho di chuyển thủ công, không can thiệp Next Map / GoBack)
-						if (!ModNextMap.isNextMapActive && !ModGoBack.isReturning && TileMap.vGo != null)
-						{
-							for (int w = 0; w < TileMap.vGo.size(); w++)
+							if (!ModNextMap.isNextMapActive && !ModGoBack.isReturning && TileMap.vGo != null)
 							{
-								Waypoint wp = (Waypoint)TileMap.vGo.elementAt(w);
-								if (wp != null && !wp.isEnter && me.cx >= wp.minX && me.cx <= wp.maxX && me.cy >= wp.minY && me.cy <= wp.maxY)
+								for (int w = 0; w < TileMap.vGo.size(); w++)
 								{
-									Char.entranceWaypoint = wp;
-									break;
+									Waypoint wp = (Waypoint)TileMap.vGo.elementAt(w);
+									if (wp != null && !wp.isEnter && me.cx >= wp.minX && me.cx <= wp.maxX && me.cy >= wp.minY && me.cy <= wp.maxY)
+									{
+										Char.entranceWaypoint = wp;
+										break;
+									}
 								}
 							}
 						}
 					}
 				}
 			}
-		}
-		else
-		{
-			mapChangeWatchdogTime = 0;
-		}
+			else
+			{
+				mapChangeWatchdogTime = 0;
+			}
 
 			if (me.charID != ModSpeed.lastCharId)
 			{
@@ -444,6 +452,10 @@ public static class ModMenu
 
 			// Tự động bơm đậu & khóa HP/MP
 			ModAutoHeal.DoRealAutoHeal();
+
+			// Cập nhật khóa mục tiêu & thống kê vàng treo máy
+			ModMapEntityHUD.UpdateLockTarget();
+			ModTanSat.UpdateGoldTrain(me, now);
 
 			// Tự động chuyển map
 			ModNextMap.UpdateNextMap();
@@ -489,6 +501,11 @@ public static class ModMenu
 		}
 		try
 		{
+			if (IsInGame())
+			{
+				ModAutoPick.PaintPickRadius(g);
+			}
+
 			// 1. Nút mũi tên gốc của game bên góc phải (chỉ hiển thị trong game khi log server)
 			ModArrowButton.Paint(g);
 
@@ -497,6 +514,15 @@ public static class ModMenu
 
 			// 2b. HUD Thông tin Player & Boss trong map (ngay dưới Thông báo Boss)
 			ModMapEntityHUD.Paint(g);
+
+			// 2c. HUD Đệ Tử, Thống kê Vàng, SKH & Bùa
+			if (IsInGame())
+			{
+				ModAutoPet.PaintPetHUD(g);
+				ModTanSat.PaintGoldTrainHUD(g);
+				ModSetActivator.PaintSkhHUD(g);
+				ModAutoBuyBua.PaintCharmHUD(g);
+			}
 
 			// 3. HUD Tên Map & Khu vực (Click để chọn nhanh map chuyển)
 			ModNextMap.PaintHUDMapTag(g);

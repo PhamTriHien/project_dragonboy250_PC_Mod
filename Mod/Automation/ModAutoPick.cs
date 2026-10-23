@@ -9,6 +9,7 @@ public class AutoPickActionListener : IActionListener
 	public const int ACTION_SET_FILTER_IDS = 99101;
 	public const int ACTION_SET_FILTER_NAMES = 99102;
 	public const int ACTION_SET_DROP_IDS = 99103;
+	public const int ACTION_SET_BLACKLIST_IDS = 99104;
 
 	/// <summary>
 	/// Thực thi hành động tương tác khi người dùng kích hoạt lệnh hoặc nút bấm.
@@ -43,6 +44,12 @@ public class AutoPickActionListener : IActionListener
 				ModConfig.SaveConfig();
 				SoundMn.gI().buttonClick();
 			}
+			else if (idAction == ACTION_SET_BLACKLIST_IDS)
+			{
+				ModAutoPick.SetBlacklistIds(text);
+				ModConfig.SaveConfig();
+				SoundMn.gI().buttonClick();
+			}
 			if (ModAutoPick.reopenModUiAfterInput)
 			{
 				ModAutoPick.reopenModUiAfterInput = false;
@@ -66,7 +73,13 @@ public static class ModAutoPick
 	public static bool pickGold = true;
 	public static bool pickEquip = true;
 	public static bool pickGem = true;
-	public static int maxPickDistance = 0; // 0: Toàn Map, 100, 200, 350
+	public static int maxPickDistance = 0; // 0: Toàn Map, 50, 100, 150, 200, 300, 500
+	public static bool onlyMyItems = false;
+	public static bool showPickRadius = false;
+
+	// Danh sách ID không nhặt (Blacklist)
+	public static string blacklistIdsRaw = "";
+	public static HashSet<int> blacklistIds = new HashSet<int>();
 
 	// Lọc theo ID Item
 	public static bool filterById = false;
@@ -188,15 +201,105 @@ public static class ModAutoPick
 		dropIds.Clear();
 		autoDropItem = false;
 
+		blacklistIdsRaw = "";
+		blacklistIds.Clear();
+
 		GameScr.info1.addInfo("Đã xóa toàn bộ lọc nhặt và danh sách vứt đồ", 0);
+	}
+
+	public static void LoadBlacklistIds(string raw)
+	{
+		blacklistIdsRaw = raw != null ? raw.Trim() : "";
+		blacklistIds.Clear();
+		if (!string.IsNullOrEmpty(blacklistIdsRaw))
+		{
+			string[] parts = blacklistIdsRaw.Split(new char[] { ',', ' ', ';', '|' }, StringSplitOptions.RemoveEmptyEntries);
+			for (int i = 0; i < parts.Length; i++)
+			{
+				if (int.TryParse(parts[i].Trim(), out int id))
+				{
+					blacklistIds.Add(id);
+				}
+			}
+		}
+	}
+
+	public static void SetBlacklistIds(string raw)
+	{
+		LoadBlacklistIds(raw);
+		if (blacklistIds.Count > 0)
+		{
+			GameScr.info1.addInfo("Đã đặt DS Không Nhặt (" + blacklistIds.Count + " ID): [" + blacklistIdsRaw + "]", 0);
+		}
+		else
+		{
+			GameScr.info1.addInfo("Đã xóa DS Không Nhặt", 0);
+		}
+	}
+
+	public static void ShowInputBlacklistId()
+	{
+		if (GameCanvas.inputDlg == null) return;
+		reopenModUiAfterInput = ModUI.uiCustomOpen;
+		ModUI.uiCustomOpen = false;
+		ModMenu.modMenuOpen = false;
+		GameCanvas.inputDlg.show("Nhập danh sách ID KHÔNG nhặt (cách nhau dấu ; hoặc ,):", new Command("OK", listener, AutoPickActionListener.ACTION_SET_BLACKLIST_IDS, null), TField.INPUT_TYPE_ANY);
+		if (GameCanvas.inputDlg.tfInput != null)
+		{
+			GameCanvas.inputDlg.tfInput.setMaxTextLenght(150);
+			GameCanvas.inputDlg.tfInput.setText(blacklistIdsRaw);
+			if (!Main.isPC) GameCanvas.inputDlg.tfInput.setFocusWithKb(isFocus: true);
+		}
 	}
 
 	public static void CycleMaxPickDistance()
 	{
-		if (maxPickDistance == 0) maxPickDistance = 100;
-		else if (maxPickDistance == 100) maxPickDistance = 200;
-		else if (maxPickDistance == 200) maxPickDistance = 350;
+		if (maxPickDistance <= 0) maxPickDistance = 50;
+		else if (maxPickDistance == 50) maxPickDistance = 100;
+		else if (maxPickDistance == 100) maxPickDistance = 150;
+		else if (maxPickDistance == 150) maxPickDistance = 200;
+		else if (maxPickDistance == 200) maxPickDistance = 300;
+		else if (maxPickDistance == 300) maxPickDistance = 500;
 		else maxPickDistance = 0;
+	}
+
+	public static void PaintPickRadius(mGraphics g)
+	{
+		if (!showPickRadius || maxPickDistance <= 0 || !ModMenu.IsInGame() || g == null) return;
+		if ((GameCanvas.panel != null && GameCanvas.panel.isShow) ||
+		    (GameCanvas.panel2 != null && GameCanvas.panel2.isShow) ||
+		    (GameCanvas.menu != null && GameCanvas.menu.showMenu) ||
+		    GameCanvas.currentDialog != null ||
+		    ModUI.uiCustomOpen)
+		{
+			return;
+		}
+		try
+		{
+			Char me = Char.myCharz();
+			if (me == null) return;
+			g.translate(-g.getTranslateX(), -g.getTranslateY());
+			g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
+			g.setColor(0x00FF00);
+
+			int cx = me.cx - GameScr.cmx;
+			int cy = me.cy - 10 - GameScr.cmy;
+			int r = maxPickDistance;
+			int steps = 24;
+			for (int i = 0; i < steps; i++)
+			{
+				int a1 = i * 360 / steps;
+				int a2 = (i + 1) * 360 / steps;
+				int x1 = cx + r * Res.cos(a1) / 1024;
+				int y1 = cy + r * Res.sin(a1) / 1024;
+				int x2 = cx + r * Res.cos(a2) / 1024;
+				int y2 = cy + r * Res.sin(a2) / 1024;
+				g.drawLine(x1, y1, x2, y2);
+			}
+		}
+		catch
+		{
+		}
 	}
 
 	public static string GetPickDistanceLabel()
@@ -315,12 +418,24 @@ public static class ModAutoPick
 		if (it == null || it.status == 2) return false;
 		Char me = Char.myCharz();
 		int myId = (me != null) ? me.charID : -1;
-		bool isMyOrPublicItem = (it.playerId == myId || it.playerId == -1 || it.playerId == -2 || it.playerId == 0);
-		if (!isMyOrPublicItem) return false;
+		if (onlyMyItems)
+		{
+			if (it.playerId != myId) return false;
+		}
+		else
+		{
+			bool isMyOrPublicItem = (it.playerId == myId || it.playerId == -1 || it.playerId == -2 || it.playerId == 0);
+			if (!isMyOrPublicItem) return false;
+		}
 
 		if (it.template == null) return pickAll;
 		int tId = it.template.id;
 		string name = it.template.name;
+
+		if (blacklistIds.Count > 0 && blacklistIds.Contains(tId))
+		{
+			return false;
+		}
 
 		// Vật phẩm 673 (cờ/vật phẩm cần xác nhận askToPick) chỉ nhặt khi người chơi chỉ định đích danh trong lọc ID
 		if (tId == 673 && !(filterById && filterIds.Contains(673)))

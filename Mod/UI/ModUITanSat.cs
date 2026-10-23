@@ -36,7 +36,7 @@ public static class ModUITanSat
 		if (ModUI.tanSatTab == 0)
 		{
 			List<int> mobIds = ModUI.GetUniqueMobTemplateIds();
-			int totalRows = (mobIds.Count + 4 + 1) / 2;
+			int totalRows = (mobIds.Count + 8 + 1) / 2;
 			int contentH = totalRows * 19 + 4;
 			int maxScroll = (contentH > 108) ? (contentH - 108) : 0;
 			if (maxScroll <= 0) return;
@@ -47,7 +47,7 @@ public static class ModUITanSat
 		else
 		{
 			List<Skill> skills = ModUI.GetPlayerAttackSkills();
-			int totalRows = (skills.Count + 3 + 1) / 2;
+			int totalRows = (skills.Count + 4 + 1) / 2;
 			int contentH = totalRows * 19 + 4;
 			int maxScroll = (contentH > 108) ? (contentH - 108) : 0;
 			if (maxScroll <= 0) return;
@@ -82,14 +82,14 @@ public static class ModUITanSat
 		if (ModUI.tanSatTab == 0)
 		{
 			List<int> mobIds = ModUI.GetUniqueMobTemplateIds();
-			int totalRows = (mobIds.Count + 4 + 1) / 2;
+			int totalRows = (mobIds.Count + 8 + 1) / 2;
 			int contentH = totalRows * 18 + 4;
 			maxScroll = (contentH > listH - 4) ? (contentH - (listH - 4)) : 0;
 		}
 		else
 		{
 			List<Skill> skills = ModUI.GetPlayerAttackSkills();
-			int totalRows = (skills.Count + 3 + 1) / 2;
+			int totalRows = (skills.Count + 4 + 1) / 2;
 			int contentH = totalRows * 18 + 4;
 			maxScroll = (contentH > listH - 4) ? (contentH - (listH - 4)) : 0;
 		}
@@ -222,7 +222,7 @@ public static class ModUITanSat
 			g.fillRect(listX + 2, listY + 2, listW - 4, listH - 4);
 
 			List<int> mobIds = ModUI.GetUniqueMobTemplateIds();
-			int totalItems = mobIds.Count + 4;
+			int totalItems = mobIds.Count + 8;
 			int totalRows = (totalItems + 1) / 2;
 			int contentH = totalRows * 18 + 4;
 			int maxScroll = (contentH > listH - 4) ? (contentH - (listH - 4)) : 0;
@@ -259,9 +259,30 @@ public static class ModUITanSat
 					ModUI.DrawCheckbox(itemX, itemY + 1, ModTanSat.autoChangeZone, g);
 					(ModTanSat.autoChangeZone ? mFont.tahoma_7_green2 : mFont.tahoma_7_grey).drawString(g, "Tự đổi khu KS", itemX + 22, itemY + 2, mFont.LEFT);
 				}
+				else if (idx == 4)
+				{
+					ModUI.DrawCheckbox(itemX, itemY + 1, ModTanSat.checkLagMob, g);
+					(ModTanSat.checkLagMob ? mFont.tahoma_7_green2 : mFont.tahoma_7_grey).drawString(g, "Check Lag Quái", itemX + 22, itemY + 2, mFont.LEFT);
+				}
+				else if (idx == 5)
+				{
+					ModUI.DrawCheckbox(itemX, itemY + 1, ModTanSat.autoResetZone, g);
+					string rzLabel = "Reset Khu (" + ModTanSat.resetZoneMinutes + "p)";
+					(ModTanSat.autoResetZone ? mFont.tahoma_7_green2 : mFont.tahoma_7_grey).drawString(g, rzLabel, itemX + 22, itemY + 2, mFont.LEFT);
+				}
+				else if (idx == 6)
+				{
+					ModUI.DrawCheckbox(itemX, itemY + 1, ModTanSat.showGoldTrain, g);
+					(ModTanSat.showGoldTrain ? mFont.tahoma_7_green2 : mFont.tahoma_7_grey).drawString(g, "HUD Vàng/Giờ", itemX + 22, itemY + 2, mFont.LEFT);
+				}
+				else if (idx == 7)
+				{
+					ModUI.DrawCheckbox(itemX, itemY + 1, ModTanSat.trainPets, g);
+					(ModTanSat.trainPets ? mFont.tahoma_7_green2 : mFont.tahoma_7_grey).drawString(g, "Chế độ Úp Đệ", itemX + 22, itemY + 2, mFont.LEFT);
+				}
 				else
 				{
-					int tId = mobIds[idx - 4];
+					int tId = mobIds[idx - 8];
 					MobTemplate t = Mob.arrMobTemplate[tId];
 					string mobName = (t != null) ? t.name : ("Quái #" + tId);
 					bool isTicked = ModTanSat.IsMobTicked(tId);
@@ -292,7 +313,7 @@ public static class ModUITanSat
 			g.fillRect(listX + 2, listY + 2, listW - 4, listH - 4);
 
 			List<Skill> skills = ModUI.GetPlayerAttackSkills();
-			int totalSkillItems = skills.Count + 3;
+			int totalSkillItems = skills.Count + 4;
 			int totalRows = (totalSkillItems + 1) / 2;
 			int contentH = totalRows * 18 + 4;
 			int maxScroll = (contentH > listH - 4) ? (contentH - (listH - 4)) : 0;
@@ -324,9 +345,14 @@ public static class ModUITanSat
 					ModUI.DrawCheckbox(itemX, itemY + 1, ModTanSat.freezeSkillCooldown, g);
 					(ModTanSat.freezeSkillCooldown ? mFont.tahoma_7_green2 : mFont.tahoma_7_grey).drawString(g, "Đóng băng Hồi Chiêu", itemX + 22, itemY + 2, mFont.LEFT);
 				}
+				else if (idx == 3)
+				{
+					ModUI.DrawCheckbox(itemX, itemY + 1, ModTanSat.autoChangeFocus, g);
+					(ModTanSat.autoChangeFocus ? mFont.tahoma_7_green2 : mFont.tahoma_7_grey).drawString(g, "Đổi Mục Tiêu", itemX + 22, itemY + 2, mFont.LEFT);
+				}
 				else
 				{
-					Skill sk = skills[idx - 3];
+					Skill sk = skills[idx - 4];
 					int slot = ModTanSatFilter.GetSkillHotbarSlot(sk.template.id);
 					string slotPrefix = (slot >= 0) ? ("[Ô " + ((slot == 9) ? 0 : (slot + 1)) + "] ") : "";
 					string skName = slotPrefix + ((sk != null && sk.template != null) ? sk.template.name : ("Skill #" + idx));
@@ -510,7 +536,7 @@ public static class ModUITanSat
 			if (ModUI.tanSatTab == 0)
 			{
 				List<int> mobIds = ModUI.GetUniqueMobTemplateIds();
-				int totalItems = mobIds.Count + 4;
+				int totalItems = mobIds.Count + 8;
 				for (int idx = 0; idx < totalItems; idx++)
 				{
 					int col = idx % 2;
@@ -541,9 +567,41 @@ public static class ModUITanSat
 							ModTanSat.autoChangeZone = !ModTanSat.autoChangeZone;
 							ModConfig.SaveConfig();
 						}
+						else if (idx == 4)
+						{
+							ModTanSat.checkLagMob = !ModTanSat.checkLagMob;
+							ModConfig.SaveConfig();
+							GameScr.info1?.addInfo("Check Lag Quái (15s >=90% HP): " + (ModTanSat.checkLagMob ? "BẬT" : "TẮT"), 0);
+						}
+						else if (idx == 5)
+						{
+							if (!ModTanSat.autoResetZone)
+							{
+								ModTanSat.autoResetZone = true;
+								ModTanSat.resetZoneMinutes = 15;
+							}
+							else if (ModTanSat.resetZoneMinutes == 15) ModTanSat.resetZoneMinutes = 30;
+							else if (ModTanSat.resetZoneMinutes == 30) ModTanSat.resetZoneMinutes = 60;
+							else ModTanSat.autoResetZone = false;
+							ModConfig.SaveConfig();
+							GameScr.info1?.addInfo("Tự Reset Khu: " + (ModTanSat.autoResetZone ? (ModTanSat.resetZoneMinutes + " phút") : "TẮT"), 0);
+						}
+						else if (idx == 6)
+						{
+							ModTanSat.showGoldTrain = !ModTanSat.showGoldTrain;
+							if (ModTanSat.showGoldTrain) ModTanSat.ResetGoldTrain();
+							ModConfig.SaveConfig();
+							GameScr.info1?.addInfo("HUD Vàng/Giờ: " + (ModTanSat.showGoldTrain ? "BẬT" : "TẮT"), 0);
+						}
+						else if (idx == 7)
+						{
+							ModTanSat.trainPets = !ModTanSat.trainPets;
+							ModConfig.SaveConfig();
+							GameScr.info1?.addInfo("Chế độ Úp Đệ Tử: " + (ModTanSat.trainPets ? "BẬT" : "TẮT"), 0);
+						}
 						else
 						{
-							ModTanSat.ToggleMobTicked(mobIds[idx - 4]);
+							ModTanSat.ToggleMobTicked(mobIds[idx - 8]);
 						}
 						SoundMn.gI().buttonClick();
 						return true;
@@ -553,7 +611,7 @@ public static class ModUITanSat
 			else
 			{
 				List<Skill> skills = ModUI.GetPlayerAttackSkills();
-				int totalSkillItems = skills.Count + 3;
+				int totalSkillItems = skills.Count + 4;
 				for (int idx = 0; idx < totalSkillItems; idx++)
 				{
 					int col = idx % 2;
@@ -579,9 +637,15 @@ public static class ModUITanSat
 							ModTanSat.freezeSkillCooldown = !ModTanSat.freezeSkillCooldown;
 							ModConfig.SaveConfig();
 						}
+						else if (idx == 3)
+						{
+							ModTanSat.autoChangeFocus = !ModTanSat.autoChangeFocus;
+							ModConfig.SaveConfig();
+							GameScr.info1?.addInfo("Đổi Mục Tiêu Liên Tục: " + (ModTanSat.autoChangeFocus ? "BẬT" : "TẮT"), 0);
+						}
 						else
 						{
-							Skill chosen = skills[idx - 3];
+							Skill chosen = skills[idx - 4];
 							ModTanSat.ToggleSkillTicked(chosen.template.id);
 							if (ModTanSatFilter.skillSelectionMode == 0 && chosen.template != null)
 							{

@@ -56,9 +56,12 @@ public static class ModUIAutoHeal
 		mFont.tahoma_7_grey.drawString(g, "Cho đệ xin:", item2X + 2, uiY + 78, mFont.LEFT);
 		ModUI.PaintNativeButton(item2X + halfW - 38, uiY + 75, 38, 16, ModAutoFeedPet(), ModAutoHeal.autoFeedPetOnAsk, g);
 
-		// Hàng 5: Tự hồi sinh & Thao tác nhanh (Thu đậu / Xin đậu / Cho đậu)
+		// Hàng 5: Tự hồi sinh, Ngưỡng Đệ & Lọc Cho Bang
 		mFont.tahoma_7_grey.drawString(g, "Tự hồi sinh:", item1X + 2, uiY + 96, mFont.LEFT);
 		ModUI.PaintNativeButton(item1X + halfW - 38, uiY + 93, 38, 16, ModAutoRevive.isEnabled ? "BẬT" : "TẮT", ModAutoRevive.isEnabled, g);
+
+		ModUI.PaintNativeButton(item2X, uiY + 93, (halfW - 4) / 2, 16, "Đệ <" + ModAutoHeal.petEatBeanHpPercent + "%", ModAutoHeal.autoFeedPetOnAsk, g);
+		ModUI.PaintNativeButton(item2X + (halfW - 4) / 2 + 4, uiY + 93, (halfW - 4) / 2, 16, string.IsNullOrEmpty(ModAutoHeal.donateTargetNamesRaw) ? "Lọc Bang" : "Đang Lọc", !string.IsNullOrEmpty(ModAutoHeal.donateTargetNamesRaw), g);
 
 		int actBtnW = (uiW - 16) / 3;
 		ModUI.PaintNativeButton(uiX + 4, uiY + 112, actBtnW, 16, "Thu Đậu", false, g);
@@ -169,12 +172,29 @@ public static class ModUIAutoHeal
 			return true;
 		}
 
-		// 7. Tự hồi sinh
-		if (px >= item1X + halfW - 40 && px <= item1X + halfW + 2 && py >= uiY + 92 && py <= uiY + 110)
+		// 7. Tự hồi sinh, Ngưỡng Đệ & Lọc Cho Bang
+		if (py >= uiY + 92 && py <= uiY + 110)
 		{
-			ModAutoRevive.Toggle();
-			SoundMn.gI().buttonClick();
-			return true;
+			if (px >= item1X + halfW - 40 && px <= item1X + halfW + 2)
+			{
+				ModAutoRevive.Toggle();
+				SoundMn.gI().buttonClick();
+				return true;
+			}
+			int subHalf = (halfW - 4) / 2;
+			if (px >= item2X && px <= item2X + subHalf)
+			{
+				ModAutoHeal.CyclePetEatBeanPercent();
+				GameScr.info1.addInfo("Ăn đậu khi HP/KI đệ < " + ModAutoHeal.petEatBeanHpPercent + "%", 0);
+				return true;
+			}
+			if (px >= item2X + subHalf + 4 && px <= item2X + halfW)
+			{
+				ModUI.uiCustomOpen = false;
+				ModAutoHeal.ShowInputDonateTarget();
+				SoundMn.gI().buttonClick();
+				return true;
+			}
 		}
 
 		// 8. 3 Nút Thao tác nhanh: Thu Đậu / Xin Đậu / Cho Đậu

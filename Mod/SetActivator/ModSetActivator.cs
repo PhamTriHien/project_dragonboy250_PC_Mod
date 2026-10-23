@@ -30,6 +30,16 @@ public static class ModSetActivator
 	public static bool autoStoreToBox = true;
 	public static int minStarToKeep = 1; // 0: Bán cả đồ sao, 1: Giữ >= 1 sao, 2: Giữ >= 2 sao, 3: Giữ >= 3 sao
 	public static bool showItemId = true;
+	public static bool showSkhHud = false;
+	public static bool sellGodItems = false;
+	public static bool sellSkhItems = false;
+	public static int sellMaxLevel = 12;
+	public static int minEmptyBagSlots = 1;
+	public static string keepItemIdsRaw = "521;1523;1524";
+	public static string sellItemIdsRaw = "";
+	public static bool autoUseTdlt = false;
+	public static bool autoBuyTdlt = false;
+	private static long lastTdltActionTime = 0;
 
 	public static SetActivatorState currentState = SetActivatorState.Idle;
 
@@ -268,6 +278,88 @@ public static class ModSetActivator
 	}
 
 	/// <summary>
+	/// Chuỗi rút gọn chỉ số % nổi bật hiển thị trực tiếp trên ô trang bị theo chuẩn Mod Java.
+	/// </summary>
+	public static string GetCompactOptionTag(Item item)
+	{
+		if (item == null || item.itemOption == null) return string.Empty;
+		string result = string.Empty;
+		for (int i = 0; i < item.itemOption.Length; i++)
+		{
+			ItemOption opt = item.itemOption[i];
+			if (opt == null || opt.optionTemplate == null) continue;
+			string tag = null;
+			switch (opt.optionTemplate.id)
+			{
+				case 50: tag = opt.param + "%SĐ"; break;
+				case 77: tag = opt.param + "%HP"; break;
+				case 80: tag = opt.param + "%HP/30s"; break;
+				case 81: tag = opt.param + "%KI/30s"; break;
+				case 94: tag = opt.param + "%AD"; break;
+				case 95: tag = opt.param + "%HM"; break;
+				case 96: tag = opt.param + "%HK"; break;
+				case 97: tag = opt.param + "%PST"; break;
+				case 100: tag = opt.param + "%Vàng"; break;
+				case 101: tag = opt.param + "%TNSM"; break;
+				case 103: tag = opt.param + "%KI"; break;
+			}
+			if (tag != null)
+			{
+				result = (result.Length == 0) ? tag : (result + " " + tag);
+			}
+		}
+		if (IsSetKichHoat(item))
+		{
+			result = (result.Length == 0) ? "SKH" : ("SKH " + result);
+		}
+		return result;
+	}
+
+	/// <summary>
+	/// Kiểm tra vật phẩm có nằm trong danh sách ID ngăn cách bởi dấu ; hoặc ,.
+	/// </summary>
+	public static bool IsInIdList(string rawList, int id)
+	{
+		if (string.IsNullOrEmpty(rawList)) return false;
+		string[] parts = rawList.Split(new char[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries);
+		for (int i = 0; i < parts.Length; i++)
+		{
+			int parsed;
+			if (int.TryParse(parts[i].Trim(), out parsed) && parsed == id)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/// <summary>
+	/// Kiểm tra trang bị có phải là Đồ Thần Linh (level >= 13) hay không.
+	/// </summary>
+	public static bool IsGodItem(Item item)
+	{
+		if (item == null || item.template == null) return false;
+		if (item.template.level >= 13) return true;
+		string name = item.template.name;
+		if (!string.IsNullOrEmpty(name))
+		{
+			string lower = name.ToLower();
+			if (lower.Contains("thần ") || lower.EndsWith(" thần")) return true;
+		}
+		return false;
+	}
+
+	public static void CycleMinEmptyBagSlots()
+	{
+		if (minEmptyBagSlots <= 1) minEmptyBagSlots = 2;
+		else if (minEmptyBagSlots == 2) minEmptyBagSlots = 3;
+		else if (minEmptyBagSlots == 3) minEmptyBagSlots = 5;
+		else minEmptyBagSlots = 1;
+		ModConfig.SaveConfig();
+		SoundMn.gI().buttonClick();
+	}
+
+	/// <summary>
 	/// Kiểm tra xem trang bị có phải là đồ SKH hoặc đồ Sao cần cất vào rương hay không.
 	/// </summary>
 	public static bool IsValuableStoreItem(Item item)
@@ -276,6 +368,7 @@ public static class ModSetActivator
 		int type = item.template.type;
 		if (type < 0 || type > 4) return false;
 		if (IsSetKichHoat(item)) return true;
+		if (IsGodItem(item)) return true;
 		if (minStarToKeep > 0 && GetItemStarCount(item) >= minStarToKeep) return true;
 		return false;
 	}
@@ -305,6 +398,10 @@ public static class ModSetActivator
 		if (item.upgrade > 0) return true;
 		if (item.isLock) return true;
 
+		int id = item.template.id;
+		if (IsInIdList(keepItemIdsRaw, id)) return true;
+		if (IsInIdList(sellItemIdsRaw, id)) return false;
+
 		int type = item.template.type;
 		// CHỈ cho phép bán nếu là trang bị thường (0: Áo, 1: Quần, 2: Găng, 3: Giày, 4: Rada)
 		if (type < 0 || type > 4)
@@ -312,7 +409,9 @@ public static class ModSetActivator
 			return true;
 		}
 
-		int id = item.template.id;
+		if (!sellGodItems && IsGodItem(item)) return true;
+		if (!sellGodItems && item.template.level > sellMaxLevel) return true;
+
 		if (id == 457) return true; // Thỏi vàng
 		if (id >= 14 && id <= 20) return true; // Ngọc rồng
 		if (id >= 13 && id <= 20) return true; // Đậu thần
@@ -336,8 +435,9 @@ public static class ModSetActivator
 	public static bool IsJunkItem(Item item)
 	{
 		if (item == null || item.template == null) return false;
+		if (IsInIdList(sellItemIdsRaw, item.template.id) && !item.isLock && item.upgrade <= 0) return true;
 		if (IsImportantItem(item)) return false;
-		if (IsSetKichHoat(item)) return false;
+		if (!sellSkhItems && IsSetKichHoat(item)) return false;
 		if (minStarToKeep > 0 && GetItemStarCount(item) >= minStarToKeep) return false;
 
 		return true;
@@ -515,6 +615,7 @@ public static class ModSetActivator
 		if (me == null || me.isDie) return;
 
 		long now = mSystem.currentTimeMillis();
+		UpdateAutoTdlt(me, now);
 
 		switch (currentState)
 		{
@@ -534,8 +635,8 @@ public static class ModSetActivator
 
 				ModDropRate.ScanBagForSpecialItems(me);
 
-				// Kiểm tra hành trang khi đầy (<= 1 ô trống)
-				if (GetFreeBagSlots() <= 1)
+				// Kiểm tra hành trang khi đầy (<= minEmptyBagSlots ô trống)
+				if (GetFreeBagSlots() <= minEmptyBagSlots)
 				{
 					if (autoSellJunk && HasSellableJunkInBag(me))
 					{
@@ -915,6 +1016,106 @@ public static class ModSetActivator
 				return "Đang teleport về đúng bãi úp";
 			default:
 				return "Đang chờ";
+		}
+	}
+
+	/// <summary>
+	/// Tự động sử dụng hoặc mua Tự Động Luyện Tập (ID 521) khi hết hiệu lực ItemTime 4387.
+	/// </summary>
+	private static void UpdateAutoTdlt(Char me, long now)
+	{
+		if (!autoUseTdlt || me == null || me.isDie) return;
+		if (now - lastTdltActionTime < 3500) return;
+		if (ItemTime.isExistItem(4387)) return;
+
+		lastTdltActionTime = now;
+		if (me.arrItemBag != null)
+		{
+			for (int i = 0; i < me.arrItemBag.Length; i++)
+			{
+				Item item = me.arrItemBag[i];
+				if (item != null && item.template != null && item.template.id == 521)
+				{
+					bool expired = false;
+					if (item.itemOption != null)
+					{
+						for (int j = 0; j < item.itemOption.Length; j++)
+						{
+							ItemOption opt = item.itemOption[j];
+							if (opt != null && opt.optionTemplate != null && (opt.optionTemplate.id == 93 || opt.optionTemplate.id == 73) && opt.param <= 0)
+							{
+								expired = true;
+								break;
+							}
+						}
+					}
+					if (!expired)
+					{
+						Service.gI().useItem(0, 1, (sbyte)i, -1);
+						return;
+					}
+				}
+			}
+		}
+
+		if (autoBuyTdlt && (me.luong + me.luongKhoa) >= 1)
+		{
+			Service.gI().buyItem(0, 521, 0);
+		}
+	}
+
+	private static void ScanArrayForSkh(Item[] arr, int[,] counts)
+	{
+		if (arr == null) return;
+		for (int i = 0; i < arr.Length; i++)
+		{
+			Item item = arr[i];
+			if (item == null || item.template == null || !IsSetKichHoat(item)) continue;
+			int type = item.template.type;
+			if (type < 0 || type > 4) continue;
+			int gender = item.template.gender;
+			if (type == 4 || gender < 0 || gender > 2)
+			{
+				counts[0, 4]++;
+				counts[1, 4]++;
+				counts[2, 4]++;
+			}
+			else
+			{
+				counts[gender, type]++;
+			}
+		}
+	}
+
+	/// <summary>
+	/// Vẽ bảng thống kê 5 món Set Kích Hoạt [Áo, Quần, Găng, Giày, Rada] theo từng hành tinh trên màn hình.
+	/// </summary>
+	public static void PaintSkhHUD(mGraphics g)
+	{
+		if (!showSkhHud || !ModMenu.IsInGame() || GameCanvas.panel.isShow || ModUI.uiCustomOpen) return;
+		try
+		{
+			Char me = Char.myCharz();
+			if (me == null) return;
+
+			int[,] counts = new int[3, 5];
+			ScanArrayForSkh(me.arrItemBody, counts);
+			ScanArrayForSkh(me.arrItemBag, counts);
+			ScanArrayForSkh(me.arrItemBox, counts);
+
+			int x = 6;
+			int y = 92;
+			mFont.tahoma_7b_yellow.drawString(g, "-- THÔNG TIN SKH --", x, y, mFont.LEFT, mFont.tahoma_7_grey);
+			string[] pNames = new string[] { "TĐ", "NM", "XD" };
+			for (int p = 0; p < 3; p++)
+			{
+				string line = pNames[p] + ": [Áo:" + counts[p, 0] + " Quần:" + counts[p, 1] + " Găng:" + counts[p, 2] + " Giày:" + counts[p, 3] + " Rada:" + counts[p, 4] + "]";
+				mFont font = (me.cgender == p) ? mFont.tahoma_7_green2 : mFont.tahoma_7_white;
+				font.drawString(g, line, x, y + 11 * (p + 1), mFont.LEFT, mFont.tahoma_7_grey);
+			}
+		}
+		catch
+		{
 		}
 	}
 }

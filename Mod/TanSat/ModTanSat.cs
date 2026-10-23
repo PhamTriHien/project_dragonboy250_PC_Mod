@@ -32,6 +32,20 @@ public static class ModTanSat
 	public static bool autoChangeZone = false;
 	public static bool autoSupportSkills = false;
 	public static bool freezeSkillCooldown = false;
+	public static bool checkLagMob = true;
+	public static bool autoResetZone = false;
+	public static int resetZoneMinutes = 15;
+	public static bool showGoldTrain = false;
+	public static bool trainPets = false;
+	public static bool autoChangeFocus = false;
+
+	public static long goldTrainTotal = 0;
+	public static long goldTrainStartTime = 0;
+	private static long lastTrackedXu = -1;
+	private static int lastTrackedCharId = -1;
+	private static long lastResetZoneTime = 0;
+	public static readonly HashSet<int> frozenSkillIds = new HashSet<int>();
+	public static readonly Dictionary<int, int> customSkillDelays = new Dictionary<int, int>();
 
 	public static Mob currentFarmTarget = null;
 	public static long targetLockTime = 0;
@@ -285,11 +299,98 @@ public static class ModTanSat
 		}
 	}
 
+	public static void UpdateGoldTrain(Char me, long now)
+	{
+		if (me == null) return;
+		if (me.charID != lastTrackedCharId || lastTrackedXu < 0)
+		{
+			lastTrackedCharId = me.charID;
+			lastTrackedXu = me.xu;
+			if (goldTrainStartTime <= 0)
+			{
+				goldTrainStartTime = now;
+			}
+		}
+		else if (me.xu != lastTrackedXu)
+		{
+			if (me.xu > lastTrackedXu)
+			{
+				goldTrainTotal += (me.xu - lastTrackedXu);
+			}
+			lastTrackedXu = me.xu;
+		}
+	}
+
+	public static long GetGoldPerHour()
+	{
+		if (goldTrainStartTime <= 0 || goldTrainTotal <= 0) return 0;
+		long elapsed = mSystem.currentTimeMillis() - goldTrainStartTime;
+		if (elapsed < 1000) return 0;
+		return goldTrainTotal * 3600000L / elapsed;
+	}
+
+	public static void ResetGoldTrain()
+	{
+		goldTrainTotal = 0;
+		goldTrainStartTime = mSystem.currentTimeMillis();
+		lastTrackedXu = (Char.myCharz() != null) ? Char.myCharz().xu : -1;
+	}
+
+	public static void PaintGoldTrainHUD(mGraphics g)
+	{
+		if (!showGoldTrain || !ModMenu.IsInGame() || g == null) return;
+		if ((GameCanvas.panel != null && GameCanvas.panel.isShow) ||
+		    (GameCanvas.panel2 != null && GameCanvas.panel2.isShow) ||
+		    (GameCanvas.menu != null && GameCanvas.menu.showMenu) ||
+		    GameCanvas.currentDialog != null ||
+		    ModUI.uiCustomOpen)
+		{
+			return;
+		}
+		try
+		{
+			g.translate(-g.getTranslateX(), -g.getTranslateY());
+			g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
+			int x = 6 + SafeArea.Left;
+			int y = 64;
+			string text = "Vàng úp: " + Res.formatNumber2(goldTrainTotal) + " (" + Res.formatNumber2(GetGoldPerHour()) + "/h)";
+			(mFont.tahoma_7b_yellow ?? mFont.tahoma_7_yellow).drawString(g, text, x, y, mFont.LEFT);
+		}
+		catch
+		{
+		}
+	}
+
+	private static void CheckAutoResetZone(Char me, long now)
+	{
+		if (!autoResetZone || me == null || resetZoneMinutes <= 0)
+		{
+			lastResetZoneTime = 0;
+			return;
+		}
+		if (TileMap.isOfflineMap() || TileMap.mapID == 21 || TileMap.mapID == 22 || TileMap.mapID == 23)
+		{
+			return;
+		}
+		if (lastResetZoneTime == 0)
+		{
+			lastResetZoneTime = now;
+			return;
+		}
+		long intervalMs = resetZoneMinutes * 60000L;
+		if (now - lastResetZoneTime >= intervalMs)
+		{
+			lastResetZoneTime = now;
+			Service.gI().requestChangeZone(TileMap.zoneID, -1);
+			GameScr.info1?.addInfo("Tự làm mới Khu " + TileMap.zoneID + " (" + resetZoneMinutes + "p)!", 0);
+		}
+	}
+
 	public static bool UpdateSupportAndFreezeSkills(Char me, long now)
 	{
 		if (me == null) return false;
 
-		if (freezeSkillCooldown)
+		if (freezeSkillCooldown || frozenSkillIds.Count > 0)
 		{
 			Skill[] hotbar = ModTanSatFilter.GetHotbarSkills();
 			if (hotbar != null)
@@ -297,7 +398,7 @@ public static class ModTanSat
 				for (int i = 0; i < hotbar.Length; i++)
 				{
 					Skill s = hotbar[i];
-					if (s != null)
+					if (s != null && s.template != null && (freezeSkillCooldown || frozenSkillIds.Contains(s.template.id)))
 					{
 						s.coolDown = 0;
 						s.lastTimeUseThisSkill = 0;
@@ -305,7 +406,7 @@ public static class ModTanSat
 					}
 				}
 			}
-			if (me.myskill != null)
+			if (me.myskill != null && me.myskill.template != null && (freezeSkillCooldown || frozenSkillIds.Contains(me.myskill.template.id)))
 			{
 				me.myskill.coolDown = 0;
 				me.myskill.lastTimeUseThisSkill = 0;
@@ -429,6 +530,13 @@ public static class ModTanSat
 
 			CheckAndRestoreStamina(me, now);
 			CheckAutoChangeZone(me, now);
+			CheckAutoResetZone(me, now);
+			if (trainPets && me.havePet && Char.myPetz() != null && Char.myPetz().petStatus != 2 && Char.myPetz().petStatus != 1 && now - lastSupportSkillTime > 3000)
+			{
+				lastSupportSkillTime = now;
+				Service.gI().petStatus(2);
+				Char.myPetz().petStatus = 2;
+			}
 			if (UpdateSupportAndFreezeSkills(me, now))
 			{
 				return;
@@ -446,12 +554,27 @@ public static class ModTanSat
 				lastSentSkillTemplateId = skillToUse.template.id;
 			}
 
-			// 2. Giữ khóa mục tiêu hiện tại cho đến khi quái chết hẳn (chỉ bỏ qua nếu là quái ma bị lỗi sau >= 12 đòn đánh liên tiếp không mất máu)
+			// 2. Giữ khóa mục tiêu hiện tại cho đến khi quái chết hẳn (hoặc bỏ qua quái lag 15s >=90% HP / đổi mục tiêu khi bật trainPets / autoChangeFocus)
 			bool targetDiedOrInvalid = false;
 			if (currentFarmTarget != null)
 			{
 				if (currentFarmTarget.status == 0 || currentFarmTarget.status == 1 || currentFarmTarget.hp <= 0 || (avoidSuperMob && (currentFarmTarget.levelBoss > 0 || currentFarmTarget.isBoss)) || !ModTanSatFilter.IsMobAllowed(currentFarmTarget.templateId) || !GameScr.gI().isMeCanAttackMob(currentFarmTarget))
 				{
+					targetDiedOrInvalid = true;
+				}
+				else if (checkLagMob && currentFarmTarget.templateId != 0 && currentFarmTarget.maxHp > 0 && currentFarmTarget.hp * 100L >= currentFarmTarget.maxHp * 90L && now - targetLockTime >= 15000)
+				{
+					ignoredMobUntil[currentFarmTarget.mobId] = now + 30000L;
+					targetDiedOrInvalid = true;
+				}
+				else if (trainPets && me.havePet && currentFarmTarget.maxHp > 0 && currentFarmTarget.hp * 100L < currentFarmTarget.maxHp * 80L && currentTargetUnchangedAttackCount >= 1)
+				{
+					ignoredMobUntil[currentFarmTarget.mobId] = now + 4000L;
+					targetDiedOrInvalid = true;
+				}
+				else if (autoChangeFocus && currentTargetUnchangedAttackCount >= 1)
+				{
+					ignoredMobUntil[currentFarmTarget.mobId] = now + 1200L;
 					targetDiedOrInvalid = true;
 				}
 				else if (currentFarmTarget.hp < targetLastHp)
@@ -625,6 +748,10 @@ public static class ModTanSat
 
 			// 6. Kiểm tra Cooldown thực tế & KI của game cho kỹ năng này
 			int effectiveCooldown = (skillToUse.coolDown < timeAttack) ? timeAttack : skillToUse.coolDown;
+			if (skillToUse.template != null && customSkillDelays.TryGetValue(skillToUse.template.id, out int customDelay) && customDelay > 0)
+			{
+				effectiveCooldown = System.Math.Max(effectiveCooldown, customDelay);
+			}
 
 			if (now - skillToUse.lastTimeUseThisSkill < effectiveCooldown || now - lastAttackTime < timeAttack)
 			{

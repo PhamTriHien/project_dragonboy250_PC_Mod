@@ -33,10 +33,15 @@ public static class ModUIBoss
 		ModUI.PaintNativeButton(uiX + 8 + r2W, uiY + 40, r2W, 16, "Săn Boss: " + (ModBossNotice.isAutoAttackBoss ? "BẬT" : "TẮT"), ModBossNotice.isAutoAttackBoss, g);
 		ModUI.PaintNativeButton(uiX + 12 + r2W * 2, uiY + 40, r2W, 16, "Đánh Broly: " + (ModKiteBroly.autoAttackBroly ? "BẬT" : "TẮT"), ModKiteBroly.autoAttackBroly, g);
 
+		// Hàng 4: Lọc Boss, Gim Mục Tiêu, KS Broly 1HP
+		ModUI.PaintNativeButton(uiX + 4, uiY + 57, r2W, 16, string.IsNullOrEmpty(ModBossNotice.filterBossNamesRaw) ? "Lọc Boss: Tất cả" : "Lọc: Đang bật", !string.IsNullOrEmpty(ModBossNotice.filterBossNamesRaw), g);
+		ModUI.PaintNativeButton(uiX + 8 + r2W, uiY + 57, r2W, 16, "Gim M.Tiêu: " + (ModMapEntityHUD.isLockTarget ? "BẬT" : "TẮT"), ModMapEntityHUD.isLockTarget, g);
+		ModUI.PaintNativeButton(uiX + 12 + r2W * 2, uiY + 57, r2W, 16, "KS Broly 1HP: " + (ModBossNotice.isKsSuperBroly1Hp ? "BẬT" : "TẮT"), ModBossNotice.isKsSuperBroly1Hp, g);
+
 		int listX = uiX + 4;
-		int listY = uiY + 58;
+		int listY = uiY + 75;
 		int listW = uiW - 8;
-		int listH = uiH - 62;
+		int listH = uiH - 79;
 		if (listH < 40) listH = 40;
 		GameCanvas.paintz.paintFrameSimple(listX, listY, listW, listH, g);
 		g.setColor(15196114);
@@ -180,11 +185,36 @@ public static class ModUIBoss
 			}
 		}
 
+		// 5b. Hàng 4: Lọc Boss, Gim Mục Tiêu, KS Broly 1HP
+		if (py >= uiY + 56 && py <= uiY + 74)
+		{
+			if (px >= uiX + 4 && px <= uiX + 4 + r2W)
+			{
+				ModUI.uiCustomOpen = false;
+				ModBossNotice.ShowInputFilterBoss();
+				SoundMn.gI().buttonClick();
+				return true;
+			}
+			if (px >= uiX + 8 + r2W && px <= uiX + 8 + r2W * 2)
+			{
+				ModMapEntityHUD.ToggleLockTarget();
+				return true;
+			}
+			if (px >= uiX + 12 + r2W * 2 && px <= uiX + 12 + r2W * 3)
+			{
+				ModBossNotice.isKsSuperBroly1Hp = !ModBossNotice.isKsSuperBroly1Hp;
+				ModConfig.SaveConfig();
+				GameScr.info1.addInfo("KS Super Broly 1HP: " + (ModBossNotice.isKsSuperBroly1Hp ? "BẬT" : "TẮT"), 0);
+				SoundMn.gI().buttonClick();
+				return true;
+			}
+		}
+
 		// 6. Click vào nút "Đến" ở từng dòng Boss
 		int listX = uiX + 4;
-		int listY = uiY + 58;
+		int listY = uiY + 75;
 		int listW = uiW - 8;
-		int listH = uiH - 62;
+		int listH = uiH - 79;
 
 		if (px >= listX + listW - 34 && px <= listX + listW && py >= listY && py <= listY + listH)
 		{

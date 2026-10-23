@@ -52,19 +52,22 @@ public static class ModUISetActivator
 		ModUI.PaintNativeButton(uiX + 14 + w4 * 2, listY + 52, w4, 16, ModAutoBuyBua.isAutoRebuy ? "Bùa: Auto" : "Bùa: Tắt", ModAutoBuyBua.isAutoRebuy, g);
 		ModUI.PaintNativeButton(uiX + 17 + w4 * 3, listY + 52, w4, 16, ModSetActivator.showItemId ? "Hiện ID" : "ID: Tắt", ModSetActivator.showItemId, g);
 
+		// Hàng cài đặt mở rộng: HUD SKH | Auto TĐLT | Giữ Đồ Thần | Ô Trống
+		ModUI.PaintNativeButton(uiX + 8, listY + 70, w4, 16, ModSetActivator.showSkhHud ? "HUD SKH" : "SKH: Tắt", ModSetActivator.showSkhHud, g);
+		ModUI.PaintNativeButton(uiX + 11 + w4, listY + 70, w4, 16, ModSetActivator.autoUseTdlt ? "Auto TĐLT" : "TĐLT: Tắt", ModSetActivator.autoUseTdlt, g);
+		ModUI.PaintNativeButton(uiX + 14 + w4 * 2, listY + 70, w4, 16, !ModSetActivator.sellGodItems ? "Giữ Thần" : "Bán Thần", !ModSetActivator.sellGodItems, g);
+		ModUI.PaintNativeButton(uiX + 17 + w4 * 3, listY + 70, w4, 16, "Trống <=" + ModSetActivator.minEmptyBagSlots, true, g);
+
 		// Thống kê rơi đồ thực chiến
-		string stat1 = "- Diệt: " + ModDropRate.totalMobsKilled + " (" + ModDropRate.GetMobsPerMinute() + "/p) | Rơi: " + ModDropRate.totalItemsDropped;
-		mFont.tahoma_7_grey.drawString(g, stat1, uiX + 10, listY + 70, mFont.LEFT);
+		string stat1 = "- Diệt: " + ModDropRate.totalMobsKilled + " (" + ModDropRate.GetMobsPerMinute() + "/p) | Rơi: " + ModDropRate.totalItemsDropped + " | KH: " + ModDropRate.totalSetKHCount + " | Sao: " + ModDropRate.totalStarCount;
+		mFont.tahoma_7_green2.drawString(g, stat1, uiX + 10, listY + 89, mFont.LEFT);
 
-		string stat2 = "- Đồ KH: " + ModDropRate.totalSetKHCount + " | Sao: " + ModDropRate.totalStarCount;
-		mFont.tahoma_7_green2.drawString(g, stat2, uiX + 10, listY + 86, mFont.LEFT);
-
-		ModUI.PaintNativeButton(uiX + listW - 48, listY + 84, 44, 15, "Reset TK", false, g);
+		ModUI.PaintNativeButton(uiX + listW - 48, listY + 87, 44, 15, "Reset TK", false, g);
 
 		// Trạng thái vận hành
 		string stText = ModAutoBuyBua.isBusy ? ModAutoBuyBua.GetStatusText() : ModSetActivator.GetStatusText();
-		mFont.tahoma_7_grey.drawString(g, "- Trạng thái: ", uiX + 10, listY + 102, mFont.LEFT);
-		mFont.tahoma_7_green2.drawString(g, stText, uiX + 68, listY + 102, mFont.LEFT);
+		mFont.tahoma_7_grey.drawString(g, "- Trạng thái: ", uiX + 10, listY + 103, mFont.LEFT);
+		mFont.tahoma_7_green2.drawString(g, stText, uiX + 68, listY + 103, mFont.LEFT);
 
 		// Hàng 5 nút chức năng dưới cùng ở Footer
 		int fBtnW = (uiW - 24) / 5;
@@ -185,8 +188,43 @@ public static class ModUISetActivator
 			return true;
 		}
 
+		// 4b. Hàng mở rộng: HUD SKH | Auto TĐLT | Giữ Đồ Thần | Ô Trống
+		if (py >= listY + 69 && py <= listY + 87)
+		{
+			if (px >= uiX + 8 && px <= uiX + 8 + w4)
+			{
+				ModSetActivator.showSkhHud = !ModSetActivator.showSkhHud;
+				ModConfig.SaveConfig();
+				GameScr.info1.addInfo("HUD Thống kê SKH: " + (ModSetActivator.showSkhHud ? "BẬT" : "TẮT"), 0);
+				SoundMn.gI().buttonClick();
+				return true;
+			}
+			if (px >= uiX + 11 + w4 && px <= uiX + 11 + w4 * 2)
+			{
+				ModSetActivator.autoUseTdlt = !ModSetActivator.autoUseTdlt;
+				ModConfig.SaveConfig();
+				GameScr.info1.addInfo("Auto Tự động luyện tập (521): " + (ModSetActivator.autoUseTdlt ? "BẬT" : "TẮT"), 0);
+				SoundMn.gI().buttonClick();
+				return true;
+			}
+			if (px >= uiX + 14 + w4 * 2 && px <= uiX + 14 + w4 * 3)
+			{
+				ModSetActivator.sellGodItems = !ModSetActivator.sellGodItems;
+				ModConfig.SaveConfig();
+				GameScr.info1.addInfo("Giữ Đồ Thần Linh khi bán rác: " + (!ModSetActivator.sellGodItems ? "BẬT" : "TẮT"), 0);
+				SoundMn.gI().buttonClick();
+				return true;
+			}
+			if (px >= uiX + 17 + w4 * 3 && px <= uiX + 17 + w4 * 4)
+			{
+				ModSetActivator.CycleMinEmptyBagSlots();
+				GameScr.info1.addInfo("Bán rác khi ô trống <= " + ModSetActivator.minEmptyBagSlots, 0);
+				return true;
+			}
+		}
+
 		// 5. Nút Reset TK
-		if (px >= uiX + listW - 50 && px <= uiX + listW && py >= listY + 83 && py <= listY + 100)
+		if (px >= uiX + listW - 50 && px <= uiX + listW && py >= listY + 86 && py <= listY + 103)
 		{
 			ModDropRate.ResetStats();
 			GameScr.info1.addInfo("Đã reset thống kê rơi đồ!", 0);

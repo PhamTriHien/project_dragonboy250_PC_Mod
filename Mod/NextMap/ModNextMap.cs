@@ -658,6 +658,15 @@ public static class ModNextMap
 					mFont.tahoma_7_white.drawString(g, mapTag, drawX, drawY, mFont.LEFT);
 				}
 			}
+
+			if (isNextMapActive || ModBossNotice.isAutoScanBossZone || ModGoBack.isReturning || ModSetActivator.isBusy || ModAutoBuyBua.isBusy)
+			{
+				int stopW = 86;
+				int stopH = 16;
+				int stopX = (GameCanvas.w - stopW) / 2;
+				int stopY = GameCanvas.h - 68;
+				ModUI.PaintNativeButton(stopX, stopY, stopW, stopH, "Dừng Di Chuyển", true, g);
+			}
 		}
 		catch
 		{
@@ -683,6 +692,30 @@ public static class ModNextMap
 			    ModUI.uiCustomOpen)
 			{
 				return false;
+			}
+
+			if (isNextMapActive || ModBossNotice.isAutoScanBossZone || ModGoBack.isReturning || ModSetActivator.isBusy || ModAutoBuyBua.isBusy)
+			{
+				int stopW = 86;
+				int stopH = 16;
+				int stopX = (GameCanvas.w - stopW) / 2;
+				int stopY = GameCanvas.h - 68;
+				if (Res.inRect(stopX, stopY, stopW, stopH, px, py))
+				{
+					if (GameCanvas.isPointerClick || GameCanvas.isPointerJustRelease)
+					{
+						if (isNextMapActive) StopNextMap();
+						if (ModBossNotice.isAutoScanBossZone) ModBossNotice.isAutoScanBossZone = false;
+						if (ModGoBack.isReturning) ModGoBack.isReturning = false;
+						if (ModSetActivator.isBusy) ModSetActivator.currentState = ModSetActivator.SetActivatorState.Farming;
+						if (ModAutoBuyBua.isBusy) ModAutoBuyBua.StopAutoBuyBua();
+						GameScr.info1.addInfo("Đã dừng di chuyển tự động!", 0);
+						SoundMn.gI().buttonClick();
+						GameCanvas.clearAllPointerEvent();
+						return true;
+					}
+					return true;
+				}
 			}
 
 			int drawX = 160;

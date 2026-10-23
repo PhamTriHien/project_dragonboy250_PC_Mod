@@ -1,13 +1,35 @@
 using System;
 
+/// <summary>
+/// Module Auto Reconnect & Re-login: Tự động kết nối lại máy chủ và đăng nhập tài khoản khi mất kết nối mạng.
+/// </summary>
 public static class ModAutoLogin
 {
 	public static bool isEnabled = true;
+	public static bool keepSavedZone = false;
+	public static int savedKeepZoneId = -1;
+	private static long lastKeepZoneCheckTime = 0;
 	public static bool isReconnecting = false;
 	public static int retryCount = 0;
 	public static long lastRetryTime = 0;
 	public static int reconnectDelayMs = 8000;
 	public static string statusMessage = "";
+
+	public static void ToggleKeepZone()
+	{
+		keepSavedZone = !keepSavedZone;
+		if (keepSavedZone && ModMenu.IsInGame())
+		{
+			savedKeepZoneId = TileMap.zoneID;
+			GameScr.info1.addInfo("Giữ Khu Cố Định: BẬT (Khu " + savedKeepZoneId + ")", 0);
+		}
+		else
+		{
+			GameScr.info1.addInfo("Giữ Khu Cố Định: TẮT", 0);
+		}
+		ModConfig.SaveConfig();
+		SoundMn.gI().buttonClick();
+	}
 
 	public static bool wasTanSatActive = false;
 	public static bool wasAutoPickActive = false;
@@ -22,10 +44,39 @@ public static class ModAutoLogin
 	public static int lastFarmX = -1;
 	public static int lastFarmY = -1;
 
+	public static bool hasEnteredGameOnce = false;
+
+	/// <summary>
+	/// Dọn dẹp và đặt lại trạng thái ban đầu cho ResetSession.
+	/// </summary>
+	public static void ResetSession()
+	{
+		isReconnecting = false;
+		hasEnteredGameOnce = false;
+		retryCount = 0;
+		lastRetryTime = 0;
+		statusMessage = "";
+		wasTanSatActive = false;
+		wasAutoPickActive = false;
+		wasAutoHealActive = false;
+		wasGoBackActive = false;
+		wasSetKHActive = false;
+		wasAutoBuaActive = false;
+		wasSpeedHackActive = false;
+		lastFarmMapId = -1;
+		lastFarmZoneId = -1;
+		lastFarmX = -1;
+		lastFarmY = -1;
+	}
+
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ SnapshotAutoState.
+	/// </summary>
 	public static void SnapshotAutoState()
 	{
 		if (ModMenu.IsInGame())
 		{
+			hasEnteredGameOnce = true;
 			wasTanSatActive = ModTanSat.autoTanSat;
 			wasAutoPickActive = ModAutoPick.autoPick;
 			wasAutoHealActive = ModAutoHeal.autoPean;
@@ -34,14 +85,21 @@ public static class ModAutoLogin
 			wasAutoBuaActive = ModAutoBuyBua.isAutoRebuy;
 			wasSpeedHackActive = ModSpeed.speedHack;
 
-			if (ModGoBack.savedMapId > 0)
+			if (ModGoBack.isGoBackActive && ModGoBack.savedMapId >= 0)
 			{
 				lastFarmMapId = ModGoBack.savedMapId;
 				lastFarmZoneId = ModGoBack.savedZoneId;
 				lastFarmX = ModGoBack.savedX;
 				lastFarmY = ModGoBack.savedY;
 			}
-			else if (TileMap.mapID > 0 && Char.myCharz() != null)
+			else if (ModSetActivator.isActive && ModSetActivator.savedFarmMapId >= 0)
+			{
+				lastFarmMapId = ModSetActivator.savedFarmMapId;
+				lastFarmZoneId = ModSetActivator.savedFarmZoneId;
+				lastFarmX = ModSetActivator.savedFarmX;
+				lastFarmY = ModSetActivator.savedFarmY;
+			}
+			else if (TileMap.mapID >= 0 && Char.myCharz() != null)
 			{
 				lastFarmMapId = TileMap.mapID;
 				lastFarmZoneId = TileMap.zoneID;
@@ -51,9 +109,12 @@ public static class ModAutoLogin
 		}
 	}
 
+	/// <summary>
+	/// Bộ xử lý sự kiện tiếp nhận và phản hồi OnDisconnected.
+	/// </summary>
 	public static void OnDisconnected()
 	{
-		if (!isEnabled) return;
+		if (!isEnabled || !hasEnteredGameOnce || isReconnecting) return;
 		if (GameCanvas.currentScreen == GameCanvas.loginScr || GameCanvas.currentScreen == GameCanvas.serverScreen)
 		{
 			return;
@@ -67,8 +128,24 @@ public static class ModAutoLogin
 		Res.outz("[ModAutoLogin] Disconnected detected. Auto-reconnect triggered.");
 	}
 
+	/// <summary>
+	/// Cập nhật trạng thái logic của đối tượng theo từng chu kỳ khung hình.
+	/// </summary>
 	public static void Update()
 	{
+		if (keepSavedZone && savedKeepZoneId >= 0 && ModMenu.IsInGame() && !Char.isLoadingMap && !Char.ischangingMap)
+		{
+			if (!ModNextMap.isNextMapActive && !ModBossNotice.isAutoScanBossZone && !ModGoBack.isReturning && !ModSetActivator.isBusy && !ModAutoBuyBua.isBusy)
+			{
+				long tNow = mSystem.currentTimeMillis();
+				if (TileMap.zoneID != savedKeepZoneId && tNow - lastKeepZoneCheckTime >= 3500)
+				{
+					lastKeepZoneCheckTime = tNow;
+					Service.gI().requestChangeZone(savedKeepZoneId, -1);
+				}
+			}
+		}
+
 		if (!isEnabled || !isReconnecting) return;
 
 		// Khi da vao lai map on dinh
@@ -100,6 +177,14 @@ public static class ModAutoLogin
 		statusMessage = "Tự động kết nối lại lần " + retryCount + "/3...";
 		Res.outz("[ModAutoLogin] " + statusMessage);
 
+		PerformLoginSequence();
+	}
+
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ PerformLoginSequence.
+	/// </summary>
+	public static void PerformLoginSequence()
+	{
 		// 1. Dong cac popup thong bao loi (MsgDlg / Dialog OK)
 		try
 		{
@@ -156,6 +241,9 @@ public static class ModAutoLogin
 		catch { }
 	}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ RestoreAutoState.
+	/// </summary>
 	public static void RestoreAutoState()
 	{
 		try
@@ -184,7 +272,7 @@ public static class ModAutoLogin
 			if (wasGoBackActive)
 			{
 				ModGoBack.isGoBackActive = true;
-				if (lastFarmMapId > 0 && (TileMap.mapID != lastFarmMapId || (lastFarmZoneId >= 0 && TileMap.zoneID != lastFarmZoneId)))
+				if (lastFarmMapId >= 0 && (TileMap.mapID != lastFarmMapId || (lastFarmZoneId >= 0 && TileMap.zoneID != lastFarmZoneId)))
 				{
 					ModGoBack.savedMapId = lastFarmMapId;
 					ModGoBack.savedZoneId = lastFarmZoneId;
@@ -198,6 +286,15 @@ public static class ModAutoLogin
 			if (wasSetKHActive)
 			{
 				ModSetActivator.isActive = true;
+				if (!wasGoBackActive && lastFarmMapId >= 0 && (TileMap.mapID != lastFarmMapId || (lastFarmZoneId >= 0 && TileMap.zoneID != lastFarmZoneId)))
+				{
+					ModSetActivator.savedFarmMapId = lastFarmMapId;
+					ModSetActivator.savedFarmZoneId = lastFarmZoneId;
+					ModSetActivator.savedFarmX = lastFarmX;
+					ModSetActivator.savedFarmY = lastFarmY;
+					ModSetActivator.currentState = ModSetActivator.SetActivatorState.ReturningToFarm;
+					ModNextMap.StartNextMap(lastFarmMapId);
+				}
 			}
 
 			// 6. Tu Mua Bua

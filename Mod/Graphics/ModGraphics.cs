@@ -22,6 +22,18 @@ public static class ModGraphics
 	};
 	public static readonly string[] resolutionNames = new string[4] { "1024x600", "1280x720", "1600x900", "1920x1080" };
 	public static bool isFullscreen = false;
+	public static bool isAfkLowCpu = false;
+
+	public static void ToggleAfkLowCpu()
+	{
+		isAfkLowCpu = !isAfkLowCpu;
+		ModFps.ApplyFPS();
+		ModConfig.SaveConfig();
+		if (GameScr.info1 != null)
+		{
+			GameScr.info1.addInfo("Treo Giảm CPU (15 FPS + Ẩn Nền): " + (isAfkLowCpu ? "BẬT" : "TẮT"), 0);
+		}
+	}
 
 	private static int lastScreenWidth = 0;
 	private static int lastScreenHeight = 0;

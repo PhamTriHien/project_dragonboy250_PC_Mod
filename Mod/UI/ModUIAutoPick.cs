@@ -10,12 +10,13 @@ public static class ModUIAutoPick
 	/// </summary>
 	public static void Paint(int uiX, int uiY, int uiW, int uiH, mGraphics g)
 	{
-		mFont.tahoma_7_grey.drawString(g, "Tự nhặt đồ:", uiX + 5, uiY + 7, mFont.LEFT);
-		ModUI.PaintNativeButton(uiX + 66, uiY + 4, 42, 17, ModAutoPick.autoPick ? "BẬT" : "TẮT", ModAutoPick.autoPick, g);
+		mFont.tahoma_7_grey.drawString(g, "Tự nhặt:", uiX + 4, uiY + 7, mFont.LEFT);
+		ModUI.PaintNativeButton(uiX + 48, uiY + 4, 34, 17, ModAutoPick.autoPick ? "BẬT" : "TẮT", ModAutoPick.autoPick, g);
+		ModUI.PaintNativeButton(uiX + 85, uiY + 4, 52, 17, ModAutoPick.onlyMyItems ? "Đồ mình" : "Mọi đồ", ModAutoPick.onlyMyItems, g);
+		ModUI.PaintNativeButton(uiX + 140, uiY + 4, 48, 17, ModAutoPick.showPickRadius ? "Vòng: Bật" : "Vòng: Tắt", ModAutoPick.showPickRadius, g);
 
-		int distBtnW = 72;
+		int distBtnW = 58;
 		int distBtnX = uiX + uiW - distBtnW - 4;
-		mFont.tahoma_7_grey.drawString(g, "Phạm vi:", distBtnX - 44, uiY + 7, mFont.LEFT);
 		ModUI.PaintNativeButton(distBtnX, uiY + 4, distBtnW, 17, ModAutoPick.GetPickDistanceLabel(), ModAutoPick.maxPickDistance > 0, g);
 
 		int footerH = 18;
@@ -67,12 +68,13 @@ public static class ModUIAutoPick
 		if (dropText.Length > 26) dropText = dropText.Substring(0, 23) + "...]";
 		(ModAutoPick.autoDropItem ? mFont.tahoma_7_green2 : mFont.tahoma_7_grey).drawString(g, "Tự vứt ID: " + dropText, boxX + 26, boxY + 5 + stepY * 6, mFont.LEFT);
 
-		// 4 Nút Bấm Thao Tác Nhanh ở Footer
-		int actionBtnW = (uiW - 20) / 4;
+		// 5 Nút Bấm Thao Tác Nhanh ở Footer
+		int actionBtnW = (uiW - 24) / 5;
 		ModUI.PaintNativeButton(uiX + 4, footerY, actionBtnW, footerH, "ID Nhặt", false, g);
 		ModUI.PaintNativeButton(uiX + 8 + actionBtnW, footerY, actionBtnW, footerH, "Tên Nhặt", false, g);
-		ModUI.PaintNativeButton(uiX + 12 + actionBtnW * 2, footerY, actionBtnW, footerH, "ID Vứt", false, g);
-		ModUI.PaintNativeButton(uiX + 16 + actionBtnW * 3, footerY, actionBtnW, footerH, "Xóa Lọc", false, g);
+		ModUI.PaintNativeButton(uiX + 12 + actionBtnW * 2, footerY, actionBtnW, footerH, "Cấm Nhặt", ModAutoPick.blacklistIds.Count > 0, g);
+		ModUI.PaintNativeButton(uiX + 16 + actionBtnW * 3, footerY, actionBtnW, footerH, "ID Vứt", false, g);
+		ModUI.PaintNativeButton(uiX + 20 + actionBtnW * 4, footerY, actionBtnW, footerH, "Xóa Lọc", false, g);
 	}
 
 	/// <summary>
@@ -81,16 +83,34 @@ public static class ModUIAutoPick
 	public static bool HandleTap(int px, int py, int uiX, int uiY, int uiW, int uiH)
 	{
 		// Nút BẬT/TẮT Tự nhặt
-		if (px >= uiX + 66 && px <= uiX + 108 && py >= uiY + 3 && py <= uiY + 22)
+		if (px >= uiX + 48 && px <= uiX + 82 && py >= uiY + 3 && py <= uiY + 22)
 		{
 			ModAutoPick.autoPick = !ModAutoPick.autoPick;
 			ModConfig.SaveConfig();
 			SoundMn.gI().buttonClick();
 			return true;
 		}
+		// Nút Chỉ nhặt đồ của mình
+		if (px >= uiX + 85 && px <= uiX + 137 && py >= uiY + 3 && py <= uiY + 22)
+		{
+			ModAutoPick.onlyMyItems = !ModAutoPick.onlyMyItems;
+			ModConfig.SaveConfig();
+			GameScr.info1.addInfo("Chỉ nhặt đồ của mình: " + (ModAutoPick.onlyMyItems ? "BẬT" : "TẮT"), 0);
+			SoundMn.gI().buttonClick();
+			return true;
+		}
+		// Nút Hiện vòng phạm vi nhặt
+		if (px >= uiX + 140 && px <= uiX + 188 && py >= uiY + 3 && py <= uiY + 22)
+		{
+			ModAutoPick.showPickRadius = !ModAutoPick.showPickRadius;
+			ModConfig.SaveConfig();
+			GameScr.info1.addInfo("Vòng tròn phạm vi nhặt: " + (ModAutoPick.showPickRadius ? "BẬT" : "TẮT"), 0);
+			SoundMn.gI().buttonClick();
+			return true;
+		}
 
 		// Nút Phạm vi nhặt
-		int distBtnW = 72;
+		int distBtnW = 58;
 		int distBtnX = uiX + uiW - distBtnW - 4;
 		if (px >= distBtnX && px <= distBtnX + distBtnW && py >= uiY + 3 && py <= uiY + 22)
 		{
@@ -197,8 +217,8 @@ public static class ModUIAutoPick
 			}
 		}
 
-		// 4 Nút Bấm Thao Tác Nhanh ở Footer
-		int actionBtnW = (uiW - 20) / 4;
+		// 5 Nút Bấm Thao Tác Nhanh ở Footer
+		int actionBtnW = (uiW - 24) / 5;
 		if (py >= footerY - 1 && py <= footerY + footerH + 1)
 		{
 			if (px >= uiX + 4 && px <= uiX + 4 + actionBtnW)
@@ -213,10 +233,15 @@ public static class ModUIAutoPick
 			}
 			if (px >= uiX + 12 + actionBtnW * 2 && px <= uiX + 12 + actionBtnW * 3)
 			{
-				ModAutoPick.ShowInputDropId();
+				ModAutoPick.ShowInputBlacklistId();
 				return true;
 			}
 			if (px >= uiX + 16 + actionBtnW * 3 && px <= uiX + 16 + actionBtnW * 4)
+			{
+				ModAutoPick.ShowInputDropId();
+				return true;
+			}
+			if (px >= uiX + 20 + actionBtnW * 4 && px <= uiX + 20 + actionBtnW * 5)
 			{
 				ModAutoPick.ClearFilters();
 				ModConfig.SaveConfig();

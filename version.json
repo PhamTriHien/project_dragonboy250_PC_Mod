@@ -1,9 +1,9 @@
 {
-  "version": "2.5.27",
+  "version": "2.5.28",
   "buildDate": "2026-10-23",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.27/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.27/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.27/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.27/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.27: Hoan thien 100% tinh nang Mod tuong duong va vuot troi Mod Java: Tan Sat (Ne Sieu Quai, Tu an Nho hoi the luc, Tu doi khu chong KS, Auto Buff ho tro, Dong bang hoi chieu); Auto Dau Than (Nguong HP & KI doc lap, Auto Xin Dau bang); Auto Nhat (Gioi han ban kinh nhat & Auto Vut Do rac theo ID); Bao Boss (Click [Den] truc tiep tren HUD, Auto Do Khu Boss & Tu San Boss); Up Set KH (Tu ve Nha cat do SKH/Do Sao vao Ruong); Auto De Tu (HUD De Tu, Ne Boss, Tu bat Co Den, Auto Tri Thuong Namek); Auto Cong Diem (Chi Mang Goc & Moc gioi han tu dung)."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.28/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.28/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.28/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.28/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.28: Hoan thien toan dien 14 nhom tinh nang Mod Java sau vao Mod C#: Tan Sat (Check Quai Lag, Reset Khu dinh ky, HUD Vang Train, Luyen De Tu, Luan Phien Muc Tieu, Dong Bang & Custom Delay tung Skill); Hanh Trang & SKH (Tag %SD/%HP/%KI/%TNSM/SKH tren o do, HUD 5 mon SKH, Loc ban Do Than/SKH/Cap do/Giu ID/Ban ID, Auto TDLT & Mua TDLT); Bua (10 loai bua Ba Hat Mit & HUD Bua); Radar & Boss (Tia do & HUD trang thai muc tieu, Khoa muc tieu, Loc ten Boss, KS Super Broly < 1tr HP); Auto Nhat (Chi nhat do minh, Blacklist ID, Vong ban kinh nhat); Dau Than & De Tu (Cho dau theo ten, Nguong HP/KI De an dau, Thoat game khi De dat moc SM); GoBack (Ve nha hoi KI khi het MP, Toa do tuy chinh); Tien Ich (Giu Khu Reconnect, Auto CSKB, 6 Khung Gio Train Map/Khu, Auto NV Tan Thu 0->10, Treo Giam CPU 15 FPS)."
 }

@@ -8,18 +8,79 @@ public static class ModAutoHeal
 	public static bool autoPean = true;
 	public static int autoPeanHpPercent = 30;
 	public static int autoPeanMpPercent = 30;
+	public static long autoPeanMinHp = 0;
+	public static long autoPeanMinMp = 0;
 	public static bool lockHPMP = false;
 
 	public static bool autoHarvestPea = true;
 	public static bool autoDonateClan = true;
+	public static string donateTargetNamesRaw = "";
 	public static bool autoRequestPea = false;
 	public static bool autoFeedPetOnAsk = true;
+	public static int petEatBeanHpPercent = 30;
+	public static int petEatBeanMpPercent = 30;
 
 	private static long lastPeanTime = 0;
 	private static long lastHarvestTime = 0;
 	private static long lastClanDonateTime = 0;
 	private static long lastClanRequestTime = 0;
 	private static long lastFeedPetTime = 0;
+
+	public static bool MatchesDonateTarget(string playerName)
+	{
+		if (string.IsNullOrEmpty(donateTargetNamesRaw)) return true;
+		if (string.IsNullOrEmpty(playerName)) return false;
+		string[] parts = donateTargetNamesRaw.Split(new char[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries);
+		if (parts.Length == 0) return true;
+		for (int i = 0; i < parts.Length; i++)
+		{
+			string kw = parts[i].Trim();
+			if (kw.Length > 0 && playerName.IndexOf(kw, StringComparison.OrdinalIgnoreCase) >= 0)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private class DonateFilterChatListener : IChatable
+	{
+		public void onChatFromMe(string text, string to)
+		{
+			donateTargetNamesRaw = (text ?? string.Empty).Trim();
+			ModConfig.SaveConfig();
+			ChatTextField.gI().isShow = false;
+			ChatTextField.gI().parentScreen = GameScr.gI();
+			GameScr.info1.addInfo(string.IsNullOrEmpty(donateTargetNamesRaw) ? "Cho đậu bang: Tất cả thành viên" : ("Chỉ cho đậu: " + donateTargetNamesRaw), 0);
+		}
+		public void onCancelChat()
+		{
+			ChatTextField.gI().isShow = false;
+			ChatTextField.gI().parentScreen = GameScr.gI();
+		}
+	}
+
+	private static readonly DonateFilterChatListener donateChatListener = new DonateFilterChatListener();
+
+	public static void ShowInputDonateTarget()
+	{
+		ChatTextField.gI().strChat = "Nhập tên TV được cho đậu (cách nhau dấu ;)";
+		ChatTextField.gI().tfChat.name = "Tên thành viên (để trống = tất cả)";
+		ChatTextField.gI().tfChat.setIputType(TField.INPUT_TYPE_ANY);
+		ChatTextField.gI().startChat2(donateChatListener, string.Empty);
+		ChatTextField.gI().tfChat.setText(donateTargetNamesRaw ?? string.Empty);
+	}
+
+	public static void CyclePetEatBeanPercent()
+	{
+		if (petEatBeanHpPercent <= 20) petEatBeanHpPercent = 30;
+		else if (petEatBeanHpPercent == 30) petEatBeanHpPercent = 50;
+		else if (petEatBeanHpPercent == 50) petEatBeanHpPercent = 70;
+		else petEatBeanHpPercent = 20;
+		petEatBeanMpPercent = petEatBeanHpPercent;
+		ModConfig.SaveConfig();
+		SoundMn.gI().buttonClick();
+	}
 
 	/// <summary>
 	/// Truy xuất và trả về dữ liệu của GetBeanCount.
@@ -149,7 +210,7 @@ public static class ModAutoHeal
 			for (int i = 0; i < ClanMessage.vMessage.size(); i++)
 			{
 				ClanMessage cm = (ClanMessage)ClanMessage.vMessage.elementAt(i);
-				if (cm != null && cm.type == 1 && cm.playerId != myId && cm.recieve < cm.maxCap)
+				if (cm != null && cm.type == 1 && cm.playerId != myId && cm.recieve < cm.maxCap && MatchesDonateTarget(cm.playerName))
 				{
 					Service.gI().clanDonate(cm.id);
 					cm.recieve++;
@@ -258,7 +319,8 @@ public static class ModAutoHeal
 				long curHpPercent = (me.cHPFull > 0) ? (me.cHP * 100L / me.cHPFull) : 100;
 				long curMpPercent = (me.cMPFull > 0) ? (me.cMP * 100L / me.cMPFull) : 100;
 
-				if (curHpPercent < autoPeanHpPercent || curMpPercent < autoPeanMpPercent)
+				if (curHpPercent < autoPeanHpPercent || curMpPercent < autoPeanMpPercent ||
+				    (autoPeanMinHp > 0 && me.cHP < autoPeanMinHp) || (autoPeanMinMp > 0 && me.cMP < autoPeanMinMp))
 				{
 					needHeal = true;
 				}
@@ -304,7 +366,7 @@ public static class ModAutoHeal
 					for (int i = 0; i < ClanMessage.vMessage.size(); i++)
 					{
 						ClanMessage cm = (ClanMessage)ClanMessage.vMessage.elementAt(i);
-						if (cm != null && cm.type == 1 && cm.playerId != me.charID && cm.recieve < cm.maxCap)
+						if (cm != null && cm.type == 1 && cm.playerId != me.charID && cm.recieve < cm.maxCap && MatchesDonateTarget(cm.playerName))
 						{
 							Service.gI().clanDonate(cm.id);
 							cm.recieve++;
@@ -324,16 +386,25 @@ public static class ModAutoHeal
 				GameScr.info1.addInfo("Tự động xin đậu bang hội!", 0);
 			}
 
-			// 5. Giám sát sinh lực đệ tử thực tế trong map, tự ăn đậu khi máu đệ tử nguy kịch
+			// 5. Giám sát sinh lực đệ tử thực tế trong map, tự ăn đậu khi máu/KI đệ tử xuống thấp
 			if (autoFeedPetOnAsk && me.havePet)
 			{
 				Char mapPet = GameScr.findCharInMap(-me.charID);
 				if (mapPet != null && mapPet.cHPFull > 0 && mapPet.cHP > 0)
 				{
 					long petHpPercent = mapPet.cHP * 100L / mapPet.cHPFull;
-					if (petHpPercent <= 25)
+					if (petHpPercent <= petEatBeanHpPercent)
 					{
 						FeedPetBean("HP đệ còn " + petHpPercent + "%");
+					}
+				}
+				Char myPet = Char.myPetz();
+				if (myPet != null && myPet.cMPFull > 0 && myPet.cMP > 0 && myPet.cHP > 0)
+				{
+					long petMpPercent = myPet.cMP * 100L / myPet.cMPFull;
+					if (petMpPercent <= petEatBeanMpPercent)
+					{
+						FeedPetBean("KI đệ còn " + petMpPercent + "%");
 					}
 				}
 			}
