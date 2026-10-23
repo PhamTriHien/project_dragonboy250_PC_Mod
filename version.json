@@ -1,9 +1,9 @@
 {
-  "version": "2.5.30",
+  "version": "2.5.31",
   "buildDate": "2026-10-24",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.30/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.30/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.30/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.30/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.30: Chan triet de goi charMove ro ri tu Char.Update.Me sau RESET_POINT_STALE (khoa cxSend=cx, cySend=cy trong setResetPoint) va siet tam danh can chien maxRangeX=32, dx<=12 de khong bao gio danh hut o cu ly 38-39px."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.31/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.31/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.31/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.31/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.31: Triet tieu 100% hang doi RESET_POINT tre (5.5s-19.5s) khi Tan Sat bang buoc don Canopy Path (1 goi charMove/nhip >=120ms, khong gui y+1 ngam, vong qua vach da) va dong bo tuc thi toa do may chu trong setResetPoint."
 }

@@ -133,7 +133,7 @@ public static class ModTdltLogger
 		long lastUse = skill != null ? skill.lastTimeUseThisSkill : 0;
 		long delta = mSystem.currentTimeMillis() - lastUse;
 
-		Log("FIRE_ATTACK", $"Skill='{skName}' (tpl={tplId}, id={skId}, cd={cd}ms, deltaLastUse={delta}ms) -> Target Mob: ID={target?.mobId}, Pos=({target?.x},{target?.y}), PlayerPos=({me?.cx},{me?.cy})");
+		Log("FIRE_ATTACK", $"Skill='{skName}' (tpl={tplId}, id={skId}, cd={cd}ms, deltaLastUse={delta}ms) -> Target Mob: ID={target?.mobId}, Pos=({target?.x},{target?.y}), MobHP={target?.hp}/{target?.maxHp}, PlayerPos=({me?.cx},{me?.cy}), PlayerHP={me?.cHP}/{me?.cHPFull}");
 	}
 
 	public static void LogCharMove(string method, int cx, int cy, int cxSend, int cySend)

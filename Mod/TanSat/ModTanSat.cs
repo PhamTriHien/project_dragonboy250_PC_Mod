@@ -83,7 +83,7 @@ public static class ModTanSat
 		lastResetPenaltyTime = now;
 		currentTargetResetCount++;
 		lastTeleportTargetMobId = -1;
-		waitUntilTime = now + 380;
+		waitUntilTime = now + 180;
 		lastStepMoveTime = now;
 		ModTeleport.lastStepTime = now;
 		ModTeleport.lastStepDistance = 0;
@@ -595,8 +595,9 @@ public static class ModTanSat
 					{
 						targetLastHp = currentFarmTarget.hp;
 					}
-					if (currentFarmTarget.templateId != 0 && currentTargetUnchangedAttackCount == 4 && now - lastTeleportTime > 1200)
+					if (currentFarmTarget.templateId != 0 && (currentTargetUnchangedAttackCount == 3 || currentTargetUnchangedAttackCount == 6))
 					{
+						ModTeleport.SendSingleCharMove(me.cx, me.cy);
 						lastTeleportTargetMobId = -1;
 						lastTeleportTime = 0;
 					}

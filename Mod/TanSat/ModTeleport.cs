@@ -94,49 +94,69 @@ public static class ModTeleport
 		isWaitingSettle = false;
 	}
 
+	private static bool IsPointUndergroundOrBlocked(int px, int py, int refTopY)
+	{
+		if (ModTanSatTargeting.IsTileBlocked(px, py))
+		{
+			return true;
+		}
+		if (TileMap.tileTypeAt(px, py, 2) && py % 24 != 0)
+		{
+			return true;
+		}
+		if (py >= 24 && TileMap.tileTypeAt(px, py - 24, 2))
+		{
+			return true;
+		}
+		int startY = TileMap.tileYofPixel(System.Math.Max(24, refTopY));
+		int endY = TileMap.tileYofPixel(py);
+		for (int y = startY; y < endY; y += 24)
+		{
+			int t = TileMap.tileTypeAtPixel(px, y);
+			if ((t & (1 | 4 | 8 | 4096 | 8192 | 16384)) != 0)
+			{
+				return true;
+			}
+			if ((t & 2) != 0 && !TileMap.tileTypeAt(px, py, 2))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/// <summary>
-	/// Gửi chuỗi gói charMove hợp lệ (|dx| <= 80, |dy| <= 44 mỗi bước) từ (fromX, fromY) tới (toX, toY)
-	/// mà không gửi gói sai lệch (x, y+1), giúp máy chủ chấp nhận tọa độ tức thì và không sinh RESET_POINT trễ.
+	/// Gửi duy nhất 1 gói charMove hợp lệ từ vị trí hiện tại tới (toX, toY),
+	/// tuyệt đối không gửi gói sai lệch (x, y+1) hay chuỗi gói 0ms để không kích hoạt bộ đếm RESET_POINT của máy chủ.
 	/// </summary>
-	public static void StepMoveFrom(int fromX, int fromY, int toX, int toY)
+	public static void SendSingleCharMove(int toX, int toY)
 	{
 		Char me = Char.myCharz();
 		if (me == null)
 		{
 			return;
 		}
-		int totalDx = Res.abs(toX - fromX);
-		int totalDy = Res.abs(toY - fromY);
-		int stepsX = (totalDx + 79) / 80;
-		int stepsY = (totalDy + 43) / 44;
-		int steps = System.Math.Max(1, System.Math.Max(stepsX, stepsY));
-		if (steps > 6)
-		{
-			steps = 6;
-		}
-
-		int prevX = fromX;
-		int prevY = fromY;
-		for (int i = 1; i <= steps; i++)
-		{
-			int curX = (i == steps) ? toX : (fromX + (toX - fromX) * i / steps);
-			int curY = (i == steps) ? toY : (fromY + (toY - fromY) * i / steps);
-			me.cxSend = (curX != prevX) ? prevX : (curX - 1);
-			me.cySend = (curY != prevY) ? prevY : (curY - 1);
-			me.cx = curX;
-			me.cy = curY;
-			Service.gI().charMove();
-			prevX = curX;
-			prevY = curY;
-		}
+		int fromX = me.cx;
+		int fromY = me.cy;
+		me.cxSend = (toX != fromX) ? fromX : (toX - 1);
+		me.cySend = (toY != fromY) ? fromY : (toY - 1);
 		me.cx = toX;
 		me.cy = toY;
-		me.cxSend = toX;
-		me.cySend = toY;
 		me.cvx = 0;
 		me.cvy = 0;
 		me.statusMe = 1;
 		me.delayFall = 0;
+		Service.gI().charMove();
+		me.cxSend = toX;
+		me.cySend = toY;
+	}
+
+	/// <summary>
+	/// Đồng bộ bước di chuyển hợp lệ tới (toX, toY) trong 1 gói charMove duy nhất.
+	/// </summary>
+	public static void StepMoveFrom(int fromX, int fromY, int toX, int toY)
+	{
+		SendSingleCharMove(toX, toY);
 	}
 
 	/// <summary>
@@ -148,10 +168,8 @@ public static class ModTeleport
 	}
 
 	/// <summary>
-	/// Điều phối dịch chuyển thông minh theo địa hình và khoảng cách:
-	/// 1. Bước ngắn (dx <= 96 && dy <= 48): Gửi gói charMove hợp lệ trực tiếp, không gửi (x, y+1), triệt tiêu hoàn toàn hàng đợi RESET_POINT trễ.
-	/// 2. Mục tiêu trên không (!tileTypeAt(target, 2) hoặc quái bay): Di chuyển theo nhịp charMove trên không (tối đa 140px ngang, 132px dọc mỗi nhịp) không gửi (x, y+1) để không bị máy chủ kéo rơi xuống đất (y=336).
-	/// 3. Dịch chuyển xa trên mặt đất (dx > 96 || dy > 48): Sử dụng ModWaypoint.TeleportTo nhảy thẳng tới đích trong 1 bước.
+	/// Điều phối di chuyển Tàn Sát và Auto Nhặt theo từng bước đơn (1 gói charMove / nhịp >= 120ms, tối đa 96px ngang, 84px dọc)
+	/// kết hợp quỹ đạo vòng qua vách đá (Canopy Path) và không bao giờ gửi (x, y+1), triệt tiêu 100% hàng đợi RESET_POINT từ máy chủ.
 	/// </summary>
 	public static bool MoveSteppedTo(int targetX, int targetY, bool isTargetFlying = false)
 	{
@@ -168,21 +186,13 @@ public static class ModTeleport
 			int dx = Res.abs(me.cx - targetX);
 			int dy = Res.abs(me.cy - targetY);
 
-			if (isWaitingSettle)
-			{
-				if (now - lastStepTime < 140)
-				{
-					return false;
-				}
-				isWaitingSettle = false;
-			}
-
 			if (dx <= 12 && dy <= 16)
 			{
+				isWaitingSettle = false;
 				return true;
 			}
 
-			if (now - lastStepTime < 140)
+			if (now - lastStepTime < 120)
 			{
 				return false;
 			}
@@ -191,31 +201,66 @@ public static class ModTeleport
 
 			if (dx <= 96 && dy <= 48)
 			{
-				StepMoveFrom(me.cx, me.cy, targetX, targetY);
+				SendSingleCharMove(targetX, targetY);
 				lastStepTime = now;
 				isWaitingSettle = false;
 				return true;
 			}
 
-			bool isTargetOnGround = TileMap.tileTypeAt(targetX, targetY, 2);
-			if (!isTargetOnGround || isTargetFlying)
+			int candX = (dx <= 96) ? targetX : (me.cx + ((targetX > me.cx) ? 96 : (-96)));
+			int nextX = candX;
+			int nextY = targetY;
+
+			if (targetY < me.cy)
 			{
-				int nextX = (dx <= 140) ? targetX : (me.cx + ((targetX > me.cx) ? 140 : (-140)));
-				int nextY = (dy <= 132) ? targetY : (me.cy + ((targetY > me.cy) ? 132 : (-132)));
-				StepMoveFrom(me.cx, me.cy, nextX, nextY);
-				RegisterTeleportEcho(nextX, nextY);
-				lastStepTime = now;
-				if (nextX == targetX && nextY == targetY)
+				// Di chuyển lên nền cao / quái bay: Ưu tiên nâng độ cao trước nếu tiến ngang sẽ đâm vào vách núi
+				int candY = (me.cy - targetY <= 84) ? targetY : (me.cy - 84);
+				if (candY > targetY && IsPointUndergroundOrBlocked(candX, candY, targetY))
 				{
-					isWaitingSettle = false;
-					return true;
+					nextX = me.cx;
 				}
-				isWaitingSettle = true;
-				return false;
+				nextY = candY;
+			}
+			else if (targetY > me.cy)
+			{
+				// Di chuyển từ nền cao xuống nền thấp: Tiến ngang trên không vượt qua mép vách đá trước khi hạ độ cao
+				int candY = (targetY - me.cy <= 84) ? targetY : (me.cy + 84);
+				if (dx > 64 || IsPointUndergroundOrBlocked(candX, candY, me.cy))
+				{
+					nextY = me.cy;
+					int highGroundY = ModTanSatTargeting.FindGroundY(nextX, me.cy, 48);
+					if (highGroundY != -1 && highGroundY < nextY)
+					{
+						nextY = highGroundY;
+					}
+				}
+				else
+				{
+					nextY = candY;
+				}
+			}
+			else
+			{
+				nextY = targetY;
+				if (TileMap.tileTypeAt(targetX, targetY, 2))
+				{
+					int groundY = ModTanSatTargeting.FindGroundY(nextX, nextY, 48);
+					if (groundY != -1 && groundY < nextY)
+					{
+						nextY = groundY;
+					}
+				}
 			}
 
-			ModWaypoint.TeleportTo(targetX, targetY);
+			SendSingleCharMove(nextX, nextY);
 			lastStepTime = now;
+
+			if (Res.abs(nextX - targetX) <= 12 && Res.abs(nextY - targetY) <= 16)
+			{
+				isWaitingSettle = false;
+				return true;
+			}
+
 			isWaitingSettle = true;
 			return false;
 		}
