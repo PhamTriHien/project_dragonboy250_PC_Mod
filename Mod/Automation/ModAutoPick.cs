@@ -8,6 +8,7 @@ public class AutoPickActionListener : IActionListener
 {
 	public const int ACTION_SET_FILTER_IDS = 99101;
 	public const int ACTION_SET_FILTER_NAMES = 99102;
+	public const int ACTION_SET_DROP_IDS = 99103;
 
 	/// <summary>
 	/// Thực thi hành động tương tác khi người dùng kích hoạt lệnh hoặc nút bấm.
@@ -36,6 +37,12 @@ public class AutoPickActionListener : IActionListener
 				ModConfig.SaveConfig();
 				SoundMn.gI().buttonClick();
 			}
+			else if (idAction == ACTION_SET_DROP_IDS)
+			{
+				ModAutoPick.SetDropIds(text);
+				ModConfig.SaveConfig();
+				SoundMn.gI().buttonClick();
+			}
 			if (ModAutoPick.reopenModUiAfterInput)
 			{
 				ModAutoPick.reopenModUiAfterInput = false;
@@ -59,6 +66,7 @@ public static class ModAutoPick
 	public static bool pickGold = true;
 	public static bool pickEquip = true;
 	public static bool pickGem = true;
+	public static int maxPickDistance = 0; // 0: Toàn Map, 100, 200, 350
 
 	// Lọc theo ID Item
 	public static bool filterById = false;
@@ -69,6 +77,12 @@ public static class ModAutoPick
 	public static bool filterByName = false;
 	public static string filterNameRaw = "";
 	public static List<string> filterNameKeywords = new List<string>();
+
+	// Tự động Vứt Đồ theo danh sách ID
+	public static bool autoDropItem = false;
+	public static string dropIdsRaw = "";
+	public static HashSet<int> dropIds = new HashSet<int>();
+	private static long lastDropTime = 0;
 
 	public static bool isBusy = false;
 	private static long lastPickTime = 0;
@@ -170,7 +184,89 @@ public static class ModAutoPick
 		filterNameKeywords.Clear();
 		filterByName = false;
 
-		GameScr.info1.addInfo("Đã xóa toàn bộ lọc ID và Tên nhặt", 0);
+		dropIdsRaw = "";
+		dropIds.Clear();
+		autoDropItem = false;
+
+		GameScr.info1.addInfo("Đã xóa toàn bộ lọc nhặt và danh sách vứt đồ", 0);
+	}
+
+	public static void CycleMaxPickDistance()
+	{
+		if (maxPickDistance == 0) maxPickDistance = 100;
+		else if (maxPickDistance == 100) maxPickDistance = 200;
+		else if (maxPickDistance == 200) maxPickDistance = 350;
+		else maxPickDistance = 0;
+	}
+
+	public static string GetPickDistanceLabel()
+	{
+		return (maxPickDistance <= 0) ? "Toàn Map" : (maxPickDistance + "px");
+	}
+
+	public static void LoadDropIds(string raw)
+	{
+		dropIdsRaw = raw != null ? raw.Trim() : "";
+		dropIds.Clear();
+		if (!string.IsNullOrEmpty(dropIdsRaw))
+		{
+			string[] parts = dropIdsRaw.Split(new char[] { ',', ' ', ';', '|' }, StringSplitOptions.RemoveEmptyEntries);
+			for (int i = 0; i < parts.Length; i++)
+			{
+				if (int.TryParse(parts[i].Trim(), out int id))
+				{
+					dropIds.Add(id);
+				}
+			}
+		}
+	}
+
+	public static void SetDropIds(string raw)
+	{
+		LoadDropIds(raw);
+		if (dropIds.Count > 0)
+		{
+			autoDropItem = true;
+			GameScr.info1.addInfo("Đã đặt tự vứt (" + dropIds.Count + " ID): [" + dropIdsRaw + "]", 0);
+		}
+		else
+		{
+			autoDropItem = false;
+			GameScr.info1.addInfo("Đã xóa danh sách ID tự vứt", 0);
+		}
+	}
+
+	public static void ShowInputDropId()
+	{
+		if (GameCanvas.inputDlg == null) return;
+		reopenModUiAfterInput = ModUI.uiCustomOpen;
+		ModUI.uiCustomOpen = false;
+		ModMenu.modMenuOpen = false;
+		GameCanvas.inputDlg.show("Nhập danh sách ID item cần tự vứt bỏ (cách nhau dấu phẩy):", new Command("OK", listener, AutoPickActionListener.ACTION_SET_DROP_IDS, null), TField.INPUT_TYPE_ANY);
+		if (GameCanvas.inputDlg.tfInput != null)
+		{
+			GameCanvas.inputDlg.tfInput.setMaxTextLenght(150);
+			GameCanvas.inputDlg.tfInput.setText(dropIdsRaw);
+			if (!Main.isPC) GameCanvas.inputDlg.tfInput.setFocusWithKb(isFocus: true);
+		}
+	}
+
+	private static void UpdateAutoDrop(Char me, long now)
+	{
+		if (!autoDropItem || dropIds.Count == 0 || me == null || me.arrItemBag == null || now - lastDropTime < 450)
+		{
+			return;
+		}
+		for (int i = 0; i < me.arrItemBag.Length; i++)
+		{
+			Item it = me.arrItemBag[i];
+			if (it != null && it.template != null && dropIds.Contains(it.template.id))
+			{
+				lastDropTime = now;
+				Service.gI().useItem(2, 1, (sbyte)i, -1);
+				return;
+			}
+		}
 	}
 
 	public static bool reopenModUiAfterInput = false;
@@ -283,14 +379,16 @@ public static class ModAutoPick
 		{
 			return false;
 		}
+		Char me = Char.myCharz();
 		MyVector items = GameScr.vItemMap;
-		if (items == null || items.size() == 0) return false;
+		if (me == null || items == null || items.size() == 0) return false;
 		long now = mSystem.currentTimeMillis();
 		for (int i = 0; i < items.size(); i++)
 		{
 			ItemMap it = (ItemMap)items.elementAt(i);
 			if (it == null) continue;
 			if (ignoredItemUntil.TryGetValue(it.itemMapID, out long ignoreUntil) && now < ignoreUntil) continue;
+			if (maxPickDistance > 0 && Res.distance(me.cx, me.cy, it.x, it.y) > maxPickDistance) continue;
 			if (ShouldPickItem(it)) return true;
 		}
 		return false;
@@ -303,6 +401,13 @@ public static class ModAutoPick
 	{
 		try
 		{
+			Char me = Char.myCharz();
+			long now = mSystem.currentTimeMillis();
+			if (me != null && me.cHP > 0 && !Char.isLoadingMap && !Char.ischangingMap)
+			{
+				UpdateAutoDrop(me, now);
+			}
+
 			if (!autoPick || ModNextMap.isNextMapActive || ModGoBack.isReturning || ModSetActivator.isBusy || ModAutoBuyBua.isBusy)
 			{
 				isBusy = false;
@@ -315,12 +420,10 @@ public static class ModAutoPick
 				currentItemRetryCount = 0;
 				ignoredItemUntil.Clear();
 			}
-			long now = mSystem.currentTimeMillis();
 			if (now - lastPickTime < 200)
 			{
 				return;
 			}
-			Char me = Char.myCharz();
 			if (me == null || me.cHP <= 0 || me.statusMe == 14 || me.statusMe == 5 || Char.isLoadingMap || Char.ischangingMap)
 			{
 				isBusy = false;
@@ -353,6 +456,10 @@ public static class ModAutoPick
 				if (ShouldPickItem(it))
 				{
 					int dist = Res.distance(me.cx, me.cy, it.x, it.y);
+					if (maxPickDistance > 0 && dist > maxPickDistance)
+					{
+						continue;
+					}
 					if (dist < minDistance)
 					{
 						minDistance = dist;

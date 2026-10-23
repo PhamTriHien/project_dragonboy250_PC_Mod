@@ -1,7 +1,13 @@
 using System;
 using Assets.src.g;
+/// <summary>
+/// Thành phần phân mảnh (partial) của lớp GameScr: Đảm nhiệm vòng lặp cập nhật trạng thái logic theo từng khung hình (Input).
+/// </summary>
 public partial class GameScr : mScreen, IChatable
 {
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của checkClick.
+	/// </summary>
 	private void checkClick()
 			{
 				if (isCharging())
@@ -17,6 +23,10 @@ public partial class GameScr : mScreen, IChatable
 					return;
 				}
 				if (ModNextMap.CheckHUDMapTagClick(GameCanvas.px, GameCanvas.py))
+				{
+					return;
+				}
+				if (ModBossNotice.CheckHUDClick(GameCanvas.px, GameCanvas.py))
 				{
 					return;
 				}
@@ -116,6 +126,9 @@ public partial class GameScr : mScreen, IChatable
 					}
 				}
 			}
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ findClickToWaypoint.
+	/// </summary>
 	private Waypoint findClickToWaypoint(int px, int py)
 			{
 				if (TileMap.vGo == null || TileMap.vGo.size() == 0)
@@ -143,6 +156,9 @@ public partial class GameScr : mScreen, IChatable
 				}
 				return null;
 			}
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ findClickToItem.
+	/// </summary>
 	private IMapObject findClickToItem(int px, int py)
 			{
 				IMapObject mapObject = null;
@@ -196,6 +212,9 @@ public partial class GameScr : mScreen, IChatable
 				}
 				return mapObject;
 			}
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ findClickToMOB.
+	/// </summary>
 	private Mob findClickToMOB(int px, int py)
 			{
 				int num = 30;
@@ -239,6 +258,9 @@ public partial class GameScr : mScreen, IChatable
 				}
 				return mob;
 			}
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của checkSingleClickEarly.
+	/// </summary>
 	private bool checkSingleClickEarly()
 			{
 				int num = GameCanvas.px + cmx;
@@ -270,6 +292,9 @@ public partial class GameScr : mScreen, IChatable
 				}
 				return false;
 			}
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của checkDoubleClick.
+	/// </summary>
 	private void checkDoubleClick()
 			{
 				int num = GameCanvas.px + lastClickCMX;
@@ -288,6 +313,9 @@ public partial class GameScr : mScreen, IChatable
 					doDoubleClickToObj(mapObject);
 				}
 			}
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của checkClickToBotton.
+	/// </summary>
 	private bool checkClickToBotton(IMapObject Object)
 			{
 				if (Object == null)
@@ -312,6 +340,9 @@ public partial class GameScr : mScreen, IChatable
 				}
 				return false;
 			}
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ doDoubleClickToObj.
+	/// </summary>
 	private void doDoubleClickToObj(IMapObject obj)
 			{
 				if (obj == null)

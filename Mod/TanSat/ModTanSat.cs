@@ -27,6 +27,12 @@ public static class ModTanSat
 	}
 
 	public static bool useTeleport = true;
+	public static bool avoidSuperMob = false;
+	public static bool autoCheckStamina = true;
+	public static bool autoChangeZone = false;
+	public static bool autoSupportSkills = false;
+	public static bool freezeSkillCooldown = false;
+
 	public static Mob currentFarmTarget = null;
 	public static long targetLockTime = 0;
 	public static long targetLastHp = 0;
@@ -46,6 +52,10 @@ public static class ModTanSat
 	public static long waitUntilTime = 0;
 	public static long lastStepMoveTime = 0;
 	private static long changingMapStuckSince = 0;
+	private static long lastStaminaUseTime = 0;
+	private static long lastAutoZoneChangeTime = 0;
+	private static long ksDetectedSince = 0;
+	private static long lastSupportSkillTime = 0;
 	private static readonly Dictionary<int, long> ignoredMobUntil = new Dictionary<int, long>();
 
 	/// <summary>
@@ -157,6 +167,7 @@ public static class ModTanSat
 		{
 			Mob m = (Mob)mobs.elementAt(i);
 			if (m == null || m.status == 0 || m.status == 1 || m.hp <= 0) continue;
+			if (avoidSuperMob && (m.levelBoss > 0 || m.isBoss)) continue;
 			if (!GameScr.gI().isMeCanAttackMob(m)) continue;
 			if (!ModTanSatFilter.IsMobAllowed(m.templateId)) continue;
 
@@ -185,6 +196,157 @@ public static class ModTanSat
 		}
 
 		return bestMob;
+	}
+
+	private static void CheckAndRestoreStamina(Char me, long now)
+	{
+		if (!autoCheckStamina || me == null || me.cStamina > 5 || now - lastStaminaUseTime < 2000)
+		{
+			return;
+		}
+		if (me.arrItemBag != null)
+		{
+			for (int i = 0; i < me.arrItemBag.Length; i++)
+			{
+				Item it = me.arrItemBag[i];
+				if (it != null && it.template != null && (it.template.id == 212 || it.template.id == 211))
+				{
+					lastStaminaUseTime = now;
+					Service.gI().useItem(0, 1, (sbyte)i, -1);
+					GameScr.info1?.addInfo("Tự dùng " + it.template.name + " hồi thể lực!", 0);
+					return;
+				}
+			}
+		}
+	}
+
+	private static void CheckAutoChangeZone(Char me, long now)
+	{
+		if (!autoChangeZone || me == null || now - lastAutoZoneChangeTime < 12000)
+		{
+			return;
+		}
+		if (TileMap.isOfflineMap() || TileMap.mapID == 21 || TileMap.mapID == 22 || TileMap.mapID == 23)
+		{
+			return;
+		}
+
+		bool hasOtherPlayerNear = false;
+		if (GameScr.vCharInMap != null)
+		{
+			for (int i = 0; i < GameScr.vCharInMap.size(); i++)
+			{
+				Char c = (Char)GameScr.vCharInMap.elementAt(i);
+				if (c != null && c.charID > 0 && c.charID != me.charID && c.charID != -me.charID && c.cHP > 0)
+				{
+					if (Res.distance(me.cx, me.cy, c.cx, c.cy) <= 180)
+					{
+						hasOtherPlayerNear = true;
+						break;
+					}
+				}
+			}
+		}
+
+		if (hasOtherPlayerNear)
+		{
+			if (ksDetectedSince == 0)
+			{
+				ksDetectedSince = now;
+			}
+			else if (now - ksDetectedSince >= 8000)
+			{
+				ksDetectedSince = 0;
+				lastAutoZoneChangeTime = now;
+				int maxZ = (GameScr.gI() != null && GameScr.gI().zones != null && GameScr.gI().zones.Length > 0) ? GameScr.gI().zones.Length : 15;
+				int nextZone = (TileMap.zoneID + 1) % maxZ;
+				if (GameScr.gI() != null && GameScr.gI().numPlayer != null && GameScr.gI().maxPlayer != null)
+				{
+					int minPlayers = int.MaxValue;
+					for (int z = 0; z < GameScr.gI().numPlayer.Length; z++)
+					{
+						if (z == TileMap.zoneID) continue;
+						int np = GameScr.gI().numPlayer[z];
+						int mp = GameScr.gI().maxPlayer[z];
+						if (np < mp - 2 && np < minPlayers)
+						{
+							minPlayers = np;
+							nextZone = z;
+						}
+					}
+				}
+				Service.gI().requestChangeZone(nextZone, -1);
+				GameScr.info1?.addInfo("Tự đổi sang Khu " + nextZone + " tránh KS!", 0);
+			}
+		}
+		else
+		{
+			ksDetectedSince = 0;
+		}
+	}
+
+	public static bool UpdateSupportAndFreezeSkills(Char me, long now)
+	{
+		if (me == null) return false;
+
+		if (freezeSkillCooldown)
+		{
+			Skill[] hotbar = ModTanSatFilter.GetHotbarSkills();
+			if (hotbar != null)
+			{
+				for (int i = 0; i < hotbar.Length; i++)
+				{
+					Skill s = hotbar[i];
+					if (s != null)
+					{
+						s.coolDown = 0;
+						s.lastTimeUseThisSkill = 0;
+						s.paintCanNotUseSkill = false;
+					}
+				}
+			}
+			if (me.myskill != null)
+			{
+				me.myskill.coolDown = 0;
+				me.myskill.lastTimeUseThisSkill = 0;
+				me.myskill.paintCanNotUseSkill = false;
+			}
+		}
+
+		if (!autoSupportSkills || now - lastSupportSkillTime < 1000)
+		{
+			return false;
+		}
+
+		Skill[] skills = ModTanSatFilter.GetHotbarSkills();
+		if (skills == null) return false;
+
+		for (int i = 0; i < skills.Length; i++)
+		{
+			Skill s = skills[i];
+			if (s == null || s.template == null || ModTanSatFilter.IsAttackSkill(s)) continue;
+			int tplId = s.template.id;
+			// Chỉ tự bật các skill buff/hỗ trợ: Thái dương hạ san (6), Trị thương (7), Đẻ trứng (12), Biến khỉ (13), Khiên năng lượng (19), Huýt sáo (21)
+			if (tplId != 6 && tplId != 7 && tplId != 12 && tplId != 13 && tplId != 19 && tplId != 21) continue;
+			if (tplId == 7 && me.cHPFull > 0 && (me.cHP * 100L / me.cHPFull) > 65) continue;
+			if (tplId == 13 && me.isMonkey == 1) continue;
+			if (tplId == 19 && me.protectEff) continue;
+
+			int cd = (s.coolDown > 0) ? s.coolDown : 1500;
+			if (now - s.lastTimeUseThisSkill >= cd && ModTanSatFilter.HasEnoughMp(me, s))
+			{
+				lastSupportSkillTime = now;
+				me.myskill = s;
+				Service.gI().selectSkill(tplId);
+				GameScr.gI().doSelectSkill(s, isShortcut: true);
+				s.lastTimeUseThisSkill = now;
+				lastSentSkillTemplateId = tplId;
+				waitUntilTime = now + 400;
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/// <summary>
@@ -265,6 +427,13 @@ public static class ModTanSat
 				return;
 			}
 
+			CheckAndRestoreStamina(me, now);
+			CheckAutoChangeZone(me, now);
+			if (UpdateSupportAndFreezeSkills(me, now))
+			{
+				return;
+			}
+
 			// 1. Xác định kỹ năng tấn công
 			Skill skillToUse = GetBestSkillToUse();
 			if (skillToUse == null) return;
@@ -281,7 +450,7 @@ public static class ModTanSat
 			bool targetDiedOrInvalid = false;
 			if (currentFarmTarget != null)
 			{
-				if (currentFarmTarget.status == 0 || currentFarmTarget.status == 1 || currentFarmTarget.hp <= 0 || !ModTanSatFilter.IsMobAllowed(currentFarmTarget.templateId) || !GameScr.gI().isMeCanAttackMob(currentFarmTarget))
+				if (currentFarmTarget.status == 0 || currentFarmTarget.status == 1 || currentFarmTarget.hp <= 0 || (avoidSuperMob && (currentFarmTarget.levelBoss > 0 || currentFarmTarget.isBoss)) || !ModTanSatFilter.IsMobAllowed(currentFarmTarget.templateId) || !GameScr.gI().isMeCanAttackMob(currentFarmTarget))
 				{
 					targetDiedOrInvalid = true;
 				}

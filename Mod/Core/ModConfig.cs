@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Text;
 using UnityEngine;
@@ -31,14 +31,20 @@ public static class ModConfig
 			// Tàn Sát: Luôn lưu false để khi thoát game/khởi động lại Tàn Sát luôn TẮT
 			sb.AppendLine("autoTanSat=False");
 			sb.AppendLine("useTeleport=" + ModTanSat.useTeleport);
+			sb.AppendLine("avoidSuperMob=" + ModTanSat.avoidSuperMob);
+			sb.AppendLine("autoCheckStamina=" + ModTanSat.autoCheckStamina);
+			sb.AppendLine("autoChangeZone=" + ModTanSat.autoChangeZone);
+			sb.AppendLine("autoSupportSkills=" + ModTanSat.autoSupportSkills);
+			sb.AppendLine("freezeSkillCooldown=" + ModTanSat.freezeSkillCooldown);
 			sb.AppendLine("selectAllMobs=" + ModTanSat.selectAllMobs);
 			sb.AppendLine("tickedMobTemplateIds=" + string.Join(",", ModTanSat.tickedMobTemplateIds.ConvertAll(i => i.ToString()).ToArray()));
 			sb.AppendLine("tanSatUseAllSkills=" + ModTanSat.selectAllSkills);
 			sb.AppendLine("skillSelectionMode=" + ModTanSatFilter.skillSelectionMode);
 			sb.AppendLine("tickedSkillTemplateIds=" + string.Join(",", ModTanSat.tickedSkillTemplateIds.ConvertAll(i => i.ToString()).ToArray()));
 			sb.AppendLine("timeAttack=" + ModTanSat.timeAttack);
+			sb.AppendLine("lockedSkillTemplateId=" + ModTanSat.lockedSkillTemplateId);
 
-			// Tự Nhặt
+			// Tự Nhặt & Vứt Đồ
 			sb.AppendLine("autoPick=" + ModAutoPick.autoPick);
 			sb.AppendLine("pickAll=" + ModAutoPick.pickAll);
 			sb.AppendLine("pickGold=" + ModAutoPick.pickGold);
@@ -48,6 +54,9 @@ public static class ModConfig
 			sb.AppendLine("filterIds=" + ModAutoPick.filterIdsRaw);
 			sb.AppendLine("filterByName=" + ModAutoPick.filterByName);
 			sb.AppendLine("filterName=" + ModAutoPick.filterNameRaw);
+			sb.AppendLine("maxPickDistance=" + ModAutoPick.maxPickDistance);
+			sb.AppendLine("autoDropItem=" + ModAutoPick.autoDropItem);
+			sb.AppendLine("dropIds=" + ModAutoPick.dropIdsRaw);
 
 			// Tốc Chạy
 			sb.AppendLine("speedHack=" + ModSpeed.speedHack);
@@ -56,9 +65,11 @@ public static class ModConfig
 			// Bơm Đậu & HP
 			sb.AppendLine("autoPean=" + ModAutoHeal.autoPean);
 			sb.AppendLine("autoPeanHpPercent=" + ModAutoHeal.autoPeanHpPercent);
+			sb.AppendLine("autoPeanMpPercent=" + ModAutoHeal.autoPeanMpPercent);
 			sb.AppendLine("lockHPMP=" + ModAutoHeal.lockHPMP);
 			sb.AppendLine("autoHarvestPea=" + ModAutoHeal.autoHarvestPea);
 			sb.AppendLine("autoDonateClan=" + ModAutoHeal.autoDonateClan);
+			sb.AppendLine("autoRequestPea=" + ModAutoHeal.autoRequestPea);
 			sb.AppendLine("autoFeedPetOnAsk=" + ModAutoHeal.autoFeedPetOnAsk);
 
 			// Đồ Họa & FPS
@@ -70,8 +81,10 @@ public static class ModConfig
 			sb.AppendLine("isAutoFps=" + ModFps.isAutoFps);
 			sb.AppendLine("isAnalog=" + (GameScr.isAnalog == 1));
 
-			// Thông Báo Boss
+			// Thông Báo Boss & Săn Boss
 			sb.AppendLine("isShowBossNotice=" + ModBossNotice.isShowBossNotice);
+			sb.AppendLine("isAutoScanBossZone=" + ModBossNotice.isAutoScanBossZone);
+			sb.AppendLine("isAutoAttackBoss=" + ModBossNotice.isAutoAttackBoss);
 
 			// Logo TriHienKun
 			sb.AppendLine("isShowLogoInGame=" + ModLogo.isShowLogoInGame);
@@ -91,6 +104,7 @@ public static class ModConfig
 			// Úp Set Kích Hoạt & Lọc Đồ
 			sb.AppendLine("autoSetKHActive=" + ModSetActivator.isActive);
 			sb.AppendLine("autoSellJunkFullBag=" + ModSetActivator.autoSellJunk);
+			sb.AppendLine("autoStoreToBox=" + ModSetActivator.autoStoreToBox);
 			sb.AppendLine("minStarToKeep=" + ModSetActivator.minStarToKeep);
 			sb.AppendLine("showItemId=" + ModSetActivator.showItemId);
 			sb.AppendLine("savedFarmMapId=" + ModSetActivator.savedFarmMapId);
@@ -167,6 +181,21 @@ public static class ModConfig
 					case "useTeleport":
 						bool.TryParse(val, out ModTanSat.useTeleport);
 						break;
+					case "avoidSuperMob":
+						bool.TryParse(val, out ModTanSat.avoidSuperMob);
+						break;
+					case "autoCheckStamina":
+						bool.TryParse(val, out ModTanSat.autoCheckStamina);
+						break;
+					case "autoChangeZone":
+						bool.TryParse(val, out ModTanSat.autoChangeZone);
+						break;
+					case "autoSupportSkills":
+						bool.TryParse(val, out ModTanSat.autoSupportSkills);
+						break;
+					case "freezeSkillCooldown":
+						bool.TryParse(val, out ModTanSat.freezeSkillCooldown);
+						break;
 					case "selectAllMobs":
 						bool.TryParse(val, out ModTanSatFilter.selectAllMobs);
 						break;
@@ -215,6 +244,9 @@ public static class ModConfig
 							ModTanSat.timeAttack = ta;
 						}
 						break;
+					case "lockedSkillTemplateId":
+						int.TryParse(val, out ModTanSat.lockedSkillTemplateId);
+						break;
 					case "autoPick":
 						bool.TryParse(val, out ModAutoPick.autoPick);
 						break;
@@ -242,6 +274,16 @@ public static class ModConfig
 					case "filterName":
 						ModAutoPick.LoadFilterNames(val);
 						break;
+					case "maxPickDistance":
+						int mpd;
+						if (int.TryParse(val, out mpd) && mpd >= 0) ModAutoPick.maxPickDistance = mpd;
+						break;
+					case "autoDropItem":
+						bool.TryParse(val, out ModAutoPick.autoDropItem);
+						break;
+					case "dropIds":
+						ModAutoPick.LoadDropIds(val);
+						break;
 					case "speedHack":
 						bool.TryParse(val, out ModSpeed.speedHack);
 						break;
@@ -254,6 +296,9 @@ public static class ModConfig
 					case "autoPeanHpPercent":
 						int.TryParse(val, out ModAutoHeal.autoPeanHpPercent);
 						break;
+					case "autoPeanMpPercent":
+						int.TryParse(val, out ModAutoHeal.autoPeanMpPercent);
+						break;
 					case "lockHPMP":
 						bool.TryParse(val, out ModAutoHeal.lockHPMP);
 						break;
@@ -262,6 +307,9 @@ public static class ModConfig
 						break;
 					case "autoDonateClan":
 						bool.TryParse(val, out ModAutoHeal.autoDonateClan);
+						break;
+					case "autoRequestPea":
+						bool.TryParse(val, out ModAutoHeal.autoRequestPea);
 						break;
 					case "autoFeedPetOnAsk":
 						bool.TryParse(val, out ModAutoHeal.autoFeedPetOnAsk);
@@ -289,6 +337,12 @@ public static class ModConfig
 						break;
 					case "isShowBossNotice":
 						bool.TryParse(val, out ModBossNotice.isShowBossNotice);
+						break;
+					case "isAutoScanBossZone":
+						bool.TryParse(val, out ModBossNotice.isAutoScanBossZone);
+						break;
+					case "isAutoAttackBoss":
+						bool.TryParse(val, out ModBossNotice.isAutoAttackBoss);
 						break;
 					case "isShowLogoInGame":
 						bool.TryParse(val, out ModLogo.isShowLogoInGame);
@@ -322,6 +376,9 @@ public static class ModConfig
 						break;
 					case "autoSellJunkFullBag":
 						bool.TryParse(val, out ModSetActivator.autoSellJunk);
+						break;
+					case "autoStoreToBox":
+						bool.TryParse(val, out ModSetActivator.autoStoreToBox);
 						break;
 					case "minStarToKeep":
 						int.TryParse(val, out ModSetActivator.minStarToKeep);

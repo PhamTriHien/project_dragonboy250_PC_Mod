@@ -1,19 +1,20 @@
 using System;
 
+/// <summary>
+/// CLASS ModUISetActivator: Định nghĩa và điều phối logic trong hệ thống game.
+/// </summary>
 public static class ModUISetActivator
 {
+	/// <summary>
+	/// Thực hiện vẽ toàn bộ đối tượng và các lớp hiển thị lên canvas mGraphics.
+	/// </summary>
 	public static void Paint(int uiX, int uiY, int uiW, int uiH, mGraphics g)
 	{
-		int halfW = (uiW - 14) / 2;
-		int item1X = uiX + 4;
-		int item2X = uiX + 8 + halfW;
-
-		// Hàng 1: Auto Úp Set KH & Tự Bán Khi Full Túi
-		mFont.tahoma_7_grey.drawString(g, "Auto Úp Set KH:", item1X + 2, uiY + 7, mFont.LEFT);
-		ModUI.PaintNativeButton(item1X + halfW - 38, uiY + 4, 38, 17, ModSetActivator.isActive ? "BẬT" : "TẮT", ModSetActivator.isActive, g);
-
-		mFont.tahoma_7_grey.drawString(g, "Bán Full:", item2X + 2, uiY + 7, mFont.LEFT);
-		ModUI.PaintNativeButton(item2X + halfW - 38, uiY + 4, 38, 17, ModSetActivator.autoSellJunk ? "BẬT" : "TẮT", ModSetActivator.autoSellJunk, g);
+		// Hàng 1: Auto Úp Set KH, Tự Bán Rác & Tự Cất Rương
+		int r1W = (uiW - 16) / 3;
+		ModUI.PaintNativeButton(uiX + 4, uiY + 4, r1W, 17, "Úp SKH: " + (ModSetActivator.isActive ? "BẬT" : "TẮT"), ModSetActivator.isActive, g);
+		ModUI.PaintNativeButton(uiX + 8 + r1W, uiY + 4, r1W, 17, "Bán Rác: " + (ModSetActivator.autoSellJunk ? "BẬT" : "TẮT"), ModSetActivator.autoSellJunk, g);
+		ModUI.PaintNativeButton(uiX + 12 + r1W * 2, uiY + 4, r1W, 17, "Cất Rương: " + (ModSetActivator.autoStoreToBox ? "BẬT" : "TẮT"), ModSetActivator.autoStoreToBox, g);
 
 		int footerH = 18;
 		int footerY = uiY + uiH - footerH - 4;
@@ -32,22 +33,24 @@ public static class ModUISetActivator
 		mFont.tahoma_7_green2.drawString(g, "BÃI ÚP & BỘ LỌC TRANG BỊ:", uiX + 10, listY + 4, mFont.LEFT);
 
 		// Bãi úp đã lưu
-		string spotText = (ModSetActivator.savedFarmMapId > 0)
+		string spotText = (ModSetActivator.savedFarmMapId >= 0)
 			? (ModNextMap.GetMapName(ModSetActivator.savedFarmMapId) + " [K." + ModSetActivator.savedFarmZoneId + "] (" + ModSetActivator.savedFarmX + ", " + ModSetActivator.savedFarmY + ")")
 			: "(Chưa lưu - Bấm 'Lưu Bãi' để lưu)";
 		mFont.tahoma_7_grey.drawString(g, "- Bãi úp: ", uiX + 10, listY + 18, mFont.LEFT);
-		(ModSetActivator.savedFarmMapId > 0 ? mFont.tahoma_7_green2 : mFont.tahoma_7_grey).drawString(g, spotText, uiX + 56, listY + 18, mFont.LEFT);
+		(ModSetActivator.savedFarmMapId >= 0 ? mFont.tahoma_7_green2 : mFont.tahoma_7_grey).drawString(g, spotText, uiX + 56, listY + 18, mFont.LEFT);
 
-		// 3 nút lọc: Lọc Đồ Sao | Hút Tức Thì | Hiện ID Item
-		int w3 = (listW - 16) / 3;
-		ModUI.PaintNativeButton(uiX + 8, listY + 34, w3, 16, ModSetActivator.GetMinStarText(), ModSetActivator.minStarToKeep > 0, g);
-		ModUI.PaintNativeButton(uiX + 11 + w3, listY + 34, w3, 16, ModDropRate.isInstantPick ? "Hút: BẬT" : "Hút: TẮT", ModDropRate.isInstantPick, g);
-		ModUI.PaintNativeButton(uiX + 14 + w3 * 2, listY + 34, w3, 16, ModSetActivator.showItemId ? "ID: BẬT" : "ID: TẮT", ModSetActivator.showItemId, g);
+		// 4 nút lọc: Lọc Đồ Sao | Hút Tức Thì | Hồi Sinh Đánh | Khóa Kết Liễu
+		int w4 = (listW - 20) / 4;
+		ModUI.PaintNativeButton(uiX + 8, listY + 34, w4, 16, ModSetActivator.GetMinStarText(), ModSetActivator.minStarToKeep > 0, g);
+		ModUI.PaintNativeButton(uiX + 11 + w4, listY + 34, w4, 16, ModDropRate.isInstantPick ? "Hút Đồ" : "Hút: Tắt", ModDropRate.isInstantPick, g);
+		ModUI.PaintNativeButton(uiX + 14 + w4 * 2, listY + 34, w4, 16, ModDropRate.isInstantRespawnAttack ? "HS Đánh" : "HS: Tắt", ModDropRate.isInstantRespawnAttack, g);
+		ModUI.PaintNativeButton(uiX + 17 + w4 * 3, listY + 34, w4, 16, ModDropRate.isLastHitLock ? "Khóa K.Liễu" : "K.Liễu: Tắt", ModDropRate.isLastHitLock, g);
 
-		// Hàng cài đặt Bùa Bà Hạt Mít
-		ModUI.PaintNativeButton(uiX + 8, listY + 52, w3, 16, ModAutoBuyBua.buaTypeNames[ModAutoBuyBua.selectedBuaType], true, g);
-		ModUI.PaintNativeButton(uiX + 11 + w3, listY + 52, w3, 16, ModAutoBuyBua.packageNames[ModAutoBuyBua.selectedPackage], false, g);
-		ModUI.PaintNativeButton(uiX + 14 + w3 * 2, listY + 52, w3, 16, ModAutoBuyBua.isAutoRebuy ? "Bùa: Auto" : "Bùa: Tắt", ModAutoBuyBua.isAutoRebuy, g);
+		// Hàng cài đặt Bùa Bà Hạt Mít & Hiện ID Trang Bị
+		ModUI.PaintNativeButton(uiX + 8, listY + 52, w4, 16, ModAutoBuyBua.buaTypeNames[ModAutoBuyBua.selectedBuaType], true, g);
+		ModUI.PaintNativeButton(uiX + 11 + w4, listY + 52, w4, 16, ModAutoBuyBua.packageNames[ModAutoBuyBua.selectedPackage], false, g);
+		ModUI.PaintNativeButton(uiX + 14 + w4 * 2, listY + 52, w4, 16, ModAutoBuyBua.isAutoRebuy ? "Bùa: Auto" : "Bùa: Tắt", ModAutoBuyBua.isAutoRebuy, g);
+		ModUI.PaintNativeButton(uiX + 17 + w4 * 3, listY + 52, w4, 16, ModSetActivator.showItemId ? "Hiện ID" : "ID: Tắt", ModSetActivator.showItemId, g);
 
 		// Thống kê rơi đồ thực chiến
 		string stat1 = "- Diệt: " + ModDropRate.totalMobsKilled + " (" + ModDropRate.GetMobsPerMinute() + "/p) | Rơi: " + ModDropRate.totalItemsDropped;
@@ -65,7 +68,7 @@ public static class ModUISetActivator
 
 		// Hàng 5 nút chức năng dưới cùng ở Footer
 		int fBtnW = (uiW - 24) / 5;
-		string[] bottomLabels = new string[] { "Lưu Bãi", "Bán Rác", "Mua Bùa", "Về Bãi", "Xóa Bãi" };
+		string[] bottomLabels = new string[] { "Lưu Bãi", "Bán Rác", "Cất Rương", "Mua Bùa", "Về Bãi" };
 		for (int b = 0; b < 5; b++)
 		{
 			int bx = uiX + 4 + b * (fBtnW + 4);
@@ -73,36 +76,46 @@ public static class ModUISetActivator
 		}
 	}
 
+	/// <summary>
+	/// Xử lý nghiệp vụ logic chuyên trách cho HandleTap.
+	/// </summary>
 	public static bool HandleTap(int px, int py, int uiX, int uiY, int uiW, int uiH)
 	{
-		int halfW = (uiW - 14) / 2;
-		int item1X = uiX + 4;
-		int item2X = uiX + 8 + halfW;
+		int r1W = (uiW - 16) / 3;
 		int footerH = 18;
 		int footerY = uiY + uiH - footerH - 4;
 		int listY = uiY + 24;
 		int listW = uiW - 8;
 
-		// 1. Nút Bật/Tắt Auto Úp Set KH
-		if (px >= item1X + halfW - 40 && px <= item1X + halfW + 2 && py >= uiY + 2 && py <= uiY + 22)
+		// 1. Hàng 1: Úp SKH | Bán Rác | Cất Rương
+		if (py >= uiY + 2 && py <= uiY + 22)
 		{
-			ModSetActivator.ToggleActive();
-			return true;
+			if (px >= uiX + 4 && px <= uiX + 4 + r1W)
+			{
+				ModSetActivator.ToggleActive();
+				return true;
+			}
+			if (px >= uiX + 8 + r1W && px <= uiX + 8 + r1W * 2)
+			{
+				ModSetActivator.autoSellJunk = !ModSetActivator.autoSellJunk;
+				ModConfig.SaveConfig();
+				GameScr.info1.addInfo("Tự bán khi full túi: " + (ModSetActivator.autoSellJunk ? "BẬT" : "TẮT"), 0);
+				SoundMn.gI().buttonClick();
+				return true;
+			}
+			if (px >= uiX + 12 + r1W * 2 && px <= uiX + 12 + r1W * 3)
+			{
+				ModSetActivator.autoStoreToBox = !ModSetActivator.autoStoreToBox;
+				ModConfig.SaveConfig();
+				GameScr.info1.addInfo("Tự cất đồ SKH/Sao vào rương: " + (ModSetActivator.autoStoreToBox ? "BẬT" : "TẮT"), 0);
+				SoundMn.gI().buttonClick();
+				return true;
+			}
 		}
 
-		// 2. Nút Bật/Tắt Bán Khi Full Túi
-		if (px >= item2X + halfW - 40 && px <= item2X + halfW + 2 && py >= uiY + 2 && py <= uiY + 22)
-		{
-			ModSetActivator.autoSellJunk = !ModSetActivator.autoSellJunk;
-			ModConfig.SaveConfig();
-			GameScr.info1.addInfo("Tự bán khi full túi: " + (ModSetActivator.autoSellJunk ? "BẬT" : "TẮT"), 0);
-			SoundMn.gI().buttonClick();
-			return true;
-		}
-
-		// 3. 3 nút lọc hàng 1
-		int w3 = (listW - 16) / 3;
-		if (px >= uiX + 8 && px <= uiX + 8 + w3 && py >= listY + 33 && py <= listY + 51)
+		// 3. 4 nút lọc hàng 1
+		int w4 = (listW - 20) / 4;
+		if (px >= uiX + 8 && px <= uiX + 8 + w4 && py >= listY + 33 && py <= listY + 51)
 		{
 			ModSetActivator.CycleMinStar();
 			ModConfig.SaveConfig();
@@ -110,7 +123,7 @@ public static class ModUISetActivator
 			return true;
 		}
 
-		if (px >= uiX + 11 + w3 && px <= uiX + 11 + w3 * 2 && py >= listY + 33 && py <= listY + 51)
+		if (px >= uiX + 11 + w4 && px <= uiX + 11 + w4 * 2 && py >= listY + 33 && py <= listY + 51)
 		{
 			ModDropRate.isInstantPick = !ModDropRate.isInstantPick;
 			ModConfig.SaveConfig();
@@ -119,17 +132,26 @@ public static class ModUISetActivator
 			return true;
 		}
 
-		if (px >= uiX + 14 + w3 * 2 && px <= uiX + 14 + w3 * 3 && py >= listY + 33 && py <= listY + 51)
+		if (px >= uiX + 14 + w4 * 2 && px <= uiX + 14 + w4 * 3 && py >= listY + 33 && py <= listY + 51)
 		{
-			ModSetActivator.showItemId = !ModSetActivator.showItemId;
+			ModDropRate.isInstantRespawnAttack = !ModDropRate.isInstantRespawnAttack;
 			ModConfig.SaveConfig();
-			GameScr.info1.addInfo("Hiện ID trang bị: " + (ModSetActivator.showItemId ? "BẬT" : "TẮT"), 0);
+			GameScr.info1.addInfo("Hồi sinh đánh ngay: " + (ModDropRate.isInstantRespawnAttack ? "BẬT" : "TẮT"), 0);
 			SoundMn.gI().buttonClick();
 			return true;
 		}
 
-		// 4. 3 nút Bùa Bà Hạt Mít
-		if (px >= uiX + 8 && px <= uiX + 8 + w3 && py >= listY + 51 && py <= listY + 69)
+		if (px >= uiX + 17 + w4 * 3 && px <= uiX + 17 + w4 * 4 && py >= listY + 33 && py <= listY + 51)
+		{
+			ModDropRate.isLastHitLock = !ModDropRate.isLastHitLock;
+			ModConfig.SaveConfig();
+			GameScr.info1.addInfo("Khóa đòn kết liễu: " + (ModDropRate.isLastHitLock ? "BẬT" : "TẮT"), 0);
+			SoundMn.gI().buttonClick();
+			return true;
+		}
+
+		// 4. Hàng Bùa & Hiện ID Trang Bị
+		if (px >= uiX + 8 && px <= uiX + 8 + w4 && py >= listY + 51 && py <= listY + 69)
 		{
 			ModAutoBuyBua.CycleBuaType();
 			ModConfig.SaveConfig();
@@ -137,7 +159,7 @@ public static class ModUISetActivator
 			return true;
 		}
 
-		if (px >= uiX + 11 + w3 && px <= uiX + 11 + w3 * 2 && py >= listY + 51 && py <= listY + 69)
+		if (px >= uiX + 11 + w4 && px <= uiX + 11 + w4 * 2 && py >= listY + 51 && py <= listY + 69)
 		{
 			ModAutoBuyBua.CyclePackage();
 			ModConfig.SaveConfig();
@@ -145,11 +167,20 @@ public static class ModUISetActivator
 			return true;
 		}
 
-		if (px >= uiX + 14 + w3 * 2 && px <= uiX + 14 + w3 * 3 && py >= listY + 51 && py <= listY + 69)
+		if (px >= uiX + 14 + w4 * 2 && px <= uiX + 14 + w4 * 3 && py >= listY + 51 && py <= listY + 69)
 		{
 			ModAutoBuyBua.isAutoRebuy = !ModAutoBuyBua.isAutoRebuy;
 			ModConfig.SaveConfig();
 			GameScr.info1.addInfo("Auto gia hạn bùa: " + (ModAutoBuyBua.isAutoRebuy ? "BẬT" : "TẮT"), 0);
+			SoundMn.gI().buttonClick();
+			return true;
+		}
+
+		if (px >= uiX + 17 + w4 * 3 && px <= uiX + 17 + w4 * 4 && py >= listY + 51 && py <= listY + 69)
+		{
+			ModSetActivator.showItemId = !ModSetActivator.showItemId;
+			ModConfig.SaveConfig();
+			GameScr.info1.addInfo("Hiện ID trang bị: " + (ModSetActivator.showItemId ? "BẬT" : "TẮT"), 0);
 			SoundMn.gI().buttonClick();
 			return true;
 		}
@@ -181,10 +212,13 @@ public static class ModUISetActivator
 							ModSetActivator.StartGoSellJunkNow();
 							break;
 						case 2:
-							ModAutoBuyBua.StartBuyBuaNow();
+							ModSetActivator.StartGoStoreBoxNow();
 							break;
 						case 3:
-							if (ModSetActivator.savedFarmMapId > 0)
+							ModAutoBuyBua.StartBuyBuaNow();
+							break;
+						case 4:
+							if (ModSetActivator.savedFarmMapId >= 0)
 							{
 								ModSetActivator.currentState = ModSetActivator.SetActivatorState.ReturningToFarm;
 								ModNextMap.StartNextMap(ModSetActivator.savedFarmMapId);
@@ -194,9 +228,6 @@ public static class ModUISetActivator
 							{
 								GameScr.info1.addInfo("Chưa lưu bãi úp!", 0);
 							}
-							break;
-						case 4:
-							ModSetActivator.ResetPosition();
 							break;
 					}
 					return true;

@@ -1,9 +1,9 @@
 {
-  "version": "2.5.26",
+  "version": "2.5.27",
   "buildDate": "2026-10-23",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.26/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.26/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.26/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.26/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.26: Nang cap Dich chuyen Tan Sat & Auto Nhat dong nhat 100% co che NextMap (nhay thang 1 buoc xuyen ban do, bo loc TryConsumeTeleportEcho chong giat lui RESET_POINT, chan spam charMove khi danh quai bay, leo be mat dat ClimbToTopSurface); them thanh chon nhanh Chieu TS & khoa muc tieu den khi quai chet han; hien thi day du o trang bi Nhan vat & De tu; sua loi hien thi Danh hieu, Chan menh & Hieu ung (EffectData)."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.27/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.27/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.27/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.27/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.27: Hoan thien 100% tinh nang Mod tuong duong va vuot troi Mod Java: Tan Sat (Ne Sieu Quai, Tu an Nho hoi the luc, Tu doi khu chong KS, Auto Buff ho tro, Dong bang hoi chieu); Auto Dau Than (Nguong HP & KI doc lap, Auto Xin Dau bang); Auto Nhat (Gioi han ban kinh nhat & Auto Vut Do rac theo ID); Bao Boss (Click [Den] truc tiep tren HUD, Auto Do Khu Boss & Tu San Boss); Up Set KH (Tu ve Nha cat do SKH/Do Sao vao Ruong); Auto De Tu (HUD De Tu, Ne Boss, Tu bat Co Den, Auto Tri Thuong Namek); Auto Cong Diem (Chi Mang Goc & Moc gioi han tu dung)."
 }

@@ -1,8 +1,14 @@
 using System;
 using System.Collections.Generic;
 
+/// <summary>
+/// Module Úp Set Kích Hoạt (SKH): Quản lý nhận diện 13 bộ set kích hoạt, tự động lọc, bán đồ rác và cất trang bị SKH/Sao vào rương nhà.
+/// </summary>
 public static class ModSetActivator
 {
+	/// <summary>
+	/// ENUM SetActivatorState: Định nghĩa và điều phối logic trong hệ thống game.
+	/// </summary>
 	public enum SetActivatorState
 	{
 		Idle,
@@ -11,6 +17,9 @@ public static class ModSetActivator
 		MovingToUron,
 		InteractingUron,
 		SellingJunk,
+		MovingToHomeBox,
+		InteractingBox,
+		StoringToBox,
 		ReturningToFarm,
 		SwitchingZone,
 		TeleportingToSpot
@@ -18,6 +27,7 @@ public static class ModSetActivator
 
 	public static bool isActive = false;
 	public static bool autoSellJunk = true;
+	public static bool autoStoreToBox = true;
 	public static int minStarToKeep = 1; // 0: Bán cả đồ sao, 1: Giữ >= 1 sao, 2: Giữ >= 2 sao, 3: Giữ >= 3 sao
 	public static bool showItemId = true;
 
@@ -32,6 +42,8 @@ public static class ModSetActivator
 	private static int currentSellingBagIndex = -1;
 	private static long lastSellActionTime = 0;
 	private static int sellFailTimeoutCount = 0;
+	private static int storeAttemptCount = 0;
+	private static bool isBoxFullWarned = false;
 
 	private static long stateTimer = 0;
 	private static long lastZoneAttemptTime = 0;
@@ -45,6 +57,9 @@ public static class ModSetActivator
 		}
 	}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ SaveCurrentFarmPosition.
+	/// </summary>
 	public static void SaveCurrentFarmPosition()
 	{
 		Char me = Char.myCharz();
@@ -63,6 +78,9 @@ public static class ModSetActivator
 		SoundMn.gI().buttonClick();
 	}
 
+	/// <summary>
+	/// Dọn dẹp và đặt lại trạng thái ban đầu cho ResetPosition.
+	/// </summary>
 	public static void ResetPosition()
 	{
 		savedFarmMapId = -1;
@@ -71,12 +89,16 @@ public static class ModSetActivator
 		savedFarmY = -1;
 		currentState = SetActivatorState.Idle;
 		isSellingJunk = false;
+		isBoxFullWarned = false;
 		ModConfig.SaveConfig();
 
 		GameScr.info1.addInfo("Úp Set KH: Đã xóa bãi úp lưu!", 0);
 		SoundMn.gI().buttonClick();
 	}
 
+	/// <summary>
+	/// Bật hoặc tắt trạng thái kích hoạt của ToggleActive.
+	/// </summary>
 	public static void ToggleActive()
 	{
 		isActive = !isActive;
@@ -86,6 +108,7 @@ public static class ModSetActivator
 			{
 				SaveCurrentFarmPosition();
 			}
+			isBoxFullWarned = false;
 			currentState = SetActivatorState.Farming;
 			GameScr.info1.addInfo("Auto Úp Set Kích Hoạt: BẬT", 0);
 		}
@@ -103,6 +126,9 @@ public static class ModSetActivator
 		SoundMn.gI().buttonClick();
 	}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ CycleMinStar.
+	/// </summary>
 	public static void CycleMinStar()
 	{
 		minStarToKeep++;
@@ -114,12 +140,18 @@ public static class ModSetActivator
 		SoundMn.gI().buttonClick();
 	}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của GetMinStarText.
+	/// </summary>
 	public static string GetMinStarText()
 	{
 		if (minStarToKeep == 0) return "Bán Hết Sao";
 		return "Giữ >=" + minStarToKeep + " Sao";
 	}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của GetFreeBagSlots.
+	/// </summary>
 	public static int GetFreeBagSlots()
 	{
 		try
@@ -142,6 +174,34 @@ public static class ModSetActivator
 		}
 	}
 
+	/// <summary>
+	/// Truy xuất số ô trống trong rương đồ tại nhà.
+	/// </summary>
+	public static int GetFreeBoxSlots()
+	{
+		try
+		{
+			Char me = Char.myCharz();
+			if (me == null || me.arrItemBox == null) return -1;
+			int free = 0;
+			for (int i = 0; i < me.arrItemBox.Length; i++)
+			{
+				if (me.arrItemBox[i] == null)
+				{
+					free++;
+				}
+			}
+			return free;
+		}
+		catch
+		{
+			return -1;
+		}
+	}
+
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của IsSetKichHoat.
+	/// </summary>
 	public static bool IsSetKichHoat(Item item)
 	{
 		if (item == null || item.itemOption == null) return false;
@@ -178,6 +238,9 @@ public static class ModSetActivator
 		return false;
 	}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của GetItemStarCount.
+	/// </summary>
 	public static int GetItemStarCount(Item item)
 	{
 		if (item == null || item.itemOption == null) return 0;
@@ -204,6 +267,38 @@ public static class ModSetActivator
 		return stars;
 	}
 
+	/// <summary>
+	/// Kiểm tra xem trang bị có phải là đồ SKH hoặc đồ Sao cần cất vào rương hay không.
+	/// </summary>
+	public static bool IsValuableStoreItem(Item item)
+	{
+		if (item == null || item.template == null) return false;
+		int type = item.template.type;
+		if (type < 0 || type > 4) return false;
+		if (IsSetKichHoat(item)) return true;
+		if (minStarToKeep > 0 && GetItemStarCount(item) >= minStarToKeep) return true;
+		return false;
+	}
+
+	/// <summary>
+	/// Kiểm tra trong hành trang có trang bị SKH/Sao cần cất vào rương hay không.
+	/// </summary>
+	public static bool HasValuableStoreItemInBag(Char me)
+	{
+		if (me == null || me.arrItemBag == null) return false;
+		for (int i = 0; i < me.arrItemBag.Length; i++)
+		{
+			if (me.arrItemBag[i] != null && IsValuableStoreItem(me.arrItemBag[i]))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của IsImportantItem.
+	/// </summary>
 	public static bool IsImportantItem(Item item)
 	{
 		if (item == null || item.template == null) return true;
@@ -233,6 +328,11 @@ public static class ModSetActivator
 		return false;
 	}
 
+	private static long lastFullNonJunkWarnTime = 0;
+
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của IsJunkItem.
+	/// </summary>
 	public static bool IsJunkItem(Item item)
 	{
 		if (item == null || item.template == null) return false;
@@ -243,6 +343,25 @@ public static class ModSetActivator
 		return true;
 	}
 
+	/// <summary>
+	/// Kiểm tra xem trong hành trang có ít nhất một vật phẩm rác có thể bán được hay không.
+	/// </summary>
+	public static bool HasSellableJunkInBag(Char me)
+	{
+		if (me == null || me.arrItemBag == null) return false;
+		for (int i = 0; i < me.arrItemBag.Length; i++)
+		{
+			if (me.arrItemBag[i] != null && IsJunkItem(me.arrItemBag[i]))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của GetTargetSpaceshipMapId.
+	/// </summary>
 	public static int GetTargetSpaceshipMapId()
 	{
 		Char me = Char.myCharz();
@@ -259,6 +378,42 @@ public static class ModSetActivator
 		return 24;
 	}
 
+	/// <summary>
+	/// Truy xuất ID map Nhà theo hành tinh nhân vật (21: Trái Đất, 22: Namếc, 23: Xayda).
+	/// </summary>
+	public static int GetHomeMapId()
+	{
+		Char me = Char.myCharz();
+		if (me == null) return 21;
+		return 21 + me.cgender;
+	}
+
+	/// <summary>
+	/// Tìm NPC Rương Đồ (templateId = 3) tại map Nhà.
+	/// </summary>
+	public static Npc FindHomeBoxNpc()
+	{
+		if (GameScr.vNpc == null) return null;
+		for (int i = 0; i < GameScr.vNpc.size(); i++)
+		{
+			Npc npc = (Npc)GameScr.vNpc.elementAt(i);
+			if (npc == null || npc.template == null) continue;
+			if (npc.template.npcTemplateId == 3)
+			{
+				return npc;
+			}
+			string name = (npc.template.name ?? string.Empty).ToLower();
+			if (name.Contains("rương") || name.Contains("ruong"))
+			{
+				return npc;
+			}
+		}
+		return null;
+	}
+
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ FindUronNpc.
+	/// </summary>
 	public static Npc FindUronNpc()
 	{
 		if (GameScr.vNpc == null) return null;
@@ -285,6 +440,9 @@ public static class ModSetActivator
 		return null;
 	}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ StartGoSellJunkNow.
+	/// </summary>
 	public static void StartGoSellJunkNow()
 	{
 		Char me = Char.myCharz();
@@ -303,6 +461,33 @@ public static class ModSetActivator
 		ModNextMap.StartNextMap(targetMap);
 	}
 
+	/// <summary>
+	/// Bắt đầu về Nhà để cất trang bị SKH / Đồ Sao vào Rương Đồ.
+	/// </summary>
+	public static void StartGoStoreBoxNow()
+	{
+		Char me = Char.myCharz();
+		if (me == null || !ModMenu.IsInGame()) return;
+
+		if (savedFarmMapId == -1)
+		{
+			savedFarmMapId = TileMap.mapID;
+			savedFarmZoneId = TileMap.zoneID;
+			savedFarmX = me.cx;
+			savedFarmY = me.cy;
+			ModConfig.SaveConfig();
+		}
+
+		int homeMap = GetHomeMapId();
+		currentState = SetActivatorState.MovingToHomeBox;
+		stateTimer = mSystem.currentTimeMillis();
+		GameScr.info1.addInfo("Bắt đầu về Nhà cất đồ SKH/Đồ Sao vào Rương...", 0);
+		ModNextMap.StartNextMap(homeMap);
+	}
+
+	/// <summary>
+	/// Bộ xử lý sự kiện tiếp nhận và phản hồi OnSaleRequestReceived.
+	/// </summary>
 	public static void OnSaleRequestReceived(sbyte type, short id)
 	{
 		if (!isSellingJunk) return;
@@ -320,6 +505,9 @@ public static class ModSetActivator
 		}
 	}
 
+	/// <summary>
+	/// Cập nhật trạng thái logic của đối tượng theo từng chu kỳ khung hình.
+	/// </summary>
 	public static void Update()
 	{
 		if (!ModMenu.IsInGame() || ModAutoBuyBua.isBusy) return;
@@ -344,17 +532,36 @@ public static class ModSetActivator
 					break;
 				}
 
-				// Kiểm tra hành trang nếu bật Auto Bán Rác
-				if (autoSellJunk && GetFreeBagSlots() <= 1)
+				ModDropRate.ScanBagForSpecialItems(me);
+
+				// Kiểm tra hành trang khi đầy (<= 1 ô trống)
+				if (GetFreeBagSlots() <= 1)
 				{
-					GameScr.info1.addInfo("Hành trang đã đầy! Tự động lưu bãi và đi bán đồ rác tại Urôn...", 0);
-					StartGoSellJunkNow();
+					if (autoSellJunk && HasSellableJunkInBag(me))
+					{
+						GameScr.info1.addInfo("Hành trang đã đầy! Tự động lưu bãi và đi bán đồ rác tại Urôn...", 0);
+						StartGoSellJunkNow();
+					}
+					else if (autoStoreToBox && !isBoxFullWarned && HasValuableStoreItemInBag(me))
+					{
+						savedFarmMapId = TileMap.mapID;
+						savedFarmZoneId = TileMap.zoneID;
+						savedFarmX = me.cx;
+						savedFarmY = me.cy;
+						ModConfig.SaveConfig();
+						StartGoStoreBoxNow();
+					}
+					else if (now - lastFullNonJunkWarnTime > 30000)
+					{
+						lastFullNonJunkWarnTime = now;
+						GameScr.info1.addInfo("Hành trang đã đầy vật phẩm giá trị (không còn đồ rác để bán)!", 0);
+					}
 				}
 				break;
 
 			case SetActivatorState.MovingToUron:
 				int targetStation = GetTargetSpaceshipMapId();
-				if (TileMap.mapID == targetStation)
+				if (TileMap.mapID == targetStation && !Char.isLoadingMap && !Char.ischangingMap)
 				{
 					if (ModNextMap.isNextMapActive)
 					{
@@ -363,7 +570,7 @@ public static class ModSetActivator
 					currentState = SetActivatorState.InteractingUron;
 					stateTimer = now;
 				}
-				else if (!ModNextMap.isNextMapActive)
+				else if (!ModNextMap.isNextMapActive && !Char.isLoadingMap && !Char.ischangingMap)
 				{
 					// Nếu chưa đến nơi mà nextmap dừng, kích hoạt lại
 					if (now - stateTimer > 3000)
@@ -375,15 +582,15 @@ public static class ModSetActivator
 				break;
 
 			case SetActivatorState.InteractingUron:
+				if (Char.isLoadingMap || Char.ischangingMap) break;
+
 				Npc uron = FindUronNpc();
 				if (uron != null)
 				{
 					int dist = Res.distance(me.cx, me.cy, uron.cx, uron.cy);
 					if (dist > 30)
 					{
-						me.cx = uron.cx;
-						me.cy = uron.cy;
-						Service.gI().charMoveTo(uron.cx, uron.cy);
+						ModTeleport.TeleportTo(uron.cx, uron.cy);
 					}
 					me.focusManualTo(uron);
 
@@ -453,8 +660,105 @@ public static class ModSetActivator
 				else
 				{
 					// Đã bán hết đồ rác!
-					GameScr.info1.addInfo("Đã bán hết đồ rác! Chuẩn bị quay lại bãi úp...", 0);
+					GameScr.info1.addInfo("Đã bán hết đồ rác!", 0);
 					FinishSellingAndReturn();
+				}
+				break;
+
+			case SetActivatorState.MovingToHomeBox:
+				int homeMap = GetHomeMapId();
+				if (TileMap.mapID == homeMap && !Char.isLoadingMap && !Char.ischangingMap)
+				{
+					if (ModNextMap.isNextMapActive)
+					{
+						ModNextMap.StopNextMap();
+					}
+					currentState = SetActivatorState.InteractingBox;
+					stateTimer = now;
+				}
+				else if (!ModNextMap.isNextMapActive && !Char.isLoadingMap && !Char.ischangingMap)
+				{
+					if (now - stateTimer > 3000)
+					{
+						stateTimer = now;
+						ModNextMap.StartNextMap(homeMap);
+					}
+				}
+				break;
+
+			case SetActivatorState.InteractingBox:
+				if (Char.isLoadingMap || Char.ischangingMap) break;
+
+				Npc boxNpc = FindHomeBoxNpc();
+				if (boxNpc != null)
+				{
+					int distBox = Res.distance(me.cx, me.cy, boxNpc.cx, boxNpc.cy);
+					if (distBox > 30)
+					{
+						ModTeleport.TeleportTo(boxNpc.cx, boxNpc.cy);
+					}
+					me.focusManualTo(boxNpc);
+
+					if (now - stateTimer > 900)
+					{
+						stateTimer = now;
+						int boxTmplId = (boxNpc.template != null) ? boxNpc.template.npcTemplateId : 3;
+						Service.gI().openMenu(boxTmplId);
+
+						currentState = SetActivatorState.StoringToBox;
+						lastSellActionTime = now;
+						storeAttemptCount = 0;
+					}
+				}
+				else
+				{
+					if (now - stateTimer > 5000)
+					{
+						GameScr.info1.addInfo("Không tìm thấy Rương Đồ tại nhà! Quay lại bãi úp...", 0);
+						ReturnToSavedFarm();
+					}
+				}
+				break;
+
+			case SetActivatorState.StoringToBox:
+				if (now - lastSellActionTime < 350)
+				{
+					break;
+				}
+
+				int freeBox = GetFreeBoxSlots();
+				if (freeBox == 0)
+				{
+					isBoxFullWarned = true;
+					GameScr.info1.addInfo("Rương đồ ở nhà đã đầy! Quay lại bãi úp...", 0);
+					ReturnToSavedFarm();
+					break;
+				}
+
+				int storeIdx = -1;
+				if (me.arrItemBag != null)
+				{
+					for (int i = 0; i < me.arrItemBag.Length; i++)
+					{
+						Item item = me.arrItemBag[i];
+						if (item != null && IsValuableStoreItem(item))
+						{
+							storeIdx = i;
+							break;
+						}
+					}
+				}
+
+				if (storeIdx != -1 && storeAttemptCount < 25)
+				{
+					lastSellActionTime = now;
+					storeAttemptCount++;
+					Service.gI().getItem(1, (sbyte)storeIdx);
+				}
+				else
+				{
+					GameScr.info1.addInfo("Đã cất đồ SKH/Đồ Sao vào rương! Quay lại bãi úp...", 0);
+					ReturnToSavedFarm();
 				}
 				break;
 
@@ -465,7 +769,7 @@ public static class ModSetActivator
 					break;
 				}
 
-				if (TileMap.mapID == savedFarmMapId)
+				if (TileMap.mapID == savedFarmMapId && !Char.isLoadingMap && !Char.ischangingMap)
 				{
 					if (ModNextMap.isNextMapActive)
 					{
@@ -487,7 +791,7 @@ public static class ModSetActivator
 						stateTimer = now;
 					}
 				}
-				else if (!ModNextMap.isNextMapActive)
+				else if (!ModNextMap.isNextMapActive && !Char.isLoadingMap && !Char.ischangingMap)
 				{
 					if (now - stateTimer > 3000)
 					{
@@ -498,6 +802,8 @@ public static class ModSetActivator
 				break;
 
 			case SetActivatorState.SwitchingZone:
+				if (Char.isLoadingMap || Char.ischangingMap) break;
+
 				if (TileMap.zoneID == savedFarmZoneId)
 				{
 					currentState = SetActivatorState.TeleportingToSpot;
@@ -523,6 +829,8 @@ public static class ModSetActivator
 				break;
 
 			case SetActivatorState.TeleportingToSpot:
+				if (Char.isLoadingMap || Char.ischangingMap) break;
+
 				if (savedFarmX != -1 && savedFarmY != -1)
 				{
 					ModTeleport.TeleportTo(savedFarmX, savedFarmY);
@@ -541,15 +849,43 @@ public static class ModSetActivator
 		}
 	}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ FinishSellingAndReturn.
+	/// </summary>
 	private static void FinishSellingAndReturn()
 	{
 		isSellingJunk = false;
 		GameCanvas.endDlg();
-		currentState = SetActivatorState.ReturningToFarm;
-		stateTimer = mSystem.currentTimeMillis();
-		ModNextMap.StartNextMap(savedFarmMapId);
+
+		Char me = Char.myCharz();
+		if (autoStoreToBox && !isBoxFullWarned && me != null && HasValuableStoreItemInBag(me))
+		{
+			StartGoStoreBoxNow();
+			return;
+		}
+
+		ReturnToSavedFarm();
 	}
 
+	private static void ReturnToSavedFarm()
+	{
+		isSellingJunk = false;
+		GameCanvas.endDlg();
+		if (GameCanvas.panel != null && GameCanvas.panel.isShow)
+		{
+			GameCanvas.panel.hide();
+		}
+		currentState = SetActivatorState.ReturningToFarm;
+		stateTimer = mSystem.currentTimeMillis();
+		if (savedFarmMapId >= 0)
+		{
+			ModNextMap.StartNextMap(savedFarmMapId);
+		}
+	}
+
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của GetStatusText.
+	/// </summary>
 	public static string GetStatusText()
 	{
 		if (!isActive) return "Đang TẮT";
@@ -565,6 +901,12 @@ public static class ModSetActivator
 				return "Đang tương tác với Urôn";
 			case SetActivatorState.SellingJunk:
 				return "Đang bán đồ rác tại Urôn";
+			case SetActivatorState.MovingToHomeBox:
+				return "Đang về Nhà mở Rương Đồ";
+			case SetActivatorState.InteractingBox:
+				return "Đang mở Rương Đồ tại nhà";
+			case SetActivatorState.StoringToBox:
+				return "Đang cất đồ SKH/Sao vào Rương";
 			case SetActivatorState.ReturningToFarm:
 				return "Đang quay lại bản đồ bãi úp";
 			case SetActivatorState.SwitchingZone:

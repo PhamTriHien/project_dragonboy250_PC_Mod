@@ -3,8 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
+/// <summary>
+/// Module Thông Báo Boss: Giám sát toàn server thông báo boss xuất hiện kèm nút bay đến tức thì, tự dò khu và tự đánh Boss.
+/// </summary>
 public static class ModBossNotice
 {
+	/// <summary>
+	/// CLASS BossNoticeEntry: Định nghĩa và điều phối logic trong hệ thống game.
+	/// </summary>
 	public class BossNoticeEntry
 	{
 		public string bossName;
@@ -15,9 +21,175 @@ public static class ModBossNotice
 	}
 
 	public static bool isShowBossNotice = true;
-	public static int hudStartY = 70;
+	public static bool isAutoScanBossZone = false;
+	public static bool isAutoAttackBoss = false;
+	public static int hudStartY = 38;
 	public static readonly List<BossNoticeEntry> listBossNotices = new List<BossNoticeEntry>();
 	public const int MAX_BOSS_NOTICES = 6;
+
+	private static long lastScanZoneTime = 0;
+	private static int currentScanZoneIdx = 0;
+	private static long lastAutoAttackBossTime = 0;
+
+	/// <summary>
+	/// Bật hoặc tắt tự động dò khu tìm Boss trong map hiện tại.
+	/// </summary>
+	public static void ToggleAutoScanBossZone()
+	{
+		isAutoScanBossZone = !isAutoScanBossZone;
+		lastScanZoneTime = 0;
+		if (isAutoScanBossZone && ModMenu.IsInGame())
+		{
+			currentScanZoneIdx = TileMap.zoneID;
+			Service.gI().openUIZone();
+		}
+		ModConfig.SaveConfig();
+		GameScr.info1.addInfo("Tự dò khu Boss: " + (isAutoScanBossZone ? "BẬT" : "TẮT"), 0);
+		SoundMn.gI().buttonClick();
+	}
+
+	/// <summary>
+	/// Bật hoặc tắt tự động khóa mục tiêu và tấn công Boss trong map.
+	/// </summary>
+	public static void ToggleAutoAttackBoss()
+	{
+		isAutoAttackBoss = !isAutoAttackBoss;
+		ModConfig.SaveConfig();
+		GameScr.info1.addInfo("Tự săn Boss: " + (isAutoAttackBoss ? "BẬT" : "TẮT"), 0);
+		SoundMn.gI().buttonClick();
+	}
+
+	/// <summary>
+	/// Tìm kiếm thực thể Boss đang còn sống trong bản đồ hiện tại.
+	/// </summary>
+	public static Char FindLiveBossInMap()
+	{
+		if (GameScr.vCharInMap == null)
+		{
+			return null;
+		}
+		for (int i = 0; i < GameScr.vCharInMap.size(); i++)
+		{
+			Char c = (Char)GameScr.vCharInMap.elementAt(i);
+			if (c != null && c.charID < 0 && c.cHP > 0 && !c.isDie && c.statusMe != 14 && c.statusMe != 5)
+			{
+				if (c.cTypePk == 5 || IsBossName(c.cName))
+				{
+					return c;
+				}
+			}
+		}
+		return null;
+	}
+
+	/// <summary>
+	/// Cập nhật tiến trình tự dò khu tìm Boss và tự động tấn công Boss.
+	/// </summary>
+	public static void UpdateAutoBoss()
+	{
+		if ((!isAutoScanBossZone && !isAutoAttackBoss) || !ModMenu.IsInGame())
+		{
+			return;
+		}
+		if (Char.isLoadingMap || Char.ischangingMap || ModNextMap.isNextMapActive || ModGoBack.isReturning || ModSetActivator.isBusy || ModAutoBuyBua.isBusy)
+		{
+			return;
+		}
+		Char me = Char.myCharz();
+		if (me == null || me.isDie || me.cHP <= 0 || me.statusMe == 14 || me.statusMe == 5)
+		{
+			return;
+		}
+
+		long now = mSystem.currentTimeMillis();
+		Char liveBoss = FindLiveBossInMap();
+
+		if (liveBoss != null)
+		{
+			if (isAutoScanBossZone)
+			{
+				isAutoScanBossZone = false;
+				ModConfig.SaveConfig();
+				GameScr.info1.addInfo("Đã tìm thấy Boss [" + liveBoss.cName + "] tại Khu " + TileMap.zoneID + "!", 0);
+				SoundMn.gI().buttonClick();
+			}
+
+			if (isAutoAttackBoss)
+			{
+				me.charFocus = liveBoss;
+				me.mobFocus = null;
+				me.npcFocus = null;
+				me.itemFocus = null;
+
+				int dist = Res.distance(me.cx, me.cy, liveBoss.cx, liveBoss.cy);
+				if (dist > 48 && now - lastAutoAttackBossTime >= 350)
+				{
+					ModTeleport.TeleportTo(liveBoss.cx, liveBoss.cy);
+				}
+
+				if (now - lastAutoAttackBossTime >= 250)
+				{
+					Skill sk = me.myskill;
+					if (sk != null && !sk.paintCanNotUseSkill && now - sk.lastTimeUseThisSkill >= sk.coolDown)
+					{
+						lastAutoAttackBossTime = now;
+						sk.lastTimeUseThisSkill = now;
+						MyVector vMob = new MyVector();
+						MyVector vChar = new MyVector();
+						vChar.addElement(liveBoss);
+						Service.gI().sendPlayerAttack(vMob, vChar, 2);
+					}
+				}
+			}
+			return;
+		}
+
+		if (isAutoScanBossZone && now - lastScanZoneTime >= 1600)
+		{
+			lastScanZoneTime = now;
+			GameScr gs = GameScr.gI();
+			int maxZ = (gs != null && gs.zones != null && gs.zones.Length > 0) ? gs.zones.Length : 15;
+			if (maxZ <= 1)
+			{
+				return;
+			}
+
+			int nextZ = (TileMap.zoneID + 1) % maxZ;
+			if (gs != null && gs.zones != null && gs.maxPlayer != null)
+			{
+				for (int attempt = 0; attempt < maxZ; attempt++)
+				{
+					int candidate = (TileMap.zoneID + 1 + attempt) % maxZ;
+					if (candidate != TileMap.zoneID && candidate < gs.zones.Length && candidate < gs.maxPlayer.Length)
+					{
+						if (gs.zones[candidate] < gs.maxPlayer[candidate])
+						{
+							nextZ = candidate;
+							break;
+						}
+					}
+				}
+			}
+
+			currentScanZoneIdx = nextZ;
+			Service.gI().requestChangeZone(currentScanZoneIdx, -1);
+		}
+	}
+
+	/// <summary>
+	/// Tính toán tọa độ Y ngay sát bên dưới nút Chat góc phải trên màn hình.
+	/// </summary>
+	public static int GetHudStartY()
+	{
+		int yC = (GameCanvas.w <= 240) ? 5 : 2;
+		Image chatImg = (!Main.isPC) ? GameScr.imgChat : GameScr.imgChatPC;
+		int chatH = (chatImg != null) ? mGraphics.getImageHeight(chatImg) : 34;
+		if (chatH <= 0)
+		{
+			chatH = 34;
+		}
+		return yC + 17 + chatH / 2 + 2 + mGraphics.addYWhenOpenKeyBoard;
+	}
 
 	public static readonly string[] KNOWN_BOSSES = new string[]
 	{
@@ -34,6 +206,9 @@ public static class ModBossNotice
 		"Số 4 Thần Nami", "Số 3 Thần Lam", "Số 2 Tầm Trụ", "Super Baby", "Baby", "Janemba", "Hildegarn", "Cui", "Dodoria", "Zarbon"
 	};
 
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của IsBossName.
+	/// </summary>
 	public static bool IsBossName(string name)
 	{
 		if (string.IsNullOrEmpty(name)) return false;
@@ -47,6 +222,9 @@ public static class ModBossNotice
 		return false;
 	}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ AddBossNotice.
+	/// </summary>
 	public static void AddBossNotice(string bossName, string mapName, string timeStr, bool isDefeated = false)
 	{
 		lock (listBossNotices)
@@ -97,6 +275,9 @@ public static class ModBossNotice
 		}
 	}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ LogBossDebug.
+	/// </summary>
 	public static void LogBossDebug(string verdict, string raw)
 	{
 		try
@@ -127,6 +308,9 @@ public static class ModBossNotice
 		}
 	}
 
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của IsBossCandidate.
+	/// </summary>
 	private static bool IsBossCandidate(string lower)
 	{
 		try
@@ -145,6 +329,9 @@ public static class ModBossNotice
 		}
 	}
 
+	/// <summary>
+	/// Xử lý nghiệp vụ logic chuyên trách cho ProcessServerBossNotice.
+	/// </summary>
 	public static void ProcessServerBossNotice(string raw)
 	{
 		try
@@ -378,6 +565,9 @@ public static class ModBossNotice
 		}
 	}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của GetTimeAgoString.
+	/// </summary>
 	public static string GetTimeAgoString(long timestamp)
 	{
 		if (timestamp <= 0)
@@ -424,6 +614,9 @@ public static class ModBossNotice
 		return d + "d";
 	}
 
+	/// <summary>
+	/// Thực hiện vẽ và hiển thị thành phần PaintBossNotice lên canvas đồ họa.
+	/// </summary>
 	public static void PaintBossNotice(mGraphics g)
 	{
 		if (!isShowBossNotice)
@@ -453,6 +646,7 @@ public static class ModBossNotice
 				g.translate(-g.getTranslateX(), -g.getTranslateY());
 				g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
 
+				hudStartY = GetHudStartY();
 				int startY = hudStartY;
 				int lineH = 11;
 				int drawY = startY;
@@ -465,10 +659,12 @@ public static class ModBossNotice
 						string bossPart = entry.bossName ?? string.Empty;
 						string mapPart = " - " + (entry.mapName ?? string.Empty) + " - ";
 						string timePart = GetTimeAgoString(entry.timestamp);
+						string goPart = entry.isDefeated ? string.Empty : " [Đến]";
 
 						mFont bossF = entry.isDefeated ? mFont.tahoma_7_grey : mFont.tahoma_7_red;
 						mFont mapF = entry.isDefeated ? mFont.tahoma_7_grey : (mFont.tahoma_7_blue ?? mFont.tahoma_7b_blue ?? mFont.tahoma_7_white);
 						mFont timeF = entry.isDefeated ? mFont.tahoma_7_grey : mFont.tahoma_7_green2;
+						mFont goF = mFont.tahoma_7b_yellow ?? mFont.tahoma_7_yellow ?? timeF;
 						if (bossF == null || mapF == null || timeF == null)
 						{
 							break;
@@ -477,9 +673,10 @@ public static class ModBossNotice
 						int bossW = bossF.getWidth(bossPart);
 						int mapW = mapF.getWidth(mapPart);
 						int timeW = timeF.getWidth(timePart);
-						int rowW = bossW + mapW + timeW;
+						int goW = (!entry.isDefeated && goF != null) ? goF.getWidth(goPart) : 0;
+						int rowW = bossW + mapW + timeW + goW;
 
-						// Thụt lùi sát mép phải màn hình (cách mép 2px)
+						// Thụt lùi sát mép phải màn hình (cách mép 2px) có tính toán Safe Area
 						int lineX = GameCanvas.w - rowW - 2;
 						if (lineX < 2)
 						{
@@ -489,6 +686,10 @@ public static class ModBossNotice
 						bossF.drawString(g, bossPart, lineX, drawY, mFont.LEFT);
 						mapF.drawString(g, mapPart, lineX + bossW, drawY, mFont.LEFT);
 						timeF.drawString(g, timePart, lineX + bossW + mapW, drawY, mFont.LEFT);
+						if (!entry.isDefeated && goF != null)
+						{
+							goF.drawString(g, goPart, lineX + bossW + mapW + timeW, drawY, mFont.LEFT);
+						}
 
 						drawY += lineH;
 					}
@@ -500,26 +701,98 @@ public static class ModBossNotice
 		}
 	}
 
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của CheckHUDClick (Click trực tiếp vào dòng Boss đang sống trên HUD để Xmap).
+	/// </summary>
 	public static bool CheckHUDClick(int px, int py)
 	{
-		// Thông báo boss trên HUD chỉ để hiển thị thông tin, không nhận tương tác click
+		if (!isShowBossNotice || (!GameCanvas.isPointerJustRelease && !GameCanvas.isPointerClick))
+		{
+			return false;
+		}
+		if ((GameCanvas.panel != null && GameCanvas.panel.isShow) ||
+		    (GameCanvas.panel2 != null && GameCanvas.panel2.isShow) ||
+		    (GameCanvas.menu != null && GameCanvas.menu.showMenu) ||
+		    GameCanvas.currentDialog != null ||
+		    ModUI.uiCustomOpen)
+		{
+			return false;
+		}
+
+		lock (listBossNotices)
+		{
+			if (listBossNotices.Count == 0)
+			{
+				return false;
+			}
+
+			int startY = GetHudStartY();
+			int lineH = 11;
+			int drawY = startY;
+
+			for (int j = 0; j < listBossNotices.Count; j++)
+			{
+				BossNoticeEntry entry = listBossNotices[j];
+				if (entry != null)
+				{
+					if (!entry.isDefeated && py >= drawY - 1 && py <= drawY + lineH)
+					{
+						string bossPart = entry.bossName ?? string.Empty;
+						string mapPart = " - " + (entry.mapName ?? string.Empty) + " - ";
+						string timePart = GetTimeAgoString(entry.timestamp);
+						string goPart = " [Đến]";
+
+						mFont bossF = mFont.tahoma_7_red;
+						mFont mapF = mFont.tahoma_7_blue ?? mFont.tahoma_7b_blue ?? mFont.tahoma_7_white;
+						mFont timeF = mFont.tahoma_7_green2;
+						mFont goF = mFont.tahoma_7b_yellow ?? mFont.tahoma_7_yellow ?? timeF;
+
+						int rowW = 140;
+						if (bossF != null && mapF != null && timeF != null && goF != null)
+						{
+							rowW = bossF.getWidth(bossPart) + mapF.getWidth(mapPart) + timeF.getWidth(timePart) + goF.getWidth(goPart);
+						}
+						int lineX = GameCanvas.w - rowW - 2;
+						if (lineX < 2) lineX = 2;
+
+						if (px >= lineX && px <= GameCanvas.w)
+						{
+							int targetMapId = ModNextMapData.FindMapIdByName(entry.mapName);
+							if (targetMapId >= 0)
+							{
+								GameCanvas.clearAllPointerEvent();
+								ModNextMap.StartNextMap(targetMapId);
+								GameScr.info1.addInfo("Đang bay đến: " + entry.mapName + " (" + entry.bossName + ")", 0);
+								SoundMn.gI().buttonClick();
+								return true;
+							}
+						}
+					}
+					drawY += lineH;
+				}
+			}
+		}
 		return false;
 	}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của GetBottomY.
+	/// </summary>
 	public static int GetBottomY()
 	{
+		int baseY = GetHudStartY();
 		if (!isShowBossNotice)
 		{
-			return hudStartY;
+			return baseY;
 		}
 		lock (listBossNotices)
 		{
 			if (listBossNotices.Count == 0)
 			{
-				return hudStartY;
+				return baseY;
 			}
 			int count = (listBossNotices.Count < MAX_BOSS_NOTICES) ? listBossNotices.Count : MAX_BOSS_NOTICES;
-			return hudStartY + count * 11 + 4;
+			return baseY + count * 11 + 4;
 		}
 	}
 }

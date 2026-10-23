@@ -457,6 +457,9 @@ public static class ModMenu
 			// Tự động né Broly & khinh công
 			ModKiteBroly.Update();
 
+			// Tự động dò khu Boss & săn Boss
+			ModBossNotice.UpdateAutoBoss();
+
 			// Tối ưu hóa tỉ lệ rơi đồ
 			ModDropRate.Update();
 
@@ -467,6 +470,10 @@ public static class ModMenu
 			ModAutoPick.RunRealAutoPick();
 
 			// Tự động Tàn Sát
+			if (!ModTanSat.autoTanSat && (ModTanSat.freezeSkillCooldown || ModTanSat.autoSupportSkills) && !me.isDie && me.cHP > 0)
+			{
+				ModTanSat.UpdateSupportAndFreezeSkills(me, now);
+			}
 			ModTanSat.RunTanSat();
 		}
 		catch
