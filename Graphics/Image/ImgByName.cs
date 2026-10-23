@@ -2,15 +2,24 @@ using System;
 using System.Collections;
 using UnityEngine;
 
+/// <summary>
+/// CLASS ImgByName: Định nghĩa và điều phối logic trong hệ thống game.
+/// </summary>
 public class ImgByName
 {
 	public static MyHashTable hashImagePath = new MyHashTable();
 
+	/// <summary>
+	/// Thiết lập giá trị hoặc trạng thái cho SetImage.
+	/// </summary>
 	public static void SetImage(string name, Image img, sbyte nFrame)
 	{
 		hashImagePath.put(string.Empty + name, new MainImage(img, nFrame));
 	}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của getImagePath.
+	/// </summary>
 	public static MainImage getImagePath(string nameImg, MyHashTable hash)
 	{
 		MainImage mainImage = (MainImage)hash.get(string.Empty + nameImg);
@@ -38,6 +47,9 @@ public class ImgByName
 		return mainImage;
 	}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của getFromRms.
+	/// </summary>
 	public static MainImage getFromRms(string nameImg)
 	{
 		string text = mGraphics.zoomLevel + "ImgByName_" + nameImg;
@@ -53,8 +65,9 @@ public class ImgByName
 			result = new MainImage();
 			result.nFrame = array[0];
 			result.img = Image.createImage(array, 1, array.Length - 1);
-			if (result.img != null)
+			if (mGraphics.zoomLevel > 1 && result.img != null && !result.img.isZoomScaled)
 			{
+				result.img.isZoomScaled = true;
 			}
 		}
 		catch (Exception)
@@ -65,6 +78,9 @@ public class ImgByName
 		return result;
 	}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ saveRMS.
+	/// </summary>
 	public static void saveRMS(string nameImg, sbyte nFrame, sbyte[] data)
 	{
 		string text = mGraphics.zoomLevel + "ImgByName_" + nameImg;
@@ -86,6 +102,9 @@ public class ImgByName
 		}
 	}
 
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của checkDelHash.
+	/// </summary>
 	public static void checkDelHash(MyHashTable hash, int minute, bool isTrue)
 	{
 		MyVector myVector = new MyVector("checkDelHash");

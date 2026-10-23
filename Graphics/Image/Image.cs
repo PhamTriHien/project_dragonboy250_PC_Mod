@@ -36,6 +36,8 @@ public class Image
 
 	public Color colorBlend = Color.black;
 
+	public bool isZoomScaled;
+
 	public static Image createEmptyImage()
 	{
 		return __createEmptyImage();

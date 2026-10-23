@@ -1,11 +1,17 @@
-using System;
+﻿using System;
 using Assets.src.e;
 using Assets.src.f;
 using Assets.src.g;
 using UnityEngine;
 
+/// <summary>
+/// Thành phần phân mảnh (partial) của lớp Controller: Phân tích cú pháp và xử lý các bản tin thông điệp mạng từ máy chủ (Part6).
+/// </summary>
 public partial class Controller : IMessageHandler
 {
+	/// <summary>
+	/// Bộ xử lý sự kiện tiếp nhận và phản hồi onMessage_Part6.
+	/// </summary>
 	public bool onMessage_Part6(Message msg)
 	{
 		Char @char = null;
@@ -401,7 +407,7 @@ public partial class Controller : IMessageHandler
 				{
 					TileMap.vItemBg.removeAllElements();
 					short num64 = msg.reader().readShort();
-					Res.err("[ITEM_BACKGROUND] nItem= " + num64);
+					Res.outz("[ITEM_BACKGROUND] nItem= " + num64);
 					for (int num65 = 0; num65 < num64; num65++)
 					{
 						BgItem bgItem = new BgItem();
@@ -415,8 +421,8 @@ public partial class Controller : IMessageHandler
 						bgItem.tileY = new int[b27];
 						for (int num66 = 0; num66 < b27; num66++)
 						{
-							bgItem.tileX[num65] = msg.reader().readByte();
-							bgItem.tileY[num65] = msg.reader().readByte();
+							bgItem.tileX[num66] = msg.reader().readByte();
+							bgItem.tileY[num66] = msg.reader().readByte();
 						}
 						TileMap.vItemBg.addElement(bgItem);
 					}
@@ -586,7 +592,7 @@ public partial class Controller : IMessageHandler
 							if (num3 == Char.myCharz().charID)
 							{
 								char3 = Char.myCharz();
-								if (!GameScr.isChangeZone && GameScr.isAutoPlay && GameScr.canAutoPlay)
+								if (!GameScr.isChangeZone && GameScr.isAutoPlay && GameScr.canAutoPlay && !ModTanSat.autoTanSat)
 								{
 									Service.gI().requestChangeZone(-1, -1);
 									GameScr.isChangeZone = true;

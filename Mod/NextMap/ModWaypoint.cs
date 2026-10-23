@@ -56,6 +56,12 @@ public static class ModWaypoint
 				if (TileMap.tileTypeAt(x, y, 2))
 				{
 					int gy = TileMap.tileYofPixel(y);
+					int guard = 0;
+					while (gy >= 24 && guard < 6 && TileMap.tileTypeAt(x, gy - 24, 2))
+					{
+						gy -= 24;
+						guard++;
+					}
 					if (gy >= minY && gy <= maxY)
 					{
 						return gy;
@@ -104,6 +110,7 @@ public static class ModWaypoint
 			Service.gI().charMove();
 			if (!ItemTime.isExistItem(4387))
 			{
+				ModTeleport.RegisterTeleportEcho(x, y);
 				me.cx = x;
 				me.cy = y + 1;
 				Service.gI().charMove();

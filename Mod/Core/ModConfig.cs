@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Text;
 using UnityEngine;
@@ -33,7 +33,8 @@ public static class ModConfig
 			sb.AppendLine("useTeleport=" + ModTanSat.useTeleport);
 			sb.AppendLine("selectAllMobs=" + ModTanSat.selectAllMobs);
 			sb.AppendLine("tickedMobTemplateIds=" + string.Join(",", ModTanSat.tickedMobTemplateIds.ConvertAll(i => i.ToString()).ToArray()));
-			sb.AppendLine("selectAllSkills=" + ModTanSat.selectAllSkills);
+			sb.AppendLine("tanSatUseAllSkills=" + ModTanSat.selectAllSkills);
+			sb.AppendLine("skillSelectionMode=" + ModTanSatFilter.skillSelectionMode);
 			sb.AppendLine("tickedSkillTemplateIds=" + string.Join(",", ModTanSat.tickedSkillTemplateIds.ConvertAll(i => i.ToString()).ToArray()));
 			sb.AppendLine("timeAttack=" + ModTanSat.timeAttack);
 
@@ -184,8 +185,12 @@ public static class ModConfig
 							}
 						}
 						break;
-					case "selectAllSkills":
+					case "tanSatUseAllSkills":
 						bool.TryParse(val, out ModTanSatFilter.selectAllSkills);
+						break;
+					case "skillSelectionMode":
+						int ssm;
+						if (int.TryParse(val, out ssm) && ssm >= 0 && ssm <= 2) ModTanSatFilter.skillSelectionMode = ssm;
 						break;
 					case "tickedSkillTemplateIds":
 						ModTanSat.tickedSkillTemplateIds.Clear();

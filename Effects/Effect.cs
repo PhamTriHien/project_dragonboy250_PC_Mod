@@ -1,6 +1,9 @@
 using System;
 using UnityEngine;
 
+/// <summary>
+/// CLASS Effect: Định nghĩa và điều phối logic trong hệ thống game.
+/// </summary>
 public class Effect
 {
 	public int effId;
@@ -135,10 +138,16 @@ public class Effect
 
 	public long cur_time_cLastStatusMe;
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ Effect.
+	/// </summary>
 	public Effect()
 	{
 	}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ Effect.
+	/// </summary>
 	public Effect(int id, Char c, int layer, int loop, int loopCount, sbyte isStand)
 	{
 		this.c = c;
@@ -157,17 +166,20 @@ public class Effect
 		{
 			typeEff = 4;
 		}
-		if (id >= 201 && id < 2000)
+		if (id >= 201 && id < 2000 && layer == 2)
 		{
 			typeEff = 5;
 		}
-		Debug.LogError(id + ">>>>>>Add Effect: char:" + c.cName + "  layer:" + layer + " loop:" + loop + " loopCount:" + loopCount + " isStand:" + isStand);
+		Debug.Log(id + ">>>>>>Add Effect: char:" + c.cName + "  layer:" + layer + " loop:" + loop + " loopCount:" + loopCount + " isStand:" + isStand);
 		if (!isExistNewEff(effId + string.Empty))
 		{
 			newEff.addElement(effId + string.Empty);
 		}
 	}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ Effect.
+	/// </summary>
 	public Effect(int id, int x, int y, int layer, int loop, int loopCount)
 	{
 		this.x = x;
@@ -185,13 +197,16 @@ public class Effect
 		{
 			typeEff = 1;
 		}
-		Debug.LogError(id + ">>>>>>Add Effect: layer:" + layer + " loop:" + loop + " loopCount:" + loopCount);
+		Debug.Log(id + ">>>>>>Add Effect: layer:" + layer + " loop:" + loop + " loopCount:" + loopCount);
 		if (!isExistNewEff(effId + string.Empty))
 		{
 			newEff.addElement(effId + string.Empty);
 		}
 	}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của GetCharEff.
+	/// </summary>
 	public static void GetCharEff(Char c)
 	{
 		for (int i = 0; i < 1799; i++)
@@ -205,6 +220,9 @@ public class Effect
 		}
 	}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ removeEffData.
+	/// </summary>
 	public static void removeEffData(int id)
 	{
 		for (int i = 0; i < vEffData.size(); i++)
@@ -218,11 +236,17 @@ public class Effect
 		}
 	}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ addEffData.
+	/// </summary>
 	public static void addEffData(EffectData eff)
 	{
 		vEffData.addElement(eff);
 	}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của getEffDataById.
+	/// </summary>
 	public static EffectData getEffDataById(int id)
 	{
 		for (int i = 0; i < vEffData.size(); i++)
@@ -236,6 +260,9 @@ public class Effect
 		return null;
 	}
 
+	/// <summary>
+	/// Khởi tạo và nạp dữ liệu cấu hình cho initCommon.
+	/// </summary>
 	private void initCommon(int id)
 	{
 		indexFrom = -1;
@@ -277,6 +304,9 @@ public class Effect
 		lastEff.addElement(effId + string.Empty);
 	}
 
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của isExistNewEff.
+	/// </summary>
 	public static bool isExistNewEff(string id)
 	{
 		for (int i = 0; i < newEff.size(); i++)
@@ -290,6 +320,9 @@ public class Effect
 		return false;
 	}
 
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của isPaintz.
+	/// </summary>
 	public bool isPaintz()
 	{
 		if (!isPaint)
@@ -299,6 +332,9 @@ public class Effect
 		return true;
 	}
 
+	/// <summary>
+	/// Thực hiện vẽ và hiển thị thành phần paintUnderBackground lên canvas đồ họa.
+	/// </summary>
 	public void paintUnderBackground(mGraphics g, int xLayer, int yLayer)
 	{
 		if (isPaintz() && getEffDataById(effId).img != null)
@@ -307,6 +343,9 @@ public class Effect
 		}
 	}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của getFrameKhangia.
+	/// </summary>
 	public void getFrameKhangia()
 	{
 		if (effId == 42)
@@ -336,6 +375,9 @@ public class Effect
 		}
 	}
 
+	/// <summary>
+	/// Thực hiện vẽ toàn bộ đối tượng và các lớp hiển thị lên canvas mGraphics.
+	/// </summary>
 	public void paint(mGraphics g)
 	{
 		if (!isPaint || getEffDataById(effId) == null || getEffDataById(effId).img == null)
@@ -351,6 +393,9 @@ public class Effect
 		}
 	}
 
+	/// <summary>
+	/// Cập nhật trạng thái logic của đối tượng theo từng chu kỳ khung hình.
+	/// </summary>
 	public void update()
 	{
 		try
@@ -365,7 +410,11 @@ public class Effect
 				{
 					return;
 				}
-				if (typeEff == 5)
+				if (c != null && effId >= 201 && effId < 2000)
+				{
+					typeEff = ((getEffDataById(effId).hasAnimData || layer == 2) ? 5 : 4);
+				}
+				if (typeEff == 5 && getEffDataById(effId).hasAnimData)
 				{
 					data = getEffDataById(effId).get(c.statusMe);
 				}
@@ -550,6 +599,9 @@ public class Effect
 		}
 	}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của getnFrame.
+	/// </summary>
 	public int getnFrame()
 	{
 		return data.Length;

@@ -4,8 +4,14 @@ using Assets.src.f;
 using Assets.src.g;
 using UnityEngine;
 
+/// <summary>
+/// Thành phần phân mảnh (partial) của lớp Controller: Đảm nhiệm phân hệ chuyên trách PhuBan ().
+/// </summary>
 public partial class Controller : IMessageHandler
 {
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ readGetImgByName.
+	/// </summary>
 	private void readGetImgByName(Message msg)
 		{
 			try
@@ -15,6 +21,7 @@ public partial class Controller : IMessageHandler
 				sbyte[] array = null;
 				array = NinjaUtil.readByteArray(msg);
 				Image img = createImage(array);
+				if (img != null) { img.isZoomScaled = true; }
 				ImgByName.SetImage(name, img, nFrame);
 				if (array == null)
 				{
@@ -25,6 +32,9 @@ public partial class Controller : IMessageHandler
 			}
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ readFrameBoss.
+	/// </summary>
 	private void readFrameBoss(Message msg, int mobTemplateId)
 		{
 			try
@@ -47,6 +57,9 @@ public partial class Controller : IMessageHandler
 			}
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ phuban_Info.
+	/// </summary>
 	public void phuban_Info(Message msg)
 		{
 			try
@@ -62,6 +75,9 @@ public partial class Controller : IMessageHandler
 			}
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ readPhuBan_CHIENTRUONGNAMEK.
+	/// </summary>
 	private void readPhuBan_CHIENTRUONGNAMEK(Message msg, int type_PB)
 		{
 			try

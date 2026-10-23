@@ -52,6 +52,10 @@ public partial class Char : IMapObject
 				{
 					return false;
 				}
+				if ((ModTanSat.autoTanSat || ModAutoPick.isBusy) && !ModNextMap.isNextMapActive && !ModGoBack.isReturning && !ModSetActivator.isBusy && !ModAutoBuyBua.isBusy && !ModTanSat.IsManualMoving())
+				{
+					return false;
+				}
 				if (TileMap.isInAirMap() && cy >= TileMap.pxh - 48)
 				{
 					if (ModNextMap.isNextMapActive && ModNextMap.currentTargetWaypoint != null && ModNextMap.currentTargetWaypoint.minY <= 150)
@@ -125,8 +129,40 @@ public partial class Char : IMapObject
 				vMovePoints.removeAllElements();
 				myCharz().cxSend = x;
 				myCharz().cySend = y;
-				if (ModNextMap.isNextMapActive || cy - y == 0)
+				if (ModNextMap.isNextMapActive || ModTanSat.autoTanSat || ModAutoPick.isBusy || ModGoBack.isReturning || cy - y == 0)
 				{
+					if ((ModTanSat.autoTanSat || ModAutoPick.isBusy) && ModTeleport.TryConsumeTeleportEcho(x, y, cx, cy, out bool isCurrentPos))
+					{
+						cvx = 0;
+						cvy = 0;
+						statusMe = 1;
+						cp1 = (cp2 = (cp3 = 0));
+						ischangingMap = false;
+						isLockKey = false;
+						if (isCurrentPos)
+						{
+							cx = x;
+							cy = y;
+							myCharz().cxSend = x;
+							myCharz().cySend = y;
+							ModTeleport.isWaitingSettle = false;
+							if (ModTanSat.autoTanSat)
+							{
+								ModTdltLogger.Log("RESET_POINT_CONFIRM", $"Server confirmed teleport pos=({x},{y})");
+							}
+						}
+						else
+						{
+							myCharz().cxSend = cx;
+							myCharz().cySend = cy;
+							if (ModTanSat.autoTanSat)
+							{
+								ModTdltLogger.Log("RESET_POINT_STALE", $"Ignored stale teleport echo pos=({x},{y}), keeping current pos=({cx},{cy})");
+							}
+						}
+						return;
+					}
+					bool isPulledBack = (Res.abs(x - cx) > 24 || Res.abs(y - cy) > 24);
 					cx = x;
 					cy = y;
 					cvx = 0;
@@ -135,9 +171,21 @@ public partial class Char : IMapObject
 					cp1 = (cp2 = (cp3 = 0));
 					ischangingMap = false;
 					isLockKey = false;
-					if (ModNextMap.isNextMapActive)
+					if (!isPulledBack)
+					{
+						ModTeleport.isWaitingSettle = false;
+						if (ModTanSat.autoTanSat)
+						{
+							ModTdltLogger.Log("RESET_POINT_CONFIRM", $"Server confirmed teleport pos=({x},{y})");
+						}
+					}
+					if (ModNextMap.isNextMapActive && isPulledBack)
 					{
 						ModNextMap.OnServerResetPoint();
+					}
+					if (ModTanSat.autoTanSat && isPulledBack)
+					{
+						ModTanSat.OnServerResetPoint();
 					}
 					return;
 				}
@@ -647,22 +695,20 @@ public partial class Char : IMapObject
 	/// </summary>
 	public void setDanhHieu(int smallDanhHieu, int frame)
 			{
-				smallDanhHieu = 0;
-				frame = 1;
 				if (mainImg == null)
 				{
-					mainImg = ImgByName.getImagePath("banner_" + 0, ImgByName.hashImagePath);
+					mainImg = ImgByName.getImagePath("banner_" + smallDanhHieu, ImgByName.hashImagePath);
 				}
 				if (mainImg.img != null)
 				{
-					int num = mainImg.img.getHeight() / mainImg.nFrame;
+					int nFr = (mainImg.nFrame > 0) ? mainImg.nFrame : ((frame > 0) ? frame : 1);
+					int num = mainImg.img.getHeight() / nFr;
 					if (num < 1)
 					{
 						num = 1;
 					}
 					fraDanhHieu = new FrameImage(mainImg.img, mainImg.img.getWidth(), num);
 				}
-				Res.err("===== tim thay DanhHieu ve danh hieu ra");
 			}
 
 }

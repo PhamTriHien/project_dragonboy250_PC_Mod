@@ -1,7 +1,13 @@
 using System;
 
+/// <summary>
+/// CLASS BgItemMn: Định nghĩa và điều phối logic trong hệ thống game.
+/// </summary>
 public class BgItemMn
 {
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ blendImage.
+	/// </summary>
 	public static Image blendImage(Image img, int layer, int idImage)
 	{
 		int num = TileMap.tileID - 1;
@@ -115,10 +121,16 @@ public class BgItemMn
 			}
 		}
 		byte[] byteArray = getByteArray(image);
-		Rms.saveRMS("x" + mGraphics.zoomLevel + "blend" + idImage + "layer" + layer, ArrayCast.cast(byteArray));
+		if (byteArray != null && byteArray.Length > 0)
+		{
+			Rms.saveRMS("x" + mGraphics.zoomLevel + "blend" + idImage + "layer" + layer, ArrayCast.cast(byteArray));
+		}
 		return image;
 	}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của getByteArray.
+	/// </summary>
 	public static byte[] getByteArray(Image img)
 	{
 		try
@@ -131,6 +143,9 @@ public class BgItemMn
 		}
 	}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ blendcurrBg.
+	/// </summary>
 	public static void blendcurrBg(short id, Image img)
 	{
 		for (int i = 0; i < TileMap.vCurrItem.size(); i++)
@@ -140,12 +155,13 @@ public class BgItemMn
 			if (bgItem.idImage == id && !bgItem.isNotBlend() && bgItem.layer != 2 && bgItem.layer != 4 && !BgItem.imgNew.containsKey(blendKey))
 			{
 				sbyte[] array = Rms.loadRMS("x" + mGraphics.zoomLevel + "blend" + id + "layer" + bgItem.layer + "_t" + TileMap.tileID);
-				if (array == null)
+				if (array == null || array.Length == 0)
 				{
 					BgItem.imgNew.put(blendKey, blendImage(img, bgItem.layer, bgItem.idImage));
 					continue;
 				}
 				Image v = Image.createImage(array, 0, array.Length);
+				if (v != null) { v.isZoomScaled = true; }
 				BgItem.imgNew.put(blendKey, v);
 			}
 		}

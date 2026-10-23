@@ -1,3 +1,6 @@
+/// <summary>
+/// CLASS BgItem: Định nghĩa và điều phối logic trong hệ thống game.
+/// </summary>
 public class BgItem
 {
 	public int id;
@@ -53,12 +56,18 @@ public class BgItem
 
 	public static sbyte[] newSmallVersion;
 
+	/// <summary>
+	/// Dọn dẹp và đặt lại trạng thái ban đầu cho clearHashTable.
+	/// </summary>
 	public static void clearHashTable()
 	{
 		imgNew.clear();
 		vKeysNew.removeAllElements();
 	}
 
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của isExistKeyNews.
+	/// </summary>
 	public static bool isExistKeyNews(string keyNew)
 	{
 		for (int i = 0; i < vKeysNew.size(); i++)
@@ -72,6 +81,9 @@ public class BgItem
 		return false;
 	}
 
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của isExistKeyLast.
+	/// </summary>
 	public static bool isExistKeyLast(string keyLast)
 	{
 		for (int i = 0; i < vKeysLast.size(); i++)
@@ -85,6 +97,9 @@ public class BgItem
 		return false;
 	}
 
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của isNotBlend.
+	/// </summary>
 	public bool isNotBlend()
 	{
 		if (mGraphics.zoomLevel == 1)
@@ -105,6 +120,9 @@ public class BgItem
 		return false;
 	}
 
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của isMiniBg.
+	/// </summary>
 	public bool isMiniBg()
 	{
 		for (int i = 0; i < isMiniBgz.Length; i++)
@@ -117,6 +135,9 @@ public class BgItem
 		return false;
 	}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ changeColor.
+	/// </summary>
 	public void changeColor()
 	{
 		string blendKey = idImage + "blend" + layer + "_t" + TileMap.tileID;
@@ -128,16 +149,23 @@ public class BgItem
 		if (image != null && image.getRealImageWidth() > 4)
 		{
 			sbyte[] array = Rms.loadRMS("x" + mGraphics.zoomLevel + "blend" + idImage + "layer" + layer + "_t" + TileMap.tileID);
-			if (array == null)
+			if (array == null || array.Length == 0)
 			{
 				imgNew.put(blendKey, BgItemMn.blendImage(image, layer, idImage));
 				return;
 			}
 			Image v = Image.createImage(array, 0, array.Length);
+			if (mGraphics.zoomLevel > 1 && v != null && !v.isZoomScaled)
+			{
+				v.isZoomScaled = true;
+			}
 			imgNew.put(blendKey, v);
 		}
 	}
 
+	/// <summary>
+	/// Thực hiện vẽ toàn bộ đối tượng và các lớp hiển thị lên canvas mGraphics.
+	/// </summary>
 	public void paint(mGraphics g)
 	{
 		if (Char.isLoadingMap || (idImage == 279 && GameScr.gI().tMabuEff >= 110))
@@ -149,6 +177,10 @@ public class BgItem
 		Image image = null;
 		string blendKey = idImage + "blend" + layer + "_t" + TileMap.tileID;
 		image = ((layer == 2 || layer == 4) ? ((Image)imgNew.get(idImage + string.Empty)) : (isNotBlend() ? ((Image)imgNew.get(idImage + string.Empty)) : ((Image)imgNew.get(blendKey))));
+		if (image == null)
+		{
+			image = (Image)imgNew.get(idImage + string.Empty);
+		}
 		if (image == null || idImage == 96)
 		{
 			return;
@@ -172,9 +204,16 @@ public class BgItem
 		}
 		int num = x + dx + transX;
 		int num2 = y + dy + transY;
-		if (x + dx + image.getWidth() + transX >= cmx && x + dx + transX <= cmx + GameCanvas.w && y + dy + transY + image.getHeight() >= cmy && y + dy + transY <= cmy + GameCanvas.h)
+		int imgW = mGraphics.getImageWidth(image);
+		int imgH = mGraphics.getImageHeight(image);
+		if (imgW <= 0 || imgH <= 0)
 		{
-			g.drawRegion(image, 0, 0, mGraphics.getImageWidth(image), mGraphics.getImageHeight(image), trans, x + dx + transX, y + dy + transY, 0);
+			return;
+		}
+
+		if (x + dx + imgW + transX >= cmx && x + dx + transX <= cmx + GameCanvas.w && y + dy + transY + imgH >= cmy && y + dy + transY <= cmy + GameCanvas.h)
+		{
+			g.drawRegion(image, 0, 0, imgW, imgH, trans, x + dx + transX, y + dy + transY, 0);
 			if (idImage == 11 && TileMap.mapID != 122)
 			{
 				g.setClip(num, num2 + 24, 48, 14);
@@ -185,9 +224,9 @@ public class BgItem
 				g.setClip(GameScr.cmx, GameScr.cmy, GameScr.gW, GameScr.gH);
 			}
 		}
-		if (TileMap.isDoubleMap() && idImage > 137 && idImage != 156 && idImage != 159 && idImage != 157 && idImage != 165 && idImage != 167 && idImage != 168 && idImage != 169 && idImage != 170 && idImage != 238 && TileMap.pxw - (x + dx + transX) >= cmx && TileMap.pxw - (x + dx + transX + image.getWidth()) <= cmx + GameCanvas.w && y + dy + transY + image.getHeight() >= cmy && y + dy + transY <= cmy + GameCanvas.h && (idImage < 241 || idImage >= 266))
+		if (TileMap.isDoubleMap() && idImage > 137 && idImage != 156 && idImage != 159 && idImage != 157 && idImage != 165 && idImage != 167 && idImage != 168 && idImage != 169 && idImage != 170 && idImage != 238 && TileMap.pxw - (x + dx + transX) >= cmx && TileMap.pxw - (x + dx + transX + imgW) <= cmx + GameCanvas.w && y + dy + transY + imgH >= cmy && y + dy + transY <= cmy + GameCanvas.h && (idImage < 241 || idImage >= 266))
 		{
-			g.drawRegion(image, 0, 0, mGraphics.getImageWidth(image), mGraphics.getImageHeight(image), 2, TileMap.pxw - (x + dx + transX), y + dy + transY, StaticObj.TOP_RIGHT);
+			g.drawRegion(image, 0, 0, imgW, imgH, 2, TileMap.pxw - (x + dx + transX), y + dy + transY, StaticObj.TOP_RIGHT);
 		}
 	}
 }

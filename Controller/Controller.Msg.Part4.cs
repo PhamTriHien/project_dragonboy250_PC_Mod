@@ -4,8 +4,14 @@ using Assets.src.f;
 using Assets.src.g;
 using UnityEngine;
 
+/// <summary>
+/// Thành phần phân mảnh (partial) của lớp Controller: Phân tích cú pháp và xử lý các bản tin thông điệp mạng từ máy chủ (Part4).
+/// </summary>
 public partial class Controller : IMessageHandler
 {
+	/// <summary>
+	/// Bộ xử lý sự kiện tiếp nhận và phản hồi onMessage_Part4.
+	/// </summary>
 	public bool onMessage_Part4(Message msg)
 	{
 		Char @char = null;
@@ -34,6 +40,10 @@ public partial class Controller : IMessageHandler
 						{
 							SmallImage.ensureImgNew(num154);
 							Image imgSmall = createImage(array17);
+							if (imgSmall != null)
+							{
+								imgSmall.isZoomScaled = true;
+							}
 							if (SmallImage.imgNew[num154] == null)
 							{
 								SmallImage.imgNew[num154] = new Small(imgSmall, num154);
@@ -83,6 +93,10 @@ public partial class Controller : IMessageHandler
 					}
 					sbyte[] array15 = NinjaUtil.readByteArray(msg);
 					effDataById.img = Image.createImage(array15, 0, array15.Length);
+					if (mGraphics.zoomLevel > 1 && effDataById.img != null && !effDataById.img.isZoomScaled)
+					{
+						effDataById.img.isZoomScaled = true;
+					}
 					break;
 				}
 				case -32:
@@ -99,6 +113,10 @@ public partial class Controller : IMessageHandler
 							array11[num137] = msg.reader().readByte();
 						}
 						image = Image.createImage(array11, 0, num136);
+						if (mGraphics.zoomLevel > 1 && image != null && !image.isZoomScaled)
+						{
+							image.isZoomScaled = true;
+						}
 						BgItem.imgNew.put(num135 + string.Empty, image);
 					}
 					catch (Exception)

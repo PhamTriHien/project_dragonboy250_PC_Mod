@@ -1,12 +1,26 @@
-using System;
+﻿using System;
 using Assets.src.e;
 using Assets.src.g;
 using UnityEngine;
 
+/// <summary>
+/// Thành phần phân mảnh (partial) của lớp Char: Đảm nhiệm phân hệ chuyên trách Focus ().
+/// </summary>
 public partial class Char : IMapObject
 {
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ searchFocus.
+	/// </summary>
 	public void searchFocus()
 			{
+				if (me && ModTanSat.autoTanSat && ModTanSat.currentFarmTarget != null && ModTanSat.currentFarmTarget.status != 0 && ModTanSat.currentFarmTarget.status != 1 && ModTanSat.currentFarmTarget.hp > 0)
+				{
+					mobFocus = ModTanSat.currentFarmTarget;
+					charFocus = null;
+					npcFocus = null;
+					itemFocus = null;
+					return;
+				}
 				if (myCharz().skillPaint != null || myCharz().arr != null || myCharz().dart != null)
 				{
 					timeFocusToMob = 200;
@@ -291,6 +305,9 @@ public partial class Char : IMapObject
 				}
 			}
 
+	/// <summary>
+	/// Dọn dẹp và đặt lại trạng thái ban đầu cho clearFocus.
+	/// </summary>
 	public void clearFocus(int index)
 			{
 				switch (index)
@@ -318,6 +335,9 @@ public partial class Char : IMapObject
 				}
 			}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ findNextFocusByKey.
+	/// </summary>
 	public void findNextFocusByKey()
 			{
 				Res.outz("focus size= " + focus.size());
@@ -436,6 +456,9 @@ public partial class Char : IMapObject
 				}
 			}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ deFocusNPC.
+	/// </summary>
 	public void deFocusNPC()
 			{
 				if (me && npcFocus != null)
@@ -449,6 +472,9 @@ public partial class Char : IMapObject
 			}
 
 
+	/// <summary>
+	/// Dọn dẹp và đặt lại trạng thái ban đầu cho clearTask.
+	/// </summary>
 	public void clearTask()
 			{
 				myCharz().taskMaint = null;
@@ -462,6 +488,9 @@ public partial class Char : IMapObject
 				Npc.clearEffTask();
 			}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ focusManualTo.
+	/// </summary>
 	public void focusManualTo(object objectz)
 			{
 				if (objectz is Mob)

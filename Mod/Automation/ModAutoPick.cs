@@ -1,11 +1,17 @@
 using System;
 using System.Collections.Generic;
 
+/// <summary>
+/// CLASS AutoPickActionListener: Định nghĩa và điều phối logic trong hệ thống game.
+/// </summary>
 public class AutoPickActionListener : IActionListener
 {
 	public const int ACTION_SET_FILTER_IDS = 99101;
 	public const int ACTION_SET_FILTER_NAMES = 99102;
 
+	/// <summary>
+	/// Thực thi hành động tương tác khi người dùng kích hoạt lệnh hoặc nút bấm.
+	/// </summary>
 	public void perform(int idAction, object p)
 	{
 		try
@@ -30,6 +36,11 @@ public class AutoPickActionListener : IActionListener
 				ModConfig.SaveConfig();
 				SoundMn.gI().buttonClick();
 			}
+			if (ModAutoPick.reopenModUiAfterInput)
+			{
+				ModAutoPick.reopenModUiAfterInput = false;
+				ModUI.uiCustomOpen = true;
+			}
 		}
 		catch
 		{
@@ -38,6 +49,9 @@ public class AutoPickActionListener : IActionListener
 	}
 }
 
+/// <summary>
+/// CLASS ModAutoPick: Định nghĩa và điều phối logic trong hệ thống game.
+/// </summary>
 public static class ModAutoPick
 {
 	public static bool autoPick = false;
@@ -58,8 +72,15 @@ public static class ModAutoPick
 
 	public static bool isBusy = false;
 	private static long lastPickTime = 0;
+	private static int lastPickMapId = -1;
+	private static int lastPickedItemMapId = -1;
+	private static int currentItemRetryCount = 0;
+	private static readonly Dictionary<int, long> ignoredItemUntil = new Dictionary<int, long>();
 	private static readonly AutoPickActionListener listener = new AutoPickActionListener();
 
+	/// <summary>
+	/// Khởi tạo và nạp dữ liệu cấu hình cho LoadFilterIds.
+	/// </summary>
 	public static void LoadFilterIds(string raw)
 	{
 		filterIdsRaw = raw != null ? raw.Trim() : "";
@@ -77,6 +98,9 @@ public static class ModAutoPick
 		}
 	}
 
+	/// <summary>
+	/// Thiết lập giá trị hoặc trạng thái cho SetFilterIds.
+	/// </summary>
 	public static void SetFilterIds(string raw)
 	{
 		LoadFilterIds(raw);
@@ -93,6 +117,9 @@ public static class ModAutoPick
 		}
 	}
 
+	/// <summary>
+	/// Khởi tạo và nạp dữ liệu cấu hình cho LoadFilterNames.
+	/// </summary>
 	public static void LoadFilterNames(string raw)
 	{
 		filterNameRaw = raw != null ? raw.Trim() : "";
@@ -111,6 +138,9 @@ public static class ModAutoPick
 		}
 	}
 
+	/// <summary>
+	/// Thiết lập giá trị hoặc trạng thái cho SetFilterNames.
+	/// </summary>
 	public static void SetFilterNames(string raw)
 	{
 		LoadFilterNames(raw);
@@ -127,6 +157,9 @@ public static class ModAutoPick
 		}
 	}
 
+	/// <summary>
+	/// Dọn dẹp và đặt lại trạng thái ban đầu cho ClearFilters.
+	/// </summary>
 	public static void ClearFilters()
 	{
 		filterIdsRaw = "";
@@ -140,36 +173,66 @@ public static class ModAutoPick
 		GameScr.info1.addInfo("Đã xóa toàn bộ lọc ID và Tên nhặt", 0);
 	}
 
+	public static bool reopenModUiAfterInput = false;
+
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ ShowInputFilterId.
+	/// </summary>
 	public static void ShowInputFilterId()
 	{
 		if (GameCanvas.inputDlg == null) return;
+		reopenModUiAfterInput = ModUI.uiCustomOpen;
+		ModUI.uiCustomOpen = false;
+		ModMenu.modMenuOpen = false;
 		GameCanvas.inputDlg.show("Nhập danh sách ID cần nhặt (cách nhau dấu phẩy hoặc khoảng trắng):", new Command("OK", listener, AutoPickActionListener.ACTION_SET_FILTER_IDS, null), TField.INPUT_TYPE_ANY);
 		if (GameCanvas.inputDlg.tfInput != null)
 		{
 			GameCanvas.inputDlg.tfInput.setMaxTextLenght(150);
 			GameCanvas.inputDlg.tfInput.setText(filterIdsRaw);
+			if (!Main.isPC) GameCanvas.inputDlg.tfInput.setFocusWithKb(isFocus: true);
 		}
 	}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ ShowInputFilterName.
+	/// </summary>
 	public static void ShowInputFilterName()
 	{
 		if (GameCanvas.inputDlg == null) return;
+		reopenModUiAfterInput = ModUI.uiCustomOpen;
+		ModUI.uiCustomOpen = false;
+		ModMenu.modMenuOpen = false;
 		GameCanvas.inputDlg.show("Nhập từ khóa tên item cần nhặt (cách nhau dấu phẩy):", new Command("OK", listener, AutoPickActionListener.ACTION_SET_FILTER_NAMES, null), TField.INPUT_TYPE_ANY);
 		if (GameCanvas.inputDlg.tfInput != null)
 		{
 			GameCanvas.inputDlg.tfInput.setMaxTextLenght(150);
 			GameCanvas.inputDlg.tfInput.setText(filterNameRaw);
+			if (!Main.isPC) GameCanvas.inputDlg.tfInput.setFocusWithKb(isFocus: true);
 		}
 	}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ ShouldPickItem.
+	/// </summary>
 	public static bool ShouldPickItem(ItemMap it)
 	{
-		if (it == null) return false;
-		if (pickAll) return true;
-		if (it.template == null) return true;
+		if (it == null || it.status == 2) return false;
+		Char me = Char.myCharz();
+		int myId = (me != null) ? me.charID : -1;
+		bool isMyOrPublicItem = (it.playerId == myId || it.playerId == -1 || it.playerId == -2 || it.playerId == 0);
+		if (!isMyOrPublicItem) return false;
 
+		if (it.template == null) return pickAll;
 		int tId = it.template.id;
 		string name = it.template.name;
+
+		// Vật phẩm 673 (cờ/vật phẩm cần xác nhận askToPick) chỉ nhặt khi người chơi chỉ định đích danh trong lọc ID
+		if (tId == 673 && !(filterById && filterIds.Contains(673)))
+		{
+			return false;
+		}
+
+		if (pickAll) return true;
 
 		// 1. Lọc theo danh sách ID
 		if (filterById && filterIds.Contains(tId))
@@ -211,14 +274,46 @@ public static class ModAutoPick
 		return false;
 	}
 
+	/// <summary>
+	/// Kiểm tra xem trên bản đồ có vật phẩm rơi hợp lệ đang chờ nhặt hay không.
+	/// </summary>
+	public static bool HasPendingPickableItem()
+	{
+		if (!autoPick || ModNextMap.isNextMapActive || ModGoBack.isReturning || ModSetActivator.isBusy || ModAutoBuyBua.isBusy)
+		{
+			return false;
+		}
+		MyVector items = GameScr.vItemMap;
+		if (items == null || items.size() == 0) return false;
+		long now = mSystem.currentTimeMillis();
+		for (int i = 0; i < items.size(); i++)
+		{
+			ItemMap it = (ItemMap)items.elementAt(i);
+			if (it == null) continue;
+			if (ignoredItemUntil.TryGetValue(it.itemMapID, out long ignoreUntil) && now < ignoreUntil) continue;
+			if (ShouldPickItem(it)) return true;
+		}
+		return false;
+	}
+
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ RunRealAutoPick.
+	/// </summary>
 	public static void RunRealAutoPick()
 	{
 		try
 		{
-			if (!autoPick || ModNextMap.isNextMapActive || ModGoBack.isReturning || ModSetActivator.isBusy)
+			if (!autoPick || ModNextMap.isNextMapActive || ModGoBack.isReturning || ModSetActivator.isBusy || ModAutoBuyBua.isBusy)
 			{
 				isBusy = false;
 				return;
+			}
+			if (TileMap.mapID != lastPickMapId)
+			{
+				lastPickMapId = TileMap.mapID;
+				lastPickedItemMapId = -1;
+				currentItemRetryCount = 0;
+				ignoredItemUntil.Clear();
 			}
 			long now = mSystem.currentTimeMillis();
 			if (now - lastPickTime < 200)
@@ -226,7 +321,7 @@ public static class ModAutoPick
 				return;
 			}
 			Char me = Char.myCharz();
-			if (me == null || me.cHP <= 0 || me.statusMe == 14 || me.statusMe == 5)
+			if (me == null || me.cHP <= 0 || me.statusMe == 14 || me.statusMe == 5 || Char.isLoadingMap || Char.ischangingMap)
 			{
 				isBusy = false;
 				return;
@@ -249,6 +344,11 @@ public static class ModAutoPick
 				{
 					continue;
 				}
+				if (ignoredItemUntil.TryGetValue(it.itemMapID, out long ignoreUntil))
+				{
+					if (now < ignoreUntil) continue;
+					ignoredItemUntil.Remove(it.itemMapID);
+				}
 
 				if (ShouldPickItem(it))
 				{
@@ -263,28 +363,81 @@ public static class ModAutoPick
 
 			if (closest != null)
 			{
-				lastPickTime = now;
-				isBusy = true;
-				if (minDistance <= 30)
+				bool isFightingTarget = ModTanSat.autoTanSat &&
+				                        ModTanSat.currentFarmTarget != null &&
+				                        ModTanSat.currentFarmTarget.status != 0 &&
+				                        ModTanSat.currentFarmTarget.status != 1 &&
+				                        ModTanSat.currentFarmTarget.hp > 0;
+
+				int pickX = closest.x;
+				int pickY = closest.y;
+				if (ModTanSatTargeting.IsInsideWaypoint(pickX, pickY) && TileMap.pxw > 160)
 				{
-					// Đã ở cự ly gần: Nhặt trực tiếp
-					me.itemFocus = closest;
+					if (pickX < 72) pickX = 72;
+					else if (pickX > TileMap.pxw - 72) pickX = TileMap.pxw - 72;
+				}
+				if (!TileMap.isInAirMap())
+				{
+					int groundY = ModTanSatTargeting.FindGroundY(pickX, pickY, 48);
+					if (groundY != -1)
+					{
+						pickY = groundY;
+					}
+				}
+
+				int groundDist = Res.distance(me.cx, me.cy, pickX, pickY);
+
+				// Khi đang đánh dở quái Tàn Sát: Chỉ nhặt tại chỗ nếu item rơi sát bên (<= 60px), tuyệt đối không dịch chuyển bỏ dở quái đang đánh
+				if (isFightingTarget && groundDist > 60)
+				{
+					isBusy = false;
+					return;
+				}
+
+				if (closest.itemMapID == lastPickedItemMapId)
+				{
+					currentItemRetryCount++;
+					if (currentItemRetryCount > 3)
+					{
+						ignoredItemUntil[closest.itemMapID] = now + 10000L;
+						lastPickedItemMapId = -1;
+						currentItemRetryCount = 0;
+						isBusy = false;
+						return;
+					}
+				}
+				else
+				{
+					lastPickedItemMapId = closest.itemMapID;
+					currentItemRetryCount = 1;
+				}
+
+				lastPickTime = now;
+				if (groundDist <= 60)
+				{
+					isBusy = false;
+					ModTeleport.isWaitingSettle = false;
 					Service.gI().pickItem(closest.itemMapID);
 				}
 				else
 				{
-					// Áp sát vật phẩm và nhặt
-					ModTeleport.TeleportTo(closest.x, closest.y);
-					me.itemFocus = closest;
-					Service.gI().pickItem(closest.itemMapID);
+					isBusy = true;
+					if (ModTeleport.MoveSteppedTo(pickX, pickY))
+					{
+						me.itemFocus = closest;
+						Service.gI().pickItem(closest.itemMapID);
+					}
+					else
+					{
+						currentItemRetryCount--;
+					}
 				}
 			}
 			else
 			{
-				if (now - lastPickTime > 200)
-				{
-					isBusy = false;
-				}
+				lastPickedItemMapId = -1;
+				currentItemRetryCount = 0;
+				isBusy = false;
 			}
 		}
 		catch

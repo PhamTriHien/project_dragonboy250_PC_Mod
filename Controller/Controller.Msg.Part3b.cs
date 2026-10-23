@@ -1,11 +1,17 @@
-﻿using System;
+using System;
 using Assets.src.e;
 using Assets.src.f;
 using Assets.src.g;
 using UnityEngine;
 
+/// <summary>
+/// Thành phần phân mảnh (partial) của lớp Controller: Phân tích cú pháp và xử lý các bản tin thông điệp mạng từ máy chủ (Part3b).
+/// </summary>
 public partial class Controller : IMessageHandler
 {
+	/// <summary>
+	/// Bộ xử lý sự kiện tiếp nhận và phản hồi onMessage_Part3b.
+	/// </summary>
 	public bool onMessage_Part3b(Message msg)
 	{
 		Char @char = null;
@@ -557,6 +563,7 @@ public partial class Controller : IMessageHandler
 					}
 					sbyte[] array2 = NinjaUtil.readByteArray(msg);
 					Image img = Image.createImage(array2, 0, array2.Length);
+					if (img != null) { img.isZoomScaled = true; }
 					Mob.arrMobTemplate[num14].data.img = img;
 					int num15 = msg.reader().readByte();
 					Mob.arrMobTemplate[num14].data.typeData = num15;

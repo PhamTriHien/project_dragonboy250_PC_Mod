@@ -1,7 +1,13 @@
-using System;
+﻿using System;
 using Assets.src.g;
+/// <summary>
+/// Thành phần phân mảnh (partial) của lớp GameScr: Đảm nhiệm phân hệ chuyên trách Part4 ().
+/// </summary>
 public partial class GameScr : mScreen, IChatable
 {
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của isMeCanAttackMob.
+	/// </summary>
 	public bool isMeCanAttackMob(Mob m)
 		{
 			if (m == null)
@@ -35,6 +41,9 @@ public partial class GameScr : mScreen, IChatable
 			}
 			return false;
 		}
+	/// <summary>
+	/// Dọn dẹp và đặt lại trạng thái ban đầu cho resetButton.
+	/// </summary>
 	public void resetButton()
 		{
 			if (!ModMenu.modMenuOpen)
@@ -69,10 +78,16 @@ public partial class GameScr : mScreen, IChatable
 			}
 			scrMain.clear();
 		}
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của isVsMap.
+	/// </summary>
 	public bool isVsMap()
 		{
 			return true;
 		}
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của checkDrag.
+	/// </summary>
 	private void checkDrag()
 		{
 			if (ModMenu.uiCustomOpen || isAnalog == 1 || gamePad.disableCheckDrag())
@@ -162,10 +177,16 @@ public partial class GameScr : mScreen, IChatable
 				}
 			}
 		}
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ inRectangle.
+	/// </summary>
 	private bool inRectangle(int xClick, int yClick, int x, int y, int w, int h)
 		{
 			return xClick >= x && xClick <= x + w && yClick >= y && yClick <= y + h;
 		}
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của checkAuto.
+	/// </summary>
 	private void checkAuto()
 		{
 			long num = mSystem.currentTimeMillis();
@@ -212,6 +233,9 @@ public partial class GameScr : mScreen, IChatable
 				auto--;
 			}
 		}
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ doUseHP.
+	/// </summary>
 	public void doUseHP()
 		{
 			if (Char.myCharz().stone || Char.myCharz().blindEff || Char.myCharz().holdEffID > 0)
@@ -232,6 +256,9 @@ public partial class GameScr : mScreen, IChatable
 				SoundMn.gI().eatPeans();
 			}
 		}
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ activeSuperPower.
+	/// </summary>
 	public void activeSuperPower(int x, int y)
 		{
 			if (!isSuperPower)
@@ -244,11 +271,17 @@ public partial class GameScr : mScreen, IChatable
 				yPower = y - cmy;
 			}
 		}
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ doiMauTroi.
+	/// </summary>
 	public void doiMauTroi()
 		{
 			isRongThanXuatHien = true;
 			mautroi = mGraphics.blendColor(0.4f, 0, GameCanvas.colorTop[GameCanvas.colorTop.Length - 1]);
 		}
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ callRongThan.
+	/// </summary>
 	public void callRongThan(int x, int y)
 		{
 			Res.outz("VE RONG THAN O VI TRI x= " + x + " y=" + y);
@@ -256,6 +289,9 @@ public partial class GameScr : mScreen, IChatable
 			Effect me = new Effect((!isRongNamek) ? 17 : 25, x, y - 77, 2, -1, 1);
 			EffecMn.addEff(me);
 		}
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ hideRongThan.
+	/// </summary>
 	public void hideRongThan()
 		{
 			isRongThanXuatHien = false;
@@ -266,8 +302,15 @@ public partial class GameScr : mScreen, IChatable
 				EffecMn.removeEff(25);
 			}
 		}
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ autoPlay.
+	/// </summary>
 	private void autoPlay()
 		{
+			if (ModTanSat.autoTanSat)
+			{
+				return;
+			}
 			if (timeSkill > 0)
 			{
 				timeSkill--;
@@ -386,6 +429,9 @@ public partial class GameScr : mScreen, IChatable
 				doDoubleClickToObj(Char.myCharz().mobFocus);
 			}
 		}
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ askToPick.
+	/// </summary>
 	private void askToPick()
 		{
 			Npc npc = new Npc(5, 0, -100, 100, 5, info1.charId[Char.myCharz().cgender][2]);

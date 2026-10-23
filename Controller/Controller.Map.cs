@@ -421,6 +421,7 @@ public partial class Controller : IMessageHandler
 											image = Image.createImage(array, 0, array.Length);
 											if (image != null)
 											{
+												image.isZoomScaled = true;
 												BgItem.imgNew.put(bgItem.idImage + string.Empty, image);
 											}
 											else

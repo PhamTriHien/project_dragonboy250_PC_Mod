@@ -3,20 +3,29 @@ using Assets.src.e;
 using Assets.src.g;
 using UnityEngine;
 
+/// <summary>
+/// Thành phần phân mảnh (partial) của lớp Char: Đảm nhiệm kết xuất đồ họa, vẽ giao diện, hiệu ứng và nhân vật (Aura).
+/// </summary>
 public partial class Char : IMapObject
 {
+	/// <summary>
+	/// Thực hiện vẽ và hiển thị thành phần paintEff_Pet lên canvas đồ họa.
+	/// </summary>
 	private void paintEff_Pet(mGraphics g)
 			{
 				for (int i = 0; i < vEffChar.size(); i++)
 				{
 					Effect effect = (Effect)vEffChar.elementAt(i);
-					if (effect.effId >= 201)
+					if (effect.effId >= 201 && effect.layer != 0 && effect.layer != 1)
 					{
 						effect.paint(g);
 					}
 				}
 			}
 
+	/// <summary>
+	/// Thực hiện vẽ và hiển thị thành phần paintSuperEffBehind lên canvas đồ họa.
+	/// </summary>
 	private void paintSuperEffBehind(mGraphics g)
 			{
 				if ((me && !isPaintAura2) || idAuraEff > -1 || (statusMe != 1 && statusMe != 6) || mSystem.currentTimeMillis() - timeBlue <= 0 || isCopy || clevel < 16)
@@ -50,6 +59,9 @@ public partial class Char : IMapObject
 				}
 			}
 
+	/// <summary>
+	/// Thực hiện vẽ và hiển thị thành phần paintSuperEffFront lên canvas đồ họa.
+	/// </summary>
 	private void paintSuperEffFront(mGraphics g)
 			{
 				if (!isPaintAura2)
@@ -153,6 +165,9 @@ public partial class Char : IMapObject
 				}
 			}
 
+	/// <summary>
+	/// Thực hiện vẽ và hiển thị thành phần paintEffect lên canvas đồ họa.
+	/// </summary>
 	private void paintEffect(mGraphics g)
 			{
 				if (effPaints != null)
@@ -196,6 +211,9 @@ public partial class Char : IMapObject
 				}
 			}
 
+	/// <summary>
+	/// Thực hiện vẽ và hiển thị thành phần paintShadow lên canvas đồ họa.
+	/// </summary>
 	public void paintShadow(mGraphics g)
 			{
 				if (isMabuHold || head == 377 || leg == 471 || isTeleport || isFlyUp)
@@ -222,6 +240,9 @@ public partial class Char : IMapObject
 				g.setClip(GameScr.cmx, GameScr.cmy - GameCanvas.transY, GameScr.gW, GameScr.gH + 2 * GameCanvas.transY);
 			}
 
+	/// <summary>
+	/// Cập nhật trạng thái logic của updateShadown theo chu kỳ khung hình.
+	/// </summary>
 	public void updateShadown()
 			{
 				int num = 0;
@@ -247,6 +268,9 @@ public partial class Char : IMapObject
 				}
 			}
 
+	/// <summary>
+	/// Thực hiện vẽ và hiển thị thành phần paintEffBehind lên canvas đồ họa.
+	/// </summary>
 	public void paintEffBehind(mGraphics g)
 			{
 				for (int i = 0; i < vEffChar.size(); i++)
@@ -267,6 +291,9 @@ public partial class Char : IMapObject
 				}
 			}
 
+	/// <summary>
+	/// Thực hiện vẽ và hiển thị thành phần paintEffFront lên canvas đồ họa.
+	/// </summary>
 	public void paintEffFront(mGraphics g)
 			{
 				for (int i = 0; i < vEffChar.size(); i++)
@@ -287,6 +314,9 @@ public partial class Char : IMapObject
 				}
 			}
 
+	/// <summary>
+	/// Thực hiện vẽ và hiển thị thành phần paintAuraBehind lên canvas đồ họa.
+	/// </summary>
 	public void paintAuraBehind(mGraphics g)
 			{
 				if ((!me || isPaintAura) && idAuraEff > -1 && (statusMe == 1 || statusMe == 6) && !GameCanvas.panel.isShow && mSystem.currentTimeMillis() - timeBlue > 0)
@@ -297,6 +327,9 @@ public partial class Char : IMapObject
 				}
 			}
 
+	/// <summary>
+	/// Thực hiện vẽ và hiển thị thành phần paintAuraFront lên canvas đồ họa.
+	/// </summary>
 	public void paintAuraFront(mGraphics g)
 			{
 				if ((me && !isPaintAura) || idAuraEff <= -1)
@@ -340,6 +373,9 @@ public partial class Char : IMapObject
 				}
 			}
 
+	/// <summary>
+	/// Thực hiện vẽ và hiển thị thành phần paintEff_Lvup_behind lên canvas đồ họa.
+	/// </summary>
 	public void paintEff_Lvup_behind(mGraphics g)
 			{
 				if (idEff_Set_Item != -1)
@@ -355,6 +391,9 @@ public partial class Char : IMapObject
 				}
 			}
 
+	/// <summary>
+	/// Thực hiện vẽ và hiển thị thành phần paintEff_Lvup_front lên canvas đồ họa.
+	/// </summary>
 	public void paintEff_Lvup_front(mGraphics g)
 			{
 				if (idEff_Set_Item != -1)

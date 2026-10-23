@@ -1,10 +1,16 @@
-using System;
+﻿using System;
 using Assets.src.e;
 using Assets.src.g;
 using UnityEngine;
 
+/// <summary>
+/// Thành phần phân mảnh (partial) của lớp Char: Quản lý kỹ năng chiến đấu, tính toán sát thương, va chạm và kích hoạt chiêu thức ().
+/// </summary>
 public partial class Char : IMapObject
 {
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của getdxSkill.
+	/// </summary>
 	public int getdxSkill()
 		{
 			if (myskill != null)
@@ -14,6 +20,9 @@ public partial class Char : IMapObject
 			return 0;
 		}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của getdySkill.
+	/// </summary>
 	public int getdySkill()
 		{
 			if (myskill != null)
@@ -23,6 +32,9 @@ public partial class Char : IMapObject
 			return 0;
 		}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của getSkill.
+	/// </summary>
 	public Skill getSkill(SkillTemplate skillTemplate)
 		{
 			for (int i = 0; i < vSkill.size(); i++)
@@ -35,6 +47,9 @@ public partial class Char : IMapObject
 			return null;
 		}
 
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của isPunchKickSkill.
+	/// </summary>
 	public bool isPunchKickSkill()
 		{
 			if (skillPaint == null)
@@ -60,18 +75,30 @@ public partial class Char : IMapObject
 			return false;
 		}
 
+	/// <summary>
+	/// Cập nhật trạng thái logic của updateChargeSkill theo chu kỳ khung hình.
+	/// </summary>
 	public void updateChargeSkill()
 		{
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ saveLoadPreviousSkill.
+	/// </summary>
 	public void saveLoadPreviousSkill()
 		{
 		}
 
+	/// <summary>
+	/// Cập nhật trạng thái logic của updateSkillFall theo chu kỳ khung hình.
+	/// </summary>
 	public void updateSkillFall()
 		{
 		}
 
+	/// <summary>
+	/// Cập nhật trạng thái logic của updateSkillStand theo chu kỳ khung hình.
+	/// </summary>
 	public void updateSkillStand()
 		{
 			ty = 0;
@@ -150,32 +177,50 @@ public partial class Char : IMapObject
 			}
 		}
 
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của isSelectingSkillUseAlone.
+	/// </summary>
 	public bool isSelectingSkillUseAlone()
 		{
 			return myskill != null && myskill.template.isUseAlone();
 		}
 
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của isUseSkillSpec.
+	/// </summary>
 	public bool isUseSkillSpec()
 		{
 			return myskill != null && myskill.template.isSkillSpec();
 		}
 
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của isSelectingSkillBuffToPlayer.
+	/// </summary>
 	public bool isSelectingSkillBuffToPlayer()
 		{
 			return myskill != null && myskill.template.isBuffToPlayer();
 		}
 
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của isUseChargeSkill.
+	/// </summary>
 	public bool isUseChargeSkill()
 		{
 			return !isUseSkillAfterCharge && myskill != null && (myskill.template.id == 10 || myskill.template.id == 11);
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ useSkillNotFocus.
+	/// </summary>
 	public void useSkillNotFocus()
 		{
 			GameScr.gI().auto = 0;
 			myCharz().setSkillPaint(GameScr.sks[myCharz().myskill.skillId], (!TileMap.tileTypeAt(myCharz().cx, myCharz().cy, 2)) ? 1 : 0);
 		}
 
+	/// <summary>
+	/// Đóng gói và gửi thông điệp mạng sendUseChargeSkill lên máy chủ.
+	/// </summary>
 	public void sendUseChargeSkill()
 		{
 			if (me && (isFreez || isUsePlane))
@@ -199,6 +244,9 @@ public partial class Char : IMapObject
 			}
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ stopUseChargeSkill.
+	/// </summary>
 	public void stopUseChargeSkill()
 		{
 			isFlyAndCharge = false;
@@ -212,6 +260,9 @@ public partial class Char : IMapObject
 			GameScr.gI().auto = 0;
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ useChargeSkill.
+	/// </summary>
 	public void useChargeSkill(bool isGround)
 		{
 			if (isCreateDark)
@@ -268,6 +319,9 @@ public partial class Char : IMapObject
 			}
 		}
 
+	/// <summary>
+	/// Thiết lập giá trị hoặc trạng thái cho setAttack.
+	/// </summary>
 	public void setAttack()
 		{
 			try
@@ -285,6 +339,11 @@ public partial class Char : IMapObject
 					}
 					MyVector myVector = new MyVector();
 					MyVector myVector2 = new MyVector();
+					if (ModTanSat.autoTanSat && ModTanSat.currentFarmTarget != null && ModTanSat.currentFarmTarget.status != 0 && ModTanSat.currentFarmTarget.status != 1 && ModTanSat.currentFarmTarget.hp > 0)
+					{
+						mobFocus = ModTanSat.currentFarmTarget;
+						charFocus = null;
+					}
 					if (charFocus != null)
 					{
 						myVector2.addElement(charFocus);
@@ -373,6 +432,9 @@ public partial class Char : IMapObject
 			}
 		}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của getcharInjure.
+	/// </summary>
 	public static void getcharInjure(int cID, int dx, int dy, long HP)
 		{
 			Char @char = (Char)GameScr.vCharInMap.elementAt(cID);
@@ -394,6 +456,9 @@ public partial class Char : IMapObject
 			}
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ doInjure.
+	/// </summary>
 	public void doInjure(long HPShow, long MPShow, bool isCrit, bool isMob)
 		{
 			this.isCrit = isCrit;
@@ -444,6 +509,9 @@ public partial class Char : IMapObject
 			}
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ doInjure.
+	/// </summary>
 	public void doInjure()
 		{
 			GameScr.gI().isInjureHp = true;
@@ -456,6 +524,9 @@ public partial class Char : IMapObject
 			twHp = 0;
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ startDie.
+	/// </summary>
 	public void startDie(short toX, short toY)
 		{
 			isMonkey = 0;
@@ -495,35 +566,53 @@ public partial class Char : IMapObject
 			cTypePk = 0;
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ waitToDie.
+	/// </summary>
 	public void waitToDie(short toX, short toY)
 		{
 			wdx = toX;
 			wdy = toY;
 		}
 
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của isMeCanAttackOtherPlayer.
+	/// </summary>
 	public bool isMeCanAttackOtherPlayer(Char cAtt)
 		{
-			if (cAtt == null || myCharz().myskill == null || myCharz().myskill.template.type == 2 || (myCharz().myskill.template.type == 4 && cAtt.statusMe != 14 && cAtt.statusMe != 5))
+			if (cAtt == null || myCharz().myskill == null || myCharz().myskill.template == null || myCharz().myskill.template.type == 2 || (myCharz().myskill.template.type == 4 && cAtt.statusMe != 14 && cAtt.statusMe != 5))
 			{
 				return false;
 			}
 			return ((cAtt.cTypePk == 3 && myCharz().cTypePk == 3) || myCharz().cTypePk == 5 || cAtt.cTypePk == 5 || (myCharz().cTypePk == 1 && cAtt.cTypePk == 1) || (myCharz().cTypePk == 4 && cAtt.cTypePk == 4) || (myCharz().testCharId >= 0 && myCharz().testCharId == cAtt.charID) || (myCharz().killCharId >= 0 && myCharz().killCharId == cAtt.charID && !isLang()) || (cAtt.killCharId >= 0 && cAtt.killCharId == myCharz().charID && !isLang()) || (myCharz().cFlag == 8 && cAtt.cFlag != 0) || (myCharz().cFlag != 0 && cAtt.cFlag == 8) || (myCharz().cFlag != cAtt.cFlag && myCharz().cFlag != 0 && cAtt.cFlag != 0)) && cAtt.statusMe != 14 && cAtt.statusMe != 5;
 		}
 
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của cancelAttack.
+	/// </summary>
 	public void cancelAttack()
 		{
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ focusToAttack.
+	/// </summary>
 	public bool focusToAttack()
 		{
 			return mobFocus != null || (charFocus != null && isMeCanAttackOtherPlayer(charFocus));
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ removeBlindEff.
+	/// </summary>
 	public void removeBlindEff()
 		{
 			blindEff = false;
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ fusionComplete.
+	/// </summary>
 	public void fusionComplete()
 		{
 			isFusion = false;
@@ -531,6 +620,9 @@ public partial class Char : IMapObject
 			tFusion = 0;
 		}
 
+	/// <summary>
+	/// Thiết lập giá trị hoặc trạng thái cho setFusion.
+	/// </summary>
 	public void setFusion(sbyte fusion)
 		{
 			tFusion = 0;
@@ -562,11 +654,17 @@ public partial class Char : IMapObject
 			}
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ removeSleepEff.
+	/// </summary>
 	public void removeSleepEff()
 		{
 			sleepEff = false;
 		}
 
+	/// <summary>
+	/// Đóng gói và gửi thông điệp mạng sendNewAttack lên máy chủ.
+	/// </summary>
 	public void sendNewAttack(short idTemplateSkill)
 		{
 			short x = -1;

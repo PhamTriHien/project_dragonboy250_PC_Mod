@@ -1,5 +1,8 @@
 using System;
 
+/// <summary>
+/// CLASS EffectData: Định nghĩa và điều phối logic trong hệ thống game.
+/// </summary>
 public class EffectData
 {
 	public Image img;
@@ -12,6 +15,8 @@ public class EffectData
 
 	public short[][] anim_data = new short[16][];
 
+	public bool hasAnimData;
+
 	public int ID;
 
 	public int typeData;
@@ -20,6 +25,9 @@ public class EffectData
 
 	public int height;
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của getImageInfo.
+	/// </summary>
 	public ImageInfo getImageInfo(sbyte id)
 	{
 		for (int i = 0; i < imgInfo.Length; i++)
@@ -32,11 +40,17 @@ public class EffectData
 		return null;
 	}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của get.
+	/// </summary>
 	public short[] get()
 	{
 		return arrFrame;
 	}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của get.
+	/// </summary>
 	public short[] get(int index)
 	{
 		if (index >= anim_data.Length)
@@ -50,6 +64,9 @@ public class EffectData
 		return anim_data[index];
 	}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ readData.
+	/// </summary>
 	public void readData(string patch)
 	{
 		DataInputStream dataInputStream = null;
@@ -64,6 +81,9 @@ public class EffectData
 		readData(dataInputStream.r);
 	}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ readData2.
+	/// </summary>
 	public void readData2(string patch)
 	{
 		DataInputStream dataInputStream = null;
@@ -78,6 +98,9 @@ public class EffectData
 		readEffect(dataInputStream.r);
 	}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ readEffect.
+	/// </summary>
 	public void readEffect(myReader msg)
 	{
 		int num = 0;
@@ -148,6 +171,9 @@ public class EffectData
 		}
 	}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ readData.
+	/// </summary>
 	public void readData(myReader iss)
 	{
 		int num = 0;
@@ -222,9 +248,10 @@ public class EffectData
 					if (num9 + 500 >= 500)
 					{
 						array[num8++] = num9;
-						flag = true;
 						continue;
 					}
+					hasAnimData = true;
+					flag = true;
 					num7 = (short)Res.abs(num9 + 500);
 					anim_data[num7] = new short[num8];
 					Array.Copy(array, 0, anim_data[num7], 0, num8);
@@ -233,14 +260,15 @@ public class EffectData
 				if (!flag)
 				{
 					anim_data[0] = new short[num8];
-					Array.Copy(array, 0, anim_data[num7], 0, num8);
+					Array.Copy(array, 0, anim_data[0], 0, num8);
+					for (int m = 1; m < 16; m++) { anim_data[m] = anim_data[0]; }
 					return;
 				}
 				for (int m = 0; m < 16; m++)
 				{
 					if (anim_data[m] == null)
 					{
-						anim_data[m] = anim_data[2];
+						anim_data[m] = anim_data[2] ?? anim_data[1] ?? anim_data[0];
 					}
 				}
 			}
@@ -258,21 +286,30 @@ public class EffectData
 		}
 	}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ readData.
+	/// </summary>
 	public void readData(sbyte[] data)
 	{
 		myReader iss = new myReader(data);
 		readData(iss);
 	}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ readDataNewBoss.
+	/// </summary>
 	public void readDataNewBoss(sbyte[] data, sbyte typeread)
 	{
 		myReader msg = new myReader(data);
 		readMobNew(msg, typeread);
 	}
 
+	/// <summary>
+	/// Thực hiện vẽ và hiển thị thành phần paintFrame lên canvas đồ họa.
+	/// </summary>
 	public void paintFrame(mGraphics g, int f, int x, int y, int trans, int layer)
 	{
-		if (this.frame == null || this.frame.Length == 0)
+		if (this.frame == null || this.frame.Length == 0 || f < 0 || f >= this.frame.Length)
 		{
 			return;
 		}
@@ -304,6 +341,9 @@ public class EffectData
 		}
 	}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ readMobNew.
+	/// </summary>
 	public void readMobNew(myReader msg, sbyte typeread)
 	{
 		int num = 0;

@@ -3,8 +3,14 @@ using System.Collections.Generic;
 using Assets.src.g;
 using UnityEngine;
 
+/// <summary>
+/// Thành phần phân mảnh (partial) của lớp Panel: Đảm nhiệm kết xuất đồ họa, vẽ giao diện, hiệu ứng và nhân vật (Clan).
+/// </summary>
 public partial class Panel : IActionListener, IChatable
 {
+	/// <summary>
+	/// Thực hiện vẽ và hiển thị thành phần paintPetStatus lên canvas đồ họa.
+	/// </summary>
 	private void paintPetStatus(mGraphics g)
 			{
 				g.setClip(xScroll, yScroll, wScroll, hScroll);
@@ -25,10 +31,16 @@ public partial class Panel : IActionListener, IChatable
 				paintScrollArrow(g);
 			}
 
+	/// <summary>
+	/// Thực hiện vẽ và hiển thị thành phần paintPetSkill lên canvas đồ họa.
+	/// </summary>
 	private void paintPetSkill()
 			{
 			}
 
+	/// <summary>
+	/// Thực hiện vẽ và hiển thị thành phần paintPetInventory lên canvas đồ họa.
+	/// </summary>
 	private void paintPetInventory(mGraphics g)
 			{
 				g.setColor(16711680);
@@ -172,6 +184,13 @@ public partial class Panel : IActionListener, IChatable
 							mFont.tahoma_7_yellow.drawString(g, string.Empty + item.quantity, num6 + num8, num7 + num9 - mFont.tahoma_7_yellow.getHeight(), 1);
 						}
 					}
+					else if (flag)
+					{
+						string slotLabel = GetBodySlotGhostName(num);
+						mFont.tahoma_7_grey.drawString(g, slotLabel, num6 + num8 / 2, num7 + num9 / 2 - 4, mFont.CENTER);
+						mFont.tahoma_7_grey.drawString(g, "Ô trang bị: " + slotLabel, num3 + 5, num4 + 1, 0);
+						mFont.tahoma_7_grey.drawString(g, "Trống", num3 + 5, num4 + 11, 0);
+					}
 					else if (!flag)
 					{
 						Skill skill = arrPetSkill[num2];
@@ -207,6 +226,9 @@ public partial class Panel : IActionListener, IChatable
 				paintScrollArrow(g);
 			}
 
+	/// <summary>
+	/// Thực hiện vẽ và hiển thị thành phần paintMapTrans lên canvas đồ họa.
+	/// </summary>
 	private void paintMapTrans(mGraphics g)
 			{
 				g.setColor(16711680);
@@ -233,6 +255,9 @@ public partial class Panel : IActionListener, IChatable
 				paintScrollArrow(g);
 			}
 
+	/// <summary>
+	/// Thực hiện vẽ và hiển thị thành phần paintZone lên canvas đồ họa.
+	/// </summary>
 	private void paintZone(mGraphics g)
 			{
 				g.setColor(16711680);
@@ -279,6 +304,9 @@ public partial class Panel : IActionListener, IChatable
 				paintScrollArrow(g);
 			}
 
+	/// <summary>
+	/// Thực hiện vẽ và hiển thị thành phần paintClans lên canvas đồ họa.
+	/// </summary>
 	private void paintClans(mGraphics g)
 			{
 				g.setClip(xScroll, yScroll, wScroll, hScroll);
@@ -438,6 +466,9 @@ public partial class Panel : IActionListener, IChatable
 				paintScrollArrow(g);
 			}
 
+	/// <summary>
+	/// Thực hiện vẽ và hiển thị thành phần paintClanInfo lên canvas đồ họa.
+	/// </summary>
 	private void paintClanInfo(mGraphics g)
 			{
 				if (Char.myCharz().clan == null)
@@ -469,6 +500,9 @@ public partial class Panel : IActionListener, IChatable
 				}
 			}
 
+	/// <summary>
+	/// Thực hiện vẽ và hiển thị thành phần paintPetInfo lên canvas đồ họa.
+	/// </summary>
 	private void paintPetInfo(mGraphics g)
 			{
 				mFont.tahoma_7_yellow.drawString(g, mResources.power + ": " + NinjaUtil.getMoneys(Char.myPetz().cPower), X + 60, 4, mFont.LEFT, mFont.tahoma_7_grey);
@@ -491,6 +525,9 @@ public partial class Panel : IActionListener, IChatable
 				g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
 			}
 
+	/// <summary>
+	/// Thực hiện vẽ và hiển thị thành phần paintZoneInfo lên canvas đồ họa.
+	/// </summary>
 	private void paintZoneInfo(mGraphics g)
 			{
 				mFont.tahoma_7b_white.drawString(g, mResources.zone + " " + TileMap.zoneID, 60, 4, mFont.LEFT, mFont.tahoma_7b_dark);
@@ -498,6 +535,9 @@ public partial class Panel : IActionListener, IChatable
 				mFont.tahoma_7b_white.drawString(g, TileMap.zoneID + string.Empty, 25, 27, mFont.CENTER);
 			}
 
+	/// <summary>
+	/// Thực hiện vẽ và hiển thị thành phần paintMapInfo lên canvas đồ họa.
+	/// </summary>
 	private void paintMapInfo(mGraphics g)
 			{
 				mFont.tahoma_7b_white.drawString(g, mResources.MENUGENDER[TileMap.planetID], 60, 4, mFont.LEFT);
@@ -518,6 +558,9 @@ public partial class Panel : IActionListener, IChatable
 				}
 			}
 
+	/// <summary>
+	/// Thực hiện vẽ và hiển thị thành phần paintPetStatusInfo lên canvas đồ họa.
+	/// </summary>
 	private void paintPetStatusInfo(mGraphics g)
 			{
 				mFont.tahoma_7b_white.drawString(g, "HP: " + Char.myPetz().cHP + "/" + Char.myPetz().cHPFull, X + 60, 4, mFont.LEFT, mFont.tahoma_7b_dark);
@@ -526,6 +569,9 @@ public partial class Panel : IActionListener, IChatable
 				mFont.tahoma_7_yellow.drawString(g, mResources.status + ": " + strStatus[Char.myPetz().petStatus], X + 60, 38, mFont.LEFT, mFont.tahoma_7_grey);
 			}
 
+	/// <summary>
+	/// Thực hiện vẽ và hiển thị thành phần paintMap lên canvas đồ họa.
+	/// </summary>
 	public void paintMap(mGraphics g)
 			{
 				g.setClip(xScroll, yScroll, wScroll, hScroll);
