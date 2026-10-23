@@ -589,10 +589,27 @@ public static class ModTanSat
 						lastResetPenaltyTime = now;
 					}
 				}
-				else if (currentFarmTarget.templateId != 0 && currentTargetUnchangedAttackCount >= 12 && now - targetLockTime > 20000)
+				else
 				{
-					ignoredMobUntil[currentFarmTarget.mobId] = now + 5000L;
-					targetDiedOrInvalid = true;
+					if (currentFarmTarget.hp > targetLastHp)
+					{
+						targetLastHp = currentFarmTarget.hp;
+					}
+					if (currentFarmTarget.templateId != 0 && currentTargetUnchangedAttackCount == 4 && now - lastTeleportTime > 1200)
+					{
+						lastTeleportTargetMobId = -1;
+						lastTeleportTime = 0;
+					}
+					if (checkLagMob && currentFarmTarget.templateId != 0 && currentTargetUnchangedAttackCount >= 8 && now - targetLockTime > 4500)
+					{
+						ignoredMobUntil[currentFarmTarget.mobId] = now + 6000L;
+						targetDiedOrInvalid = true;
+					}
+					else if (currentFarmTarget.templateId != 0 && currentTargetUnchangedAttackCount >= 12 && now - targetLockTime > 20000)
+					{
+						ignoredMobUntil[currentFarmTarget.mobId] = now + 5000L;
+						targetDiedOrInvalid = true;
+					}
 				}
 			}
 
@@ -713,18 +730,10 @@ public static class ModTanSat
 
 						lastTeleportTargetMobId = currentFarmTarget.mobId;
 						lastTeleportTime = now;
-
-						if (isMobFlying && !TileMap.tileTypeAt(me.cx, me.cy, 2))
-						{
-							me.statusMe = 4;
-							me.delayFall = 40;
-							me.cvy = 0;
-						}
-						else
-						{
-							me.statusMe = 1;
-							me.delayFall = 0;
-						}
+						me.statusMe = 1;
+						me.delayFall = 0;
+						me.cvx = 0;
+						me.cvy = 0;
 					}
 				}
 				else if (isOutOfRange)
@@ -742,7 +751,9 @@ public static class ModTanSat
 			me.charFocus = null;
 			if (!TileMap.tileTypeAt(me.cx, me.cy, 2))
 			{
-				me.delayFall = 40;
+				me.statusMe = 1;
+				me.delayFall = 0;
+				me.cvx = 0;
 				me.cvy = 0;
 			}
 
@@ -797,15 +808,8 @@ public static class ModTanSat
 				bool isGroundedNow = TileMap.tileTypeAt(me.cx, me.cy, 2);
 				me.currentFireByShortcut = true;
 				me.setSkillPaint(GameScr.sks[skillToUse.skillId], (!isGroundedNow) ? 1 : 0);
-				if (!isGroundedNow)
-				{
-					me.delayFall = 40;
-					me.cvy = 0;
-				}
-				else
-				{
-					me.delayFall = 0;
-				}
+				me.delayFall = 0;
+				me.cvy = 0;
 			}
 			else
 			{

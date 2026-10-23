@@ -136,15 +136,33 @@ public partial class Char : IMapObject
 						cvx = 0;
 						cvy = 0;
 						statusMe = 1;
+						delayFall = 0;
 						cp1 = (cp2 = (cp3 = 0));
 						ischangingMap = false;
 						isLockKey = false;
 						if (isCurrentPos)
 						{
-							cx = x;
-							cy = y;
-							myCharz().cxSend = x;
-							myCharz().cySend = y;
+							if (!ModTanSat.autoTanSat || ModTanSat.currentFarmTarget == null)
+							{
+								cx = x;
+								cy = y;
+								myCharz().cxSend = x;
+								myCharz().cySend = y;
+							}
+							else if (cx != x || cy != y)
+							{
+								myCharz().cxSend = x;
+								myCharz().cySend = y;
+								if (!ModTeleport.HasPendingEchoNear(cx, cy))
+								{
+									Service.gI().charMove();
+								}
+							}
+							else
+							{
+								myCharz().cxSend = x;
+								myCharz().cySend = y;
+							}
 							ModTeleport.isWaitingSettle = false;
 							if (ModTanSat.autoTanSat)
 							{
@@ -153,8 +171,26 @@ public partial class Char : IMapObject
 						}
 						else
 						{
-							myCharz().cxSend = cx;
-							myCharz().cySend = cy;
+							myCharz().cxSend = x;
+							myCharz().cySend = y;
+							if (!ModTeleport.HasPendingEchoNear(cx, cy))
+							{
+								if (Res.abs(cx - x) <= 96 && Res.abs(cy - y) <= 48)
+								{
+									Service.gI().charMove();
+								}
+								else if (Res.abs(cx - x) <= 24 && y > cy && !TileMap.tileTypeAt(cx, cy, 2))
+								{
+									ModTeleport.StepMoveFrom(x, y, cx, cy);
+									ModTeleport.RegisterTeleportEcho(cx, cy);
+								}
+								else
+								{
+									ModTanSat.lastTeleportTargetMobId = -1;
+									ModTanSat.lastTeleportTime = 0;
+									ModTeleport.isWaitingSettle = false;
+								}
+							}
 							if (ModTanSat.autoTanSat)
 							{
 								ModTdltLogger.Log("RESET_POINT_STALE", $"Ignored stale teleport echo pos=({x},{y}), keeping current pos=({cx},{cy})");

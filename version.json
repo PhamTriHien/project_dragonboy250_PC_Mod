@@ -1,9 +1,9 @@
 {
-  "version": "2.5.28",
-  "buildDate": "2026-10-23",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.28/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.28/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.28/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.28/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.28: Hoan thien toan dien 14 nhom tinh nang Mod Java sau vao Mod C#: Tan Sat (Check Quai Lag, Reset Khu dinh ky, HUD Vang Train, Luyen De Tu, Luan Phien Muc Tieu, Dong Bang & Custom Delay tung Skill); Hanh Trang & SKH (Tag %SD/%HP/%KI/%TNSM/SKH tren o do, HUD 5 mon SKH, Loc ban Do Than/SKH/Cap do/Giu ID/Ban ID, Auto TDLT & Mua TDLT); Bua (10 loai bua Ba Hat Mit & HUD Bua); Radar & Boss (Tia do & HUD trang thai muc tieu, Khoa muc tieu, Loc ten Boss, KS Super Broly < 1tr HP); Auto Nhat (Chi nhat do minh, Blacklist ID, Vong ban kinh nhat); Dau Than & De Tu (Cho dau theo ten, Nguong HP/KI De an dau, Thoat game khi De dat moc SM); GoBack (Ve nha hoi KI khi het MP, Toa do tuy chinh); Tien Ich (Giu Khu Reconnect, Auto CSKB, 6 Khung Gio Train Map/Khu, Auto NV Tan Thu 0->10, Treo Giam CPU 15 FPS)."
+  "version": "2.5.29",
+  "buildDate": "2026-10-24",
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.29/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.29/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.29/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.29/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.29: Toi uu triet de Tan Sat Dich Chuyen (ModTeleport, ModTanSat, Char.Helpers): (1) Triet tieu loi roi tu do tren khong (delayFall=40 -> 39%10=9>5 lam cy++ moi frame va phat sinh Teleport lap lai moi 800ms khi danh quai bay); (2) Di chuyen buoc ngan (dx<=96, dy<=48) va muc tieu tren khong bang chuoi charMove chuan khong gui (x,y+1), xoa bo hoan toan hang doi RESET_POINT tre 15-40s va loi may chu keo roi xuong dat y=336; (3) Dong bo chinh xac RESET_POINT_STALE/CONFIRM khong giat nguoc ra ngoai tam danh can chien; (4) Tang toc tai dong bo vi tri sau 4 don danh hụt va chuyen muc tieu Lag Mob sau 4.5s."
 }
