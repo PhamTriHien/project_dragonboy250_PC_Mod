@@ -1,9 +1,9 @@
 {
-  "version": "2.5.29",
+  "version": "2.5.30",
   "buildDate": "2026-10-24",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.29/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.29/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.29/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.29/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.29: Toi uu triet de Tan Sat Dich Chuyen (ModTeleport, ModTanSat, Char.Helpers): (1) Triet tieu loi roi tu do tren khong (delayFall=40 -> 39%10=9>5 lam cy++ moi frame va phat sinh Teleport lap lai moi 800ms khi danh quai bay); (2) Di chuyen buoc ngan (dx<=96, dy<=48) va muc tieu tren khong bang chuoi charMove chuan khong gui (x,y+1), xoa bo hoan toan hang doi RESET_POINT tre 15-40s va loi may chu keo roi xuong dat y=336; (3) Dong bo chinh xac RESET_POINT_STALE/CONFIRM khong giat nguoc ra ngoai tam danh can chien; (4) Tang toc tai dong bo vi tri sau 4 don danh hụt va chuyen muc tieu Lag Mob sau 4.5s."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.30/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.30/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.30/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.30/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.30: Chan triet de goi charMove ro ri tu Char.Update.Me sau RESET_POINT_STALE (khoa cxSend=cx, cySend=cy trong setResetPoint) va siet tam danh can chien maxRangeX=32, dx<=12 de khong bao gio danh hut o cu ly 38-39px."
 }

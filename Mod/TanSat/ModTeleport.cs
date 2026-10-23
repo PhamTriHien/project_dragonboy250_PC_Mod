@@ -177,7 +177,7 @@ public static class ModTeleport
 				isWaitingSettle = false;
 			}
 
-			if (dx <= 28 && dy <= 24)
+			if (dx <= 12 && dy <= 16)
 			{
 				return true;
 			}

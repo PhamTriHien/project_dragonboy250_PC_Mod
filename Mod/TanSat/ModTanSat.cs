@@ -677,13 +677,13 @@ public static class ModTanSat
 			bool isMeleeTemplate = (tplId == 0 || tplId == 2 || tplId == 4 || tplId == 9 || tplId == 17);
 			bool isRanged = !isMeleeTemplate && (skillToUse.dx > 75);
 
-			int maxRangeX = isRanged ? (skillToUse.dx - 8) : System.Math.Max(38, skillToUse.dx - 2);
-			int maxRangeY = isRanged ? (skillToUse.dy - 6) : System.Math.Max(32, skillToUse.dy - 2);
+			int maxRangeX = isRanged ? (skillToUse.dx - 8) : 32;
+			int maxRangeY = isRanged ? (skillToUse.dy - 6) : 28;
 
 			bool isNewTarget = (lastTeleportTargetMobId != currentFarmTarget.mobId);
 			bool isOutOfRange = (deltaX > maxRangeX || deltaY > maxRangeY);
 
-			if (isNewTarget && !isOutOfRange && !ModTeleport.isWaitingSettle && deltaX <= 24 && deltaY <= 24 && !ModTanSatTargeting.IsInsideWaypoint(me.cx, me.cy))
+			if (isNewTarget && !isOutOfRange && !ModTeleport.isWaitingSettle && deltaX <= 16 && deltaY <= 16 && !ModTanSatTargeting.IsInsideWaypoint(me.cx, me.cy))
 			{
 				lastTeleportTargetMobId = currentFarmTarget.mobId;
 				lastTeleportTime = now;

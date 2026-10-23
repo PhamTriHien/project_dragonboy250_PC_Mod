@@ -146,8 +146,6 @@ public partial class Char : IMapObject
 							{
 								cx = x;
 								cy = y;
-								myCharz().cxSend = x;
-								myCharz().cySend = y;
 							}
 							else if (cx != x || cy != y)
 							{
@@ -158,11 +156,8 @@ public partial class Char : IMapObject
 									Service.gI().charMove();
 								}
 							}
-							else
-							{
-								myCharz().cxSend = x;
-								myCharz().cySend = y;
-							}
+							myCharz().cxSend = cx;
+							myCharz().cySend = cy;
 							ModTeleport.isWaitingSettle = false;
 							if (ModTanSat.autoTanSat)
 							{
@@ -171,12 +166,12 @@ public partial class Char : IMapObject
 						}
 						else
 						{
-							myCharz().cxSend = x;
-							myCharz().cySend = y;
 							if (!ModTeleport.HasPendingEchoNear(cx, cy))
 							{
 								if (Res.abs(cx - x) <= 96 && Res.abs(cy - y) <= 48)
 								{
+									myCharz().cxSend = x;
+									myCharz().cySend = y;
 									Service.gI().charMove();
 								}
 								else if (Res.abs(cx - x) <= 24 && y > cy && !TileMap.tileTypeAt(cx, cy, 2))
@@ -191,6 +186,8 @@ public partial class Char : IMapObject
 									ModTeleport.isWaitingSettle = false;
 								}
 							}
+							myCharz().cxSend = cx;
+							myCharz().cySend = cy;
 							if (ModTanSat.autoTanSat)
 							{
 								ModTdltLogger.Log("RESET_POINT_STALE", $"Ignored stale teleport echo pos=({x},{y}), keeping current pos=({cx},{cy})");
