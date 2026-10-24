@@ -1,9 +1,9 @@
 {
-  "version": "2.5.44",
+  "version": "2.5.45",
   "buildDate": "2026-10-24",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.44/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.44/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.44/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.44/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.44: Khắc phục triệt để lỗi nút Khóa Mục Tiêu / Gim Mục Tiêu (GIM / KHÓA) vẫn cho phép đổi sang mục tiêu khác khi click màn hình, đi ngang thực thể khác hoặc bấm nút Đổi Mục Tiêu."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.45/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.45/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.45/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.45/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.45: Bổ sung ghi log toàn diện thông báo từ Server (SERVER_MSG), gói tin chuyển map (MAP_INFO / MAP_CLEAR / TELEPORT / SET_POS), sát thương quái/người chơi (MOB_ATTACK_ME / CHAR_HIT_ME) và trạng thái tử vong/hồi sinh (CHAR_DEAD / CHAR_REVIVE) vào tdlt_activity.log."
 }

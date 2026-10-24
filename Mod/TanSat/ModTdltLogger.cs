@@ -140,4 +140,40 @@ public static class ModTdltLogger
 	{
 		Log("CHAR_MOVE", $"{method} -> cx={cx}, cy={cy}, cxSend={cxSend}, cySend={cySend}");
 	}
+
+	public static void LogServerMessage(string source, string message)
+	{
+		if (string.IsNullOrEmpty(message)) return;
+		Char me = Char.myCharz();
+		string cleanMsg = message.Replace("\r", " ").Replace("\n", " | ");
+		Log("SERVER_MSG", $"[{source}] '{cleanMsg}' | Map='{TileMap.mapName}' (ID:{TileMap.mapID}, Zone:{TileMap.zoneID}), PlayerPos=({me?.cx},{me?.cy}), PlayerHP={me?.cHP}/{me?.cHPFull}");
+	}
+
+	public static void LogMapInfo(int mapId, string mapName, int zoneId, sbyte planetId, int cx, int cy, sbyte teleport)
+	{
+		Char me = Char.myCharz();
+		Log("MAP_INFO", $"Packet -24 -> Map='{mapName}' (ID:{mapId}, Zone:{zoneId}, Planet:{planetId}), SpawnPos=({cx},{cy}), TeleportType={teleport}, PlayerHP={me?.cHP}/{me?.cHPFull}, statusMe={me?.statusMe}, meDead={me?.meDead}, isNhapThe={me?.isNhapThe}");
+	}
+
+	public static void LogCharDead(string source, int toX, int toY, sbyte cPk, long cPower)
+	{
+		Char me = Char.myCharz();
+		Log("CHAR_DEAD", $"[{source}] Map='{TileMap.mapName}' (ID:{TileMap.mapID}, Zone:{TileMap.zoneID}), DiePos=({toX},{toY}), CurPos=({me?.cx},{me?.cy}), HP={me?.cHP}/{me?.cHPFull}, cPk={cPk}, Power={cPower}, isNhapThe={me?.isNhapThe}");
+	}
+
+	public static void LogMobAttackMe(Mob mob, long dameHp, long dameMp)
+	{
+		Char me = Char.myCharz();
+		int mobTpl = mob != null ? mob.templateId : -1;
+		string mobName = (Mob.arrMobTemplate != null && mobTpl >= 0 && mobTpl < Mob.arrMobTemplate.Length && Mob.arrMobTemplate[mobTpl] != null) ? Mob.arrMobTemplate[mobTpl].name : ("Mob#" + mobTpl);
+		Log("MOB_ATTACK_ME", $"Packet -11 -> Mob: ID={mob?.mobId}, Template={mobTpl} ('{mobName}'), Pos=({mob?.x},{mob?.y}), DameHP={dameHp}, DameMP={dameMp}, PlayerHP_Before={me?.cHP}/{me?.cHPFull}, Map='{TileMap.mapName}' (ID:{TileMap.mapID})");
+	}
+
+	public static void LogPlayerHitMe(string source, int attackerId, long dameHp, long newHp, bool isDie, bool isCrit)
+	{
+		Char me = Char.myCharz();
+		Char attacker = GameScr.findCharInMap(attackerId);
+		string attackerName = attacker != null ? attacker.cName : ("Char#" + attackerId);
+		Log("CHAR_HIT_ME", $"[{source}] Attacker='{attackerName}' (ID:{attackerId}), DameHP={dameHp}, NewHP={newHp}/{me?.cHPFull}, isDie={isDie}, isCrit={isCrit}, Map='{TileMap.mapName}' (ID:{TileMap.mapID}, Zone:{TileMap.zoneID}), PlayerPos=({me?.cx},{me?.cy})");
+	}
 }

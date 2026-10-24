@@ -187,6 +187,7 @@ public partial class Controller : IMessageHandler
 					break;
 				case -22:
 					GameCanvas.debug("SA65", 2);
+					ModTdltLogger.Log("MAP_CLEAR", $"Packet -22 received -> Clearing Map='{TileMap.mapName}' (ID:{TileMap.mapID}, Zone:{TileMap.zoneID}), PlayerPos=({Char.myCharz()?.cx},{Char.myCharz()?.cy}), PlayerHP={Char.myCharz()?.cHP}/{Char.myCharz()?.cHPFull}, meDead={Char.myCharz()?.meDead}");
 					Char.isLockKey = true;
 					Char.ischangingMap = true;
 					GameScr.gI().timeStartMap = 0;
@@ -215,6 +216,7 @@ public partial class Controller : IMessageHandler
 					GameCanvas.endDlg();
 					int avatar2 = msg.reader().readShort();
 					string chat3 = msg.reader().readUTF();
+					ModTdltLogger.LogServerMessage("CMD_-70_BIG_MSG", chat3);
 					try
 					{
 						ModBossNotice.LogBossDebug("RAW-70", chat3);
@@ -254,6 +256,7 @@ public partial class Controller : IMessageHandler
 					Res.outz("OPEN_UI_SAY ID= " + num76);
 					string str = msg.reader().readUTF();
 					str = Res.changeString(str);
+					ModTdltLogger.LogServerMessage("CMD_38_NPC_SAY_" + num76, str);
 					for (int num109 = 0; num109 < GameScr.vNpc.size(); num109++)
 					{
 						Npc npc3 = (Npc)GameScr.vNpc.elementAt(num109);
@@ -660,6 +663,7 @@ public partial class Controller : IMessageHandler
 							flag = (@char.isCrit = msg.reader().readBoolean());
 							@char.isMob = false;
 							num5 = (@char.damHP = num5 + num6);
+							ModTdltLogger.LogPlayerHitMe("CMD_-60_PVP", num2, num5, @char.cHP - num5, @char.isDie, flag);
 							if (b5 == 0)
 							{
 								@char.doInjure(num5, 0L, flag, isMob: false);

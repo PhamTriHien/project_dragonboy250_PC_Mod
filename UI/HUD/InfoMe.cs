@@ -330,6 +330,10 @@ public class InfoMe
 	public void addInfo(string s, int Type)
 	{
 		s = Res.changeString(s);
+		if (!string.IsNullOrEmpty(s) && !s.StartsWith("[Mod]"))
+		{
+			ModTdltLogger.LogServerMessage("INFO_TOAST_" + Type, s);
+		}
 		ModMenu.ProcessServerBossNotice(s);
 		if (info.infoWaitToShow.size() > 0 && s.Equals(((InfoItem)info.infoWaitToShow.lastElement()).s))
 		{

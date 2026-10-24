@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Assets.src.e;
 using Assets.src.g;
 using UnityEngine;
@@ -537,6 +537,7 @@ public partial class Char : IMapObject
 			}
 			if (me)
 			{
+				ModTdltLogger.LogCharDead("CHAR_START_DIE", toX, toY, cPk, cPower);
 				isLockMove = true;
 				for (int i = 0; i < GameScr.vCharInMap.size(); i++)
 				{

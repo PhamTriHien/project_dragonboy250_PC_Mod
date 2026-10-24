@@ -507,6 +507,7 @@ public partial class Controller : IMessageHandler
 				TileMap.bgType = msg.reader().readByte();
 				sbyte teleport = msg.reader().readByte();
 				loadCurrMap(teleport);
+				ModTdltLogger.LogMapInfo(TileMap.mapID, TileMap.mapName, TileMap.zoneID, TileMap.planetID, Char.myCharz().cx, Char.myCharz().cy, teleport);
 				GameCanvas.debug("SA75x8", 2);
 			}
 			catch (Exception)
@@ -556,6 +557,7 @@ public partial class Controller : IMessageHandler
 					GameCanvas.endDlg();
 					GameScr.gI().resetButton();
 					string text35 = msg.reader().readUTF();
+					ModTdltLogger.LogServerMessage("CMD_-28_SUB35", text35);
 					try
 					{
 						ModBossNotice.LogBossDebug("RAW-35", text35);

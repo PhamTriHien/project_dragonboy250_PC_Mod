@@ -568,6 +568,7 @@ public partial class Controller : IMessageHandler
 					}
 					if (Char.myCharz().charID == num67)
 					{
+						ModTdltLogger.Log("TELEPORT_PACKET", $"Packet -65 received for Me -> type={b29}, Map='{TileMap.mapName}' (ID:{TileMap.mapID}, Zone:{TileMap.zoneID}), Pos=({Char.myCharz()?.cx},{Char.myCharz()?.cy}), HP={Char.myCharz()?.cHP}/{Char.myCharz()?.cHPFull}");
 						GameScr.gI().center = null;
 						if (b29 == 0 || b29 == 1 || b29 == 3)
 						{

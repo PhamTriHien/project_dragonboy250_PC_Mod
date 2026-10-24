@@ -626,6 +626,7 @@ public partial class Controller : IMessageHandler
 						{
 							num171 = 0L;
 						}
+						ModTdltLogger.LogMobAttackMe(mob9, num170, num171);
 						if (mob9.isBusyAttackSomeOne)
 						{
 							Char.myCharz().doInjure(num170, num171, isCrit: false, isMob: true);
@@ -683,10 +684,13 @@ public partial class Controller : IMessageHandler
 					break;
 				}
 				case -17:
+				{
 					GameCanvas.debug("SA88", 2);
 					Char.myCharz().meDead = true;
 					Char.myCharz().cPk = msg.reader().readByte();
-					Char.myCharz().startDie(msg.reader().readShort(), msg.reader().readShort());
+					short dieX = msg.reader().readShort();
+					short dieY = msg.reader().readShort();
+					Char.myCharz().startDie(dieX, dieY);
 					try
 					{
 						Char.myCharz().cPower = msg.reader().readLong();
@@ -696,8 +700,10 @@ public partial class Controller : IMessageHandler
 					{
 						Cout.println("Loi tai ME_DIE " + msg.command);
 					}
+					ModTdltLogger.LogCharDead("CMD_-17_ME_DIE", dieX, dieY, Char.myCharz().cPk, Char.myCharz().cPower);
 					Char.myCharz().countKill = 0;
 					break;
+				}
 				case 66:
 					Res.outz("ME DIE XP DOWN NOT IMPLEMENT YET!!!!!!!!!!!!!!!!!!!!!!!!!!");
 					break;
@@ -722,6 +728,7 @@ public partial class Controller : IMessageHandler
 					Char.myCharz().liveFromDead();
 					Char.myCharz().isLockMove = false;
 					Char.myCharz().meDead = false;
+					ModTdltLogger.Log("CHAR_REVIVE", $"Packet -16 (ME_LIVE) -> Pos=({Char.myCharz().cx},{Char.myCharz().cy}), HP={Char.myCharz().cHP}/{Char.myCharz().cHPFull}, Map='{TileMap.mapName}' (ID:{TileMap.mapID})");
 					break;
 				case 44:
 				{

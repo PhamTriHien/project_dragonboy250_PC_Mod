@@ -190,6 +190,7 @@ public partial class Controller : IMessageHandler
 					GameCanvas.debug("SA2", 2);
 					string serverErr = msg.reader().readUTF();
 					Res.outz("[SERVER ERROR MSG -26] " + serverErr);
+					ModTdltLogger.LogServerMessage("CMD_-26_ERR_DLG", serverErr);
 					ModAutoLogin.isReconnecting = false;
 					ModAutoLogin.statusMessage = "";
 					GameCanvas.startOKDlg(serverErr);
@@ -215,6 +216,7 @@ public partial class Controller : IMessageHandler
 				{
 					GameCanvas.debug("SA3", 2);
 					string serverMsg = msg.reader().readUTF();
+					ModTdltLogger.LogServerMessage("CMD_-25_SERVER_MSG", serverMsg);
 					GameScr.info1.addInfo(serverMsg, 0);
 					ModMenu.ProcessServerBossNotice(serverMsg);
 					break;
@@ -223,6 +225,7 @@ public partial class Controller : IMessageHandler
 				{
 					GameCanvas.debug("SA3", 2);
 					string serverAlert = msg.reader().readUTF();
+					ModTdltLogger.LogServerMessage("CMD_94_SERVER_ALERT", serverAlert);
 					GameScr.info1.addInfo(serverAlert, 0);
 					ModMenu.ProcessServerBossNotice(serverAlert);
 					break;
@@ -301,6 +304,7 @@ public partial class Controller : IMessageHandler
 						{
 						}
 						num44 += num45;
+						ModTdltLogger.LogPlayerHitMe("CMD_56", num21, num44, @char.cHP, @char.cHP <= 0, flag4);
 						if (Char.myCharz().cTypePk != 4)
 						{
 							if (num44 == 0)
@@ -390,6 +394,10 @@ public partial class Controller : IMessageHandler
 					@char.cx = msg.reader().readShort();
 					@char.cy = msg.reader().readShort();
 					@char.liveFromDead();
+					if (num21 == Char.myCharz().charID)
+					{
+						ModTdltLogger.Log("CHAR_REVIVE", $"Packet 84 (liveFromDead) -> Pos=({@char.cx},{@char.cy}), HP={@char.cHP}/{@char.cHPFull}, Map='{TileMap.mapName}' (ID:{TileMap.mapID})");
+					}
 					break;
 				}
 				case 46:

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Assets.src.e;
 using Assets.src.g;
 using UnityEngine;
@@ -73,6 +73,7 @@ public partial class Controller2
 					if (num11 == Char.myCharz().charID)
 					{
 						Char.myCharz().setFusion(fusion);
+						ModTdltLogger.Log("FUSION_PACKET", $"Packet 125 received for Me -> fusionType={fusion}, isNhapThe={Char.myCharz()?.isNhapThe}, Map='{TileMap.mapName}' (ID:{TileMap.mapID}), HP={Char.myCharz()?.cHP}/{Char.myCharz()?.cHPFull}");
 					}
 					else if (GameScr.findCharInMap(num11) != null)
 					{
@@ -106,6 +107,10 @@ public partial class Controller2
 					}
 					if (@char != null)
 					{
+						if (num3 == Char.myCharz().charID)
+						{
+							ModTdltLogger.Log("SET_POS_PACKET", $"Packet 123 received for Me -> newPos=({xPos},{yPos}), effType={b4}, oldPos=({@char.cx},{@char.cy}), Map='{TileMap.mapName}' (ID:{TileMap.mapID})");
+						}
 						ServerEffect.addServerEffect((b4 != 0) ? 173 : 60, @char, 1);
 						@char.setPos(xPos, yPos, b4);
 					}

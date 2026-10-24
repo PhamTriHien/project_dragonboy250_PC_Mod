@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -15,7 +15,7 @@ using UnityEngine;
 /// </summary>
 public static class ModAutoUpdate
 {
-	public static readonly string CurrentVersion = "2.5.44";
+	public static readonly string CurrentVersion = "2.5.45";
 	public const string ManifestUrl = "https://raw.githubusercontent.com/PhamTriHien/project_dragonboy250_PC_Mod/main/version.json";
 
 	public static bool isChecking = false;
