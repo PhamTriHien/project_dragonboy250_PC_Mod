@@ -581,7 +581,17 @@ public static class ModGoBack
 				// Teleport đến toạ độ chính xác đã lưu
 				if (targetX > 0 && targetY > 0)
 				{
-					ModTeleport.TeleportTo(targetX, targetY);
+					if (ModTeleport.IsColdPlanetAntiCheckActive())
+					{
+						if (!ModTeleport.MoveSteppedTo(targetX, targetY) && now - stateTimer < 6500)
+						{
+							return;
+						}
+					}
+					else
+					{
+						ModTeleport.TeleportTo(targetX, targetY);
+					}
 				}
 
 				SoundMn.gI().buttonClose();

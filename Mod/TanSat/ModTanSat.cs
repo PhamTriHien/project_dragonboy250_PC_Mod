@@ -650,7 +650,7 @@ public static class ModTanSat
 						if (currentTargetUnchangedAttackCount == 3 || currentTargetUnchangedAttackCount == 6)
 						{
 							lastResyncAttackCount = currentTargetUnchangedAttackCount;
-							if (!ModTeleport.isCurrentPosSynced && currentTargetUnchangedAttackCount == 3 && lastTeleportTargetMobId != currentFarmTarget.mobId && TileMap.tileTypeAt(me.cx, me.cy, 2) && !ModTeleport.HasPendingEchoNear(me.cx, me.cy))
+							if (!ModTeleport.IsColdPlanetAntiCheckActive() && !ModTeleport.isCurrentPosSynced && currentTargetUnchangedAttackCount == 3 && lastTeleportTargetMobId != currentFarmTarget.mobId && TileMap.tileTypeAt(me.cx, me.cy, 2) && !ModTeleport.HasPendingEchoNear(me.cx, me.cy))
 							{
 								ModWaypoint.TeleportTo(me.cx, me.cy);
 							}
@@ -794,6 +794,15 @@ public static class ModTanSat
 
 						if (!arrived)
 						{
+							if (ModTeleport.IsColdStepTimedOut())
+							{
+								ignoredMobUntil[currentFarmTarget.mobId] = now + 8000L;
+								currentFarmTarget = null;
+								currentTargetResetCount = 0;
+								currentTargetUnchangedAttackCount = 0;
+								ModTeleport.ResetColdStepTracking();
+								return;
+							}
 							// Đang nhảy từng bước mặt đất đến quái hoặc đang chờ đồng bộ vị trí: Gia hạn targetLockTime
 							targetLockTime = now;
 							return;

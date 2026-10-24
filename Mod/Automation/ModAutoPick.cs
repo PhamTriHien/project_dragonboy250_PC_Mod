@@ -635,7 +635,15 @@ public static class ModAutoPick
 				}
 
 				isBusy = true;
-				if (now - lastPickTime < 180)
+				if (ModTeleport.IsColdPlanetAntiCheckActive() && ModTeleport.isWaitingSettle && !TileMap.tileTypeAt(me.cx, me.cy, 2))
+				{
+					me.statusMe = 1;
+					me.delayFall = 0;
+					me.cvx = 0;
+					me.cvy = 0;
+				}
+				int pickInterval = (ModTeleport.IsColdPlanetAntiCheckActive() && ModTeleport.isWaitingSettle) ? 135 : 180;
+				if (now - lastPickTime < pickInterval)
 				{
 					return;
 				}
@@ -706,6 +714,15 @@ public static class ModAutoPick
 					{
 						ModTanSat.lastTeleportTime = 0;
 						currentItemRetryCount--;
+						if (ModTeleport.IsColdStepTimedOut())
+						{
+							ignoredItemUntil[closest.itemMapID] = now + 10000L;
+							lastPickedItemMapId = -1;
+							currentItemRetryCount = 0;
+							ModTeleport.ResetColdStepTracking();
+							isBusy = false;
+							return;
+						}
 					}
 				}
 			}
