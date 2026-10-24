@@ -148,7 +148,6 @@ public static class ModArrowButton
 		{
 			Service.gI().useItem(0, 1, (sbyte)bagIndex, -1);
 			SoundMn.gI().buttonClick();
-			GameScr.info1.addInfo("Sử dụng " + itemName, 0);
 		}
 		else
 		{
@@ -258,7 +257,7 @@ public static class ModArrowButton
 			{
 				Char me = Char.myCharz();
 
-				// 1. Nút Hợp Thể Bông Tai Porata
+				// 1. Nút Hợp Thể Bông Tai Porata (chỉ hiển thị nút tròn + icon bông tai, không hiển thị chữ)
 				int potX, potY, potW, potH;
 				GetPotaraBounds(out potX, out potY, out potW, out potH);
 				int potCenterX = potX + potW / 2;
@@ -277,11 +276,6 @@ public static class ModArrowButton
 				string potName;
 				FindPotaraInBag(out bagIdx, out potIconId, out potName);
 				SmallImage.drawSmallImage(g, potIconId, potCenterX, potCenterY, 0, mGraphics.VCENTER | mGraphics.HCENTER);
-
-				if (isFused && mFont.tahoma_7b_green2 != null)
-				{
-					mFont.tahoma_7b_green2.drawString(g, "HT", potCenterX, potY + potH - 10, mFont.CENTER, mFont.tahoma_7_grey);
-				}
 
 				// 2. Nút Khóa Mục Tiêu (Gim Mục Tiêu)
 				int lockX, lockY, lockW, lockH;

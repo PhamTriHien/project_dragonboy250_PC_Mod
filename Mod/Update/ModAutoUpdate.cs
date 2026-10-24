@@ -15,7 +15,7 @@ using UnityEngine;
 /// </summary>
 public static class ModAutoUpdate
 {
-	public static readonly string CurrentVersion = "2.5.42";
+	public static readonly string CurrentVersion = "2.5.43";
 	public const string ManifestUrl = "https://raw.githubusercontent.com/PhamTriHien/project_dragonboy250_PC_Mod/main/version.json";
 
 	public static bool isChecking = false;

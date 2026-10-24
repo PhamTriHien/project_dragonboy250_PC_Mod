@@ -1,9 +1,9 @@
 {
-  "version": "2.5.42",
+  "version": "2.5.43",
   "buildDate": "2026-10-24",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.42/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.42/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.42/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.42/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.42: Bổ sung cụm 2 nút tác vụ nhanh bên phải màn hình sử dụng 100% tài nguyên asset gốc của game: (1) Nút Hợp Thể Bông Tai Porata (tự động nhận diện và dùng Bông tai Porata cấp 1/2/3 trong hành trang kèm hiển thị trạng thái HT); (2) Nút Khóa Mục Tiêu / Gim Mục Tiêu (GIM / KHÓA) nằm ngay phía trên nút Đổi Mục Tiêu bên phải."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.43/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.43/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.43/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.43/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.43: Tinh chỉnh nút Hợp Thể Bông Tai Porata bên phải màn hình: bỏ chữ hiển thị đè trên nút, chỉ giữ nguyên nút tròn imgNut/imgNutF và biểu tượng Bông tai Porata gốc."
 }
