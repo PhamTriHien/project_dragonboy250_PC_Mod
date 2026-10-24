@@ -614,15 +614,20 @@ public static class ModTanSat
 				}
 				else if (currentFarmTarget.hp < targetLastHp)
 				{
+					long hpDrop = targetLastHp - currentFarmTarget.hp;
 					targetLastHp = currentFarmTarget.hp;
-					targetLockTime = now;
-					currentTargetResetCount = 0;
-					currentTargetUnchangedAttackCount = 0;
-					lastResyncAttackCount = 0;
-					if (resetPenaltyCount > 0 && now - lastResetPenaltyTime > 12000)
+					bool isPetChipDamageOnly = !ModTeleport.isCurrentPosSynced && me.havePet && me.cDamFull > 1000 && hpDrop < (me.cDamFull / 4);
+					if (!isPetChipDamageOnly)
 					{
-						resetPenaltyCount--;
-						lastResetPenaltyTime = now;
+						targetLockTime = now;
+						currentTargetResetCount = 0;
+						currentTargetUnchangedAttackCount = 0;
+						lastResyncAttackCount = 0;
+						if (resetPenaltyCount > 0 && now - lastResetPenaltyTime > 12000)
+						{
+							resetPenaltyCount--;
+							lastResetPenaltyTime = now;
+						}
 					}
 				}
 				else
@@ -641,7 +646,7 @@ public static class ModTanSat
 						if (!ModTeleport.isCurrentPosSynced && currentTargetUnchangedAttackCount == 3)
 						{
 							lastResyncAttackCount = currentTargetUnchangedAttackCount;
-							if (TileMap.tileTypeAt(me.cx, me.cy, 2))
+							if (TileMap.tileTypeAt(me.cx, me.cy, 2) && !ModTeleport.HasPendingEchoNear(me.cx, me.cy))
 							{
 								ModWaypoint.TeleportTo(me.cx, me.cy);
 							}
@@ -652,7 +657,7 @@ public static class ModTanSat
 							lastTeleportTargetMobId = currentFarmTarget.mobId;
 							lastTeleportTime = now;
 						}
-						else if (currentTargetUnchangedAttackCount == 5)
+						else if (currentTargetUnchangedAttackCount == 6)
 						{
 							lastResyncAttackCount = currentTargetUnchangedAttackCount;
 							ModTeleport.SendSingleCharMove(me.cx, me.cy);

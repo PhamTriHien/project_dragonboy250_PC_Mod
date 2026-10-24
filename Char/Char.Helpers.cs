@@ -131,7 +131,7 @@ public partial class Char : IMapObject
 				myCharz().cySend = y;
 				if (ModNextMap.isNextMapActive || ModTanSat.autoTanSat || ModAutoPick.isBusy || ModGoBack.isReturning || cy - y == 0)
 				{
-					bool isEcho = ModTeleport.TryConsumeTeleportEcho(x, y, cx, cy, out bool isCurrentPos);
+					bool isEcho = ModTeleport.TryConsumeTeleportEcho(x, y, cx, cy, out bool isCurrentPos, out bool hasNewerPendingEcho);
 					bool isNearCurrent = (Res.abs(x - cx) <= 32 && Res.abs(y - cy) <= 32);
 					cvx = 0;
 					cvy = 0;
@@ -155,6 +155,11 @@ public partial class Char : IMapObject
 								ModTanSat.OnTeleportSyncConfirmed();
 								ModTdltLogger.Log("RESET_POINT_CONFIRM", $"Server confirmed teleport pos=({x},{y})");
 							}
+						}
+						else if (hasNewerPendingEcho)
+						{
+							myCharz().cxSend = cx;
+							myCharz().cySend = cy;
 						}
 						else
 						{

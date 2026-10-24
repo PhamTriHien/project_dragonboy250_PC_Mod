@@ -31,7 +31,7 @@ public static class ModTeleport
 		long now = mSystem.currentTimeMillis();
 		for (int i = pendingTeleportEchoes.Count - 1; i >= 0; i--)
 		{
-			if (now - pendingTeleportEchoes[i].time > 10000)
+			if (now - pendingTeleportEchoes[i].time > 15000)
 			{
 				pendingTeleportEchoes.RemoveAt(i);
 			}
@@ -50,7 +50,8 @@ public static class ModTeleport
 
 	/// <summary>
 	/// Kiểm tra xem có đang chờ máy chủ phản hồi gói RESET_POINT xác nhận vị trí dịch chuyển trước đó hay không.
-	/// Bắt buộc đợi đồng bộ xong (hoặc hết thời gian chờ tối đa 1800ms) mới dịch chuyển tiếp để tránh dồn hàng đợi gây lag.
+	/// Bắt buộc đợi đồng bộ xong (hoặc hết thời gian chờ tối đa 4500ms) mới dịch chuyển tiếp để tránh dồn hàng đợi gây lag,
+	/// đồng thời giữ nguyên danh sách pendingTeleportEchoes để nhận diện các gói RESET_POINT trả về muộn.
 	/// </summary>
 	public static bool IsWaitingServerSync()
 	{
@@ -59,10 +60,9 @@ public static class ModTeleport
 			return false;
 		}
 		long now = mSystem.currentTimeMillis();
-		if (now - lastSyncRequestTime > 1800)
+		if (now - lastSyncRequestTime > 4500)
 		{
 			isWaitingServerSync = false;
-			pendingTeleportEchoes.Clear();
 			return false;
 		}
 		return true;
@@ -94,11 +94,11 @@ public static class ModTeleport
 		for (int i = pendingTeleportEchoes.Count - 1; i >= 0; i--)
 		{
 			TeleportEchoEntry entry = pendingTeleportEchoes[i];
-			if (now - entry.time > 10000)
+			if (now - entry.time > 15000)
 			{
 				continue;
 			}
-			if (Res.abs(entry.x - x) <= 24 && (Res.abs(entry.y - y) <= 24 || (y > entry.y && TileMap.tileTypeAt(x, y, 2))))
+			if (Res.abs(entry.x - x) <= 32 && (Res.abs(entry.y - y) <= 32 || (y > entry.y && TileMap.tileTypeAt(x, y, 2))))
 			{
 				return true;
 			}
@@ -108,13 +108,14 @@ public static class ModTeleport
 
 	/// <summary>
 	/// Kiểm tra và tiêu thụ gói phản hồi xác nhận tọa độ RESET_POINT(x, y) sinh ra bởi dịch chuyển trước đó.
+	/// Không xóa các echo mới hơn đang chờ trên đường truyền để tránh nhận nhầm gói RESET_POINT kế tiếp là lệnh phạt.
 	/// </summary>
-	public static bool TryConsumeTeleportEcho(int x, int y, int currentCx, int currentCy, out bool isCurrentPos)
+	public static bool TryConsumeTeleportEcho(int x, int y, int currentCx, int currentCy, out bool isCurrentPos, out bool hasNewerPendingEcho)
 	{
 		long now = mSystem.currentTimeMillis();
 		for (int i = pendingTeleportEchoes.Count - 1; i >= 0; i--)
 		{
-			if (now - pendingTeleportEchoes[i].time > 10000)
+			if (now - pendingTeleportEchoes[i].time > 15000)
 			{
 				pendingTeleportEchoes.RemoveAt(i);
 			}
@@ -125,19 +126,24 @@ public static class ModTeleport
 		for (int i = 0; i < pendingTeleportEchoes.Count; i++)
 		{
 			TeleportEchoEntry entry = pendingTeleportEchoes[i];
-			if (Res.abs(entry.x - x) <= 24 && (Res.abs(entry.y - y) <= 24 || (y > entry.y && TileMap.tileTypeAt(x, y, 2))))
+			if (Res.abs(entry.x - x) <= 32 && (Res.abs(entry.y - y) <= 32 || (y > entry.y && TileMap.tileTypeAt(x, y, 2))))
 			{
 				pendingTeleportEchoes.RemoveRange(0, i + 1);
-				if (isCurrentPos || pendingTeleportEchoes.Count == 0 || (Res.abs(x - pendingSyncX) <= 32 && Res.abs(y - pendingSyncY) <= 32))
+				hasNewerPendingEcho = (pendingTeleportEchoes.Count > 0);
+				if (isCurrentPos || !hasNewerPendingEcho || (Res.abs(x - pendingSyncX) <= 32 && Res.abs(y - pendingSyncY) <= 32))
 				{
 					isWaitingServerSync = false;
 					isCurrentPosSynced = isCurrentPos;
-					pendingTeleportEchoes.Clear();
+					if (isCurrentPos)
+					{
+						pendingTeleportEchoes.Clear();
+					}
 				}
 				return true;
 			}
 		}
 
+		hasNewerPendingEcho = (pendingTeleportEchoes.Count > 0);
 		if (isCurrentPos)
 		{
 			isWaitingServerSync = false;
@@ -196,7 +202,10 @@ public static class ModTeleport
 		me.cvy = 0;
 		me.statusMe = 1;
 		me.delayFall = 0;
-		isCurrentPosSynced = false;
+		if (toX != fromX || toY != fromY)
+		{
+			isCurrentPosSynced = false;
+		}
 		Service.gI().charMove();
 		me.cxSend = toX;
 		me.cySend = toY;
@@ -220,10 +229,10 @@ public static class ModTeleport
 
 	/// <summary>
 	/// Điều phối dịch chuyển Tàn Sát và Auto Nhặt theo đúng cơ chế NextMap (ModWaypoint.TeleportTo):
-	/// - Khi chuyển tầng địa hình hoặc nhảy xa qua vách núi tới mặt đất (TileMap.tileTypeAt(targetX, targetY, 2)):
-	///   Sử dụng trực tiếp ModWaypoint.TeleportTo(targetX, targetY) để dịch chuyển tức thời 1 bước duy nhất như NextMap.
-	/// - Khi nhích theo quái đi bộ hoặc di chuyển ngắn trên cùng một mặt sàn phẳng (dy <= 24, dx <= 160):
-	///   Sử dụng SendSingleCharMove (1 gói charMove, không gửi y+1) để không làm tăng bộ đếm RESET_POINT của máy chủ.
+	/// - Khi nhích ngắn theo quái đi bộ ngay sát bên (dx <= 48, dy <= 24):
+	///   Sử dụng SendSingleCharMove (1 gói charMove hợp lệ trong tốc độ đi bộ, không gửi y+1).
+	/// - Khi dịch chuyển sang quái mới hoặc điểm mặt đất cách xa hơn 48px (TileMap.tileTypeAt(targetX, targetY, 2)):
+	///   Sử dụng trực tiếp ModWaypoint.TeleportTo(targetX, targetY) 1 bước duy nhất như NextMap, tránh đi bộ 2 bước nhanh bị máy chủ phạt RESET_POINT kéo ngược về vị trí cũ.
 	/// - Khi mục tiêu là quái bay giữa không trung (!TileMap.tileTypeAt(targetX, targetY, 2)):
 	///   Dịch chuyển tức thời tới mặt đất gần nhất bằng ModWaypoint.TeleportTo rồi bước lên không trung bằng SendSingleCharMove.
 	/// </summary>
@@ -261,8 +270,8 @@ public static class ModTeleport
 			me.cdir = (targetX >= me.cx) ? 1 : (-1);
 			bool isTargetOnGround = TileMap.tileTypeAt(targetX, targetY, 2) && !isTargetFlying;
 
-			// 1. Nhích ngắn trên cùng mặt sàn hoặc trong không trung gần (dx <= 96, dy <= 36): Đi 1 gói đơn không kích hoạt RESET_POINT
-			if (dx <= 96 && dy <= 36 && !IsPointUndergroundOrBlocked(targetX, targetY))
+			// 1. Nhích ngắn theo quái đi bộ ngay sát bên (dx <= 48, dy <= 24): Đi 1 gói đơn trong ngưỡng tốc độ hợp lệ, không kích hoạt RESET_POINT
+			if (dx <= 48 && dy <= 24 && !IsPointUndergroundOrBlocked(targetX, targetY))
 			{
 				SendSingleCharMove(targetX, targetY);
 				lastStepTime = now;
@@ -270,21 +279,7 @@ public static class ModTeleport
 				return true;
 			}
 
-			// 2. Di chuyển tới quái kế bên trên cùng mặt sàn phẳng (dy <= 24, dx <= 180): Đi 2 bước ngắn không kích hoạt RESET_POINT
-			if (dy <= 24 && dx <= 180 && isTargetOnGround)
-			{
-				int stepX = me.cx + ((targetX > me.cx) ? 96 : (-96));
-				int stepY = ModTanSatTargeting.FindGroundY(stepX, targetY, 24);
-				if (stepY != -1 && Res.abs(stepY - targetY) <= 24 && !IsPointUndergroundOrBlocked(stepX, stepY))
-				{
-					SendSingleCharMove(stepX, stepY);
-					lastStepTime = now;
-					isWaitingSettle = true;
-					return false;
-				}
-			}
-
-			// 3. Nhảy xa hoặc chuyển tầng địa hình (lên/xuống vách đá, hầm) tới mặt đất: Dịch chuyển tức thời 1 bước bằng đúng ModWaypoint.TeleportTo của NextMap!
+			// 2. Dịch chuyển sang quái khác hoặc nhảy xa/chuyển tầng tới mặt đất: Dịch chuyển tức thời 1 bước bằng đúng ModWaypoint.TeleportTo của NextMap!
 			if (isTargetOnGround)
 			{
 				ModWaypoint.TeleportTo(targetX, targetY);
@@ -293,11 +288,11 @@ public static class ModTeleport
 				return true;
 			}
 
-			// 4. Mục tiêu là quái bay trên không trung: Nếu còn ở xa, dịch chuyển tức thời bằng ModWaypoint.TeleportTo tới mặt đất gần quái bay trước, sau đó bay lên
-			if (dx > 120 || dy > 96)
+			// 3. Mục tiêu là quái bay trên không trung: Nếu còn ở xa, dịch chuyển tức thời bằng ModWaypoint.TeleportTo tới mặt đất gần quái bay trước, sau đó bay lên
+			if (dx > 96 || dy > 84)
 			{
 				int groundY = ModTanSatTargeting.FindGroundY(targetX, targetY, 240);
-				if (groundY != -1 && (Res.abs(me.cx - targetX) > 96 || Res.abs(me.cy - groundY) > 36))
+				if (groundY != -1 && (Res.abs(me.cx - targetX) > 48 || Res.abs(me.cy - groundY) > 24))
 				{
 					ModWaypoint.TeleportTo(targetX, groundY);
 					lastStepTime = now;
