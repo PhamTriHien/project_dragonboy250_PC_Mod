@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Assets.src.g;
 /// <summary>
 /// Thành phần phân mảnh (partial) của lớp GameScr: Đảm nhiệm vòng lặp cập nhật trạng thái logic theo từng khung hình (Input).
@@ -106,6 +106,16 @@ public partial class GameScr : mScreen, IChatable
 							Char me = Char.myCharz();
 							if (me != null)
 							{
+								if (ModMapEntityHUD.HasLockedTarget())
+								{
+									ModMapEntityHUD.UpdateLockTarget();
+									if (me.mobFocus == mapObject || me.npcFocus == mapObject || me.charFocus == mapObject)
+									{
+										doDoubleClickToObj(mapObject);
+									}
+									GameCanvas.clearAllPointerEvent();
+									return;
+								}
 								me.cancelAttack();
 								if (me.mobFocus == mapObject || me.itemFocus == mapObject || me.npcFocus == mapObject || me.charFocus == mapObject)
 								{
@@ -407,7 +417,7 @@ public partial class GameScr : mScreen, IChatable
 						me.currentMovePoint = null;
 						me.cvx = (me.cvy = 0);
 						me.cdir = (obj.getX() >= me.cx) ? 1 : -1;
-						if (obj is Mob)
+						if (obj is Mob && !ModMapEntityHUD.HasLockedTarget())
 						{
 							me.mobFocus = (Mob)obj;
 							me.charFocus = null;

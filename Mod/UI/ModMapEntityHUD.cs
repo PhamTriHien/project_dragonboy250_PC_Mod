@@ -34,7 +34,13 @@ public static class ModMapEntityHUD
 	public static bool isLockTarget = false;
 	public static int lockedCharId = 0;
 	public static int lockedMobId = -1;
+	public static int lockedNpcId = -1;
 	public static int maxDisplayEntries = 15;
+
+	public static bool HasLockedTarget()
+	{
+		return isLockTarget && (lockedCharId != 0 || lockedMobId >= 0 || lockedNpcId >= 0);
+	}
 
 	private static readonly List<MapEntityEntry> currentEntries = new List<MapEntityEntry>();
 
@@ -75,17 +81,32 @@ public static class ModMapEntityHUD
 			{
 				lockedCharId = me.charFocus.charID;
 				lockedMobId = -1;
+				lockedNpcId = -1;
 			}
 			else if (me.mobFocus != null)
 			{
 				lockedMobId = me.mobFocus.mobId;
 				lockedCharId = 0;
+				lockedNpcId = -1;
+			}
+			else if (me.npcFocus != null && me.npcFocus.template != null)
+			{
+				lockedNpcId = me.npcFocus.template.npcTemplateId;
+				lockedCharId = 0;
+				lockedMobId = -1;
+			}
+			else
+			{
+				lockedCharId = 0;
+				lockedMobId = -1;
+				lockedNpcId = -1;
 			}
 		}
 		else
 		{
 			lockedCharId = 0;
 			lockedMobId = -1;
+			lockedNpcId = -1;
 		}
 		ModConfig.SaveConfig();
 		GameScr.info1.addInfo("Gim mục tiêu: " + (isLockTarget ? "BẬT" : "TẮT"), 0);
@@ -93,7 +114,7 @@ public static class ModMapEntityHUD
 	}
 
 	/// <summary>
-	/// Duy trì mục tiêu đã khóa trên bản đồ.
+	/// Duy trì mục tiêu đã khóa trên bản đồ (chặn đổi sang mục tiêu khác khi đã ghim).
 	/// </summary>
 	public static void UpdateLockTarget()
 	{
@@ -101,44 +122,96 @@ public static class ModMapEntityHUD
 		Char me = Char.myCharz();
 		if (me == null) return;
 
+		if (lockedCharId != 0)
+		{
+			if (GameScr.vCharInMap != null)
+			{
+				for (int i = 0; i < GameScr.vCharInMap.size(); i++)
+				{
+					Char c = (Char)GameScr.vCharInMap.elementAt(i);
+					if (c != null && c.charID == lockedCharId && c.cHP > 0 && c.statusMe != 14 && c.statusMe != 5)
+					{
+						me.charFocus = c;
+						me.mobFocus = null;
+						me.npcFocus = null;
+						me.itemFocus = null;
+						Char.isManualFocus = true;
+						return;
+					}
+				}
+			}
+			me.mobFocus = null;
+			me.npcFocus = null;
+			me.itemFocus = null;
+			return;
+		}
+
+		if (lockedMobId >= 0)
+		{
+			if (GameScr.vMob != null)
+			{
+				for (int j = 0; j < GameScr.vMob.size(); j++)
+				{
+					Mob m = (Mob)GameScr.vMob.elementAt(j);
+					if (m != null && m.mobId == lockedMobId && m.hp > 0 && m.status != 0 && m.status != 1)
+					{
+						me.mobFocus = m;
+						me.charFocus = null;
+						me.npcFocus = null;
+						me.itemFocus = null;
+						Char.isManualFocus = true;
+						return;
+					}
+				}
+			}
+			me.charFocus = null;
+			me.npcFocus = null;
+			me.itemFocus = null;
+			return;
+		}
+
+		if (lockedNpcId >= 0)
+		{
+			if (GameScr.vNpc != null)
+			{
+				for (int k = 0; k < GameScr.vNpc.size(); k++)
+				{
+					Npc n = (Npc)GameScr.vNpc.elementAt(k);
+					if (n != null && n.template != null && n.template.npcTemplateId == lockedNpcId && n.statusMe != 15)
+					{
+						me.npcFocus = n;
+						me.charFocus = null;
+						me.mobFocus = null;
+						me.itemFocus = null;
+						Char.isManualFocus = true;
+						return;
+					}
+				}
+			}
+			me.charFocus = null;
+			me.mobFocus = null;
+			me.itemFocus = null;
+			return;
+		}
+
+		// Nếu bật Gim khi chưa chọn mục tiêu nào -> tự động bắt dính mục tiêu đầu tiên được chọn
 		if (me.charFocus != null && me.charFocus.cHP > 0 && me.charFocus.statusMe != 14 && me.charFocus.statusMe != 5)
 		{
 			lockedCharId = me.charFocus.charID;
 			lockedMobId = -1;
-			return;
+			lockedNpcId = -1;
 		}
-		if (me.mobFocus != null && me.mobFocus.hp > 0 && me.mobFocus.status != 0 && me.mobFocus.status != 1)
+		else if (me.mobFocus != null && me.mobFocus.hp > 0 && me.mobFocus.status != 0 && me.mobFocus.status != 1)
 		{
 			lockedMobId = me.mobFocus.mobId;
 			lockedCharId = 0;
-			return;
+			lockedNpcId = -1;
 		}
-
-		if (lockedCharId != 0 && GameScr.vCharInMap != null)
+		else if (me.npcFocus != null && me.npcFocus.template != null && me.npcFocus.statusMe != 15)
 		{
-			for (int i = 0; i < GameScr.vCharInMap.size(); i++)
-			{
-				Char c = (Char)GameScr.vCharInMap.elementAt(i);
-				if (c != null && c.charID == lockedCharId && c.cHP > 0 && c.statusMe != 14 && c.statusMe != 5)
-				{
-					me.charFocus = c;
-					me.mobFocus = null;
-					return;
-				}
-			}
-		}
-		if (lockedMobId >= 0 && GameScr.vMob != null)
-		{
-			for (int j = 0; j < GameScr.vMob.size(); j++)
-			{
-				Mob m = (Mob)GameScr.vMob.elementAt(j);
-				if (m != null && m.mobId == lockedMobId && m.hp > 0 && m.status != 0 && m.status != 1)
-				{
-					me.mobFocus = m;
-					me.charFocus = null;
-					return;
-				}
-			}
+			lockedNpcId = me.npcFocus.template.npcTemplateId;
+			lockedCharId = 0;
+			lockedMobId = -1;
 		}
 	}
 

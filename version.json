@@ -1,9 +1,9 @@
 {
-  "version": "2.5.43",
+  "version": "2.5.44",
   "buildDate": "2026-10-24",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.43/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.43/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.43/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.43/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.43: Tinh chỉnh nút Hợp Thể Bông Tai Porata bên phải màn hình: bỏ chữ hiển thị đè trên nút, chỉ giữ nguyên nút tròn imgNut/imgNutF và biểu tượng Bông tai Porata gốc."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.44/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.44/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.44/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.44/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.44: Khắc phục triệt để lỗi nút Khóa Mục Tiêu / Gim Mục Tiêu (GIM / KHÓA) vẫn cho phép đổi sang mục tiêu khác khi click màn hình, đi ngang thực thể khác hoặc bấm nút Đổi Mục Tiêu."
 }
