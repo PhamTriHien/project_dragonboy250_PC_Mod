@@ -1,9 +1,9 @@
 {
-  "version": "2.5.40",
+  "version": "2.5.41",
   "buildDate": "2026-10-24",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.40/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.40/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.40/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.40/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.40: Sửa lỗi Next Map qua các hành tinh khác (Trạm tàu vũ trụ 24 <-> 25 <-> 26): (1) Khớp tọa độ chuẩn Xmap gốc (shipNpc.cy - 3) để tránh dịch chuyển lún 3px xuống dưới nền đất của NPC tàu vũ trụ khiến máy chủ kéo giật lại; (2) Đổi chiều quét mặt đất GetGroundY từ trên xuống dưới (safeMinY -> safeMaxY + 24) chuẩn Xmap để luôn tìm đúng mặt sàn đi bộ trên cùng, triệt tiêu lỗi chọn nhầm gạch ngầm (y=456) tại Trạm tàu; (3) Loại bỏ liên kết ảo 0<->24, 7<->25, 14<->26 khỏi đồ thị tìm đường."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.41/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.41/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.41/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.41/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.41: (1) Bổ sung đầy đủ Next Map 6 khu vực (Trái Đất, Namếc, Xayda, Nappa 63..83 & Yardrat 131..133, Cooler/Cold 105..110, Tương Lai 92..103) kèm tự động qua NPC Cui (12), Tapion (60), Calích (38), Trạm tàu/Siêu thị (10/11/12); (2) Bổ sung Auto Dùng Item theo thời gian (Cuồng Nộ, Bổ Huyết, Bổ Khí, Giáp Xên, Ẩn Danh, Đồ Ăn, Hải Sản, Máy Dò, Khẩu Trang, Bùa x2 Đệ, Cỏ 4 Lá, Combo Buff) và logic Auto Item theo ID bất kỳ kiểm tra chặt chẽ thời gian hiệu lực trong Char.vItemTime để chỉ tự dùng lại khi hết thời gian."
 }

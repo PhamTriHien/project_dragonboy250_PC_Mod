@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Assets.src.e;
 using Assets.src.f;
 using Assets.src.g;
@@ -103,6 +103,7 @@ public partial class Controller : IMessageHandler
 					GameScr.vCharInMap.removeAllElements();
 					GameScr.vItemMap.removeAllElements();
 					Char.vItemTime.removeAllElements();
+					ModAutoItem.NotifyItemTimeCleared();
 					GameScr.loadImg();
 					GameScr.currentCharViewInfo = Char.myCharz();
 					Char.myCharz().charID = msg.reader().readInt();

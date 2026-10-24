@@ -1,12 +1,18 @@
-using System;
+﻿using System;
 using Assets.src.e;
 using Assets.src.g;
 using UnityEngine;
 
 namespace Assets.src.f
 {
+/// <summary>
+/// Thành phần phân mảnh (partial) của lớp Controller2: Phân tích cú pháp và xử lý các bản tin thông điệp mạng từ máy chủ (Part2).
+/// </summary>
 public partial class Controller2
 {
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ readMessage_Part2.
+	/// </summary>
 	public static bool readMessage_Part2(sbyte cmd, Message msg)
 	{
 		switch (cmd)
@@ -396,6 +402,15 @@ public partial class Controller2
 				{
 					short num30 = msg.reader().readShort();
 					int num31 = msg.reader().readShort();
+					ModAutoItem.OnServerItemTime(num30, num31);
+					if (num31 <= 0)
+					{
+						if (ItemTime.isExistItem(num30))
+						{
+							Char.vItemTime.removeElement(ItemTime.getItemById(num30));
+						}
+						break;
+					}
 					if (ItemTime.isExistItem(num30))
 					{
 						ItemTime.getItemById(num30).initTime(num31);
@@ -497,6 +512,10 @@ public partial class Controller2
 					sbyte b11 = msg.reader().readByte();
 					if (b11 != 0 && b11 == 1)
 					{
+						if (GameCanvas.loginScr == null)
+						{
+							GameCanvas.loginScr = new LoginScr();
+						}
 						GameCanvas.loginScr.isLogin2 = false;
 						Service.gI().login(Rms.loadRMSString(Rms.RMS_acc), Rms.loadRMSString(Rms.RMS_pass), GameMidlet.VERSION, 0);
 						LoginScr.isLoggingIn = true;
@@ -505,11 +524,19 @@ public partial class Controller2
 				}
 				case -101:
 				{
+					if (GameCanvas.loginScr == null)
+					{
+						GameCanvas.loginScr = new LoginScr();
+					}
 					GameCanvas.loginScr.isLogin2 = true;
-					GameCanvas.connect();
 					string text2 = msg.reader().readUTF();
+					Res.outz("Received virtual userAo: " + text2);
 					Rms.saveRMSString(Rms.RMS_userAo + ServerListScreen.ipSelect, text2);
 					Rms.saveRMSString("passAo" + ServerListScreen.ipSelect, text2);
+					if (!Session_ME.gI().isConnected())
+					{
+						GameCanvas.connect();
+					}
 					Service.gI().setClientType();
 					Service.gI().login(text2, string.Empty, GameMidlet.VERSION, 1);
 					break;

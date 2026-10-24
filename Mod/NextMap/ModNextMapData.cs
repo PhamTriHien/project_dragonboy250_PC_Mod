@@ -6,13 +6,84 @@ using System.Collections.Generic;
 /// </summary>
 public static class ModNextMapData
 {
-	// Danh sách ID bản đồ theo 3 hành tinh: Trái Đất, Namếc, Xayda
-	public static readonly int[][] planetMapIds = new int[3][]
+	// Danh sách tên Tab khu vực bản đồ
+	public static readonly string[] planetTabNames = new string[]
 	{
-		new int[] { 21, 0, 1, 2, 24, 3, 4, 5, 6, 27, 28, 29, 30, 42, 47, 46, 45, 48 },
-		new int[] { 22, 7, 8, 9, 25, 11, 12, 13, 10, 31, 32, 33, 34, 43 },
-		new int[] { 23, 14, 15, 16, 26, 17, 18, 20, 19, 35, 36, 37, 38, 44 }
+		"Trái Đất",
+		"Namếc",
+		"Xayda",
+		"Nappa",
+		"Cooler",
+		"Tương Lai"
 	};
+
+	// Danh sách ID bản đồ theo 6 khu vực: Trái Đất, Namếc, Xayda, Nappa/Fide, Cooler/Cold, Tương Lai
+	public static readonly int[][] planetMapIds = new int[6][]
+	{
+		new int[] { 21, 0, 1, 2, 24, 3, 4, 5, 6, 27, 28, 29, 30, 42, 47, 111, 46, 45, 48, 50 },
+		new int[] { 22, 7, 8, 9, 25, 11, 12, 13, 10, 31, 32, 33, 34, 43 },
+		new int[] { 23, 14, 15, 16, 26, 17, 18, 20, 19, 35, 36, 37, 38, 44, 52, 84 },
+		new int[] { 68, 69, 70, 71, 72, 64, 65, 63, 66, 67, 73, 74, 75, 76, 77, 81, 82, 83, 79, 80, 131, 132, 133 },
+		new int[] { 105, 106, 107, 108, 109, 110 },
+		new int[] { 102, 92, 93, 94, 96, 97, 98, 99, 100, 103 }
+	};
+
+	// Chuỗi liên kết cổng trái (-1) / phải (+1) chuẩn xác từ Xmap gốc (a.g.c.sk)
+	private static readonly int[][] s_MapChains = new int[][]
+	{
+		new int[] { 42, 0, 1, 2, 3, 4, 5, 6 },
+		new int[] { 3, 27, 28, 29, 30 },
+		new int[] { 43, 7, 8, 9, 11, 12, 13, 10 },
+		new int[] { 11, 31, 32, 33, 34 },
+		new int[] { 52, 44, 14, 15, 16, 17, 18, 20, 19 },
+		new int[] { 17, 35, 36, 37, 38 },
+		new int[] { 68, 69, 70, 71, 72, 64, 65, 63, 66, 67, 73, 74, 75, 76, 77, 81, 82, 83, 79, 80 },
+		new int[] { 80, 105 },
+		new int[] { 109, 108, 107, 110, 106 },
+		new int[] { 109, 105 },
+		new int[] { 109, 106 },
+		new int[] { 106, 107 },
+		new int[] { 108, 105 },
+		new int[] { 131, 132, 133 },
+		new int[] { 102, 92, 93, 94, 96, 97, 98, 99, 100, 103 }
+	};
+
+	/// <summary>
+	/// Xác định hướng cổng (-1: Cổng trái, +1: Cổng phải, 0: Không xác định) giữa 2 bản đồ kế tiếp theo chuỗi Xmap gốc.
+	/// </summary>
+	public static int GetChainWaypointSide(int currMapId, int nextMapId)
+	{
+		for (int c = 0; c < s_MapChains.Length; c++)
+		{
+			int[] chain = s_MapChains[c];
+			for (int i = 0; i < chain.Length; i++)
+			{
+				if (chain[i] == currMapId)
+				{
+					if (i > 0 && chain[i - 1] == nextMapId) return -1;
+					if (i < chain.Length - 1 && chain[i + 1] == nextMapId) return 1;
+				}
+			}
+		}
+		return 0;
+	}
+
+	/// <summary>
+	/// Kiểm tra xem cặp bản đồ (currMapId -> nextMapId) có phải là kết nối qua NPC đặc biệt hay không.
+	/// </summary>
+	public static bool IsNpcTransitionEdge(int currMapId, int nextMapId)
+	{
+		if ((currMapId == 24 || currMapId == 25 || currMapId == 26) &&
+		    (nextMapId == 24 || nextMapId == 25 || nextMapId == 26 || nextMapId == 84)) return true;
+		if (currMapId == 84 && (nextMapId == 24 || nextMapId == 25 || nextMapId == 26)) return true;
+		if (currMapId == 19 && (nextMapId == 68 || nextMapId == 109)) return true;
+		if ((currMapId == 68 || currMapId == 109) && nextMapId == 19) return true;
+		if ((currMapId == 80 && nextMapId == 131) || (currMapId == 131 && nextMapId == 80)) return true;
+		if ((currMapId == 27 || currMapId == 28 || currMapId == 29) && nextMapId == 102) return true;
+		if (currMapId == 102 && (nextMapId == 27 || nextMapId == 28 || nextMapId == 29)) return true;
+		if ((currMapId == 48 && nextMapId == 50) || (currMapId == 50 && nextMapId == 48)) return true;
+		return false;
+	}
 
 	// Đồ thị kết nối bản đồ chuẩn xác theo World Map gốc và dữ liệu NRmap thực tế
 	public static readonly Dictionary<int, List<int>> mapWaypoints = new Dictionary<int, List<int>>
@@ -26,9 +97,9 @@ public static class ModNextMapData
 		{ 4, new List<int> { 3, 5 } },
 		{ 5, new List<int> { 4, 6, 29 } },
 		{ 6, new List<int> { 5 } },
-		{ 27, new List<int> { 3, 28 } },
-		{ 28, new List<int> { 27, 29 } },
-		{ 29, new List<int> { 28, 5, 30 } },
+		{ 27, new List<int> { 3, 28, 102 } },
+		{ 28, new List<int> { 27, 29, 102 } },
+		{ 29, new List<int> { 28, 5, 30, 102 } },
 		{ 30, new List<int> { 29 } },
 		{ 39, new List<int> { 0, 42 } },
 		{ 42, new List<int> { 0, 47 } },
@@ -39,7 +110,7 @@ public static class ModNextMapData
 		{ 48, new List<int> { 45, 50 } },
 		{ 50, new List<int> { 48, 49 } },
 		{ 49, new List<int> { 50 } },
-		{ 24, new List<int> { 2, 25, 26 } },
+		{ 24, new List<int> { 2, 25, 26, 84 } },
 
 		// Hành tinh Namếc
 		{ 7, new List<int> { 22, 8, 43 } },
@@ -56,7 +127,7 @@ public static class ModNextMapData
 		{ 34, new List<int> { 33 } },
 		{ 40, new List<int> { 7, 43 } },
 		{ 43, new List<int> { 7 } },
-		{ 25, new List<int> { 9, 24, 26 } },
+		{ 25, new List<int> { 9, 24, 26, 84 } },
 
 		// Hành tinh Xayda
 		{ 14, new List<int> { 23, 15, 44 } },
@@ -66,17 +137,20 @@ public static class ModNextMapData
 		{ 17, new List<int> { 16, 18, 35 } },
 		{ 18, new List<int> { 17, 20 } },
 		{ 20, new List<int> { 18, 19, 37 } },
-		{ 19, new List<int> { 20 } },
+		{ 19, new List<int> { 20, 68, 109 } },
 		{ 35, new List<int> { 17, 36 } },
 		{ 36, new List<int> { 35, 37 } },
 		{ 37, new List<int> { 36, 20, 38 } },
 		{ 38, new List<int> { 37 } },
 		{ 41, new List<int> { 14, 44 } },
-		{ 44, new List<int> { 14 } },
-		{ 26, new List<int> { 16, 24, 25 } },
+		{ 44, new List<int> { 14, 52 } },
+		{ 52, new List<int> { 44 } },
+		{ 26, new List<int> { 16, 24, 25, 84 } },
+		{ 84, new List<int> { 24, 25, 26, 104 } },
+		{ 104, new List<int> { 84 } },
 
-		// Khu vực Fide / Nappa (63..83)
-		{ 68, new List<int> { 69, 67 } },
+		// Khu vực Fide / Nappa (63..83) & Yardrat (131..133)
+		{ 68, new List<int> { 19, 69, 67 } },
 		{ 69, new List<int> { 68, 70 } },
 		{ 70, new List<int> { 69, 71 } },
 		{ 71, new List<int> { 70, 72 } },
@@ -95,7 +169,10 @@ public static class ModNextMapData
 		{ 82, new List<int> { 81, 83 } },
 		{ 83, new List<int> { 82, 79 } },
 		{ 79, new List<int> { 83, 80 } },
-		{ 80, new List<int> { 79 } },
+		{ 80, new List<int> { 79, 105, 131 } },
+		{ 131, new List<int> { 80, 132 } },
+		{ 132, new List<int> { 131, 133 } },
+		{ 133, new List<int> { 132 } },
 
 		// Khu vực Tương lai / Android (92..103)
 		{ 92, new List<int> { 93, 94, 102 } },
@@ -106,16 +183,16 @@ public static class ModNextMapData
 		{ 98, new List<int> { 97, 99 } },
 		{ 99, new List<int> { 97, 98, 100 } },
 		{ 100, new List<int> { 99, 103 } },
-		{ 102, new List<int> { 92, 93 } },
+		{ 102, new List<int> { 27, 92, 93 } },
 		{ 103, new List<int> { 100 } },
 
-		// Khu vực Hành tinh Cold (105..110)
-		{ 105, new List<int> { 106, 109 } },
-		{ 106, new List<int> { 105, 107, 109 } },
+		// Khu vực Hành tinh Cooler / Cold (105..110)
+		{ 105, new List<int> { 80, 106, 108, 109 } },
+		{ 106, new List<int> { 105, 107, 109, 110 } },
 		{ 107, new List<int> { 106, 108, 110 } },
-		{ 108, new List<int> { 107, 109, 110 } },
+		{ 108, new List<int> { 105, 107, 109, 110 } },
 		{ 109, new List<int> { 105, 106, 108, 110 } },
-		{ 110, new List<int> { 107, 108, 109 } }
+		{ 110, new List<int> { 106, 107, 108, 109 } }
 	};
 
 	/// <summary>
@@ -251,7 +328,49 @@ public static class ModNextMapData
 		{ 48, new string[] { "Hanh tinh Kaio", "Kaio planet", "Planet Kaio", "Thanh dia Kaio" } },
 		{ 49, new string[] { "Phong tap thoi gian", "Time room" } },
 		{ 50, new string[] { "Thanh dia Kaio", "Kaio sanctuary" } },
-		{ 111, new string[] { "Dong Nam Karin", "East South Karin" } }
+		{ 52, new string[] { "Dai hoi vo thuat", "Martial arts tournament", "Turnamen bela diri" } },
+		{ 63, new string[] { "Trai linh Fide", "Frieza soldier camp", "Fide camp", "Kemah prajurit Frieza" } },
+		{ 64, new string[] { "Nui day leo", "Vine mountain", "Gunung tanaman rambat" } },
+		{ 65, new string[] { "Nui cay quy", "Devil tree mountain", "Gunung pohon iblis" } },
+		{ 66, new string[] { "Trai quy gia", "Old devil camp", "Kemah iblis tua" } },
+		{ 67, new string[] { "Vuc chet", "Dead deep", "Death abyss", "Jurang mati" } },
+		{ 68, new string[] { "Thung lung Nappa", "Nappa valley", "Lembah Nappa" } },
+		{ 69, new string[] { "Vuc tu than", "Death valley", "Death canyon", "Jurang maut" } },
+		{ 70, new string[] { "Nui Appule", "Appule mountain", "Gunung Appule" } },
+		{ 71, new string[] { "Can cu Raspberry", "Raspberry base", "Markas Raspberry" } },
+		{ 72, new string[] { "Thung lung Raspberry", "Raspberry valley", "Lembah Raspberry" } },
+		{ 73, new string[] { "Thung lung chet", "Dead valley", "Lembah mati" } },
+		{ 74, new string[] { "Doi cay Fide", "Frieza tree hill", "Fide hill", "Bukit pohon Frieza" } },
+		{ 75, new string[] { "Vach nui chet", "Dead cliff", "Death cliff", "Tebing mati" } },
+		{ 76, new string[] { "Nui da", "Stone mountain", "Rock mountain", "Gunung batu" } },
+		{ 77, new string[] { "Rung da", "Stone forest", "Da forest", "Hutan batu" } },
+		{ 79, new string[] { "Nui khi do", "Red monkey mountain", "Gunung monyet merah" } },
+		{ 80, new string[] { "Nui khi vang", "Yellow monkey mountain", "Gunung monyet kuning" } },
+		{ 81, new string[] { "Hang quy chim", "Bird devil cave", "Gua burung iblis" } },
+		{ 82, new string[] { "Nui khi den", "Black monkey mountain", "Gunung monyet hitam" } },
+		{ 83, new string[] { "Hang khi den", "Black monkey cave", "Gua monyet hitam" } },
+		{ 84, new string[] { "Sieu thi", "Supermarket", "Pasar swalayan" } },
+		{ 92, new string[] { "Thanh pho phia dong", "East city", "Kota timur" } },
+		{ 93, new string[] { "Thanh pho phia nam", "South city", "Kota selatan" } },
+		{ 94, new string[] { "Quan dao Sasebo", "Dao Bale", "Bale island", "Sasebo island", "Pulau Bale" } },
+		{ 96, new string[] { "Cao nguyen", "Highland", "Plateau", "Dataran tinggi" } },
+		{ 97, new string[] { "Thanh pho phia bac", "North city", "Kota utara" } },
+		{ 98, new string[] { "Nui phia bac", "North mountain", "Gunung utara" } },
+		{ 99, new string[] { "Thung lung phia bac", "North valley", "Lembah utara" } },
+		{ 100, new string[] { "Thi tran Ginder", "Ginder town", "Kota Ginder" } },
+		{ 102, new string[] { "Nha Bunma", "Bulma house", "Bunma house", "Rumah Bulma" } },
+		{ 103, new string[] { "Vo dai Xen Bo Hung", "Vo dai Cell", "Cell ring", "Cell arena", "Arena Cell" } },
+		{ 104, new string[] { "San sau Sieu thi", "Backyard supermarket", "Halaman belakang" } },
+		{ 105, new string[] { "Canh dong tuyet", "Snow field", "Padang salju" } },
+		{ 106, new string[] { "Rung tuyet", "Snow forest", "Hutan salju" } },
+		{ 107, new string[] { "Nui tuyet", "Snow mountain", "Gunung salju" } },
+		{ 108, new string[] { "Dong song bang", "Ice river", "Frozen river", "Sungai es" } },
+		{ 109, new string[] { "Rung bang", "Ice forest", "Frozen forest", "Hutan es" } },
+		{ 110, new string[] { "Hang bang", "Ice cave", "Frozen cave", "Gua es" } },
+		{ 111, new string[] { "Dong Nam Karin", "East South Karin" } },
+		{ 131, new string[] { "Hanh tinh Yardrat 1", "Yardrat 1", "Planet Yardrat 1" } },
+		{ 132, new string[] { "Hanh tinh Yardrat 2", "Yardrat 2", "Planet Yardrat 2" } },
+		{ 133, new string[] { "Hanh tinh Yardrat 3", "Yardrat 3", "Planet Yardrat 3" } }
 	};
 
 	/// <summary>
@@ -304,15 +423,15 @@ public static class ModNextMapData
 				graphChanged = true;
 			}
 
-			// Nếu mọi cổng trên map thường đều đã xác định rõ đích đến, loại bỏ các cạnh tĩnh bị lệch
+			// Nếu mọi cổng trên map thường đều đã xác định rõ đích đến, loại bỏ các cạnh tĩnh bị lệch (trừ các cạnh NPC đặc biệt)
 			bool isSpaceshipStation = (currMapId == 24 || currMapId == 25 || currMapId == 26);
-			bool isAirMap = TileMap.isInAirMap() || currMapId == 45 || currMapId == 46 || currMapId == 48;
+			bool isAirMap = TileMap.isInAirMap() || currMapId == 45 || currMapId == 46 || currMapId == 48 || currMapId == 50;
 			if (!isSpaceshipStation && !isAirMap && resolvedCount == totalWps)
 			{
 				for (int i = currNeighbors.Count - 1; i >= 0; i--)
 				{
 					int oldNeighbor = currNeighbors[i];
-					if (!resolvedTargets.Contains(oldNeighbor))
+					if (!resolvedTargets.Contains(oldNeighbor) && !IsNpcTransitionEdge(currMapId, oldNeighbor))
 					{
 						currNeighbors.RemoveAt(i);
 						graphChanged = true;
@@ -421,6 +540,44 @@ public static class ModNextMapData
 			return 44;
 		}
 
+		// 0. Ưu tiên kiểm tra khớp chính xác với các láng giềng đã biết của currentMapId (tránh trùng tên như Rừng đá 36 và 77)
+		if (mapWaypoints.TryGetValue(currentMapId, out List<int> neighbors))
+		{
+			for (int i = 0; i < neighbors.Count; i++)
+			{
+				int cand = neighbors[i];
+				if (cand == currentMapId) continue;
+				if (ModTranslate.rawMapNames != null && cand >= 0 && cand < ModTranslate.rawMapNames.Length &&
+				    !string.IsNullOrEmpty(ModTranslate.rawMapNames[cand]) && CleanName(ModTranslate.rawMapNames[cand]).Equals(clean, StringComparison.OrdinalIgnoreCase))
+				{
+					return cand;
+				}
+				if (ModTranslate.MapNames != null && cand >= 0 && cand < ModTranslate.MapNames.Length &&
+				    !string.IsNullOrEmpty(ModTranslate.MapNames[cand]) && CleanName(ModTranslate.MapNames[cand]).Equals(clean, StringComparison.OrdinalIgnoreCase))
+				{
+					return cand;
+				}
+				if (s_MapMultilingualAliases.TryGetValue(cand, out string[] candAliases))
+				{
+					for (int j = 0; j < candAliases.Length; j++)
+					{
+						if (CleanName(candAliases[j]).Equals(clean, StringComparison.OrdinalIgnoreCase))
+						{
+							return cand;
+						}
+					}
+				}
+			}
+			for (int i = 0; i < neighbors.Count; i++)
+			{
+				int cand = neighbors[i];
+				if (cand != currentMapId && MatchMapId(text, cand))
+				{
+					return cand;
+				}
+			}
+		}
+
 		// 1. So khớp chính xác với tên gốc từ Server (ModTranslate.rawMapNames)
 		if (ModTranslate.rawMapNames != null)
 		{
@@ -464,20 +621,7 @@ public static class ModNextMapData
 			}
 		}
 
-		// 4. Ưu tiên kiểm tra các láng giềng đã biết của currentMapId
-		if (mapWaypoints.TryGetValue(currentMapId, out List<int> neighbors))
-		{
-			for (int i = 0; i < neighbors.Count; i++)
-			{
-				int cand = neighbors[i];
-				if (MatchMapId(text, cand))
-				{
-					return cand;
-				}
-			}
-		}
-
-		// 5. Quét toàn bộ danh sách map của hành tinh hiện tại trước, sau đó toàn bộ map
+		// 4. Quét toàn bộ danh sách map của hành tinh hiện tại trước, sau đó toàn bộ map
 		if (planetId >= 0 && planetId < planetMapIds.Length)
 		{
 			int[] pMaps = planetMapIds[planetId];

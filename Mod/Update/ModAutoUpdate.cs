@@ -10,9 +10,12 @@ using System.Net;
 #endif
 using UnityEngine;
 
+/// <summary>
+/// Module Tá»± Äá»™ng Cáº­p Nháº­t: Kiá»ƒm tra phiÃªn báº£n má»›i tá»« mÃ¡y chá»§ GitHub Release vÃ  táº£i vá» báº£n vÃ¡ tá»± Ä‘á»™ng.
+/// </summary>
 public static class ModAutoUpdate
 {
-	public const string CurrentVersion = "2.5.40";
+	public static readonly string CurrentVersion = "2.5.41";
 	public const string ManifestUrl = "https://raw.githubusercontent.com/PhamTriHien/project_dragonboy250_PC_Mod/main/version.json";
 
 	public static bool isChecking = false;
@@ -49,6 +52,9 @@ public static class ModAutoUpdate
 	public static int GetBtnX() => GameCanvas.w - GetBtnW() - 6;
 	public static int GetBtnY() => 4;
 
+	/// <summary>
+	/// Dá»n dáº¹p vÃ  Ä‘áº·t láº¡i tráº¡ng thÃ¡i ban Ä‘áº§u cho ResetAndCheckOnLaunch.
+	/// </summary>
 	public static void ResetAndCheckOnLaunch()
 	{
 		isChecking = false;
@@ -70,8 +76,23 @@ public static class ModAutoUpdate
 		StartCheckAsync(force: true, isManual: false);
 	}
 
+	/// <summary>
+	/// Thá»±c thi phÆ°Æ¡ng thá»©c nghiá»‡p vá»¥ StartCheckAsync.
+	/// </summary>
 	public static void StartCheckAsync(bool force = false, bool isManual = false)
 	{
+#if NET8_0_OR_GREATER
+		if (OperatingSystem.IsBrowser())
+		{
+			hasChecked = true;
+			isChecking = false;
+			if (isManual)
+			{
+				manualStatusMsg = "PhiÃªn báº£n Web tá»± Ä‘á»™ng cáº­p nháº­t trá»±c tiáº¿p tá»« mÃ¡y chá»§!";
+			}
+			return;
+		}
+#endif
 		if (isChecking) return;
 		if (!force && hasChecked) return;
 
@@ -81,6 +102,9 @@ public static class ModAutoUpdate
 			manualStatusMsg = "Äang kiá»ƒm tra cáº­p nháº­t...";
 		}
 
+		/// <summary>
+		/// Thá»±c thi phÆ°Æ¡ng thá»©c nghiá»‡p vá»¥ Thread.
+		/// </summary>
 		Thread thread = new Thread((ThreadStart)delegate
 		{
 			try
@@ -104,6 +128,9 @@ public static class ModAutoUpdate
 		thread.Start();
 	}
 
+	/// <summary>
+	/// Thá»±c thi phÆ°Æ¡ng thá»©c nghiá»‡p vá»¥ PerformCheck.
+	/// </summary>
 	private static void PerformCheck(bool isManual)
 	{
 		string json = null;
@@ -164,6 +191,9 @@ public static class ModAutoUpdate
 		}
 	}
 
+	/// <summary>
+	/// Thá»±c thi phÆ°Æ¡ng thá»©c nghiá»‡p vá»¥ SelectDownloadUrl.
+	/// </summary>
 	public static string SelectDownloadUrl(string json)
 	{
 		bool isAndroid = (Application.platform == RuntimePlatform.Android) || (mSystem.clientType == 2);
@@ -189,6 +219,9 @@ public static class ModAutoUpdate
 		return ExtractJsonField(json, "downloadUrl");
 	}
 
+	/// <summary>
+	/// Cáº­p nháº­t tráº¡ng thÃ¡i logic cá»§a UpdateTick theo chu ká»³ khung hÃ¬nh.
+	/// </summary>
 	public static void UpdateTick()
 	{
 		if (hasNewVersion && !hasPrompted)
@@ -212,12 +245,18 @@ public static class ModAutoUpdate
 		}
 	}
 
+	/// <summary>
+	/// Thá»±c thi phÆ°Æ¡ng thá»©c nghiá»‡p vá»¥ ShowUpdateDialog.
+	/// </summary>
 	public static void ShowUpdateDialog()
 	{
 		scrollY = 0;
 		isShowUpdateBoard = true;
 	}
 
+	/// <summary>
+	/// Kiá»ƒm tra Ä‘iá»u kiá»‡n há»£p lá»‡ hoáº·c tráº¡ng thÃ¡i cá»§a CheckManual.
+	/// </summary>
 	public static void CheckManual()
 	{
 		if (isChecking)
@@ -236,6 +275,9 @@ public static class ModAutoUpdate
 		}
 	}
 
+	/// <summary>
+	/// Thá»±c thi phÆ°Æ¡ng thá»©c nghiá»‡p vá»¥ StartInGameDownload.
+	/// </summary>
 	public static void StartInGameDownload()
 	{
 		if (isDownloading) return;
@@ -252,6 +294,9 @@ public static class ModAutoUpdate
 		totalBytes = 0;
 		downloadSpeedStr = "0 KB/s";
 
+		/// <summary>
+		/// Thá»±c thi phÆ°Æ¡ng thá»©c nghiá»‡p vá»¥ Thread.
+		/// </summary>
 		Thread thread = new Thread((ThreadStart)delegate
 		{
 			string targetFile = GetTargetLocalPath();
@@ -338,6 +383,9 @@ public static class ModAutoUpdate
 		thread.Start();
 	}
 
+	/// <summary>
+	/// Thá»±c thi phÆ°Æ¡ng thá»©c nghiá»‡p vá»¥ ReadStreamToTarget.
+	/// </summary>
 	private static void ReadStreamToTarget(Stream stream, Stream fs)
 	{
 		byte[] buffer = new byte[65536];
@@ -377,6 +425,9 @@ public static class ModAutoUpdate
 		}
 	}
 
+	/// <summary>
+	/// Truy xuáº¥t vÃ  tráº£ vá» dá»¯ liá»‡u cá»§a GetTargetLocalPath.
+	/// </summary>
 	private static string GetTargetLocalPath()
 	{
 		bool isAndroid = (Application.platform == RuntimePlatform.Android) || (mSystem.clientType == 2);
@@ -404,6 +455,9 @@ public static class ModAutoUpdate
 		}
 	}
 
+	/// <summary>
+	/// Bá»™ xá»­ lÃ½ sá»± kiá»‡n tiáº¿p nháº­n vÃ  pháº£n há»“i OnDownloadCompleted.
+	/// </summary>
 	private static void OnDownloadCompleted(string localFile)
 	{
 		bool isAndroid = (Application.platform == RuntimePlatform.Android) || (mSystem.clientType == 2);
@@ -451,6 +505,9 @@ public static class ModAutoUpdate
 		}
 	}
 
+	/// <summary>
+	/// Kiá»ƒm tra Ä‘iá»u kiá»‡n há»£p lá»‡ hoáº·c tráº¡ng thÃ¡i cá»§a CancelDownload.
+	/// </summary>
 	public static void CancelDownload()
 	{
 		isDownloadCanceled = true;
@@ -461,6 +518,9 @@ public static class ModAutoUpdate
 		GameScr.info1?.addInfo("ÄÃ£ há»§y táº£i báº£n cáº­p nháº­t!", 0);
 	}
 
+	/// <summary>
+	/// Thá»±c hiá»‡n váº½ vÃ  hiá»ƒn thá»‹ thÃ nh pháº§n PaintDownloadProgress lÃªn canvas Ä‘á»“ há»a.
+	/// </summary>
 	public static void PaintDownloadProgress(mGraphics g)
 	{
 		if (!isDownloading && !isShowCompletedBoard) return;
@@ -589,6 +649,9 @@ public static class ModAutoUpdate
 		}
 	}
 
+	/// <summary>
+	/// Cáº­p nháº­t tráº¡ng thÃ¡i logic cá»§a UpdateDownloadInput theo chu ká»³ khung hÃ¬nh.
+	/// </summary>
 	public static void UpdateDownloadInput()
 	{
 		if (!isDownloading && !isShowCompletedBoard) return;
@@ -672,15 +735,22 @@ public static class ModAutoUpdate
 		}
 	}
 
+	/// <summary>
+	/// Thá»±c hiá»‡n váº½ vÃ  hiá»ƒn thá»‹ thÃ nh pháº§n PaintLobbyUI lÃªn canvas Ä‘á»“ há»a.
+	/// </summary>
 	public static void PaintLobbyUI(mGraphics g)
 	{
 		PaintLobbyUpdateButton(g);
 		PaintUpdateInfoBoard(g);
 	}
 
+	/// <summary>
+	/// Thá»±c hiá»‡n váº½ vÃ  hiá»ƒn thá»‹ thÃ nh pháº§n PaintLobbyUpdateButton lÃªn canvas Ä‘á»“ há»a.
+	/// </summary>
 	public static void PaintLobbyUpdateButton(mGraphics g)
 	{
 		if (isDownloading || isShowCompletedBoard || isShowUpdateBoard) return;
+		if (!isDownloadCompleted && !hasNewVersion) return;
 
 		int btnW = GetBtnW();
 		int btnH = GetBtnH();
@@ -713,6 +783,9 @@ public static class ModAutoUpdate
 		}
 	}
 
+	/// <summary>
+	/// Thá»±c hiá»‡n váº½ vÃ  hiá»ƒn thá»‹ thÃ nh pháº§n PaintRedNotificationDot lÃªn canvas Ä‘á»“ há»a.
+	/// </summary>
 	private static void PaintRedNotificationDot(mGraphics g, int dotX, int dotY)
 	{
 		int pulse = (int)(System.Math.Sin(GameCanvas.gameTick * 0.25) * 2);
@@ -729,6 +802,9 @@ public static class ModAutoUpdate
 		g.fillRect(dotX - 1, dotY - 2, 2, 1);
 	}
 
+	/// <summary>
+	/// Thá»±c hiá»‡n váº½ vÃ  hiá»ƒn thá»‹ thÃ nh pháº§n PaintUpdateInfoBoard lÃªn canvas Ä‘á»“ há»a.
+	/// </summary>
 	public static void PaintUpdateInfoBoard(mGraphics g)
 	{
 		if (!isShowUpdateBoard || isDownloading || isShowCompletedBoard || !hasNewVersion) return;
@@ -842,6 +918,9 @@ public static class ModAutoUpdate
 		}
 	}
 
+	/// <summary>
+	/// Cáº­p nháº­t tráº¡ng thÃ¡i logic cá»§a UpdateLobbyInput theo chu ká»³ khung hÃ¬nh.
+	/// </summary>
 	public static void UpdateLobbyInput()
 	{
 		if (isDownloading || isShowCompletedBoard)
@@ -984,6 +1063,9 @@ public static class ModAutoUpdate
 		}
 	}
 
+	/// <summary>
+	/// Ãp dá»¥ng cÃ¡c thay Ä‘á»•i cáº¥u hÃ¬nh hoáº·c hiá»‡u á»©ng cá»§a ApplyUpdateAndRestart.
+	/// </summary>
 	public static void ApplyUpdateAndRestart()
 	{
 		string currentExePath = null;
@@ -1045,6 +1127,9 @@ del ""%~f0""
 		}
 	}
 
+	/// <summary>
+	/// Kiá»ƒm tra Ä‘iá»u kiá»‡n há»£p lá»‡ hoáº·c tráº¡ng thÃ¡i cá»§a IsNewerVersion.
+	/// </summary>
 	public static bool IsNewerVersion(string remote, string local)
 	{
 		try
@@ -1066,6 +1151,9 @@ del ""%~f0""
 		return false;
 	}
 
+	/// <summary>
+	/// Thá»±c thi phÆ°Æ¡ng thá»©c nghiá»‡p vá»¥ ExtractJsonField.
+	/// </summary>
 	public static string ExtractJsonField(string json, string fieldName)
 	{
 		try
@@ -1109,15 +1197,24 @@ del ""%~f0""
 	}
 }
 
+/// <summary>
+/// CLASS AutoUpdateActionListener: Äá»‹nh nghÄ©a vÃ  Ä‘iá»u phá»‘i logic trong há»‡ thá»‘ng game.
+/// </summary>
 public class AutoUpdateActionListener : IActionListener
 {
 	private string url;
 
+	/// <summary>
+	/// Thá»±c thi phÆ°Æ¡ng thá»©c nghiá»‡p vá»¥ AutoUpdateActionListener.
+	/// </summary>
 	public AutoUpdateActionListener(string targetUrl)
 	{
 		this.url = targetUrl;
 	}
 
+	/// <summary>
+	/// Thá»±c thi hÃ nh Ä‘á»™ng tÆ°Æ¡ng tÃ¡c khi ngÆ°á»i dÃ¹ng kÃ­ch hoáº¡t lá»‡nh hoáº·c nÃºt báº¥m.
+	/// </summary>
 	public void perform(int idAction, object p)
 	{
 		GameCanvas.endDlg();

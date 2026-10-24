@@ -581,10 +581,66 @@ public static class ModWaypoint
 		}
 	}
 
+	private static int GetFallbackNpcMenuIndex(int currentMapId, int targetMapId, int menuLength = 3)
+	{
+		if (currentMapId == 24)
+		{
+			if (targetMapId == 84) return 2;
+			return (targetMapId == 26) ? 1 : 0;
+		}
+		if (currentMapId == 25)
+		{
+			if (targetMapId == 84) return 2;
+			return (targetMapId == 26) ? 1 : 0;
+		}
+		if (currentMapId == 26)
+		{
+			if (targetMapId == 84) return 2;
+			return (targetMapId == 25) ? 1 : 0;
+		}
+		if (currentMapId == 19)
+		{
+			int taskId = (Char.myCharz() != null && Char.myCharz().taskMaint != null) ? Char.myCharz().taskMaint.taskId : 0;
+			if (targetMapId == 68)
+			{
+				return (taskId == 23) ? 0 : ((menuLength > 1) ? 1 : 0);
+			}
+			if (targetMapId == 109)
+			{
+				return (taskId > 30) ? 0 : ((menuLength > 1) ? 1 : 0);
+			}
+		}
+		if (currentMapId == 68 || currentMapId == 109)
+		{
+			return 0;
+		}
+		if (currentMapId == 80 && targetMapId == 131)
+		{
+			return 0;
+		}
+		if (currentMapId == 131 && targetMapId == 80)
+		{
+			return (menuLength > 1) ? 1 : 0;
+		}
+		if ((currentMapId == 27 || currentMapId == 28 || currentMapId == 29) && targetMapId == 102)
+		{
+			return (menuLength > 1) ? 1 : 0;
+		}
+		if (currentMapId == 102 && (targetMapId == 27 || targetMapId == 28 || targetMapId == 29))
+		{
+			return (menuLength > 1) ? 1 : 0;
+		}
+		if (currentMapId == 48 && targetMapId == 50)
+		{
+			return (menuLength >= 4) ? 3 : 0;
+		}
+		return 0;
+	}
+
 	/// <summary>
 	/// Thực thi phương thức nghiệp vụ UseSpaceShip chuẩn Xmap gốc (a.f.f.U & a.g.a.rW):
 	/// Dịch chuyển tới (shipNpc.cx, shipNpc.cy - 3) để khớp đúng bề mặt ô đất (do Controller.Map cộng +3 vào npc.cy),
-	/// sau đó gửi openMenu và confirmMenu chuyển hành tinh.
+	/// sau đó gửi openMenu và confirmMenu chuyển hành tinh / khu vực đặc biệt (Nappa, Cooler, Yardrat, Tương Lai, Siêu Thị).
 	/// </summary>
 	public static bool UseSpaceShip(Npc shipNpc, int targetPlanetMapId = -1)
 	{
@@ -616,7 +672,7 @@ public static class ModWaypoint
 			if (Res.abs(me.cx - npcX) > 24 || Res.abs(me.cy - npcY) > 24)
 			{
 				MoveSteppedTo(npcX, npcY);
-				ModTdltLogger.Log("NEXT_MAP_SHIP", $"Teleport to Spaceship NPC at ({npcX},{npcY}) [rawCy={shipNpc.cy}], map={TileMap.mapID}");
+				ModTdltLogger.Log("NEXT_MAP_SHIP", $"Teleport to NPC at ({npcX},{npcY}) [rawCy={shipNpc.cy}], map={TileMap.mapID}");
 				return false;
 			}
 
@@ -626,28 +682,20 @@ public static class ModWaypoint
 			if (isWaitingShipMenu)
 			{
 				long elapsed = now - lastShipOpenMenuTime;
-				if (elapsed >= 900 && elapsed < 2500)
+				if (elapsed >= 750 && elapsed < 2500)
 				{
-					int fallbackIndex = 0;
-					if (TileMap.mapID == 24)
-					{
-						fallbackIndex = (targetPlanetMapId == 26) ? 1 : 0;
-					}
-					else if (TileMap.mapID == 25)
-					{
-						fallbackIndex = (targetPlanetMapId == 26) ? 1 : 0;
-					}
-					else if (TileMap.mapID == 26)
-					{
-						fallbackIndex = (targetPlanetMapId == 25) ? 1 : 0;
-					}
+					int fallbackIndex = GetFallbackNpcMenuIndex(TileMap.mapID, targetPlanetMapId, 3);
 					isWaitingShipMenu = false;
 					Service.gI().confirmMenu((short)npcTemplateId, (sbyte)fallbackIndex);
+					if (TileMap.mapID == 48 && targetPlanetMapId == 50)
+					{
+						Service.gI().confirmMenu((short)npcTemplateId, 1);
+					}
 					if (GameCanvas.menu != null)
 					{
 						GameCanvas.menu.showMenu = false;
 					}
-					ModTdltLogger.Log("NEXT_MAP_SHIP", $"Fallback confirm Spaceship menu npc={npcTemplateId}, index={fallbackIndex} -> targetPlanet={targetPlanetMapId}");
+					ModTdltLogger.Log("NEXT_MAP_SHIP", $"Fallback confirm NPC menu npc={npcTemplateId}, index={fallbackIndex} -> targetMap={targetPlanetMapId}");
 					return true;
 				}
 				if (elapsed < 2500)
@@ -661,7 +709,7 @@ public static class ModWaypoint
 			lastShipOpenMenuTime = now;
 
 			Service.gI().openMenu(npcTemplateId);
-			ModTdltLogger.Log("NEXT_MAP_SHIP", $"Open Spaceship menu npc={npcTemplateId} at pos=({me.cx},{me.cy})");
+			ModTdltLogger.Log("NEXT_MAP_SHIP", $"Open NPC menu npc={npcTemplateId} at pos=({me.cx},{me.cy}) -> targetMap={targetPlanetMapId}");
 			return false;
 		}
 		catch
@@ -695,7 +743,7 @@ public static class ModWaypoint
 
 			for (int i = 0; i < menuItems.Length; i++)
 			{
-				string text = menuItems[i].ToLower();
+				string text = (menuItems[i] ?? string.Empty).ToLower();
 				if (targetPlanet == 25 && (text.Contains("nam") || text.Contains("namec") || text.Contains("namek")))
 				{
 					selectedIndex = i;
@@ -711,26 +759,57 @@ public static class ModWaypoint
 					selectedIndex = i;
 					break;
 				}
+				if (targetPlanet == 84 && (text.Contains("siêu thị") || text.Contains("sieu thi") || text.Contains("supermarket") || text.Contains("pasar")))
+				{
+					selectedIndex = i;
+					break;
+				}
+				if (targetPlanet == 68 && text.Contains("nappa"))
+				{
+					selectedIndex = i;
+					break;
+				}
+				if (targetPlanet == 109 && (text.Contains("cold") || text.Contains("cooler") || text.Contains("băng") || text.Contains("bang")))
+				{
+					selectedIndex = i;
+					break;
+				}
+				if (targetPlanet == 19 && (text.Contains("xayda") || text.Contains("vegeta") || text.Contains("quay về") || text.Contains("về") || text.Contains("kembali") || text.Contains("back")))
+				{
+					selectedIndex = i;
+					break;
+				}
+				if (targetPlanet == 131 && (text.Contains("yardrat") || text.Contains("đồng ý") || text.Contains("dong y") || text.Contains("setuju") || text.Contains("ok") || text.Contains("yes")))
+				{
+					selectedIndex = i;
+					break;
+				}
+				if (targetPlanet == 80 && (text.Contains("quay về") || text.Contains("trở về") || text.Contains("về") || text.Contains("kembali") || text.Contains("back")))
+				{
+					selectedIndex = i;
+					break;
+				}
+				if (targetPlanet == 102 && (text.Contains("tương lai") || text.Contains("tuong lai") || text.Contains("masa depan") || text.Contains("future") || text.Contains("đồng ý")))
+				{
+					selectedIndex = i;
+					break;
+				}
+				if ((targetPlanet == 27 || targetPlanet == 28 || targetPlanet == 29) && TileMap.mapID == 102 &&
+				    (text.Contains("quá khứ") || text.Contains("qua khu") || text.Contains("hiện tại") || text.Contains("quay về") || text.Contains("trở về") || text.Contains("masa lalu") || text.Contains("kembali")))
+				{
+					selectedIndex = i;
+					break;
+				}
+				if (targetPlanet == 50 && (text.Contains("thánh địa") || text.Contains("thanh dia") || text.Contains("kaio") || text.Contains("sanctuary") || text.Contains("đi đến") || text.Contains("đồng ý")))
+				{
+					selectedIndex = i;
+					break;
+				}
 			}
 
 			if (selectedIndex == -1)
 			{
-				if (TileMap.mapID == 24)
-				{
-					selectedIndex = (targetPlanet == 26) ? 1 : 0;
-				}
-				else if (TileMap.mapID == 25)
-				{
-					selectedIndex = (targetPlanet == 26) ? 1 : 0;
-				}
-				else if (TileMap.mapID == 26)
-				{
-					selectedIndex = (targetPlanet == 25) ? 1 : 0;
-				}
-				else
-				{
-					selectedIndex = 0;
-				}
+				selectedIndex = GetFallbackNpcMenuIndex(TileMap.mapID, targetPlanet, menuItems.Length);
 			}
 
 			if (selectedIndex >= menuItems.Length)
@@ -740,6 +819,11 @@ public static class ModWaypoint
 
 			int npcTemplateId = (npc != null && npc.template != null) ? npc.template.npcTemplateId : ((npc != null) ? npc.npcId : 10);
 			Service.gI().confirmMenu((short)npcTemplateId, (sbyte)selectedIndex);
+			if (TileMap.mapID == 48 && targetPlanet == 50 && selectedIndex == 3)
+			{
+				isWaitingShipMenu = true;
+				lastShipOpenMenuTime = mSystem.currentTimeMillis();
+			}
 			ModTdltLogger.Log("NEXT_MAP_SHIP", $"OnReceiveShipMenu confirm npc={npcTemplateId}, index={selectedIndex} -> targetPlanet={targetPlanet}");
 
 			GameCanvas.menu.showMenu = false;

@@ -1,6 +1,9 @@
 using System;
 using UnityEngine;
 
+/// <summary>
+/// CLASS ModUINextMap: Định nghĩa và điều phối logic trong hệ thống game.
+/// </summary>
 public static class ModUINextMap
 {
 	public static int scrollMapY = 0;
@@ -11,12 +14,19 @@ public static class ModUINextMap
 	private static int startDragY = 0;
 	private static int lastDragY = 0;
 
+	/// <summary>
+	/// Bộ xử lý sự kiện tiếp nhận và phản hồi OnMouseScroll.
+	/// </summary>
 	public static void OnMouseScroll(float wheel)
 	{
+		if (ModNextMap.selectedPlanetTab < 0 || ModNextMap.selectedPlanetTab >= ModNextMap.planetMapIds.Length)
+		{
+			ModNextMap.selectedPlanetTab = 0;
+		}
 		int[] currentPlanetMaps = ModNextMap.planetMapIds[ModNextMap.selectedPlanetTab];
 		int totalRows = (currentPlanetMaps.Length + 1) / 2;
 		int contentH = totalRows * 18 + 4;
-		int maxScroll = (contentH > 140) ? (contentH - 140) : 0;
+		int maxScroll = (contentH > 125) ? (contentH - 125) : 0;
 		if (maxScroll <= 0) return;
 
 		int step = 20;
@@ -32,20 +42,27 @@ public static class ModUINextMap
 		}
 	}
 
+	/// <summary>
+	/// Cập nhật trạng thái logic của UpdateDragScroll theo chu kỳ khung hình.
+	/// </summary>
 	public static void UpdateDragScroll(int px, int py, int uiX, int uiY, int uiW, int uiH)
 	{
 		int listX = uiX + 4;
-		int listY = uiY + 43;
+		int listY = uiY + 56;
 		int listW = uiW - 8;
-		int listH = uiH - 47;
+		int listH = uiH - 60;
 		if (listH < 40) listH = 40;
 
+		if (ModNextMap.selectedPlanetTab < 0 || ModNextMap.selectedPlanetTab >= ModNextMap.planetMapIds.Length)
+		{
+			ModNextMap.selectedPlanetTab = 0;
+		}
 		int[] currentPlanetMaps = ModNextMap.planetMapIds[ModNextMap.selectedPlanetTab];
 		int totalRows = (currentPlanetMaps.Length + 1) / 2;
 		int contentH = totalRows * 18 + 4;
 		int maxScroll = (contentH > listH - 4) ? (contentH - (listH - 4)) : 0;
 
-		bool isDown = Input.GetMouseButton(0) || GameCanvas.isPointerDown;
+		bool isDown = GameCanvas.isPointerDown;
 		if (isDown)
 		{
 			if (!isDragging)
@@ -81,6 +98,9 @@ public static class ModUINextMap
 		}
 	}
 
+	/// <summary>
+	/// Thực hiện vẽ toàn bộ đối tượng và các lớp hiển thị lên canvas mGraphics.
+	/// </summary>
 	public static void Paint(int uiX, int uiY, int uiW, int uiH, mGraphics g)
 	{
 		if (ModNextMap.isNextMapActive)
@@ -98,17 +118,28 @@ public static class ModUINextMap
 			}
 		}
 
-		// 3 Nút chọn hành tinh
+		if (ModNextMap.selectedPlanetTab < 0 || ModNextMap.selectedPlanetTab >= ModNextMap.planetMapIds.Length)
+		{
+			ModNextMap.selectedPlanetTab = 0;
+		}
+
+		// 6 Nút chọn hành tinh / khu vực (2 hàng x 3 cột: Trái Đất, Namếc, Xayda, Nappa, Cooler, Tương Lai)
 		int pBtnW = (uiW - 16) / 3;
-		ModUI.PaintNativeButton(uiX + 4, uiY + 23, pBtnW, 17, "Trái Đất (" + ModNextMap.planetMapIds[0].Length + ")", ModNextMap.selectedPlanetTab == 0, g);
-		ModUI.PaintNativeButton(uiX + 8 + pBtnW, uiY + 23, pBtnW, 17, "Namếc (" + ModNextMap.planetMapIds[1].Length + ")", ModNextMap.selectedPlanetTab == 1, g);
-		ModUI.PaintNativeButton(uiX + 12 + pBtnW * 2, uiY + 23, pBtnW, 17, "Xayda (" + ModNextMap.planetMapIds[2].Length + ")", ModNextMap.selectedPlanetTab == 2, g);
+		for (int t = 0; t < ModNextMap.planetMapIds.Length && t < 6; t++)
+		{
+			int col = t % 3;
+			int row = t / 3;
+			int bx = uiX + 4 + col * (pBtnW + 4);
+			int by = uiY + 22 + row * 16;
+			string tabLabel = ModNextMapData.planetTabNames[t] + " (" + ModNextMap.planetMapIds[t].Length + ")";
+			ModUI.PaintNativeButton(bx, by, pBtnW, 15, tabLabel, ModNextMap.selectedPlanetTab == t, g);
+		}
 
 		// Khung danh sách các map co dãn động
 		int listX = uiX + 4;
-		int listY = uiY + 43;
+		int listY = uiY + 56;
 		int listW = uiW - 8;
-		int listH = uiH - 47;
+		int listH = uiH - 60;
 		if (listH < 40) listH = 40;
 
 		GameCanvas.paintz.paintFrameSimple(listX, listY, listW, listH, g);
@@ -143,27 +174,15 @@ public static class ModUINextMap
 
 			if (isCurrent)
 			{
-				g.setColor(0xC8E6C9);
-				g.fillRect(btnX, btnY, btnW, btnH);
-				g.setColor(0x388E3C);
-				g.drawRect(btnX, btnY, btnW, btnH);
-				mFont.tahoma_7_green2.drawString(g, mName + " (Hiện tại)", btnX + btnW / 2, btnY + 2, mFont.CENTER);
+				ModUI.PaintNativeButton(btnX, btnY, btnW, btnH, mName + " (Hiện tại)", true, g);
 			}
 			else if (isTarget)
 			{
-				g.setColor(0xFFE0B2);
-				g.fillRect(btnX, btnY, btnW, btnH);
-				g.setColor(0xF57C00);
-				g.drawRect(btnX, btnY, btnW, btnH);
-				(mFont.tahoma_7_yellow ?? mFont.tahoma_7_white).drawString(g, mName + " (Đang đến)", btnX + btnW / 2, btnY + 2, mFont.CENTER);
+				ModUI.PaintNativeButton(btnX, btnY, btnW, btnH, mName + " (Đang đến)", true, g);
 			}
 			else if (isSelected)
 			{
-				g.setColor(0xFFF9C4);
-				g.fillRect(btnX, btnY, btnW, btnH);
-				g.setColor(0xFBC02D);
-				g.drawRect(btnX, btnY, btnW, btnH);
-				(mFont.tahoma_7b_dark ?? mFont.tahoma_7_green2).drawString(g, mName + " [Chọn]", btnX + btnW / 2, btnY + 2, mFont.CENTER);
+				ModUI.PaintNativeButton(btnX, btnY, btnW, btnH, mName + " [Chọn]", true, g);
 			}
 			else
 			{
@@ -173,6 +192,9 @@ public static class ModUINextMap
 		g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
 	}
 
+	/// <summary>
+	/// Xử lý nghiệp vụ logic chuyên trách cho HandleTap.
+	/// </summary>
 	public static bool HandleTap(int px, int py, int uiX, int uiY, int uiW, int uiH)
 	{
 		if (hasDragged)
@@ -204,25 +226,15 @@ public static class ModUINextMap
 		}
 
 		int pBtnW = (uiW - 16) / 3;
-		if (py >= uiY + 21 && py <= uiY + 41)
+		for (int t = 0; t < ModNextMap.planetMapIds.Length && t < 6; t++)
 		{
-			if (px >= uiX + 4 && px <= uiX + 4 + pBtnW)
+			int col = t % 3;
+			int row = t / 3;
+			int bx = uiX + 4 + col * (pBtnW + 4);
+			int by = uiY + 22 + row * 16;
+			if (px >= bx && px <= bx + pBtnW && py >= by && py <= by + 15)
 			{
-				ModNextMap.selectedPlanetTab = 0;
-				scrollMapY = 0;
-				SoundMn.gI().buttonClick();
-				return true;
-			}
-			if (px >= uiX + 8 + pBtnW && px <= uiX + 8 + pBtnW * 2)
-			{
-				ModNextMap.selectedPlanetTab = 1;
-				scrollMapY = 0;
-				SoundMn.gI().buttonClick();
-				return true;
-			}
-			if (px >= uiX + 12 + pBtnW * 2 && px <= uiX + 12 + pBtnW * 3)
-			{
-				ModNextMap.selectedPlanetTab = 2;
+				ModNextMap.selectedPlanetTab = t;
 				scrollMapY = 0;
 				SoundMn.gI().buttonClick();
 				return true;
@@ -230,9 +242,9 @@ public static class ModUINextMap
 		}
 
 		int listX = uiX + 4;
-		int listY = uiY + 43;
+		int listY = uiY + 56;
 		int listW = uiW - 8;
-		int listH = uiH - 47;
+		int listH = uiH - 60;
 		if (listH < 40) listH = 40;
 		int btnW = (listW - 10) / 2;
 		int btnH = 16;

@@ -105,6 +105,22 @@ public static class ModNextMap
 			return;
 		}
 
+		// Khôi phục các cạnh động của NPC Calích (27/28/29 -> 102) cho mỗi lượt tìm đường mới
+		int[] calichMaps = new int[] { 27, 28, 29 };
+		bool restoredCalich = false;
+		for (int i = 0; i < calichMaps.Length; i++)
+		{
+			if (ModNextMapData.mapWaypoints.TryGetValue(calichMaps[i], out List<int> cList) && !cList.Contains(102))
+			{
+				cList.Add(102);
+				restoredCalich = true;
+			}
+		}
+		if (restoredCalich)
+		{
+			ModNextMapPathFinder.ClearCache();
+		}
+
 		ModNextMapData.SyncLiveWaypointsForCurrentMap();
 
 		nextMapTargetId = targetId;
@@ -404,9 +420,13 @@ public static class ModNextMap
 		// 6. Nếu không tìm thấy cổng khớp tên, đồng bộ lại đồ thị thực tế để FindPath tự định tuyến lại ở nhịp kế tiếp
 		ModNextMapData.SyncLiveWaypointsForCurrentMap();
 
+		// Ưu tiên hướng cổng theo chuỗi Xmap gốc (-1: Trái, +1: Phải), nếu không có mới so sánh ID
+		int chainSide = ModNextMapData.GetChainWaypointSide(currMapId, nextMapId);
+		int preferSide = (chainSide != 0) ? chainSide : ((nextMapId > currMapId) ? 1 : -1);
+
 		// Chỉ fallback theo hướng X đối với các cổng không xác định được ID đích (tránh bước nhầm vào cổng đã biết rõ dẫn sang map khác)
 		Waypoint bestUnresolvedWp = null;
-		if (nextMapId > currMapId)
+		if (preferSide > 0)
 		{
 			int maxRight = int.MinValue;
 			for (int k = 0; k < TileMap.vGo.size(); k++)
@@ -434,6 +454,54 @@ public static class ModNextMap
 		}
 
 		return bestUnresolvedWp;
+	}
+
+	private static Npc FindTransitionNpc(int currMapId, int nextMapId)
+	{
+		if (GameScr.vNpc == null)
+		{
+			return null;
+		}
+
+		for (int i = 0; i < GameScr.vNpc.size(); i++)
+		{
+			Npc npc = (Npc)GameScr.vNpc.elementAt(i);
+			if (npc == null || npc.template == null || npc.statusMe == 15)
+			{
+				continue;
+			}
+
+			int tplId = npc.template.npcTemplateId;
+			if ((currMapId == 24 || currMapId == 25 || currMapId == 26) &&
+			    (nextMapId == 24 || nextMapId == 25 || nextMapId == 26 || nextMapId == 84))
+			{
+				if (tplId == 10 || tplId == 11 || tplId == 12) return npc;
+			}
+			else if ((currMapId == 19 && (nextMapId == 68 || nextMapId == 109)) ||
+			         ((currMapId == 68 || currMapId == 109) && nextMapId == 19))
+			{
+				if (tplId == 12) return npc;
+			}
+			else if ((currMapId == 80 && nextMapId == 131) || (currMapId == 131 && nextMapId == 80))
+			{
+				if (tplId == 60) return npc;
+			}
+			else if (((currMapId == 27 || currMapId == 28 || currMapId == 29) && nextMapId == 102) ||
+			         (currMapId == 102 && (nextMapId == 24 || nextMapId == 27 || nextMapId == 28 || nextMapId == 29)))
+			{
+				if (tplId == 38) return npc;
+			}
+			else if (currMapId == 48 && nextMapId == 50)
+			{
+				if (tplId == 20) return npc;
+			}
+			else if (currMapId == 50 && nextMapId == 48)
+			{
+				if (tplId == 44 || tplId == 20) return npc;
+			}
+		}
+
+		return null;
 	}
 
 	/// <summary>
@@ -553,31 +621,30 @@ public static class ModNextMap
 
 		int nextMapId = path[0];
 
-		// Trường hợp chuyển trạm tàu vũ trụ (map 24, 25, 26)
-		if ((TileMap.mapID == 24 || TileMap.mapID == 25 || TileMap.mapID == 26) &&
-			(nextMapId == 24 || nextMapId == 25 || nextMapId == 26))
+		// Xử lý các chặng chuyển map thông qua NPC (Trạm tàu vũ trụ 10/11/12, Cui 12 đi Nappa/Cold, Tapion 60 đi Yardrat, Calích 38 đi Tương lai, Thần Vũ Trụ 20)
+		if (ModNextMapData.IsNpcTransitionEdge(TileMap.mapID, nextMapId))
 		{
-			currentTargetWaypoint = null;
-			Npc shipNpc = null;
-			for (int i = 0; i < GameScr.vNpc.size(); i++)
+			Npc transitionNpc = FindTransitionNpc(TileMap.mapID, nextMapId);
+			if (transitionNpc != null)
 			{
-				Npc npc = (Npc)GameScr.vNpc.elementAt(i);
-				if (npc != null && (npc.template.npcTemplateId == 10 || npc.template.npcTemplateId == 11 || npc.template.npcTemplateId == 12))
-				{
-					shipNpc = npc;
-					break;
-				}
-			}
-			if (shipNpc != null)
-			{
+				currentTargetWaypoint = null;
 				nextMapFailCount = 0;
-				bool confirmedShip = ModWaypoint.UseSpaceShip(shipNpc, nextMapId);
-				if (confirmedShip)
+				bool confirmedNpc = ModWaypoint.UseSpaceShip(transitionNpc, nextMapId);
+				if (confirmedNpc)
 				{
 					lastChangeAttemptTime = now;
 					mapEnterWaitUntil = now + 600;
 				}
 				return;
+			}
+			if ((TileMap.mapID == 27 || TileMap.mapID == 28 || TileMap.mapID == 29) && nextMapId == 102)
+			{
+				// NPC Calích không xuất hiện ở map hiện tại -> Loại bỏ cạnh tạm thời để đi sang map kế tiếp trong cụm 27-28-29 tìm Calích
+				if (ModNextMapData.mapWaypoints.TryGetValue(TileMap.mapID, out List<int> currList) && currList.Remove(102))
+				{
+					ModNextMapPathFinder.ClearCache();
+					return;
+				}
 			}
 		}
 
