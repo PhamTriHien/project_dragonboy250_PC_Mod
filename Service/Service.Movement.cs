@@ -2,8 +2,14 @@ using System;
 using Assets.src.g;
 using UnityEngine;
 
+/// <summary>
+/// Thành phần phân mảnh (partial) của lớp Service: Đảm nhiệm phân hệ chuyên trách Movement ().
+/// </summary>
 public partial class Service
 {
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ gotoPlayer.
+	/// </summary>
 	public void gotoPlayer(int id)
 		{
 			Message message = null;
@@ -23,6 +29,9 @@ public partial class Service
 			}
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ requestChangeMap.
+	/// </summary>
 	public void requestChangeMap()
 		{
 			Message message = new Message((sbyte)(-23));
@@ -30,6 +39,9 @@ public partial class Service
 			message.cleanup();
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ requestChangeZone.
+	/// </summary>
 	public void requestChangeZone(int zoneId, int indexUI)
 		{
 			Message message = new Message((sbyte)21);
@@ -44,6 +56,9 @@ public partial class Service
 			}
 		}
 
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của checkMMove.
+	/// </summary>
 	public void checkMMove(int second)
 		{
 			Message message = new Message((sbyte)(-78));
@@ -58,6 +73,9 @@ public partial class Service
 			}
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ charMove.
+	/// </summary>
 	public void charMove()
 		{
 			int num = Char.myCharz().cx - Char.myCharz().cxSend;
@@ -66,12 +84,11 @@ public partial class Service
 			{
 				return;
 			}
-			long now = mSystem.currentTimeMillis();
-			if (Res.abs(num) < 25 && Res.abs(num2) < 25 && now - lastCharMoveTime < 30)
+			lastCharMoveTime = mSystem.currentTimeMillis();
+			if (GameScr.canAutoPlay || ModTanSat.autoTanSat || ModNextMap.isNextMapActive || ModGoBack.isReturning)
 			{
-				return;
+				ModTdltLogger.LogCharMove("charMove", Char.myCharz().cx, Char.myCharz().cy, Char.myCharz().cxSend, Char.myCharz().cySend);
 			}
-			lastCharMoveTime = now;
 			try
 			{
 				Message message = new Message((sbyte)(-7));
@@ -88,7 +105,10 @@ public partial class Service
 					message.writer().writeByte((sbyte)0);
 				}
 				message.writer().writeShort(Char.myCharz().cx);
-				message.writer().writeShort(Char.myCharz().cy);
+				if (num2 != 0)
+				{
+					message.writer().writeShort(Char.myCharz().cy);
+				}
 				session.sendMessage(message);
 				GameScr.tickMove++;
 				message.cleanup();
@@ -99,6 +119,9 @@ public partial class Service
 			}
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ charMoveTo.
+	/// </summary>
 	public void charMoveTo(int x, int y)
 		{
 			Char me = Char.myCharz();
@@ -128,6 +151,10 @@ public partial class Service
 				message.writer().writeShort(me.cx);
 				message.writer().writeShort(me.cy);
 				session.sendMessage(message);
+				if (GameScr.canAutoPlay || ModTanSat.autoTanSat || ModNextMap.isNextMapActive || ModGoBack.isReturning)
+				{
+					ModTdltLogger.LogCharMove($"charMoveTo({x},{y})", me.cx, me.cy, me.cxSend, me.cySend);
+				}
 				GameScr.tickMove++;
 				message.cleanup();
 				lastCharMoveTime = mSystem.currentTimeMillis();
@@ -138,10 +165,16 @@ public partial class Service
 			}
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ selectZone.
+	/// </summary>
 	public void selectZone(sbyte sub, int value)
 		{
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ openUIZone.
+	/// </summary>
 	public void openUIZone()
 		{
 			Message message = null;
@@ -160,6 +193,9 @@ public partial class Service
 			}
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ requestMaptemplate.
+	/// </summary>
 	public void requestMaptemplate(int maptemplateId)
 		{
 			Message message = null;
@@ -179,6 +215,9 @@ public partial class Service
 			}
 		}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của getMapOffline.
+	/// </summary>
 	public void getMapOffline()
 		{
 			Message message = null;
@@ -197,6 +236,9 @@ public partial class Service
 			}
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ finishLoadMap.
+	/// </summary>
 	public void finishLoadMap()
 		{
 			Message message = null;
@@ -215,6 +257,9 @@ public partial class Service
 			}
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ transportNow.
+	/// </summary>
 	public void transportNow()
 		{
 			Message message = null;

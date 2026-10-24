@@ -1,9 +1,9 @@
 {
-  "version": "2.5.36",
+  "version": "2.5.37",
   "buildDate": "2026-10-24",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.36/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.36/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.36/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.36/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.36: Tối ưu bảo toàn trạng thái đồng bộ tọa độ khi bước ngắn (<=48px) theo quái đi bộ, loại bỏ hoàn toàn gói dịch chuyển lặp lần 2 trên cùng mục tiêu và xác nhận tức thời khi máy chủ nhặt vật phẩm thành công."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.37/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.37/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.37/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.37/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.37: Khắc phục triệt để lỗi kẹt Next Map (ngăn Char.isInWaypoint tự kích hoạt requestChangeMap ở 0ms trước khi máy chủ xác nhận RESET_POINT, đợi đồng bộ tọa độ tại cổng rồi mới gửi requestChangeMap kèm gói charMove hợp lệ)."
 }

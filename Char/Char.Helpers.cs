@@ -52,7 +52,11 @@ public partial class Char : IMapObject
 				{
 					return false;
 				}
-				if ((ModTanSat.autoTanSat || ModAutoPick.isBusy) && !ModNextMap.isNextMapActive && !ModGoBack.isReturning && !ModSetActivator.isBusy && !ModAutoBuyBua.isBusy && !ModTanSat.IsManualMoving())
+				if (ModNextMap.isNextMapActive || ModTeleport.IsWaitingServerSync())
+				{
+					return false;
+				}
+				if ((ModTanSat.autoTanSat || ModAutoPick.isBusy) && !ModGoBack.isReturning && !ModSetActivator.isBusy && !ModAutoBuyBua.isBusy && !ModTanSat.IsManualMoving())
 				{
 					return false;
 				}
@@ -153,6 +157,9 @@ public partial class Char : IMapObject
 							if (ModTanSat.autoTanSat)
 							{
 								ModTanSat.OnTeleportSyncConfirmed();
+							}
+							if (ModTanSat.autoTanSat || ModNextMap.isNextMapActive || ModGoBack.isReturning)
+							{
 								ModTdltLogger.Log("RESET_POINT_CONFIRM", $"Server confirmed teleport pos=({x},{y})");
 							}
 						}
@@ -175,6 +182,9 @@ public partial class Char : IMapObject
 								ModTanSat.lastTeleportTime = 0;
 								ModTanSat.waitUntilTime = mSystem.currentTimeMillis() + 180;
 								ModTanSat.OnTeleportSyncConfirmed();
+							}
+							if (ModTanSat.autoTanSat || ModNextMap.isNextMapActive || ModGoBack.isReturning)
+							{
 								ModTdltLogger.Log("RESET_POINT_STALE", $"Synced delayed server pos=({x},{y}) to re-teleport cleanly");
 							}
 						}
@@ -185,9 +195,12 @@ public partial class Char : IMapObject
 					cy = y;
 					myCharz().cxSend = x;
 					myCharz().cySend = y;
+					ModTeleport.isWaitingServerSync = false;
+					ModTeleport.isCurrentPosSynced = true;
 					if (ModNextMap.isNextMapActive)
 					{
 						ModNextMap.OnServerResetPoint();
+						ModTdltLogger.Log("NEXT_MAP_RESET_POINT", $"Server reset pos=({x},{y}), penalty={ModNextMap.resetPenaltyCount}");
 					}
 					if (ModTanSat.autoTanSat)
 					{

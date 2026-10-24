@@ -262,9 +262,16 @@ public static class ModWaypoint
 				edgeWalkAttempts = 0;
 			}
 
-			if (hasTeleportedToWp && now - lastTeleportTime < 140)
+			if (hasTeleportedToWp)
 			{
-				return false;
+				if (now - lastTeleportTime < 140)
+				{
+					return false;
+				}
+				if (ModTeleport.IsWaitingServerSync() && now - lastTeleportTime < 650)
+				{
+					return false;
+				}
 			}
 
 			bool isLeftEdge = wp.maxX <= 60;
@@ -277,8 +284,12 @@ public static class ModWaypoint
 			int dy = Res.abs(me.cy - wpTargetY);
 			me.cdir = isLeftEdge ? (-1) : (isRightEdge ? 1 : ((me.cx <= wpTargetX) ? 1 : (-1)));
 
-			if (!hasTeleportedToWp || dx > 24 || dy > 24)
+			if (!hasTeleportedToWp || dx > 24 || dy > 24 || now - lastTeleportTime > 2200)
 			{
+				if (ModTeleport.IsWaitingServerSync() && now - lastTeleportTime < 800)
+				{
+					return false;
+				}
 				if (ModNextMap.useSafeMovement || ModNextMap.resetPenaltyCount > 0)
 				{
 					if (MoveSteppedTo(wpTargetX, wpTargetY))
@@ -293,14 +304,12 @@ public static class ModWaypoint
 				}
 				lastTeleportTime = now;
 				wpInitTime = now;
+				ModTdltLogger.Log("NEXT_MAP_STEP", $"Teleport to waypoint '{wp.name}' -> target=({wpTargetX},{wpTargetY}), map={TileMap.mapID}");
 				return false;
 			}
 
-			// Đảm bảo nhân vật đứng chính xác trong lòng cổng trước khi gửi gói chuyển map
-			if (me.cx != wpTargetX || me.cy != wpTargetY || me.cxSend != wpTargetX || me.cySend != wpTargetY)
-			{
-				TeleportTo(wpTargetX, wpTargetY);
-			}
+			// Đồng bộ 1 gói charMove hợp lệ (không gửi y+1) tại tâm cổng trước khi gửi gói chuyển map
+			ModTeleport.SendSingleCharMove(wpTargetX, wpTargetY);
 
 			if (wp.isOffline || TileMap.isOfflineMap() || TileMap.isTrainingMap())
 			{
@@ -312,7 +321,7 @@ public static class ModWaypoint
 				Char.ischangingMap = true;
 				Service.gI().requestChangeMap();
 			}
-			ResetWaypointState();
+			ModTdltLogger.Log("NEXT_MAP_REQ", $"Request change map from map={TileMap.mapID} via '{wp.name}' at pos=({me.cx},{me.cy}), synced={ModTeleport.isCurrentPosSynced}");
 			return true;
 		}
 		catch
@@ -350,9 +359,16 @@ public static class ModWaypoint
 				lastTeleportTime = 0;
 			}
 
-			if (hasTeleportedToWp && now - lastTeleportTime < 140)
+			if (hasTeleportedToWp)
 			{
-				return false;
+				if (now - lastTeleportTime < 140)
+				{
+					return false;
+				}
+				if (ModTeleport.IsWaitingServerSync() && now - lastTeleportTime < 650)
+				{
+					return false;
+				}
 			}
 
 			int targetX = System.Math.Max(48, System.Math.Min(TileMap.pxw - 48, me.cx));
@@ -361,8 +377,12 @@ public static class ModWaypoint
 			int dx = Res.abs(me.cx - targetX);
 			int dy = Res.abs(me.cy - targetY);
 
-			if (!hasTeleportedToWp || dx > 24 || dy > 24)
+			if (!hasTeleportedToWp || dx > 24 || dy > 24 || now - lastTeleportTime > 2200)
 			{
+				if (ModTeleport.IsWaitingServerSync() && now - lastTeleportTime < 800)
+				{
+					return false;
+				}
 				if (ModNextMap.useSafeMovement || ModNextMap.resetPenaltyCount > 0)
 				{
 					if (MoveSteppedTo(targetX, targetY))
@@ -379,14 +399,10 @@ public static class ModWaypoint
 				return false;
 			}
 
-			if (me.cx != targetX || me.cy != targetY || me.cxSend != targetX || me.cySend != targetY)
-			{
-				TeleportTo(targetX, targetY);
-			}
+			ModTeleport.SendSingleCharMove(targetX, targetY);
 
 			Char.ischangingMap = true;
 			Service.gI().requestChangeMap();
-			ResetWaypointState();
 			return true;
 		}
 		catch

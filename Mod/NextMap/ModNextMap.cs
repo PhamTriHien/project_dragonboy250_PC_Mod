@@ -112,8 +112,10 @@ public static class ModNextMap
 			me.isLockAttack = false;
 			me.isLockMove = false;
 		}
+		ModTeleport.ClearEchoes();
 		ModWaypoint.ResetWaypointState();
 
+		ModTdltLogger.Log("NEXT_MAP_START", $"Start NextMap from map={TileMap.mapID} ({GetMapName(TileMap.mapID)}) -> target={targetId} ({GetMapName(targetId)})");
 		GameScr.info1.addInfo("Bắt đầu Next Map đến: " + GetMapName(targetId), 0);
 	}
 
@@ -455,8 +457,10 @@ public static class ModNextMap
 			currentTargetWaypoint = null;
 			mapEnterWaitUntil = now + 300;
 			lastStepUpdateTime = 0;
+			ModTeleport.ClearEchoes();
 			ModWaypoint.ResetWaypointState();
 			ModNextMapData.SyncLiveWaypointsForCurrentMap();
+			ModTdltLogger.Log("NEXT_MAP_ENTER", $"Entered map={TileMap.mapID} ({GetMapName(TileMap.mapID)}), target={nextMapTargetId} ({GetMapName(nextMapTargetId)})");
 		}
 
 		// Tự động đóng popup thông báo sự kiện khi đang chạy Next Map
@@ -488,7 +492,7 @@ public static class ModNextMap
 			{
 				lastChangeAttemptTime = now;
 			}
-			else if (now - lastChangeAttemptTime > 2000)
+			else if (now - lastChangeAttemptTime > 1200)
 			{
 				Char.ischangingMap = false;
 				Char.isLockKey = false;
@@ -504,10 +508,9 @@ public static class ModNextMap
 				InfoDlg.hide();
 				GameCanvas.endDlg();
 				lastChangeAttemptTime = 0;
-				nextMapCooldown = 4;
-				mapEnterWaitUntil = now + 200;
+				nextMapCooldown = 2;
+				mapEnterWaitUntil = now + 150;
 				Char.entranceWaypoint = null;
-				ModWaypoint.ResetWaypointState();
 			}
 			return;
 		}
