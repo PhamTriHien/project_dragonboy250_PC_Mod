@@ -170,7 +170,26 @@ public static class ModTanSatTargeting
 		                 (Mob.arrMobTemplate[target.templateId].type == 4 || Mob.arrMobTemplate[target.templateId].type == 5));
 
 		Char me = Char.myCharz();
-		int preferredDir = (!isRanged && target.dir != 0) ? ((target.dir > 0) ? 1 : -1) : ((me != null && me.cx > mobX) ? 1 : -1);
+		int preferredDir;
+		if (!isRanged)
+		{
+			if (target.xFirst > mobX + 4)
+			{
+				preferredDir = 1;
+			}
+			else if (target.xFirst < mobX - 4)
+			{
+				preferredDir = -1;
+			}
+			else
+			{
+				preferredDir = (target.dir != 0) ? ((target.dir > 0) ? 1 : -1) : ((me != null && me.cx > mobX) ? 1 : -1);
+			}
+		}
+		else
+		{
+			preferredDir = (me != null && me.cx > mobX) ? 1 : -1;
+		}
 
 		int[] dirMultipliers = { preferredDir, -preferredDir };
 		int[] distOffsets = isRanged ? new int[] { 36, 24, 16, 0 } : new int[] { 8, 0, 14, 20 };

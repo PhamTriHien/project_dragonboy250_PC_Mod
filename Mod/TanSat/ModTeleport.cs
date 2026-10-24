@@ -94,7 +94,7 @@ public static class ModTeleport
 		isWaitingSettle = false;
 	}
 
-	private static bool IsPointUndergroundOrBlocked(int px, int py, int refTopY)
+	private static bool IsPointUndergroundOrBlocked(int px, int py)
 	{
 		if (ModTanSatTargeting.IsTileBlocked(px, py))
 		{
@@ -107,20 +107,6 @@ public static class ModTeleport
 		if (py >= 24 && TileMap.tileTypeAt(px, py - 24, 2))
 		{
 			return true;
-		}
-		int startY = TileMap.tileYofPixel(System.Math.Max(24, refTopY));
-		int endY = TileMap.tileYofPixel(py);
-		for (int y = startY; y < endY; y += 24)
-		{
-			int t = TileMap.tileTypeAtPixel(px, y);
-			if ((t & (1 | 4 | 8 | 4096 | 8192 | 16384)) != 0)
-			{
-				return true;
-			}
-			if ((t & 2) != 0 && !TileMap.tileTypeAt(px, py, 2))
-			{
-				return true;
-			}
 		}
 		return false;
 	}
@@ -215,7 +201,7 @@ public static class ModTeleport
 			{
 				// Di chuyển lên nền cao / quái bay: Ưu tiên nâng độ cao trước nếu tiến ngang sẽ đâm vào vách núi
 				int candY = (me.cy - targetY <= 84) ? targetY : (me.cy - 84);
-				if (candY > targetY && IsPointUndergroundOrBlocked(candX, candY, targetY))
+				if (me.cy - targetY > 48 && IsPointUndergroundOrBlocked(candX, candY))
 				{
 					nextX = me.cx;
 				}
@@ -223,9 +209,9 @@ public static class ModTeleport
 			}
 			else if (targetY > me.cy)
 			{
-				// Di chuyển từ nền cao xuống nền thấp: Tiến ngang trên không vượt qua mép vách đá trước khi hạ độ cao
+				// Di chuyển từ nền cao xuống nền thấp: Tiến ngang khi còn xa (> 96px), sau đó hạ độ cao trực tiếp qua các thềm 1 chiều
 				int candY = (targetY - me.cy <= 84) ? targetY : (me.cy + 84);
-				if (dx > 64 || IsPointUndergroundOrBlocked(candX, candY, me.cy))
+				if (dx > 96)
 				{
 					nextY = me.cy;
 					int highGroundY = ModTanSatTargeting.FindGroundY(nextX, me.cy, 48);
@@ -236,6 +222,10 @@ public static class ModTeleport
 				}
 				else
 				{
+					if (candY < targetY && IsPointUndergroundOrBlocked(candX, candY))
+					{
+						candY = System.Math.Min(targetY, candY + 24);
+					}
 					nextY = candY;
 				}
 			}
@@ -250,6 +240,12 @@ public static class ModTeleport
 						nextY = groundY;
 					}
 				}
+			}
+
+			if (nextX == me.cx && nextY == me.cy)
+			{
+				nextX = candX;
+				nextY = (targetY < me.cy) ? System.Math.Max(targetY, me.cy - 84) : System.Math.Min(targetY, me.cy + 84);
 			}
 
 			SendSingleCharMove(nextX, nextY);

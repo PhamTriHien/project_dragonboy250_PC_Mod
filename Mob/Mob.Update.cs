@@ -202,7 +202,7 @@ public partial class Mob : IMapObject
 					if (Res.abs(x - Char.myCharz().cx) < 40 && Res.abs(x - xFirst) < arrMobTemplate[templateId].rangeMove)
 					{
 						dir = ((x <= Char.myCharz().cx) ? 1 : (-1));
-						if (Res.abs(x - Char.myCharz().cx) < 20)
+						if (Res.abs(x - Char.myCharz().cx) < 20 && !ModTanSat.autoTanSat)
 						{
 							x -= dir * 10;
 						}

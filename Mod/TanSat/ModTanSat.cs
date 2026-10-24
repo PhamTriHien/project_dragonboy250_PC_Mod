@@ -63,6 +63,7 @@ public static class ModTanSat
 	public static long lastResetPenaltyTime = 0;
 	public static int currentTargetResetCount = 0;
 	public static int currentTargetUnchangedAttackCount = 0;
+	private static int lastResyncAttackCount = 0;
 	public static long waitUntilTime = 0;
 	public static long lastStepMoveTime = 0;
 	private static long changingMapStuckSince = 0;
@@ -583,6 +584,7 @@ public static class ModTanSat
 					targetLockTime = now;
 					currentTargetResetCount = 0;
 					currentTargetUnchangedAttackCount = 0;
+					lastResyncAttackCount = 0;
 					if (resetPenaltyCount > 0 && now - lastResetPenaltyTime > 12000)
 					{
 						resetPenaltyCount--;
@@ -595,9 +597,9 @@ public static class ModTanSat
 					{
 						targetLastHp = currentFarmTarget.hp;
 					}
-					if (currentFarmTarget.templateId != 0 && (currentTargetUnchangedAttackCount == 3 || currentTargetUnchangedAttackCount == 6))
+					if (currentFarmTarget.templateId != 0 && (currentTargetUnchangedAttackCount == 3 || currentTargetUnchangedAttackCount == 6) && lastResyncAttackCount != currentTargetUnchangedAttackCount)
 					{
-						ModTeleport.SendSingleCharMove(me.cx, me.cy);
+						lastResyncAttackCount = currentTargetUnchangedAttackCount;
 						lastTeleportTargetMobId = -1;
 						lastTeleportTime = 0;
 					}
@@ -620,6 +622,7 @@ public static class ModTanSat
 				lastTeleportTargetMobId = -1;
 				currentTargetResetCount = 0;
 				currentTargetUnchangedAttackCount = 0;
+				lastResyncAttackCount = 0;
 				ModTeleport.isWaitingSettle = false;
 				if (me.mobFocus == null || me.mobFocus.status == 0 || me.mobFocus.status == 1 || me.mobFocus.hp <= 0)
 				{
@@ -659,6 +662,7 @@ public static class ModTanSat
 					targetLastHp = bestMob.hp;
 					currentTargetResetCount = 0;
 					currentTargetUnchangedAttackCount = 0;
+					lastResyncAttackCount = 0;
 				}
 			}
 
@@ -678,13 +682,13 @@ public static class ModTanSat
 			bool isMeleeTemplate = (tplId == 0 || tplId == 2 || tplId == 4 || tplId == 9 || tplId == 17);
 			bool isRanged = !isMeleeTemplate && (skillToUse.dx > 75);
 
-			int maxRangeX = isRanged ? (skillToUse.dx - 8) : 32;
-			int maxRangeY = isRanged ? (skillToUse.dy - 6) : 28;
+			int maxRangeX = isRanged ? (skillToUse.dx - 8) : 24;
+			int maxRangeY = isRanged ? (skillToUse.dy - 6) : 24;
 
 			bool isNewTarget = (lastTeleportTargetMobId != currentFarmTarget.mobId);
 			bool isOutOfRange = (deltaX > maxRangeX || deltaY > maxRangeY);
 
-			if (isNewTarget && !isOutOfRange && !ModTeleport.isWaitingSettle && deltaX <= 16 && deltaY <= 16 && !ModTanSatTargeting.IsInsideWaypoint(me.cx, me.cy))
+			if (isNewTarget && lastResyncAttackCount == 0 && !isOutOfRange && !ModTeleport.isWaitingSettle && deltaX <= 16 && deltaY <= 16 && !ModTanSatTargeting.IsInsideWaypoint(me.cx, me.cy))
 			{
 				lastTeleportTargetMobId = currentFarmTarget.mobId;
 				lastTeleportTime = now;
