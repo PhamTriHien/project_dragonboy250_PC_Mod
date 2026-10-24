@@ -103,6 +103,18 @@ public static class ModTanSat
 	}
 
 	/// <summary>
+	/// Phản hồi khi máy chủ xác nhận thành công tọa độ dịch chuyển (RESET_POINT_CONFIRM):
+	/// Làm mới bộ đếm thời gian khóa mục tiêu để bắt đầu chu kỳ tấn công chính xác sau đồng bộ.
+	/// </summary>
+	public static void OnTeleportSyncConfirmed()
+	{
+		long now = mSystem.currentTimeMillis();
+		targetLockTime = now;
+		currentTargetUnchangedAttackCount = 0;
+		lastResyncAttackCount = 0;
+	}
+
+	/// <summary>
 	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của IsManualMoving.
 	/// </summary>
 	public static bool IsManualMoving()
@@ -597,19 +609,34 @@ public static class ModTanSat
 					{
 						targetLastHp = currentFarmTarget.hp;
 					}
-					if (currentFarmTarget.templateId != 0 && (currentTargetUnchangedAttackCount == 2 || currentTargetUnchangedAttackCount == 5) && lastResyncAttackCount != currentTargetUnchangedAttackCount)
+					if (ModTeleport.IsWaitingServerSync())
 					{
-						lastResyncAttackCount = currentTargetUnchangedAttackCount;
-						if (TileMap.tileTypeAt(me.cx, me.cy, 2))
+						targetLockTime = now;
+						currentTargetUnchangedAttackCount = 0;
+					}
+					else if (currentFarmTarget.templateId != 0 && currentFarmTarget.hp > 1 && now - lastAttackTime >= 350 && lastResyncAttackCount != currentTargetUnchangedAttackCount)
+					{
+						if (!ModTeleport.isCurrentPosSynced && currentTargetUnchangedAttackCount == 3)
 						{
-							ModWaypoint.TeleportTo(me.cx, me.cy);
+							lastResyncAttackCount = currentTargetUnchangedAttackCount;
+							if (TileMap.tileTypeAt(me.cx, me.cy, 2))
+							{
+								ModWaypoint.TeleportTo(me.cx, me.cy);
+							}
+							else
+							{
+								ModTeleport.SendSingleCharMove(me.cx, me.cy);
+							}
+							lastTeleportTargetMobId = currentFarmTarget.mobId;
+							lastTeleportTime = now;
 						}
-						else
+						else if (currentTargetUnchangedAttackCount == 5)
 						{
+							lastResyncAttackCount = currentTargetUnchangedAttackCount;
 							ModTeleport.SendSingleCharMove(me.cx, me.cy);
+							lastTeleportTargetMobId = currentFarmTarget.mobId;
+							lastTeleportTime = now;
 						}
-						lastTeleportTargetMobId = currentFarmTarget.mobId;
-						lastTeleportTime = now;
 					}
 					if (checkLagMob && currentFarmTarget.templateId != 0 && currentTargetUnchangedAttackCount >= 8 && now - targetLockTime > 4500)
 					{
@@ -707,6 +734,13 @@ public static class ModTanSat
 			{
 				if (useTeleport)
 				{
+					// Bắt buộc đợi máy chủ đồng bộ xong gói dịch chuyển trước đó mới dịch chuyển tiếp để tránh dồn hàng đợi RESET_POINT gây lag
+					if (ModTeleport.IsWaitingServerSync())
+					{
+						targetLockTime = now;
+						return;
+					}
+
 					if (!isNewTarget && now - lastTeleportTime < 650)
 					{
 						// Đã đứng cạnh mục tiêu hiện tại, tránh giật hình liên tục trên cùng 1 quái
@@ -768,6 +802,13 @@ public static class ModTanSat
 				me.delayFall = 0;
 				me.cvx = 0;
 				me.cvy = 0;
+			}
+
+			// Đợi máy chủ xác nhận tọa độ dịch chuyển (RESET_POINT_CONFIRM) trước khi xuất đòn đầu tiên để tránh đấm hụt lúc đang đồng bộ
+			if (ModTeleport.IsWaitingServerSyncForAttack())
+			{
+				targetLockTime = now;
+				return;
 			}
 
 			// 6. Kiểm tra Cooldown thực tế & KI của game cho kỹ năng này

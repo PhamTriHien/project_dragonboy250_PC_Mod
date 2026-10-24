@@ -144,17 +144,33 @@ public partial class Char : IMapObject
 
 					if (isEcho || isNearCurrent)
 					{
-						myCharz().cxSend = cx;
-						myCharz().cySend = cy;
-						if (ModTanSat.autoTanSat)
+						if (isCurrentPos || isNearCurrent)
 						{
-							if (isCurrentPos || isNearCurrent)
+							myCharz().cxSend = cx;
+							myCharz().cySend = cy;
+							ModTeleport.isWaitingServerSync = false;
+							ModTeleport.isCurrentPosSynced = true;
+							if (ModTanSat.autoTanSat)
 							{
+								ModTanSat.OnTeleportSyncConfirmed();
 								ModTdltLogger.Log("RESET_POINT_CONFIRM", $"Server confirmed teleport pos=({x},{y})");
 							}
-							else
+						}
+						else
+						{
+							cx = x;
+							cy = y;
+							myCharz().cxSend = x;
+							myCharz().cySend = y;
+							ModTeleport.isWaitingServerSync = false;
+							ModTeleport.isCurrentPosSynced = true;
+							if (ModTanSat.autoTanSat)
 							{
-								ModTdltLogger.Log("RESET_POINT_STALE", $"Ignored stale teleport echo pos=({x},{y}), keeping current pos=({cx},{cy})");
+								ModTanSat.lastTeleportTargetMobId = -1;
+								ModTanSat.lastTeleportTime = 0;
+								ModTanSat.waitUntilTime = mSystem.currentTimeMillis() + 180;
+								ModTanSat.OnTeleportSyncConfirmed();
+								ModTdltLogger.Log("RESET_POINT_STALE", $"Synced delayed server pos=({x},{y}) to re-teleport cleanly");
 							}
 						}
 						return;

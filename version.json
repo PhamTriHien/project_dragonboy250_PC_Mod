@@ -1,9 +1,9 @@
 {
-  "version": "2.5.32",
+  "version": "2.5.33",
   "buildDate": "2026-10-24",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.32/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.32/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.32/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.32/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.32: Chặn spam 25 gói charMove/500ms khi tái đồng bộ đòn thứ 3/6, sửa hạ độ cao xuyên thềm 1 chiều T_TOP và khóa vị trí đứng về phía xFirst chống trôi tọa độ quái khi Tàn Sát."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.33/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.33/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.33/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.33/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.33: Cơ chế đợi đồng bộ tọa độ máy chủ (RESET_POINT_CONFIRM) trước khi Tàn Sát và Auto Nhặt dịch chuyển tiếp, triệt tiêu hoàn toàn hiện tượng dồn hàng đợi gây delay/lag."
 }

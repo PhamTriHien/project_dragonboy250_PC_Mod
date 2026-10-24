@@ -16,6 +16,11 @@ public static class ModTeleport
 	public static long lastStepTime = 0;
 	public static int lastStepDistance = 0;
 	public static bool isWaitingSettle = false;
+	public static bool isWaitingServerSync = false;
+	public static bool isCurrentPosSynced = false;
+	public static int pendingSyncX = 0;
+	public static int pendingSyncY = 0;
+	public static long lastSyncRequestTime = 0;
 	private static readonly List<TeleportEchoEntry> pendingTeleportEchoes = new List<TeleportEchoEntry>(64);
 
 	/// <summary>
@@ -26,7 +31,7 @@ public static class ModTeleport
 		long now = mSystem.currentTimeMillis();
 		for (int i = pendingTeleportEchoes.Count - 1; i >= 0; i--)
 		{
-			if (now - pendingTeleportEchoes[i].time > 60000)
+			if (now - pendingTeleportEchoes[i].time > 10000)
 			{
 				pendingTeleportEchoes.RemoveAt(i);
 			}
@@ -36,6 +41,48 @@ public static class ModTeleport
 			pendingTeleportEchoes.RemoveAt(0);
 		}
 		pendingTeleportEchoes.Add(new TeleportEchoEntry { x = x, y = y, time = now });
+		isWaitingServerSync = true;
+		isCurrentPosSynced = false;
+		pendingSyncX = x;
+		pendingSyncY = y;
+		lastSyncRequestTime = now;
+	}
+
+	/// <summary>
+	/// Kiểm tra xem có đang chờ máy chủ phản hồi gói RESET_POINT xác nhận vị trí dịch chuyển trước đó hay không.
+	/// Bắt buộc đợi đồng bộ xong (hoặc hết thời gian chờ tối đa 1800ms) mới dịch chuyển tiếp để tránh dồn hàng đợi gây lag.
+	/// </summary>
+	public static bool IsWaitingServerSync()
+	{
+		if (!isWaitingServerSync)
+		{
+			return false;
+		}
+		long now = mSystem.currentTimeMillis();
+		if (now - lastSyncRequestTime > 1800)
+		{
+			isWaitingServerSync = false;
+			pendingTeleportEchoes.Clear();
+			return false;
+		}
+		return true;
+	}
+
+	/// <summary>
+	/// Kiểm tra xem có đang trong nhịp chờ máy chủ xác nhận tọa độ trước khi tung đòn đánh đầu tiên hay không (tối đa 650ms).
+	/// </summary>
+	public static bool IsWaitingServerSyncForAttack()
+	{
+		if (!isWaitingServerSync)
+		{
+			return false;
+		}
+		long now = mSystem.currentTimeMillis();
+		if (now - lastSyncRequestTime > 650)
+		{
+			return false;
+		}
+		return true;
 	}
 
 	/// <summary>
@@ -47,7 +94,7 @@ public static class ModTeleport
 		for (int i = pendingTeleportEchoes.Count - 1; i >= 0; i--)
 		{
 			TeleportEchoEntry entry = pendingTeleportEchoes[i];
-			if (now - entry.time > 60000)
+			if (now - entry.time > 10000)
 			{
 				continue;
 			}
@@ -67,24 +114,36 @@ public static class ModTeleport
 		long now = mSystem.currentTimeMillis();
 		for (int i = pendingTeleportEchoes.Count - 1; i >= 0; i--)
 		{
-			if (now - pendingTeleportEchoes[i].time > 60000)
+			if (now - pendingTeleportEchoes[i].time > 10000)
 			{
 				pendingTeleportEchoes.RemoveAt(i);
 			}
 		}
+
+		isCurrentPos = (Res.abs(x - currentCx) <= 32 && Res.abs(y - currentCy) <= 32);
 
 		for (int i = 0; i < pendingTeleportEchoes.Count; i++)
 		{
 			TeleportEchoEntry entry = pendingTeleportEchoes[i];
 			if (Res.abs(entry.x - x) <= 24 && (Res.abs(entry.y - y) <= 24 || (y > entry.y && TileMap.tileTypeAt(x, y, 2))))
 			{
-				pendingTeleportEchoes.RemoveAt(i);
-				isCurrentPos = (Res.abs(x - currentCx) <= 24 && Res.abs(y - currentCy) <= 24);
+				pendingTeleportEchoes.RemoveRange(0, i + 1);
+				if (isCurrentPos || pendingTeleportEchoes.Count == 0 || (Res.abs(x - pendingSyncX) <= 32 && Res.abs(y - pendingSyncY) <= 32))
+				{
+					isWaitingServerSync = false;
+					isCurrentPosSynced = isCurrentPos;
+					pendingTeleportEchoes.Clear();
+				}
 				return true;
 			}
 		}
 
-		isCurrentPos = (Res.abs(x - currentCx) <= 24 && Res.abs(y - currentCy) <= 24);
+		if (isCurrentPos)
+		{
+			isWaitingServerSync = false;
+			isCurrentPosSynced = true;
+			pendingTeleportEchoes.Clear();
+		}
 		return false;
 	}
 
@@ -92,6 +151,11 @@ public static class ModTeleport
 	{
 		pendingTeleportEchoes.Clear();
 		isWaitingSettle = false;
+		isWaitingServerSync = false;
+		isCurrentPosSynced = false;
+		pendingSyncX = 0;
+		pendingSyncY = 0;
+		lastSyncRequestTime = 0;
 	}
 
 	private static bool IsPointUndergroundOrBlocked(int px, int py)
@@ -132,6 +196,7 @@ public static class ModTeleport
 		me.cvy = 0;
 		me.statusMe = 1;
 		me.delayFall = 0;
+		isCurrentPosSynced = false;
 		Service.gI().charMove();
 		me.cxSend = toX;
 		me.cySend = toY;
@@ -181,6 +246,11 @@ public static class ModTeleport
 			{
 				isWaitingSettle = false;
 				return true;
+			}
+
+			if (IsWaitingServerSync())
+			{
+				return false;
 			}
 
 			if (now - lastStepTime < 120)

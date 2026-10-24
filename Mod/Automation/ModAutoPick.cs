@@ -637,17 +637,36 @@ public static class ModAutoPick
 				lastPickTime = now;
 				if (groundDist <= 60)
 				{
+					if (ModTeleport.IsWaitingServerSyncForAttack())
+					{
+						isBusy = true;
+						currentItemRetryCount--;
+						return;
+					}
 					isBusy = false;
 					ModTeleport.isWaitingSettle = false;
 					Service.gI().pickItem(closest.itemMapID);
 				}
 				else
 				{
+					if (ModTeleport.IsWaitingServerSync())
+					{
+						isBusy = true;
+						currentItemRetryCount--;
+						return;
+					}
 					isBusy = true;
 					if (ModTeleport.MoveSteppedTo(pickX, pickY))
 					{
 						me.itemFocus = closest;
-						Service.gI().pickItem(closest.itemMapID);
+						if (!ModTeleport.IsWaitingServerSyncForAttack())
+						{
+							Service.gI().pickItem(closest.itemMapID);
+						}
+						else
+						{
+							currentItemRetryCount--;
+						}
 					}
 					else
 					{
