@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Assets.src.e;
 using Assets.src.f;
 using Assets.src.g;
@@ -25,6 +25,7 @@ public partial class Controller : IMessageHandler
 					GameCanvas.debug("SA61", 2);
 					Char.myCharz().itemFocus = null;
 					short itemMapID = msg.reader().readShort();
+					ModAutoPick.OnServerConfirmPick(itemMapID, true);
 					for (int num131 = 0; num131 < GameScr.vItemMap.size(); num131++)
 					{
 						ItemMap itemMap4 = (ItemMap)GameScr.vItemMap.elementAt(num131);
@@ -104,6 +105,7 @@ public partial class Controller : IMessageHandler
 				{
 					GameCanvas.debug("SA62", 2);
 					short itemMapID = msg.reader().readShort();
+					ModAutoPick.OnServerConfirmPick(itemMapID, false);
 					@char = GameScr.findCharInMap(msg.reader().readInt());
 					for (int num130 = 0; num130 < GameScr.vItemMap.size(); num130++)
 					{

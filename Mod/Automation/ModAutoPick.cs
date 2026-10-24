@@ -640,7 +640,7 @@ public static class ModAutoPick
 					return;
 				}
 
-				bool canPickInPlace = dx <= 20 && dy <= 20 && (closest.itemMapID != lastPickedItemMapId || currentItemRetryCount < 1);
+				bool canPickInPlace = dx <= 6 && dy <= 8 && (closest.itemMapID != lastPickedItemMapId || currentItemRetryCount < 1);
 				if (canPickInPlace)
 				{
 					if (ModTeleport.IsWaitingServerSyncForAttack())
@@ -720,5 +720,23 @@ public static class ModAutoPick
 		{
 			isBusy = false;
 		}
+	}
+
+	/// <summary>
+	/// Xác nhận máy chủ đã xử lý nhặt vật phẩm (cmd -20 hoặc cmd -19) để giải phóng trạng thái bận tức thời.
+	/// </summary>
+	public static void OnServerConfirmPick(int itemMapId, bool isMe)
+	{
+		if (isMe)
+		{
+			ModTdltLogger.Log("ITEM_PICKED_OK", $"itemMapId={itemMapId}, retry={currentItemRetryCount}");
+		}
+		if (lastPickedItemMapId == itemMapId)
+		{
+			lastPickedItemMapId = -1;
+			currentItemRetryCount = 0;
+			isBusy = false;
+		}
+		ignoredItemUntil.Remove(itemMapId);
 	}
 }

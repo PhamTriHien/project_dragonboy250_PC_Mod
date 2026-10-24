@@ -202,7 +202,9 @@ public static class ModTeleport
 		me.cvy = 0;
 		me.statusMe = 1;
 		me.delayFall = 0;
-		if (toX != fromX || toY != fromY)
+		int stepDx = Res.abs(toX - fromX);
+		int stepDy = Res.abs(toY - fromY);
+		if (stepDx > 48 || stepDy > 24)
 		{
 			isCurrentPosSynced = false;
 		}

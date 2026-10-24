@@ -1,9 +1,9 @@
 {
-  "version": "2.5.35",
+  "version": "2.5.36",
   "buildDate": "2026-10-24",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.35/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.35/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.35/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.35/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.35: Khắc phục triệt để độ trễ cao và giật vị trí (RESET_POINT) khi Tàn Sát tại map Cooler (dùng dịch chuyển trực tiếp cho quái cách >48px thay vì đi bộ 2 bước nhanh, ngăn sát thương nhỏ của đệ tử làm bắn lặp gói dịch chuyển, bảo toàn hàng đợi echo RESET_POINT)."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.36/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.36/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.36/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.36/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.36: Tối ưu bảo toàn trạng thái đồng bộ tọa độ khi bước ngắn (<=48px) theo quái đi bộ, loại bỏ hoàn toàn gói dịch chuyển lặp lần 2 trên cùng mục tiêu và xác nhận tức thời khi máy chủ nhặt vật phẩm thành công."
 }
