@@ -145,15 +145,18 @@ public static class ModUITanSat
 	{
 		ModTanSatFilter.EnsureDesignatedSkill();
 
-		// Hàng 0: Trạng thái & Tiếp cận
+		// Hàng 0: Tàn sát, Tự nhặt & Tiếp cận
 		int row0Y = uiY + 3;
 		int row0H = 16;
-		mFont.tahoma_7_grey.drawString(g, "Trạng thái:", uiX + 5, row0Y + 2, mFont.LEFT);
-		ModUI.PaintNativeButton(uiX + 58, row0Y, 42, row0H, ModTanSat.autoTanSat ? "BẬT" : "TẮT", ModTanSat.autoTanSat, g);
+		mFont.tahoma_7_grey.drawString(g, "Tàn sát:", uiX + 5, row0Y + 2, mFont.LEFT);
+		ModUI.PaintNativeButton(uiX + 46, row0Y, 36, row0H, ModTanSat.autoTanSat ? "BẬT" : "TẮT", ModTanSat.autoTanSat, g);
 
-		int tpBtnW = 72;
+		mFont.tahoma_7_grey.drawString(g, "Tự nhặt:", uiX + 87, row0Y + 2, mFont.LEFT);
+		ModUI.PaintNativeButton(uiX + 128, row0Y, 36, row0H, ModAutoPick.autoPick ? "BẬT" : "TẮT", ModAutoPick.autoPick, g);
+
+		int tpBtnW = 68;
 		int tpBtnX = uiX + uiW - tpBtnW - 4;
-		mFont.tahoma_7_grey.drawString(g, "Tiếp cận:", tpBtnX - 46, row0Y + 2, mFont.LEFT);
+		mFont.tahoma_7_grey.drawString(g, "Tiếp cận:", tpBtnX - 44, row0Y + 2, mFont.LEFT);
 		ModUI.PaintNativeButton(tpBtnX, row0Y, tpBtnW, row0H, ModTanSat.useTeleport ? "Dịch chuyển" : "Chạy bộ", ModTanSat.useTeleport, g);
 
 		// Hàng 1 (Luôn hiển thị): Thanh chỉ định nhanh Skill sử dụng khi Tàn Sát
@@ -403,7 +406,7 @@ public static class ModUITanSat
 		int footerY = uiY + uiH - footerH - 3;
 
 		// 1. Bật/Tắt Tàn sát
-		if (px >= uiX + 58 && px <= uiX + 100 && py >= row0Y - 1 && py <= row0Y + row0H + 1)
+		if (px >= uiX + 46 && px <= uiX + 82 && py >= row0Y - 1 && py <= row0Y + row0H + 1)
 		{
 			ModTanSat.autoTanSat = !ModTanSat.autoTanSat;
 			ModConfig.SaveConfig();
@@ -411,8 +414,17 @@ public static class ModUITanSat
 			return true;
 		}
 
+		// 1b. Bật/Tắt Tự nhặt item
+		if (px >= uiX + 128 && px <= uiX + 164 && py >= row0Y - 1 && py <= row0Y + row0H + 1)
+		{
+			ModAutoPick.autoPick = !ModAutoPick.autoPick;
+			ModConfig.SaveConfig();
+			SoundMn.gI().buttonClick();
+			return true;
+		}
+
 		// 2. Nút Tiếp cận
-		int tpBtnW = 72;
+		int tpBtnW = 68;
 		int tpBtnX = uiX + uiW - tpBtnW - 4;
 		if (px >= tpBtnX && px <= tpBtnX + tpBtnW && py >= row0Y - 1 && py <= row0Y + row0H + 1)
 		{

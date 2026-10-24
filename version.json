@@ -1,9 +1,9 @@
 {
-  "version": "2.5.33",
+  "version": "2.5.34",
   "buildDate": "2026-10-24",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.33/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.33/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.33/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.33/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.33: Cơ chế đợi đồng bộ tọa độ máy chủ (RESET_POINT_CONFIRM) trước khi Tàn Sát và Auto Nhặt dịch chuyển tiếp, triệt tiêu hoàn toàn hiện tượng dồn hàng đợi gây delay/lag."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.34/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.34/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.34/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.34/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.34: Tích hợp Auto Nhặt Item trực tiếp vào Tàn Sát (tự động bật khi kích hoạt Tàn Sát, bổ sung nút Tự nhặt BẬT/TẮT trên thanh điều khiển Tàn Sát, đồng bộ nhặt chính xác tại tọa độ rơi xEnd/yEnd của vật phẩm)."
 }

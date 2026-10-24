@@ -6,14 +6,19 @@ using System.Collections.Generic;
 /// </summary>
 public static class ModTanSat
 {
-	public static bool autoTanSat = false;
-	public static bool autoAttack
+	private static bool _autoTanSat = false;
+	public static bool autoTanSat
 	{
-		get { return autoTanSat; }
+		get { return _autoTanSat; }
 		set
 		{
-			autoTanSat = value;
-			if (!value)
+			bool wasActive = _autoTanSat;
+			_autoTanSat = value;
+			if (value && !wasActive)
+			{
+				ModAutoPick.autoPick = true;
+			}
+			else if (!value)
 			{
 				currentFarmTarget = null;
 				lastTeleportTargetMobId = -1;
@@ -24,6 +29,11 @@ public static class ModTanSat
 				ignoredMobUntil.Clear();
 			}
 		}
+	}
+	public static bool autoAttack
+	{
+		get { return autoTanSat; }
+		set { autoTanSat = value; }
 	}
 
 	public static bool useTeleport = true;
@@ -472,7 +482,19 @@ public static class ModTanSat
 		{
 			if (!autoTanSat) return;
 
-			if (ModNextMap.isNextMapActive || ModGoBack.isReturning || ModSetActivator.isBusy || ModAutoBuyBua.isBusy || ModAutoPick.isBusy || Char.isLoadingMap) return;
+			if (ModNextMap.isNextMapActive || ModGoBack.isReturning || ModSetActivator.isBusy || ModAutoBuyBua.isBusy || Char.isLoadingMap) return;
+			if (ModAutoPick.isBusy)
+			{
+				if (currentFarmTarget != null && (currentFarmTarget.status == 0 || currentFarmTarget.status == 1 || currentFarmTarget.hp <= 0))
+				{
+					currentFarmTarget = null;
+					currentTargetResetCount = 0;
+					currentTargetUnchangedAttackCount = 0;
+					lastResyncAttackCount = 0;
+				}
+				targetLockTime = mSystem.currentTimeMillis();
+				return;
+			}
 
 			Char me = Char.myCharz();
 			if (me == null || me.cHP <= 0 || me.statusMe == 14 || me.statusMe == 5) return;

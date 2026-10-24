@@ -136,14 +136,11 @@ public static class ModDropRate
 		}
 
 		totalItemsDropped++;
+		ModTdltLogger.Log("ITEM_DROP", $"ItemMapId={item.itemMapID}, tplId={item.template?.id ?? -1} ({item.template?.name}), pos=({item.x},{item.y})->({item.xEnd},{item.yEnd}), playerId={item.playerId}, me=({me?.cx},{me?.cy}), autoPick={ModAutoPick.autoPick}");
 
-		if (isInstantPick && ModAutoPick.autoPick && me != null)
+		if (isInstantPick && ModAutoPick.autoPick && me != null && ModAutoPick.ShouldPickItem(item))
 		{
-			if (ModAutoPick.ShouldPickItem(item) && Res.distance(me.cx, me.cy, item.x, item.y) <= 60)
-			{
-				me.itemFocus = item;
-				Service.gI().pickItem(item.itemMapID);
-			}
+			me.itemFocus = item;
 		}
 	}
 

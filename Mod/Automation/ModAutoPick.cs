@@ -68,7 +68,7 @@ public class AutoPickActionListener : IActionListener
 /// </summary>
 public static class ModAutoPick
 {
-	public static bool autoPick = false;
+	public static bool autoPick = true;
 	public static bool pickAll = true;
 	public static bool pickGold = true;
 	public static bool pickEquip = true;
@@ -429,6 +429,10 @@ public static class ModAutoPick
 		}
 
 		if (it.template == null) return pickAll;
+		if (it.template.type >= 0 && it.template.type <= 5 && GameScr.gI() != null && me != null && me.arrItemBag != null && GameScr.gI().isBagFull())
+		{
+			return false;
+		}
 		int tId = it.template.id;
 		string name = it.template.name;
 
@@ -503,7 +507,9 @@ public static class ModAutoPick
 			ItemMap it = (ItemMap)items.elementAt(i);
 			if (it == null) continue;
 			if (ignoredItemUntil.TryGetValue(it.itemMapID, out long ignoreUntil) && now < ignoreUntil) continue;
-			if (maxPickDistance > 0 && Res.distance(me.cx, me.cy, it.x, it.y) > maxPickDistance) continue;
+			int ix = (it.xEnd != 0) ? it.xEnd : it.x;
+			int iy = (it.yEnd != 0) ? it.yEnd : it.y;
+			if (maxPickDistance > 0 && Res.distance(me.cx, me.cy, ix, iy) > maxPickDistance) continue;
 			if (ShouldPickItem(it)) return true;
 		}
 		return false;
@@ -535,10 +541,6 @@ public static class ModAutoPick
 				currentItemRetryCount = 0;
 				ignoredItemUntil.Clear();
 			}
-			if (now - lastPickTime < 200)
-			{
-				return;
-			}
 			if (me == null || me.cHP <= 0 || me.statusMe == 14 || me.statusMe == 5 || Char.isLoadingMap || Char.ischangingMap)
 			{
 				isBusy = false;
@@ -548,6 +550,12 @@ public static class ModAutoPick
 			MyVector items = GameScr.vItemMap;
 			if (items == null || items.size() == 0)
 			{
+				if (lastPickedItemMapId != -1)
+				{
+					ModTdltLogger.Log("ITEM_PICKED_OK", $"Server confirmed pick (cleared) -> itemMapId={lastPickedItemMapId}");
+				}
+				lastPickedItemMapId = -1;
+				currentItemRetryCount = 0;
 				isBusy = false;
 				return;
 			}
@@ -562,6 +570,12 @@ public static class ModAutoPick
 				{
 					continue;
 				}
+				if (it.itemMapID == lastPickedItemMapId && it.status == 2)
+				{
+					ModTdltLogger.Log("ITEM_PICKED_OK", $"Server confirmed pick -> itemMapId={it.itemMapID}, tplId={it.template?.id ?? -1} ({it.template?.name})");
+					lastPickedItemMapId = -1;
+					currentItemRetryCount = 0;
+				}
 				if (ignoredItemUntil.TryGetValue(it.itemMapID, out long ignoreUntil))
 				{
 					if (now < ignoreUntil) continue;
@@ -570,7 +584,9 @@ public static class ModAutoPick
 
 				if (ShouldPickItem(it))
 				{
-					int dist = Res.distance(me.cx, me.cy, it.x, it.y);
+					int ix = (it.xEnd != 0) ? it.xEnd : it.x;
+					int iy = (it.yEnd != 0) ? it.yEnd : it.y;
+					int dist = Res.distance(me.cx, me.cy, ix, iy);
 					if (maxPickDistance > 0 && dist > maxPickDistance)
 					{
 						continue;
@@ -591,8 +607,8 @@ public static class ModAutoPick
 				                        ModTanSat.currentFarmTarget.status != 1 &&
 				                        ModTanSat.currentFarmTarget.hp > 0;
 
-				int pickX = closest.x;
-				int pickY = closest.y;
+				int pickX = (closest.xEnd != 0) ? closest.xEnd : closest.x;
+				int pickY = (closest.yEnd != 0) ? closest.yEnd : closest.y;
 				if (ModTanSatTargeting.IsInsideWaypoint(pickX, pickY) && TileMap.pxw > 160)
 				{
 					if (pickX < 72) pickX = 72;
@@ -607,19 +623,43 @@ public static class ModAutoPick
 					}
 				}
 
+				int dx = Res.abs(me.cx - pickX);
+				int dy = Res.abs(me.cy - pickY);
 				int groundDist = Res.distance(me.cx, me.cy, pickX, pickY);
 
-				// Khi đang đánh dở quái Tàn Sát: Chỉ nhặt tại chỗ nếu item rơi sát bên (<= 60px), tuyệt đối không dịch chuyển bỏ dở quái đang đánh
-				if (isFightingTarget && groundDist > 60)
+				// Khi đang đánh dở quái Tàn Sát: Chỉ nhặt nếu item rơi gần (<= 72px), không dịch chuyển bỏ dở quái đang đánh
+				if (isFightingTarget && groundDist > 72)
 				{
 					isBusy = false;
 					return;
 				}
 
+				isBusy = true;
+				if (now - lastPickTime < 180)
+				{
+					return;
+				}
+
+				bool canPickInPlace = dx <= 20 && dy <= 20 && (closest.itemMapID != lastPickedItemMapId || currentItemRetryCount < 1);
+				if (canPickInPlace)
+				{
+					if (ModTeleport.IsWaitingServerSyncForAttack())
+					{
+						return;
+					}
+				}
+				else
+				{
+					if (ModTeleport.IsWaitingServerSync())
+					{
+						return;
+					}
+				}
+
 				if (closest.itemMapID == lastPickedItemMapId)
 				{
 					currentItemRetryCount++;
-					if (currentItemRetryCount > 3)
+					if (currentItemRetryCount > 4)
 					{
 						ignoredItemUntil[closest.itemMapID] = now + 10000L;
 						lastPickedItemMapId = -1;
@@ -635,32 +675,26 @@ public static class ModAutoPick
 				}
 
 				lastPickTime = now;
-				if (groundDist <= 60)
+				me.itemFocus = closest;
+				if (canPickInPlace)
 				{
-					if (ModTeleport.IsWaitingServerSyncForAttack())
-					{
-						isBusy = true;
-						currentItemRetryCount--;
-						return;
-					}
-					isBusy = false;
 					ModTeleport.isWaitingSettle = false;
+					ModTdltLogger.Log("ITEM_PICK", $"Pick in-place -> itemMapId={closest.itemMapID}, tplId={closest.template?.id ?? -1} ({closest.template?.name}), pos=({pickX},{pickY}), me=({me.cx},{me.cy}), retry={currentItemRetryCount}");
 					Service.gI().pickItem(closest.itemMapID);
 				}
 				else
 				{
-					if (ModTeleport.IsWaitingServerSync())
-					{
-						isBusy = true;
-						currentItemRetryCount--;
-						return;
-					}
-					isBusy = true;
+					bool wasAlreadyThere = Res.abs(me.cx - pickX) <= 12 && Res.abs(me.cy - pickY) <= 16;
 					if (ModTeleport.MoveSteppedTo(pickX, pickY))
 					{
-						me.itemFocus = closest;
+						if (wasAlreadyThere && currentItemRetryCount >= 2)
+						{
+							ModTeleport.SendSingleCharMove(pickX, pickY);
+						}
+						ModTanSat.lastTeleportTime = 0;
 						if (!ModTeleport.IsWaitingServerSyncForAttack())
 						{
+							ModTdltLogger.Log("ITEM_PICK", $"Pick after step -> itemMapId={closest.itemMapID}, tplId={closest.template?.id ?? -1} ({closest.template?.name}), pos=({pickX},{pickY}), me=({me.cx},{me.cy}), retry={currentItemRetryCount}");
 							Service.gI().pickItem(closest.itemMapID);
 						}
 						else
@@ -670,6 +704,7 @@ public static class ModAutoPick
 					}
 					else
 					{
+						ModTanSat.lastTeleportTime = 0;
 						currentItemRetryCount--;
 					}
 				}
