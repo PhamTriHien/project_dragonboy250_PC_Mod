@@ -40,18 +40,21 @@ public static class ModWaypoint
 
 	/// <summary>
 	/// Xử lý gói RESET_POINT (cmd 46) từ Server khi đang chạy Next Map:
-	/// Phân biệt giữa xác nhận dịch chuyển hợp lệ (y + 1 ground snap) và kéo giật lùi (pullback).
+	/// Phân biệt giữa xác nhận dịch chuyển hợp lệ (y + 1 ground snap / tiếp đất tàu vũ trụ / gói lặp xác nhận) và kéo giật lùi (pullback).
 	/// </summary>
-	public static void OnServerResetPoint(int x, int y)
+	public static void OnServerResetPoint(int x, int y, int prevCx = -1, int prevCy = -1)
 	{
-		bool isConfirmedTarget = isWaitingTeleportConfirm &&
+		bool isMatchPendingConfirm = pendingConfirmX > 0 &&
 			Res.abs(x - pendingConfirmX) <= 32 &&
 			Res.abs(y - pendingConfirmY) <= 32;
+		bool isMatchPrevPos = prevCx >= 0 && prevCy >= 0 &&
+			Res.abs(x - prevCx) <= 32 &&
+			Res.abs(y - prevCy) <= 32;
 
-		if (isConfirmedTarget)
+		if (isMatchPendingConfirm || isMatchPrevPos)
 		{
 			isWaitingTeleportConfirm = false;
-			if (hasTeleportedToWp)
+			if (hasTeleportedToWp && isMatchPendingConfirm)
 			{
 				isWpPosConfirmed = true;
 			}
@@ -89,8 +92,8 @@ public static class ModWaypoint
 				return maxY;
 			}
 
-			// Nếu đáy vùng [minY, maxY] là bề mặt đất hợp lệ có khoảng không phía trên (chuẩn Waypoint.maxY của Server)
-			if (TileMap.tileTypeAt(checkX, safeMaxY, 2))
+			// Nếu đáy vùng [minY, maxY] của cổng Waypoint hẹp là bề mặt đất hợp lệ có khoảng không phía trên (chuẩn Waypoint.maxY của Server)
+			if (safeMaxY - safeMinY <= 120 && TileMap.tileTypeAt(checkX, safeMaxY, 2))
 			{
 				int maxGy = TileMap.tileYofPixel(safeMaxY);
 				if (maxGy <= 24 || !TileMap.tileTypeAt(checkX, maxGy - 24, 2))
@@ -238,9 +241,17 @@ public static class ModWaypoint
 			}
 			else
 			{
-				int minSearchY = System.Math.Max(24, System.Math.Min(me.cy, targetY) - 96);
-				int maxSearchY = System.Math.Min(TileMap.pxh - 12, System.Math.Max(me.cy, targetY) + 96);
-				nextY = GetGroundY(nextX, minSearchY, maxSearchY);
+				int refY = (me.cy + targetY) / 2;
+				int maxDeltaY = System.Math.Max(240, TileMap.pxh);
+				int safeSurfaceY = ModTanSatTargeting.FindGroundY(nextX, refY, maxDeltaY);
+				if (safeSurfaceY != -1)
+				{
+					nextY = safeSurfaceY;
+				}
+				else
+				{
+					nextY = GetGroundY(nextX, 24, System.Math.Max(24, TileMap.pxh - 24));
+				}
 			}
 			me.cdir = (targetX >= me.cx) ? 1 : (-1);
 			TeleportTo(nextX, nextY);

@@ -333,6 +333,7 @@ public class InfoMe
 		if (!string.IsNullOrEmpty(s) && !s.StartsWith("[Mod]"))
 		{
 			ModTdltLogger.LogServerMessage("INFO_TOAST_" + Type, s);
+			ModGoBack.CheckServerKickMessage(s);
 		}
 		ModMenu.ProcessServerBossNotice(s);
 		if (info.infoWaitToShow.size() > 0 && s.Equals(((InfoItem)info.infoWaitToShow.lastElement()).s))

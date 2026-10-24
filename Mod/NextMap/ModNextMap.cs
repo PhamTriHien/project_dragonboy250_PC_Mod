@@ -573,7 +573,7 @@ public static class ModNextMap
 			{
 				lastChangeAttemptTime = now;
 			}
-			else if (now - lastChangeAttemptTime > 1200)
+			else if (now - lastChangeAttemptTime > 2500)
 			{
 				Char.ischangingMap = false;
 				Char.isLockKey = false;
