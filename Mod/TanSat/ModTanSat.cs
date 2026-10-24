@@ -597,11 +597,19 @@ public static class ModTanSat
 					{
 						targetLastHp = currentFarmTarget.hp;
 					}
-					if (currentFarmTarget.templateId != 0 && (currentTargetUnchangedAttackCount == 3 || currentTargetUnchangedAttackCount == 6) && lastResyncAttackCount != currentTargetUnchangedAttackCount)
+					if (currentFarmTarget.templateId != 0 && (currentTargetUnchangedAttackCount == 2 || currentTargetUnchangedAttackCount == 5) && lastResyncAttackCount != currentTargetUnchangedAttackCount)
 					{
 						lastResyncAttackCount = currentTargetUnchangedAttackCount;
-						lastTeleportTargetMobId = -1;
-						lastTeleportTime = 0;
+						if (TileMap.tileTypeAt(me.cx, me.cy, 2))
+						{
+							ModWaypoint.TeleportTo(me.cx, me.cy);
+						}
+						else
+						{
+							ModTeleport.SendSingleCharMove(me.cx, me.cy);
+						}
+						lastTeleportTargetMobId = currentFarmTarget.mobId;
+						lastTeleportTime = now;
 					}
 					if (checkLagMob && currentFarmTarget.templateId != 0 && currentTargetUnchangedAttackCount >= 8 && now - targetLockTime > 4500)
 					{

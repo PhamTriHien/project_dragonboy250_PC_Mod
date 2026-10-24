@@ -154,8 +154,13 @@ public static class ModTeleport
 	}
 
 	/// <summary>
-	/// Điều phối di chuyển Tàn Sát và Auto Nhặt theo từng bước đơn (1 gói charMove / nhịp >= 120ms, tối đa 96px ngang, 84px dọc)
-	/// kết hợp quỹ đạo vòng qua vách đá (Canopy Path) và không bao giờ gửi (x, y+1), triệt tiêu 100% hàng đợi RESET_POINT từ máy chủ.
+	/// Điều phối dịch chuyển Tàn Sát và Auto Nhặt theo đúng cơ chế NextMap (ModWaypoint.TeleportTo):
+	/// - Khi chuyển tầng địa hình hoặc nhảy xa qua vách núi tới mặt đất (TileMap.tileTypeAt(targetX, targetY, 2)):
+	///   Sử dụng trực tiếp ModWaypoint.TeleportTo(targetX, targetY) để dịch chuyển tức thời 1 bước duy nhất như NextMap.
+	/// - Khi nhích theo quái đi bộ hoặc di chuyển ngắn trên cùng một mặt sàn phẳng (dy <= 24, dx <= 160):
+	///   Sử dụng SendSingleCharMove (1 gói charMove, không gửi y+1) để không làm tăng bộ đếm RESET_POINT của máy chủ.
+	/// - Khi mục tiêu là quái bay giữa không trung (!TileMap.tileTypeAt(targetX, targetY, 2)):
+	///   Dịch chuyển tức thời tới mặt đất gần nhất bằng ModWaypoint.TeleportTo rồi bước lên không trung bằng SendSingleCharMove.
 	/// </summary>
 	public static bool MoveSteppedTo(int targetX, int targetY, bool isTargetFlying = false)
 	{
@@ -184,8 +189,10 @@ public static class ModTeleport
 			}
 
 			me.cdir = (targetX >= me.cx) ? 1 : (-1);
+			bool isTargetOnGround = TileMap.tileTypeAt(targetX, targetY, 2) && !isTargetFlying;
 
-			if (dx <= 96 && dy <= 48)
+			// 1. Nhích ngắn trên cùng mặt sàn hoặc trong không trung gần (dx <= 96, dy <= 36): Đi 1 gói đơn không kích hoạt RESET_POINT
+			if (dx <= 96 && dy <= 36 && !IsPointUndergroundOrBlocked(targetX, targetY))
 			{
 				SendSingleCharMove(targetX, targetY);
 				lastStepTime = now;
@@ -193,65 +200,48 @@ public static class ModTeleport
 				return true;
 			}
 
-			int candX = (dx <= 96) ? targetX : (me.cx + ((targetX > me.cx) ? 96 : (-96)));
-			int nextX = candX;
-			int nextY = targetY;
-
-			if (targetY < me.cy)
+			// 2. Di chuyển tới quái kế bên trên cùng mặt sàn phẳng (dy <= 24, dx <= 180): Đi 2 bước ngắn không kích hoạt RESET_POINT
+			if (dy <= 24 && dx <= 180 && isTargetOnGround)
 			{
-				// Di chuyển lên nền cao / quái bay: Ưu tiên nâng độ cao trước nếu tiến ngang sẽ đâm vào vách núi
-				int candY = (me.cy - targetY <= 84) ? targetY : (me.cy - 84);
-				if (me.cy - targetY > 48 && IsPointUndergroundOrBlocked(candX, candY))
+				int stepX = me.cx + ((targetX > me.cx) ? 96 : (-96));
+				int stepY = ModTanSatTargeting.FindGroundY(stepX, targetY, 24);
+				if (stepY != -1 && Res.abs(stepY - targetY) <= 24 && !IsPointUndergroundOrBlocked(stepX, stepY))
 				{
-					nextX = me.cx;
-				}
-				nextY = candY;
-			}
-			else if (targetY > me.cy)
-			{
-				// Di chuyển từ nền cao xuống nền thấp: Tiến ngang khi còn xa (> 96px), sau đó hạ độ cao trực tiếp qua các thềm 1 chiều
-				int candY = (targetY - me.cy <= 84) ? targetY : (me.cy + 84);
-				if (dx > 96)
-				{
-					nextY = me.cy;
-					int highGroundY = ModTanSatTargeting.FindGroundY(nextX, me.cy, 48);
-					if (highGroundY != -1 && highGroundY < nextY)
-					{
-						nextY = highGroundY;
-					}
-				}
-				else
-				{
-					if (candY < targetY && IsPointUndergroundOrBlocked(candX, candY))
-					{
-						candY = System.Math.Min(targetY, candY + 24);
-					}
-					nextY = candY;
-				}
-			}
-			else
-			{
-				nextY = targetY;
-				if (TileMap.tileTypeAt(targetX, targetY, 2))
-				{
-					int groundY = ModTanSatTargeting.FindGroundY(nextX, nextY, 48);
-					if (groundY != -1 && groundY < nextY)
-					{
-						nextY = groundY;
-					}
+					SendSingleCharMove(stepX, stepY);
+					lastStepTime = now;
+					isWaitingSettle = true;
+					return false;
 				}
 			}
 
-			if (nextX == me.cx && nextY == me.cy)
+			// 3. Nhảy xa hoặc chuyển tầng địa hình (lên/xuống vách đá, hầm) tới mặt đất: Dịch chuyển tức thời 1 bước bằng đúng ModWaypoint.TeleportTo của NextMap!
+			if (isTargetOnGround)
 			{
-				nextX = candX;
-				nextY = (targetY < me.cy) ? System.Math.Max(targetY, me.cy - 84) : System.Math.Min(targetY, me.cy + 84);
+				ModWaypoint.TeleportTo(targetX, targetY);
+				lastStepTime = now;
+				isWaitingSettle = false;
+				return true;
 			}
 
-			SendSingleCharMove(nextX, nextY);
+			// 4. Mục tiêu là quái bay trên không trung: Nếu còn ở xa, dịch chuyển tức thời bằng ModWaypoint.TeleportTo tới mặt đất gần quái bay trước, sau đó bay lên
+			if (dx > 120 || dy > 96)
+			{
+				int groundY = ModTanSatTargeting.FindGroundY(targetX, targetY, 240);
+				if (groundY != -1 && (Res.abs(me.cx - targetX) > 96 || Res.abs(me.cy - groundY) > 36))
+				{
+					ModWaypoint.TeleportTo(targetX, groundY);
+					lastStepTime = now;
+					isWaitingSettle = true;
+					return false;
+				}
+			}
+
+			int airX = (dx <= 96) ? targetX : (me.cx + ((targetX > me.cx) ? 96 : (-96)));
+			int airY = (dy <= 84) ? targetY : (me.cy + ((targetY > me.cy) ? 84 : (-84)));
+			SendSingleCharMove(airX, airY);
 			lastStepTime = now;
 
-			if (Res.abs(nextX - targetX) <= 12 && Res.abs(nextY - targetY) <= 16)
+			if (Res.abs(airX - targetX) <= 12 && Res.abs(airY - targetY) <= 16)
 			{
 				isWaitingSettle = false;
 				return true;

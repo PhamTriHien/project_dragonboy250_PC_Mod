@@ -131,12 +131,8 @@ public partial class Char : IMapObject
 				myCharz().cySend = y;
 				if (ModNextMap.isNextMapActive || ModTanSat.autoTanSat || ModAutoPick.isBusy || ModGoBack.isReturning || cy - y == 0)
 				{
-					bool isPulledBack = (Res.abs(x - cx) > 24 || Res.abs(y - cy) > 24);
-					bool posChanged = (cx != x || cy != y);
-					cx = x;
-					cy = y;
-					myCharz().cxSend = x;
-					myCharz().cySend = y;
+					bool isEcho = ModTeleport.TryConsumeTeleportEcho(x, y, cx, cy, out bool isCurrentPos);
+					bool isNearCurrent = (Res.abs(x - cx) <= 32 && Res.abs(y - cy) <= 32);
 					cvx = 0;
 					cvy = 0;
 					statusMe = 1;
@@ -145,24 +141,37 @@ public partial class Char : IMapObject
 					ischangingMap = false;
 					isLockKey = false;
 					ModTeleport.isWaitingSettle = false;
-					if (posChanged && ModTanSat.autoTanSat)
+
+					if (isEcho || isNearCurrent)
 					{
-						ModTanSat.lastTeleportTargetMobId = -1;
-						ModTanSat.lastTeleportTime = 0;
-					}
-					if (!isPulledBack)
-					{
+						myCharz().cxSend = cx;
+						myCharz().cySend = cy;
 						if (ModTanSat.autoTanSat)
 						{
-							ModTdltLogger.Log("RESET_POINT_CONFIRM", $"Server confirmed teleport pos=({x},{y})");
+							if (isCurrentPos || isNearCurrent)
+							{
+								ModTdltLogger.Log("RESET_POINT_CONFIRM", $"Server confirmed teleport pos=({x},{y})");
+							}
+							else
+							{
+								ModTdltLogger.Log("RESET_POINT_STALE", $"Ignored stale teleport echo pos=({x},{y}), keeping current pos=({cx},{cy})");
+							}
 						}
+						return;
 					}
-					if (ModNextMap.isNextMapActive && isPulledBack)
+
+					cx = x;
+					cy = y;
+					myCharz().cxSend = x;
+					myCharz().cySend = y;
+					if (ModNextMap.isNextMapActive)
 					{
 						ModNextMap.OnServerResetPoint();
 					}
-					if (ModTanSat.autoTanSat && isPulledBack)
+					if (ModTanSat.autoTanSat)
 					{
+						ModTanSat.lastTeleportTargetMobId = -1;
+						ModTanSat.lastTeleportTime = 0;
 						ModTanSat.OnServerResetPoint();
 					}
 					return;
