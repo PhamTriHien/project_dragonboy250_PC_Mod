@@ -675,6 +675,15 @@ public static class ModNextMap
 		else
 		{
 			nextMapFailCount++;
+			if (nextMapFailCount >= 2 &&
+			    ModNextMapData.mapWaypoints.TryGetValue(TileMap.mapID, out List<int> currNeighbors) &&
+			    currNeighbors.Count > 1 &&
+			    currNeighbors.Remove(nextMapId))
+			{
+				ModNextMapPathFinder.ClearCache();
+				nextMapFailCount = 0;
+				return;
+			}
 			if (nextMapFailCount > 25)
 			{
 				GameScr.info1.addInfo("Không tìm thấy cổng sang " + GetMapName(nextMapId), 0);

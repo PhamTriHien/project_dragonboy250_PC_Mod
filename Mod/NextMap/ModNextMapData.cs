@@ -187,12 +187,12 @@ public static class ModNextMapData
 		{ 103, new List<int> { 100 } },
 
 		// Khu vực Hành tinh Cooler / Cold (105..110)
-		{ 105, new List<int> { 80, 106, 108, 109 } },
-		{ 106, new List<int> { 105, 107, 109, 110 } },
-		{ 107, new List<int> { 106, 108, 110 } },
-		{ 108, new List<int> { 105, 107, 109, 110 } },
-		{ 109, new List<int> { 105, 106, 108, 110 } },
-		{ 110, new List<int> { 106, 107, 108, 109 } }
+		{ 105, new List<int> { 80, 109, 106, 108 } },
+		{ 106, new List<int> { 105, 110, 107 } },
+		{ 107, new List<int> { 108, 110, 106 } },
+		{ 108, new List<int> { 109, 107, 105 } },
+		{ 109, new List<int> { 108, 105, 106 } },
+		{ 110, new List<int> { 107, 106 } }
 	};
 
 	/// <summary>

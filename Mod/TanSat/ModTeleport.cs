@@ -26,14 +26,22 @@ public static class ModTeleport
 	private const int ColdSolidMask = TileMap.T_CENTER | TileMap.T_LEFT | TileMap.T_RIGHT | TileMap.T_SOLIDGROUND | TileMap.T_BOTTOM | TileMap.T_DIE;
 	private const int ColdStepIntervalMs = 135;
 	private const int ColdMaxWalkStepX = 48;
+	private const int ColdLongTeleportCooldownMs = 12000;
+	private const int ColdMaxLongTeleportsPerSession = 150;
 	private static readonly int[] ColdDirX = new int[4] { 0, -1, 1, 0 };
 	private static readonly int[] ColdDirY = new int[4] { -1, 0, 0, 1 };
 	private static int coldTrackedTargetX = -1;
 	private static int coldTrackedTargetY = -1;
 	private static long coldTrackedStartTime = 0;
+	private static long lastColdLongTeleportTime = 0;
+	private static int coldSessionLongTeleportCount = 0;
 	private static int[] bfsQueue = new int[4096];
 	private static int[] bfsParent = new int[4096];
+	private static int[] bfsDist = new int[4096];
 	private static int[] bfsPathBuffer = new int[512];
+	private static int cachedCostMapId = -1;
+	private static int cachedCostStartIdx = -1;
+	private static long cachedCostTime = 0;
 
 	public static bool IsColdPlanetMap()
 	{
@@ -55,6 +63,15 @@ public static class ModTeleport
 		coldTrackedTargetX = -1;
 		coldTrackedTargetY = -1;
 		coldTrackedStartTime = 0;
+	}
+
+	public static void ResetSessionColdCounters()
+	{
+		lastColdLongTeleportTime = 0;
+		coldSessionLongTeleportCount = 0;
+		cachedCostMapId = -1;
+		cachedCostStartIdx = -1;
+		cachedCostTime = 0;
 	}
 
 	/// <summary>
@@ -196,6 +213,9 @@ public static class ModTeleport
 		pendingSyncX = 0;
 		pendingSyncY = 0;
 		lastSyncRequestTime = 0;
+		cachedCostMapId = -1;
+		cachedCostStartIdx = -1;
+		cachedCostTime = 0;
 		ResetColdStepTracking();
 	}
 
@@ -394,6 +414,88 @@ public static class ModTeleport
 		return true;
 	}
 
+	public static int GetColdTravelTileCost(int fromX, int fromY, int toX, int toY)
+	{
+		if (TileMap.types == null || TileMap.tmw <= 2 || TileMap.tmh <= 2)
+		{
+			return Res.distance(fromX, fromY, toX, toY) / 24;
+		}
+		if (!ResolveColdAirCell(fromX, fromY, strictAir: false, out int sTx, out int sTy))
+		{
+			return Res.distance(fromX, fromY, toX, toY) / 24;
+		}
+
+		int w = TileMap.tmw;
+		int h = TileMap.tmh;
+		int total = w * h;
+		int startIdx = sTy * w + sTx;
+		long now = mSystem.currentTimeMillis();
+
+		if (cachedCostMapId != TileMap.mapID || cachedCostStartIdx != startIdx || now - cachedCostTime > 100 || bfsDist.Length < total)
+		{
+			if (bfsDist.Length < total)
+			{
+				bfsDist = new int[total];
+			}
+			if (bfsQueue.Length < total)
+			{
+				bfsQueue = new int[total];
+			}
+			for (int i = 0; i < total; i++)
+			{
+				bfsDist[i] = -1;
+			}
+
+			int head = 0;
+			int tail = 0;
+			bfsQueue[tail++] = startIdx;
+			bfsDist[startIdx] = 0;
+
+			while (head < tail)
+			{
+				int cur = bfsQueue[head++];
+				int curDist = bfsDist[cur];
+				int cx = cur % w;
+				int cy = cur / w;
+				for (int d = 0; d < 4; d++)
+				{
+					int nx = cx + ColdDirX[d];
+					int ny = cy + ColdDirY[d];
+					if (nx <= 0 || nx >= w - 1 || ny <= 0 || ny >= h - 1)
+					{
+						continue;
+					}
+					int nIdx = ny * w + nx;
+					if (bfsDist[nIdx] != -1)
+					{
+						continue;
+					}
+					if (!IsColdCellPassable(nx, ny, strictAir: false, startIdx, -1))
+					{
+						continue;
+					}
+					bfsDist[nIdx] = curDist + 1;
+					bfsQueue[tail++] = nIdx;
+				}
+			}
+
+			cachedCostMapId = TileMap.mapID;
+			cachedCostStartIdx = startIdx;
+			cachedCostTime = now;
+		}
+
+		if (ResolveColdAirCell(toX, toY, strictAir: false, out int gTx, out int gTy))
+		{
+			int gIdx = gTy * w + gTx;
+			if (gIdx >= 0 && gIdx < total && bfsDist[gIdx] >= 0)
+			{
+				return bfsDist[gIdx];
+			}
+		}
+
+		return 120 + (Res.distance(fromX, fromY, toX, toY) / 24);
+	}
+
 	private static bool FindColdAirPath(int fromX, int fromY, int toX, int toY, out int pathLen, out bool strictAirUsed)
 	{
 		pathLen = 0;
@@ -520,7 +622,7 @@ public static class ModTeleport
 		return true;
 	}
 
-	private static bool MoveColdAntiCheckTo(Char me, int targetX, int targetY, long now)
+	private static bool MoveColdAntiCheckTo(Char me, int targetX, int targetY, bool isTargetOnGround, bool allowLongTeleport, long now)
 	{
 		if (Res.abs(targetX - coldTrackedTargetX) > 36 || Res.abs(targetY - coldTrackedTargetY) > 36 || coldTrackedStartTime <= 0)
 		{
@@ -531,12 +633,14 @@ public static class ModTeleport
 
 		int dx = Res.abs(me.cx - targetX);
 		int dy = Res.abs(me.cy - targetY);
+		bool mustLandExact = isTargetOnGround && !IsPointUndergroundOrBlocked(targetX, targetY);
+		int arriveTolY = mustLandExact ? 2 : 16;
 
 		bool conservativeSpeed = (ModTanSat.lastResetPenaltyTime > 0 && now - ModTanSat.lastResetPenaltyTime < 8000) || (me.cspeed > 0 && me.cspeed < 6);
 		int maxFlyAxis = conservativeSpeed ? 48 : 60;
 		int maxFlyManhattan = conservativeSpeed ? 64 : 76;
 
-		if (dx <= 48 && dy <= 48 && IsColdLandingSegmentClear(me.cx, me.cy, targetX, targetY))
+		if (dx <= maxFlyAxis && dy <= maxFlyAxis && (dx + dy) <= maxFlyManhattan && IsColdLandingSegmentClear(me.cx, me.cy, targetX, targetY))
 		{
 			SendSingleCharMove(targetX, targetY);
 			lastStepTime = now;
@@ -561,7 +665,24 @@ public static class ModTeleport
 			return walkDone;
 		}
 
-		if (FindColdAirPath(me.cx, me.cy, targetX, targetY, out int pathLen, out bool strictAirUsed) && pathLen > 0)
+		bool hasPath = FindColdAirPath(me.cx, me.cy, targetX, targetY, out int pathLen, out bool strictAirUsed) && pathLen > 0;
+		bool canLongTeleport = allowLongTeleport &&
+		                       mustLandExact &&
+		                       coldSessionLongTeleportCount < ColdMaxLongTeleportsPerSession &&
+		                       (now - lastColdLongTeleportTime >= ColdLongTeleportCooldownMs) &&
+		                       !ModTanSatTargeting.IsInsideWaypoint(targetX, targetY);
+		if (canLongTeleport && ((hasPath && pathLen >= 14) || (!hasPath && (dx > 120 || dy > 96)) || (dx + dy) >= 420))
+		{
+			lastColdLongTeleportTime = now;
+			coldSessionLongTeleportCount++;
+			ResetColdStepTracking();
+			TeleportTo(targetX, targetY);
+			lastStepTime = now;
+			isWaitingSettle = false;
+			return true;
+		}
+
+		if (hasPath)
 		{
 			int w = TileMap.tmw;
 			for (int i = pathLen - 1; i >= 0; i--)
@@ -583,7 +704,7 @@ public static class ModTeleport
 						SendSingleCharMove(landX, landY);
 						lastStepTime = now;
 						isCurrentPosSynced = true;
-						bool landed = Res.abs(landX - targetX) <= 12 && Res.abs(landY - targetY) <= 16;
+						bool landed = Res.abs(landX - targetX) <= 12 && Res.abs(landY - targetY) <= arriveTolY;
 						isWaitingSettle = !landed;
 						if (landed)
 						{
@@ -601,7 +722,7 @@ public static class ModTeleport
 				SendSingleCharMove(candX, candY);
 				lastStepTime = now;
 				isCurrentPosSynced = true;
-				bool arrived = Res.abs(candX - targetX) <= 12 && Res.abs(candY - targetY) <= 16;
+				bool arrived = Res.abs(candX - targetX) <= 12 && Res.abs(candY - targetY) <= arriveTolY;
 				isWaitingSettle = !arrived;
 				if (arrived)
 				{
@@ -617,7 +738,7 @@ public static class ModTeleport
 			SendSingleCharMove(stepX, stepY);
 			lastStepTime = now;
 			isCurrentPosSynced = true;
-			bool stepDone = Res.abs(stepX - targetX) <= 12 && Res.abs(stepY - targetY) <= 16;
+			bool stepDone = Res.abs(stepX - targetX) <= 12 && Res.abs(stepY - targetY) <= arriveTolY;
 			isWaitingSettle = !stepDone;
 			if (stepDone)
 			{
@@ -644,7 +765,7 @@ public static class ModTeleport
 		SendSingleCharMove(fbX, fbY);
 		lastStepTime = now;
 		isCurrentPosSynced = true;
-		bool fbDone = Res.abs(fbX - targetX) <= 12 && Res.abs(fbY - targetY) <= 16;
+		bool fbDone = Res.abs(fbX - targetX) <= 12 && Res.abs(fbY - targetY) <= arriveTolY;
 		isWaitingSettle = !fbDone;
 		if (fbDone)
 		{
@@ -762,7 +883,7 @@ public static class ModTeleport
 	/// - Khi mục tiêu là quái bay giữa không trung (!TileMap.tileTypeAt(targetX, targetY, 2)):
 	///   Dịch chuyển tức thời tới mặt đất gần nhất bằng TeleportTo rồi bước lên không trung bằng SendSingleCharMove.
 	/// </summary>
-	public static bool MoveSteppedTo(int targetX, int targetY, bool isTargetFlying = false)
+	public static bool MoveSteppedTo(int targetX, int targetY, bool isTargetFlying = false, bool allowColdLongTeleport = false)
 	{
 		try
 		{
@@ -778,8 +899,10 @@ public static class ModTeleport
 			int dy = Res.abs(me.cy - targetY);
 
 			bool coldAntiCheck = IsColdPlanetAntiCheckActive();
+			bool isTargetOnGround = TileMap.tileTypeAt(targetX, targetY, 2) && !isTargetFlying;
+			int arriveTolY = (coldAntiCheck && isTargetOnGround && !IsPointUndergroundOrBlocked(targetX, targetY)) ? 2 : 16;
 
-			if (dx <= 12 && dy <= 16)
+			if (dx <= 12 && dy <= arriveTolY)
 			{
 				isWaitingSettle = false;
 				if (coldAntiCheck)
@@ -811,10 +934,8 @@ public static class ModTeleport
 			me.cdir = (targetX >= me.cx) ? 1 : (-1);
 			if (coldAntiCheck)
 			{
-				return MoveColdAntiCheckTo(me, targetX, targetY, now);
+				return MoveColdAntiCheckTo(me, targetX, targetY, isTargetOnGround, allowColdLongTeleport, now);
 			}
-
-			bool isTargetOnGround = TileMap.tileTypeAt(targetX, targetY, 2) && !isTargetFlying;
 
 			// 1. Nhích ngắn theo quái đi bộ ngay sát bên (dx <= 48, dy <= 24): Đi 1 gói đơn trong ngưỡng tốc độ hợp lệ, không kích hoạt RESET_POINT
 			if (dx <= 48 && dy <= 24 && !IsPointUndergroundOrBlocked(targetX, targetY))

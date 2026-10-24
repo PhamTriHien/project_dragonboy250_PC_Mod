@@ -199,6 +199,7 @@ public static class ModTanSat
 	{
 		Mob bestMob = null;
 		int minDistance = int.MaxValue;
+		bool coldBfs = ModTeleport.IsColdPlanetAntiCheckActive();
 
 		for (int i = 0; i < mobs.size(); i++)
 		{
@@ -214,7 +215,10 @@ public static class ModTanSat
 				ignoredMobUntil.Remove(m.mobId);
 			}
 
-			int dist = Res.distance(me.cx, me.cy, m.x, m.y);
+			int euclidDist = Res.distance(me.cx, me.cy, m.x, m.y);
+			int dist = coldBfs
+				? (ModTeleport.GetColdTravelTileCost(me.cx, me.cy, m.x, m.y) * 24 + (euclidDist / 8))
+				: euclidDist;
 
 			if (ModDropRate.isLastHitLock && m.hp < (m.maxHp / 3) && dist < 150)
 			{
@@ -645,21 +649,29 @@ public static class ModTanSat
 						targetLockTime = now;
 						currentTargetUnchangedAttackCount = 0;
 					}
-					else if (currentFarmTarget.templateId != 0 && currentFarmTarget.hp > 1 && now - lastAttackTime >= 350 && lastResyncAttackCount != currentTargetUnchangedAttackCount)
+					else
 					{
-						if (currentTargetUnchangedAttackCount == 3 || currentTargetUnchangedAttackCount == 6)
+						bool coldAntiCheck = ModTeleport.IsColdPlanetAntiCheckActive();
+						int resyncMinElapsed = coldAntiCheck ? 300 : 350;
+						if (currentFarmTarget.templateId != 0 && currentFarmTarget.hp > 1 && now - lastAttackTime >= resyncMinElapsed && lastResyncAttackCount != currentTargetUnchangedAttackCount)
 						{
-							lastResyncAttackCount = currentTargetUnchangedAttackCount;
-							if (!ModTeleport.IsColdPlanetAntiCheckActive() && !ModTeleport.isCurrentPosSynced && currentTargetUnchangedAttackCount == 3 && lastTeleportTargetMobId != currentFarmTarget.mobId && TileMap.tileTypeAt(me.cx, me.cy, 2) && !ModTeleport.HasPendingEchoNear(me.cx, me.cy))
+							bool shouldResync = (coldAntiCheck && currentTargetUnchangedAttackCount == 1) ||
+							                    currentTargetUnchangedAttackCount == 3 ||
+							                    currentTargetUnchangedAttackCount == 6;
+							if (shouldResync)
 							{
-								ModWaypoint.TeleportTo(me.cx, me.cy);
+								lastResyncAttackCount = currentTargetUnchangedAttackCount;
+								if (!coldAntiCheck && !ModTeleport.isCurrentPosSynced && currentTargetUnchangedAttackCount == 3 && lastTeleportTargetMobId != currentFarmTarget.mobId && TileMap.tileTypeAt(me.cx, me.cy, 2) && !ModTeleport.HasPendingEchoNear(me.cx, me.cy))
+								{
+									ModWaypoint.TeleportTo(me.cx, me.cy);
+								}
+								else
+								{
+									ModTeleport.SendSingleCharMove(me.cx, me.cy);
+								}
+								lastTeleportTargetMobId = currentFarmTarget.mobId;
+								lastTeleportTime = now;
 							}
-							else
-							{
-								ModTeleport.SendSingleCharMove(me.cx, me.cy);
-							}
-							lastTeleportTargetMobId = currentFarmTarget.mobId;
-							lastTeleportTime = now;
 						}
 					}
 					if (checkLagMob && currentFarmTarget.templateId != 0 && currentTargetUnchangedAttackCount >= 8 && now - targetLockTime > 4500)
@@ -746,8 +758,9 @@ public static class ModTanSat
 
 			bool isNewTarget = (lastTeleportTargetMobId != currentFarmTarget.mobId);
 			bool isOutOfRange = (deltaX > maxRangeX || deltaY > maxRangeY);
+			bool canAdoptInPlace = !ModTeleport.IsColdPlanetAntiCheckActive() || TileMap.tileTypeAt(me.cx, me.cy, 2) || !TileMap.tileTypeAt(anchorX, anchorY, 2);
 
-			if (isNewTarget && lastResyncAttackCount == 0 && !isOutOfRange && !ModTeleport.isWaitingSettle && deltaX <= 16 && deltaY <= 16 && !ModTanSatTargeting.IsInsideWaypoint(me.cx, me.cy))
+			if (isNewTarget && canAdoptInPlace && lastResyncAttackCount == 0 && !isOutOfRange && !ModTeleport.isWaitingSettle && deltaX <= 16 && deltaY <= 16 && !ModTanSatTargeting.IsInsideWaypoint(me.cx, me.cy))
 			{
 				lastTeleportTargetMobId = currentFarmTarget.mobId;
 				lastTeleportTime = now;
@@ -786,7 +799,7 @@ public static class ModTanSat
 						                    (Mob.arrMobTemplate[currentFarmTarget.templateId].type == 4 || Mob.arrMobTemplate[currentFarmTarget.templateId].type == 5));
 
 						lastStepMoveTime = now;
-						bool arrived = ModTeleport.MoveSteppedTo(safeX, safeY, isMobFlying);
+						bool arrived = ModTeleport.MoveSteppedTo(safeX, safeY, isMobFlying, allowColdLongTeleport: isNewTarget);
 
 						me.cdir = (anchorX >= me.cx) ? 1 : -1;
 						me.cvx = 0;

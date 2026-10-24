@@ -578,12 +578,17 @@ public static class ModGoBack
 					return;
 				}
 
+				if (ModTeleport.IsColdPlanetAntiCheckActive() && (me.cy <= 24 || me.statusMe == 4) && now - stateTimer < 1200)
+				{
+					return;
+				}
+
 				// Teleport đến toạ độ chính xác đã lưu
 				if (targetX > 0 && targetY > 0)
 				{
 					if (ModTeleport.IsColdPlanetAntiCheckActive())
 					{
-						if (!ModTeleport.MoveSteppedTo(targetX, targetY) && now - stateTimer < 6500)
+						if (!ModTeleport.MoveSteppedTo(targetX, targetY, isTargetFlying: false, allowColdLongTeleport: true) && now - stateTimer < 6500)
 						{
 							return;
 						}

@@ -1,9 +1,9 @@
 {
-  "version": "2.5.47",
+  "version": "2.5.48",
   "buildDate": "2026-10-25",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.47/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.47/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.47/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.47/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.47: Trang bị cơ chế Anti-Check Server chuyên biệt cho khu vực hành tinh Cooler/Cold (Map 105-110): Tự động chạy bộ mặt phẳng & bay lướt né địa hình theo lưới ô gạch (BFS) không gửi gói y+1, triệt tiêu hoàn toàn điểm phạt Packet 46 (RESET_POINT) giúp treo úp Cooler xuyên đêm không bị Server đẩy về nhà kể cả khi không dùng Bùa TĐLT."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.48/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.48/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.48/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.48/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.48: Tối ưu toàn diện tốc độ Tàn Sát tại hành tinh Cooler/Cold (Map 105-110): Chọn mục tiêu theo khoảng cách đường đi thực tế (BFS Flood-Fill) dọn sạch từng tầng trước khi chuyển tầng, kết hợp dịch chuyển tức thời Hybrid (1-2 lần có giãn cách an toàn) khi quái ở quá xa bên kia bản đồ, đáp chuẩn mặt đất (0 hao KI, 0 đấm hụt lơ lửng), đồng bộ lại vị trí ngay nhịp trượt đầu tiên và tự phục hồi định tuyến NextMap."
 }
