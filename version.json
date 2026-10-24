@@ -1,9 +1,9 @@
 {
-  "version": "2.5.39",
+  "version": "2.5.40",
   "buildDate": "2026-10-24",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.39/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.39/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.39/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.39/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.39: Khôi phục chuẩn xác thuật toán Next Map 2 pha (Xmap gốc): Pha 1 dịch chuyển tới cột mặt đất hợp lệ sát cổng (x=35 hoặc pxw-35) và đợi máy chủ xác nhận RESET_POINT, Pha 2 bước thường (SendNormalMove không gửi y+1) vào tâm cổng (x=15 hoặc pxw-15) và chuyển map ngay lập tức; giữ nguyên độc lập 100% với Tàn Sát."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.40/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.40/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.40/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.40/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.40: Sửa lỗi Next Map qua các hành tinh khác (Trạm tàu vũ trụ 24 <-> 25 <-> 26): (1) Khớp tọa độ chuẩn Xmap gốc (shipNpc.cy - 3) để tránh dịch chuyển lún 3px xuống dưới nền đất của NPC tàu vũ trụ khiến máy chủ kéo giật lại; (2) Đổi chiều quét mặt đất GetGroundY từ trên xuống dưới (safeMinY -> safeMaxY + 24) chuẩn Xmap để luôn tìm đúng mặt sàn đi bộ trên cùng, triệt tiêu lỗi chọn nhầm gạch ngầm (y=456) tại Trạm tàu; (3) Loại bỏ liên kết ảo 0<->24, 7<->25, 14<->26 khỏi đồ thị tìm đường."
 }

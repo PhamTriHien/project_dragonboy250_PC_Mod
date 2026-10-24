@@ -13,6 +13,7 @@ public static class ModNextMap
 	public static int lastMapId = -1;
 	public static Waypoint currentTargetWaypoint = null;
 	public static int resetPenaltyCount = 0;
+	private static long lastResetPenaltyTime = 0;
 	private static int nextMapCooldown = 0;
 	private static int nextMapFailCount = 0;
 	private static long lastChangeAttemptTime = 0;
@@ -24,10 +25,15 @@ public static class ModNextMap
 	/// </summary>
 	public static void OnServerResetPoint()
 	{
-		resetPenaltyCount++;
+		long now = mSystem.currentTimeMillis();
+		if (now - lastResetPenaltyTime > 250)
+		{
+			resetPenaltyCount++;
+			lastResetPenaltyTime = now;
+		}
 		lastChangeAttemptTime = 0;
 		nextMapCooldown = 6;
-		mapEnterWaitUntil = mSystem.currentTimeMillis() + 280;
+		mapEnterWaitUntil = now + 280;
 		ModWaypoint.ResetWaypointState();
 	}
 
@@ -565,11 +571,11 @@ public static class ModNextMap
 			if (shipNpc != null)
 			{
 				nextMapFailCount = 0;
-				bool openedShipMenu = ModWaypoint.UseSpaceShip(shipNpc, nextMapId);
-				if (openedShipMenu)
+				bool confirmedShip = ModWaypoint.UseSpaceShip(shipNpc, nextMapId);
+				if (confirmedShip)
 				{
 					lastChangeAttemptTime = now;
-					mapEnterWaitUntil = now + 900;
+					mapEnterWaitUntil = now + 600;
 				}
 				return;
 			}

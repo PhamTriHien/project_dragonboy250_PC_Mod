@@ -70,7 +70,7 @@ public static class ModWaypoint
 	}
 
 	/// <summary>
-	/// Tìm tọa độ mặt đất hợp lệ nằm gọn trong khoảng [minY, maxY] của cổng dịch chuyển.
+	/// Tìm tọa độ mặt đất hợp lệ nằm gọn trong khoảng [minY, maxY] (ưu tiên sàn cổng maxY hoặc quét từ trên xuống theo chuẩn Xmap gốc).
 	/// </summary>
 	public static int GetGroundY(int x, int minY, int maxY)
 	{
@@ -89,9 +89,19 @@ public static class ModWaypoint
 				return maxY;
 			}
 
-			// Quét từ đáy lên và leo qua các ô đất đặc liên tiếp để lấy đúng bề mặt đất trên cùng
-			int searchStart = System.Math.Min(TileMap.pxh - 12, safeMaxY + 24);
-			for (int y = searchStart; y >= safeMinY; y -= 12)
+			// Nếu đáy vùng [minY, maxY] là bề mặt đất hợp lệ có khoảng không phía trên (chuẩn Waypoint.maxY của Server)
+			if (TileMap.tileTypeAt(checkX, safeMaxY, 2))
+			{
+				int maxGy = TileMap.tileYofPixel(safeMaxY);
+				if (maxGy <= 24 || !TileMap.tileTypeAt(checkX, maxGy - 24, 2))
+				{
+					return maxGy;
+				}
+			}
+
+			// Quét từ trên xuống dưới (safeMinY -> safeMaxY + 24) theo chuẩn Xmap gốc (a.f.l.W) để luôn lấy mặt sàn trên cùng, không bao giờ dính tầng đất ngầm phía dưới
+			int searchEnd = System.Math.Min(TileMap.pxh - 12, safeMaxY + 24);
+			for (int y = safeMinY; y <= searchEnd; y += 12)
 			{
 				if (TileMap.tileTypeAt(checkX, y, 2))
 				{
@@ -572,7 +582,9 @@ public static class ModWaypoint
 	}
 
 	/// <summary>
-	/// Thực thi phương thức nghiệp vụ UseSpaceShip.
+	/// Thực thi phương thức nghiệp vụ UseSpaceShip chuẩn Xmap gốc (a.f.f.U & a.g.a.rW):
+	/// Dịch chuyển tới (shipNpc.cx, shipNpc.cy - 3) để khớp đúng bề mặt ô đất (do Controller.Map cộng +3 vào npc.cy),
+	/// sau đó gửi openMenu và confirmMenu chuyển hành tinh.
 	/// </summary>
 	public static bool UseSpaceShip(Npc shipNpc, int targetPlanetMapId = -1)
 	{
@@ -594,18 +606,54 @@ public static class ModWaypoint
 				isWaitingTeleportConfirm = false;
 			}
 
-			if (Res.abs(me.cx - shipNpc.cx) > 24 || Res.abs(me.cy - shipNpc.cy) > 24)
+			int npcX = shipNpc.cx;
+			int npcY = TileMap.tileYofPixel(shipNpc.cy - 3);
+			if (!TileMap.tileTypeAt(npcX, npcY, 2) && TileMap.tileTypeAt(npcX, shipNpc.cy - 3, 2))
 			{
-				MoveSteppedTo(shipNpc.cx, shipNpc.cy);
+				npcY = shipNpc.cy - 3;
+			}
+
+			if (Res.abs(me.cx - npcX) > 24 || Res.abs(me.cy - npcY) > 24)
+			{
+				MoveSteppedTo(npcX, npcY);
+				ModTdltLogger.Log("NEXT_MAP_SHIP", $"Teleport to Spaceship NPC at ({npcX},{npcY}) [rawCy={shipNpc.cy}], map={TileMap.mapID}");
 				return false;
 			}
 
 			me.focusManualTo(shipNpc);
 			int npcTemplateId = (shipNpc.template != null) ? shipNpc.template.npcTemplateId : shipNpc.npcId;
 
-			if (isWaitingShipMenu && now - lastShipOpenMenuTime < 2500)
+			if (isWaitingShipMenu)
 			{
-				return true;
+				long elapsed = now - lastShipOpenMenuTime;
+				if (elapsed >= 900 && elapsed < 2500)
+				{
+					int fallbackIndex = 0;
+					if (TileMap.mapID == 24)
+					{
+						fallbackIndex = (targetPlanetMapId == 26) ? 1 : 0;
+					}
+					else if (TileMap.mapID == 25)
+					{
+						fallbackIndex = (targetPlanetMapId == 26) ? 1 : 0;
+					}
+					else if (TileMap.mapID == 26)
+					{
+						fallbackIndex = (targetPlanetMapId == 25) ? 1 : 0;
+					}
+					isWaitingShipMenu = false;
+					Service.gI().confirmMenu((short)npcTemplateId, (sbyte)fallbackIndex);
+					if (GameCanvas.menu != null)
+					{
+						GameCanvas.menu.showMenu = false;
+					}
+					ModTdltLogger.Log("NEXT_MAP_SHIP", $"Fallback confirm Spaceship menu npc={npcTemplateId}, index={fallbackIndex} -> targetPlanet={targetPlanetMapId}");
+					return true;
+				}
+				if (elapsed < 2500)
+				{
+					return false;
+				}
 			}
 
 			isWaitingShipMenu = true;
@@ -613,7 +661,8 @@ public static class ModWaypoint
 			lastShipOpenMenuTime = now;
 
 			Service.gI().openMenu(npcTemplateId);
-			return true;
+			ModTdltLogger.Log("NEXT_MAP_SHIP", $"Open Spaceship menu npc={npcTemplateId} at pos=({me.cx},{me.cy})");
+			return false;
 		}
 		catch
 		{
@@ -691,6 +740,7 @@ public static class ModWaypoint
 
 			int npcTemplateId = (npc != null && npc.template != null) ? npc.template.npcTemplateId : ((npc != null) ? npc.npcId : 10);
 			Service.gI().confirmMenu((short)npcTemplateId, (sbyte)selectedIndex);
+			ModTdltLogger.Log("NEXT_MAP_SHIP", $"OnReceiveShipMenu confirm npc={npcTemplateId}, index={selectedIndex} -> targetPlanet={targetPlanet}");
 
 			GameCanvas.menu.showMenu = false;
 		}

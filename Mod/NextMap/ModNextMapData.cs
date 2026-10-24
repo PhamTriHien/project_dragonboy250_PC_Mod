@@ -18,9 +18,9 @@ public static class ModNextMapData
 	public static readonly Dictionary<int, List<int>> mapWaypoints = new Dictionary<int, List<int>>
 	{
 		// Hành tinh Trái Đất
-		{ 0, new List<int> { 21, 1, 24, 42 } },
+		{ 0, new List<int> { 21, 1, 42 } },
 		{ 21, new List<int> { 0 } },
-		{ 1, new List<int> { 0, 2 } },
+		{ 1, new List<int> { 0, 2, 47 } },
 		{ 2, new List<int> { 1, 3, 24, 47 } },
 		{ 3, new List<int> { 2, 4, 27 } },
 		{ 4, new List<int> { 3, 5 } },
@@ -32,17 +32,17 @@ public static class ModNextMapData
 		{ 30, new List<int> { 29 } },
 		{ 39, new List<int> { 0, 42 } },
 		{ 42, new List<int> { 0, 47 } },
-		{ 47, new List<int> { 42, 2, 46, 111 } },
+		{ 47, new List<int> { 42, 1, 2, 46, 111 } },
 		{ 111, new List<int> { 47 } },
 		{ 46, new List<int> { 47, 45 } },
 		{ 45, new List<int> { 46, 48 } },
 		{ 48, new List<int> { 45, 50 } },
 		{ 50, new List<int> { 48, 49 } },
 		{ 49, new List<int> { 50 } },
-		{ 24, new List<int> { 0, 2, 25, 26 } },
+		{ 24, new List<int> { 2, 25, 26 } },
 
 		// Hành tinh Namếc
-		{ 7, new List<int> { 22, 8, 25, 43 } },
+		{ 7, new List<int> { 22, 8, 43 } },
 		{ 22, new List<int> { 7 } },
 		{ 8, new List<int> { 7, 9 } },
 		{ 9, new List<int> { 8, 11, 25 } },
@@ -56,7 +56,7 @@ public static class ModNextMapData
 		{ 34, new List<int> { 33 } },
 		{ 40, new List<int> { 7, 43 } },
 		{ 43, new List<int> { 7 } },
-		{ 25, new List<int> { 7, 9, 24, 26 } },
+		{ 25, new List<int> { 9, 24, 26 } },
 
 		// Hành tinh Xayda
 		{ 14, new List<int> { 23, 15, 44 } },
@@ -73,7 +73,7 @@ public static class ModNextMapData
 		{ 38, new List<int> { 37 } },
 		{ 41, new List<int> { 14, 44 } },
 		{ 44, new List<int> { 14 } },
-		{ 26, new List<int> { 16, 14, 24, 25 } },
+		{ 26, new List<int> { 16, 24, 25 } },
 
 		// Khu vực Fide / Nappa (63..83)
 		{ 68, new List<int> { 69, 67 } },
