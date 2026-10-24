@@ -56,12 +56,6 @@ public static class ModWaypoint
 				if (TileMap.tileTypeAt(x, y, 2))
 				{
 					int gy = TileMap.tileYofPixel(y);
-					int guard = 0;
-					while (gy >= 24 && guard < 6 && TileMap.tileTypeAt(x, gy - 24, 2))
-					{
-						gy -= 24;
-						guard++;
-					}
 					if (gy >= minY && gy <= maxY)
 					{
 						return gy;
@@ -110,7 +104,6 @@ public static class ModWaypoint
 			Service.gI().charMove();
 			if (!ItemTime.isExistItem(4387))
 			{
-				ModTeleport.RegisterTeleportEcho(x, y);
 				me.cx = x;
 				me.cy = y + 1;
 				Service.gI().charMove();
@@ -137,7 +130,7 @@ public static class ModWaypoint
 
 		int dx = Res.abs(me.cx - targetX);
 		int dy = Res.abs(me.cy - targetY);
-		int maxStepX = 160;
+		int maxStepX = (ModNextMap.resetPenaltyCount >= 3) ? 48 : ((ModNextMap.resetPenaltyCount == 2) ? 72 : ((ModNextMap.resetPenaltyCount == 1) ? 120 : 160));
 
 		if ((ModNextMap.useSafeMovement || ModNextMap.resetPenaltyCount > 0) && dx > maxStepX)
 		{
@@ -262,16 +255,9 @@ public static class ModWaypoint
 				edgeWalkAttempts = 0;
 			}
 
-			if (hasTeleportedToWp)
+			if (hasTeleportedToWp && now - lastTeleportTime < 140)
 			{
-				if (now - lastTeleportTime < 140)
-				{
-					return false;
-				}
-				if (ModTeleport.IsWaitingServerSync() && now - lastTeleportTime < 650)
-				{
-					return false;
-				}
+				return false;
 			}
 
 			bool isLeftEdge = wp.maxX <= 60;
@@ -284,12 +270,8 @@ public static class ModWaypoint
 			int dy = Res.abs(me.cy - wpTargetY);
 			me.cdir = isLeftEdge ? (-1) : (isRightEdge ? 1 : ((me.cx <= wpTargetX) ? 1 : (-1)));
 
-			if (!hasTeleportedToWp || dx > 24 || dy > 24 || now - lastTeleportTime > 2200)
+			if (!hasTeleportedToWp || dx > 24 || dy > 24)
 			{
-				if (ModTeleport.IsWaitingServerSync() && now - lastTeleportTime < 800)
-				{
-					return false;
-				}
 				if (ModNextMap.useSafeMovement || ModNextMap.resetPenaltyCount > 0)
 				{
 					if (MoveSteppedTo(wpTargetX, wpTargetY))
@@ -308,8 +290,11 @@ public static class ModWaypoint
 				return false;
 			}
 
-			// Đồng bộ 1 gói charMove hợp lệ (không gửi y+1) tại tâm cổng trước khi gửi gói chuyển map
-			ModTeleport.SendSingleCharMove(wpTargetX, wpTargetY);
+			// Đảm bảo nhân vật đứng chính xác trong lòng cổng trước khi gửi gói chuyển map
+			if (me.cx != wpTargetX || me.cy != wpTargetY || me.cxSend != wpTargetX || me.cySend != wpTargetY)
+			{
+				TeleportTo(wpTargetX, wpTargetY);
+			}
 
 			if (wp.isOffline || TileMap.isOfflineMap() || TileMap.isTrainingMap())
 			{
@@ -321,7 +306,8 @@ public static class ModWaypoint
 				Char.ischangingMap = true;
 				Service.gI().requestChangeMap();
 			}
-			ModTdltLogger.Log("NEXT_MAP_REQ", $"Request change map from map={TileMap.mapID} via '{wp.name}' at pos=({me.cx},{me.cy}), synced={ModTeleport.isCurrentPosSynced}");
+			ModTdltLogger.Log("NEXT_MAP_REQ", $"Request change map from map={TileMap.mapID} via '{wp.name}' at pos=({me.cx},{me.cy})");
+			ResetWaypointState();
 			return true;
 		}
 		catch
@@ -359,16 +345,9 @@ public static class ModWaypoint
 				lastTeleportTime = 0;
 			}
 
-			if (hasTeleportedToWp)
+			if (hasTeleportedToWp && now - lastTeleportTime < 140)
 			{
-				if (now - lastTeleportTime < 140)
-				{
-					return false;
-				}
-				if (ModTeleport.IsWaitingServerSync() && now - lastTeleportTime < 650)
-				{
-					return false;
-				}
+				return false;
 			}
 
 			int targetX = System.Math.Max(48, System.Math.Min(TileMap.pxw - 48, me.cx));
@@ -377,12 +356,8 @@ public static class ModWaypoint
 			int dx = Res.abs(me.cx - targetX);
 			int dy = Res.abs(me.cy - targetY);
 
-			if (!hasTeleportedToWp || dx > 24 || dy > 24 || now - lastTeleportTime > 2200)
+			if (!hasTeleportedToWp || dx > 24 || dy > 24)
 			{
-				if (ModTeleport.IsWaitingServerSync() && now - lastTeleportTime < 800)
-				{
-					return false;
-				}
 				if (ModNextMap.useSafeMovement || ModNextMap.resetPenaltyCount > 0)
 				{
 					if (MoveSteppedTo(targetX, targetY))
@@ -399,10 +374,14 @@ public static class ModWaypoint
 				return false;
 			}
 
-			ModTeleport.SendSingleCharMove(targetX, targetY);
+			if (me.cx != targetX || me.cy != targetY || me.cxSend != targetX || me.cySend != targetY)
+			{
+				TeleportTo(targetX, targetY);
+			}
 
 			Char.ischangingMap = true;
 			Service.gI().requestChangeMap();
+			ResetWaypointState();
 			return true;
 		}
 		catch

@@ -112,7 +112,6 @@ public static class ModNextMap
 			me.isLockAttack = false;
 			me.isLockMove = false;
 		}
-		ModTeleport.ClearEchoes();
 		ModWaypoint.ResetWaypointState();
 
 		ModTdltLogger.Log("NEXT_MAP_START", $"Start NextMap from map={TileMap.mapID} ({GetMapName(TileMap.mapID)}) -> target={targetId} ({GetMapName(targetId)})");
@@ -457,7 +456,6 @@ public static class ModNextMap
 			currentTargetWaypoint = null;
 			mapEnterWaitUntil = now + 300;
 			lastStepUpdateTime = 0;
-			ModTeleport.ClearEchoes();
 			ModWaypoint.ResetWaypointState();
 			ModNextMapData.SyncLiveWaypointsForCurrentMap();
 			ModTdltLogger.Log("NEXT_MAP_ENTER", $"Entered map={TileMap.mapID} ({GetMapName(TileMap.mapID)}), target={nextMapTargetId} ({GetMapName(nextMapTargetId)})");
@@ -492,7 +490,7 @@ public static class ModNextMap
 			{
 				lastChangeAttemptTime = now;
 			}
-			else if (now - lastChangeAttemptTime > 1200)
+			else if (now - lastChangeAttemptTime > 2000)
 			{
 				Char.ischangingMap = false;
 				Char.isLockKey = false;
@@ -508,9 +506,10 @@ public static class ModNextMap
 				InfoDlg.hide();
 				GameCanvas.endDlg();
 				lastChangeAttemptTime = 0;
-				nextMapCooldown = 2;
-				mapEnterWaitUntil = now + 150;
+				nextMapCooldown = 4;
+				mapEnterWaitUntil = now + 200;
 				Char.entranceWaypoint = null;
+				ModWaypoint.ResetWaypointState();
 			}
 			return;
 		}

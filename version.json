@@ -1,9 +1,9 @@
 {
-  "version": "2.5.37",
+  "version": "2.5.38",
   "buildDate": "2026-10-24",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.37/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.37/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.37/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.37/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.37: Khắc phục triệt để lỗi kẹt Next Map (ngăn Char.isInWaypoint tự kích hoạt requestChangeMap ở 0ms trước khi máy chủ xác nhận RESET_POINT, đợi đồng bộ tọa độ tại cổng rồi mới gửi requestChangeMap kèm gói charMove hợp lệ)."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.38/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.38/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.38/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.38/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.38: Tách biệt độc lập hoàn toàn logic Next Map (ModNextMap/ModWaypoint) với Tàn Sát (ModTanSat/ModTeleport), khôi phục cơ chế Next Map gốc ổn định, loại bỏ vòng lặp leo tường biên trong GetGroundY và tự động thu nhỏ bước nhảy MoveSteppedTo khi bị máy chủ kéo lùi."
 }

@@ -222,21 +222,56 @@ public static class ModTeleport
 	}
 
 	/// <summary>
-	/// Dịch chuyển nhân vật đến tọa độ đích sử dụng trực tiếp ModWaypoint.TeleportTo của NextMap.
+	/// Dịch chuyển nhân vật đến tọa độ đích và đăng ký echo đồng bộ máy chủ cho Tàn Sát / Auto Nhặt.
 	/// </summary>
-	public static void TeleportTo(int targetX, int targetY)
+	public static void TeleportTo(int x, int y)
 	{
-		ModWaypoint.TeleportTo(targetX, targetY);
+		try
+		{
+			Char me = Char.myCharz();
+			if (me == null)
+			{
+				return;
+			}
+			me.vMovePoints.removeAllElements();
+			me.currentMovePoint = null;
+			me.endMovePointCommand = null;
+			me.cvx = 0;
+			me.cvy = 0;
+			me.statusMe = 1;
+			me.delayFall = 0;
+			me.cyStartFall = 0;
+			me.isFlyUp = false;
+
+			me.cx = x;
+			me.cy = y;
+			me.cxSend = x - 1;
+			me.cySend = y - 1;
+			Service.gI().charMove();
+			if (!ItemTime.isExistItem(4387))
+			{
+				RegisterTeleportEcho(x, y);
+				me.cx = x;
+				me.cy = y + 1;
+				Service.gI().charMove();
+				me.cx = x;
+				me.cy = y;
+				Service.gI().charMove();
+			}
+		}
+		catch
+		{
+		}
 	}
 
 	/// <summary>
-	/// Điều phối dịch chuyển Tàn Sát và Auto Nhặt theo đúng cơ chế NextMap (ModWaypoint.TeleportTo):
+	/// Điều phối dịch chuyển Tàn Sát và Auto Nhặt:
 	/// - Khi nhích ngắn theo quái đi bộ ngay sát bên (dx <= 48, dy <= 24):
 	///   Sử dụng SendSingleCharMove (1 gói charMove hợp lệ trong tốc độ đi bộ, không gửi y+1).
 	/// - Khi dịch chuyển sang quái mới hoặc điểm mặt đất cách xa hơn 48px (TileMap.tileTypeAt(targetX, targetY, 2)):
-	///   Sử dụng trực tiếp ModWaypoint.TeleportTo(targetX, targetY) 1 bước duy nhất như NextMap, tránh đi bộ 2 bước nhanh bị máy chủ phạt RESET_POINT kéo ngược về vị trí cũ.
+	///   Sử dụng trực tiếp TeleportTo(targetX, targetY) 1 bước duy nhất, tránh đi bộ 2 bước nhanh bị máy chủ phạt RESET_POINT kéo ngược về vị trí cũ.
 	/// - Khi mục tiêu là quái bay giữa không trung (!TileMap.tileTypeAt(targetX, targetY, 2)):
-	///   Dịch chuyển tức thời tới mặt đất gần nhất bằng ModWaypoint.TeleportTo rồi bước lên không trung bằng SendSingleCharMove.
+	///   Dịch chuyển tức thời tới mặt đất gần nhất bằng TeleportTo rồi bước lên không trung bằng SendSingleCharMove.
 	/// </summary>
 	public static bool MoveSteppedTo(int targetX, int targetY, bool isTargetFlying = false)
 	{
@@ -281,22 +316,22 @@ public static class ModTeleport
 				return true;
 			}
 
-			// 2. Dịch chuyển sang quái khác hoặc nhảy xa/chuyển tầng tới mặt đất: Dịch chuyển tức thời 1 bước bằng đúng ModWaypoint.TeleportTo của NextMap!
+			// 2. Dịch chuyển sang quái khác hoặc nhảy xa/chuyển tầng tới mặt đất: Dịch chuyển tức thời 1 bước
 			if (isTargetOnGround)
 			{
-				ModWaypoint.TeleportTo(targetX, targetY);
+				TeleportTo(targetX, targetY);
 				lastStepTime = now;
 				isWaitingSettle = false;
 				return true;
 			}
 
-			// 3. Mục tiêu là quái bay trên không trung: Nếu còn ở xa, dịch chuyển tức thời bằng ModWaypoint.TeleportTo tới mặt đất gần quái bay trước, sau đó bay lên
+			// 3. Mục tiêu là quái bay trên không trung: Nếu còn ở xa, dịch chuyển tức thời tới mặt đất gần quái bay trước, sau đó bay lên
 			if (dx > 96 || dy > 84)
 			{
 				int groundY = ModTanSatTargeting.FindGroundY(targetX, targetY, 240);
 				if (groundY != -1 && (Res.abs(me.cx - targetX) > 48 || Res.abs(me.cy - groundY) > 24))
 				{
-					ModWaypoint.TeleportTo(targetX, groundY);
+					TeleportTo(targetX, groundY);
 					lastStepTime = now;
 					isWaitingSettle = true;
 					return false;
