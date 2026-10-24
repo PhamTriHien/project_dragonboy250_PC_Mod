@@ -1,7 +1,13 @@
-using System;
+﻿using System;
 using Assets.src.g;
+/// <summary>
+/// Thành phần phân mảnh (partial) của lớp GameScr: Đảm nhiệm vòng lặp cập nhật trạng thái logic theo từng khung hình (Input).
+/// </summary>
 public partial class GameScr : mScreen, IChatable
 {
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của checkSingleClick.
+	/// </summary>
 	private void checkSingleClick()
 			{
 				int xClick = GameCanvas.px + lastClickCMX;
@@ -15,11 +21,17 @@ public partial class GameScr : mScreen, IChatable
 					}
 				}
 			}
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của checkClickMoveTo.
+	/// </summary>
 	private void checkClickMoveTo(int xClick, int yClick, int index)
 			{
 				// Bỏ hoàn toàn việc nhân vật tự động di chuyển theo vị trí click chuột bên ngoài
 				return;
 			}
+	/// <summary>
+	/// Cập nhật trạng thái logic của updateKeyTouchCapcha theo chu kỳ khung hình.
+	/// </summary>
 	public void updateKeyTouchCapcha()
 			{
 				if (isNotPaintTouchControl())
@@ -65,6 +77,9 @@ public partial class GameScr : mScreen, IChatable
 					}
 				}
 			}
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của checkClickToCapcha.
+	/// </summary>
 	public bool checkClickToCapcha()
 			{
 				if (mobCapcha == null)
@@ -81,9 +96,16 @@ public partial class GameScr : mScreen, IChatable
 				}
 				return false;
 			}
+	/// <summary>
+	/// Cập nhật trạng thái logic của updateKeyTouchControl theo chu kỳ khung hình.
+	/// </summary>
 	private void updateKeyTouchControl()
 			{
 				if (isNotPaintTouchControl())
+				{
+					return;
+				}
+				if (ModArrowButton.CheckClick())
 				{
 					return;
 				}
@@ -275,6 +297,9 @@ public partial class GameScr : mScreen, IChatable
 					GameCanvas.keyHold[(!Main.isPC) ? 6 : 24] = false;
 				}
 			}
+	/// <summary>
+	/// Cập nhật trạng thái logic của updateClickToArrow theo chu kỳ khung hình.
+	/// </summary>
 	private void updateClickToArrow()
 			{
 				if (tDoubleDelay > 0)

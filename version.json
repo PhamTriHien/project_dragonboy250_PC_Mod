@@ -1,9 +1,9 @@
 {
-  "version": "2.5.41",
+  "version": "2.5.42",
   "buildDate": "2026-10-24",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.41/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.41/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.41/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.41/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.41: (1) Bổ sung đầy đủ Next Map 6 khu vực (Trái Đất, Namếc, Xayda, Nappa 63..83 & Yardrat 131..133, Cooler/Cold 105..110, Tương Lai 92..103) kèm tự động qua NPC Cui (12), Tapion (60), Calích (38), Trạm tàu/Siêu thị (10/11/12); (2) Bổ sung Auto Dùng Item theo thời gian (Cuồng Nộ, Bổ Huyết, Bổ Khí, Giáp Xên, Ẩn Danh, Đồ Ăn, Hải Sản, Máy Dò, Khẩu Trang, Bùa x2 Đệ, Cỏ 4 Lá, Combo Buff) và logic Auto Item theo ID bất kỳ kiểm tra chặt chẽ thời gian hiệu lực trong Char.vItemTime để chỉ tự dùng lại khi hết thời gian."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.42/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.42/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.42/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.42/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.42: Bổ sung cụm 2 nút tác vụ nhanh bên phải màn hình sử dụng 100% tài nguyên asset gốc của game: (1) Nút Hợp Thể Bông Tai Porata (tự động nhận diện và dùng Bông tai Porata cấp 1/2/3 trong hành trang kèm hiển thị trạng thái HT); (2) Nút Khóa Mục Tiêu / Gim Mục Tiêu (GIM / KHÓA) nằm ngay phía trên nút Đổi Mục Tiêu bên phải."
 }
