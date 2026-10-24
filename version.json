@@ -1,9 +1,9 @@
 {
-  "version": "2.5.38",
+  "version": "2.5.39",
   "buildDate": "2026-10-24",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.38/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.38/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.38/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.38/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.38: Tách biệt độc lập hoàn toàn logic Next Map (ModNextMap/ModWaypoint) với Tàn Sát (ModTanSat/ModTeleport), khôi phục cơ chế Next Map gốc ổn định, loại bỏ vòng lặp leo tường biên trong GetGroundY và tự động thu nhỏ bước nhảy MoveSteppedTo khi bị máy chủ kéo lùi."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.39/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.39/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.39/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.39/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.39: Khôi phục chuẩn xác thuật toán Next Map 2 pha (Xmap gốc): Pha 1 dịch chuyển tới cột mặt đất hợp lệ sát cổng (x=35 hoặc pxw-35) và đợi máy chủ xác nhận RESET_POINT, Pha 2 bước thường (SendNormalMove không gửi y+1) vào tâm cổng (x=15 hoặc pxw-15) và chuyển map ngay lập tức; giữ nguyên độc lập 100% với Tàn Sát."
 }

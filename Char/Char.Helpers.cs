@@ -48,11 +48,11 @@ public partial class Char : IMapObject
 	/// </summary>
 	public bool isInWaypoint()
 			{
-				if (isLoadingMap)
+				if (isLoadingMap || ModNextMap.isNextMapActive)
 				{
 					return false;
 				}
-				if ((ModTanSat.autoTanSat || ModAutoPick.isBusy) && !ModNextMap.isNextMapActive && !ModGoBack.isReturning && !ModSetActivator.isBusy && !ModAutoBuyBua.isBusy && !ModTanSat.IsManualMoving())
+				if ((ModTanSat.autoTanSat || ModAutoPick.isBusy) && !ModGoBack.isReturning && !ModSetActivator.isBusy && !ModAutoBuyBua.isBusy && !ModTanSat.IsManualMoving())
 				{
 					return false;
 				}
@@ -131,7 +131,6 @@ public partial class Char : IMapObject
 				myCharz().cySend = y;
 				if (ModNextMap.isNextMapActive)
 				{
-					bool isPulledBack = (Res.abs(x - cx) > 24 || Res.abs(y - cy) > 24);
 					cx = x;
 					cy = y;
 					myCharz().cxSend = x;
@@ -141,13 +140,7 @@ public partial class Char : IMapObject
 					statusMe = 1;
 					delayFall = 0;
 					cp1 = (cp2 = (cp3 = 0));
-					if (isPulledBack)
-					{
-						ischangingMap = false;
-						isLockKey = false;
-						ModNextMap.OnServerResetPoint();
-						ModTdltLogger.Log("NEXT_MAP_RESET_POINT", $"Server reset pos=({x},{y}), penalty={ModNextMap.resetPenaltyCount}");
-					}
+					ModWaypoint.OnServerResetPoint(x, y);
 					return;
 				}
 				if (ModTanSat.autoTanSat || ModAutoPick.isBusy || ModGoBack.isReturning || cy - y == 0)

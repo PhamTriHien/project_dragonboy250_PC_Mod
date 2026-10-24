@@ -20,15 +20,24 @@ public static class ModNextMap
 	private static long lastStepUpdateTime = 0;
 
 	/// <summary>
-	/// Phản hồi khi server gửi gói RESET_POINT (cmd 46) để tạm hoãn và giảm bước nhảy chống giật lặp lại.
+	/// Phản hồi khi server gửi gói RESET_POINT (cmd 46) kéo lùi nhân vật để tạm hoãn và giảm bước nhảy chống giật lặp lại.
 	/// </summary>
 	public static void OnServerResetPoint()
 	{
 		resetPenaltyCount++;
 		lastChangeAttemptTime = 0;
-		nextMapCooldown = 8;
-		mapEnterWaitUntil = mSystem.currentTimeMillis() + 350;
+		nextMapCooldown = 6;
+		mapEnterWaitUntil = mSystem.currentTimeMillis() + 280;
 		ModWaypoint.ResetWaypointState();
+	}
+
+	/// <summary>
+	/// Phản hồi khi server gửi gói RESET_POINT xác nhận vị trí dịch chuyển hợp lệ để chuyển ngay sang nhịp tiếp theo.
+	/// </summary>
+	public static void OnServerConfirmPoint()
+	{
+		nextMapCooldown = 0;
+		lastStepUpdateTime = 0;
 	}
 
 	// Backward-compatible accessors to data
@@ -490,7 +499,7 @@ public static class ModNextMap
 			{
 				lastChangeAttemptTime = now;
 			}
-			else if (now - lastChangeAttemptTime > 2000)
+			else if (now - lastChangeAttemptTime > 1200)
 			{
 				Char.ischangingMap = false;
 				Char.isLockKey = false;
@@ -506,8 +515,8 @@ public static class ModNextMap
 				InfoDlg.hide();
 				GameCanvas.endDlg();
 				lastChangeAttemptTime = 0;
-				nextMapCooldown = 4;
-				mapEnterWaitUntil = now + 200;
+				nextMapCooldown = 3;
+				mapEnterWaitUntil = now + 180;
 				Char.entranceWaypoint = null;
 				ModWaypoint.ResetWaypointState();
 			}

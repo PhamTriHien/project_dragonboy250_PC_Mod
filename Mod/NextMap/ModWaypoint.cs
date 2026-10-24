@@ -12,6 +12,10 @@ public static class ModWaypoint
 	private static Waypoint activeWp;
 	private static long wpInitTime;
 	private static bool hasTeleportedToWp;
+	private static bool isWpPosConfirmed;
+	private static bool isWaitingTeleportConfirm;
+	private static int pendingConfirmX;
+	private static int pendingConfirmY;
 	private static long lastTeleportTime;
 	private static bool isAirBottomActive;
 
@@ -23,11 +27,46 @@ public static class ModWaypoint
 		activeWp = null;
 		wpInitTime = 0;
 		hasTeleportedToWp = false;
+		isWpPosConfirmed = false;
+		isWaitingTeleportConfirm = false;
+		pendingConfirmX = 0;
+		pendingConfirmY = 0;
 		lastTeleportTime = 0;
 		edgeWalkAttempts = 0;
 		isAirBottomActive = false;
 		isWaitingShipMenu = false;
 		pendingTargetPlanetMapId = -1;
+	}
+
+	/// <summary>
+	/// Xử lý gói RESET_POINT (cmd 46) từ Server khi đang chạy Next Map:
+	/// Phân biệt giữa xác nhận dịch chuyển hợp lệ (y + 1 ground snap) và kéo giật lùi (pullback).
+	/// </summary>
+	public static void OnServerResetPoint(int x, int y)
+	{
+		bool isConfirmedTarget = isWaitingTeleportConfirm &&
+			Res.abs(x - pendingConfirmX) <= 32 &&
+			Res.abs(y - pendingConfirmY) <= 32;
+
+		if (isConfirmedTarget)
+		{
+			isWaitingTeleportConfirm = false;
+			if (hasTeleportedToWp)
+			{
+				isWpPosConfirmed = true;
+			}
+			ModNextMap.OnServerConfirmPoint();
+			ModTdltLogger.Log("NEXT_MAP_CONFIRM", $"Server confirmed pos=({x},{y})");
+			return;
+		}
+
+		Char.ischangingMap = false;
+		Char.isLockKey = false;
+		isWaitingTeleportConfirm = false;
+		hasTeleportedToWp = false;
+		isWpPosConfirmed = false;
+		ModNextMap.OnServerResetPoint();
+		ModTdltLogger.Log("NEXT_MAP_RESET_POINT", $"Server reset pos=({x},{y}), penalty={ModNextMap.resetPenaltyCount}");
 	}
 
 	/// <summary>
@@ -42,6 +81,7 @@ public static class ModWaypoint
 				return (minY + maxY) / 2;
 			}
 
+			int checkX = System.Math.Max(35, System.Math.Min(TileMap.pxw - 35, x));
 			int safeMinY = System.Math.Max(12, minY);
 			int safeMaxY = System.Math.Min(TileMap.pxh - 12, maxY);
 			if (safeMaxY < safeMinY)
@@ -49,13 +89,19 @@ public static class ModWaypoint
 				return maxY;
 			}
 
-			// Quét từ đáy cổng lên đỉnh cổng để luôn lấy đúng mặt đất tầng dưới (tránh dính vách đá/mái nhà phía trên)
+			// Quét từ đáy lên và leo qua các ô đất đặc liên tiếp để lấy đúng bề mặt đất trên cùng
 			int searchStart = System.Math.Min(TileMap.pxh - 12, safeMaxY + 24);
 			for (int y = searchStart; y >= safeMinY; y -= 12)
 			{
-				if (TileMap.tileTypeAt(x, y, 2))
+				if (TileMap.tileTypeAt(checkX, y, 2))
 				{
 					int gy = TileMap.tileYofPixel(y);
+					int guard = 0;
+					while (gy - 24 >= safeMinY && guard < 6 && TileMap.tileTypeAt(checkX, gy - 24, 2))
+					{
+						gy -= 24;
+						guard++;
+					}
 					if (gy >= minY && gy <= maxY)
 					{
 						return gy;
@@ -76,7 +122,7 @@ public static class ModWaypoint
 	}
 
 	/// <summary>
-	/// Dịch chuyển nhân vật đến tọa độ đích và đồng bộ gói tin charMove lên máy chủ.
+	/// Dịch chuyển nhân vật đến tọa độ mặt đất hợp lệ và gửi gói tin (x,y) -> (x,y+1) -> (x,y) để Server xác nhận vị trí.
 	/// </summary>
 	public static void TeleportTo(int x, int y)
 	{
@@ -97,6 +143,10 @@ public static class ModWaypoint
 			me.cyStartFall = 0;
 			me.isFlyUp = false;
 
+			pendingConfirmX = x;
+			pendingConfirmY = y;
+			lastTeleportTime = mSystem.currentTimeMillis();
+
 			me.cx = x;
 			me.cy = y;
 			me.cxSend = x - 1;
@@ -104,6 +154,7 @@ public static class ModWaypoint
 			Service.gI().charMove();
 			if (!ItemTime.isExistItem(4387))
 			{
+				isWaitingTeleportConfirm = TileMap.tileTypeAt(x, y, 2);
 				me.cx = x;
 				me.cy = y + 1;
 				Service.gI().charMove();
@@ -111,6 +162,41 @@ public static class ModWaypoint
 				me.cy = y;
 				Service.gI().charMove();
 			}
+			else
+			{
+				isWaitingTeleportConfirm = false;
+			}
+		}
+		catch
+		{
+		}
+	}
+
+	/// <summary>
+	/// Di chuyển bước ngắn thông thường vào lòng cổng Waypoint mà không gửi gói y+1.
+	/// </summary>
+	public static void SendNormalMove(int x, int y)
+	{
+		try
+		{
+			Char me = Char.myCharz();
+			if (me == null)
+			{
+				return;
+			}
+			me.vMovePoints.removeAllElements();
+			me.currentMovePoint = null;
+			me.endMovePointCommand = null;
+			me.cvx = 0;
+			me.cvy = 0;
+			me.statusMe = 2;
+			me.delayFall = 0;
+			me.cyStartFall = 0;
+			me.isFlyUp = false;
+			me.cx = x;
+			me.cy = y;
+			Service.gI().charMove();
+			me.statusMe = 1;
 		}
 		catch
 		{
@@ -130,7 +216,7 @@ public static class ModWaypoint
 
 		int dx = Res.abs(me.cx - targetX);
 		int dy = Res.abs(me.cy - targetY);
-		int maxStepX = (ModNextMap.resetPenaltyCount >= 3) ? 48 : ((ModNextMap.resetPenaltyCount == 2) ? 72 : ((ModNextMap.resetPenaltyCount == 1) ? 120 : 160));
+		int maxStepX = (ModNextMap.resetPenaltyCount >= 3) ? 64 : ((ModNextMap.resetPenaltyCount == 2) ? 108 : ((ModNextMap.resetPenaltyCount == 1) ? 160 : 180));
 
 		if ((ModNextMap.useSafeMovement || ModNextMap.resetPenaltyCount > 0) && dx > maxStepX)
 		{
@@ -151,22 +237,16 @@ public static class ModWaypoint
 			return false;
 		}
 
-		if (dx > 20 || dy > 20)
+		if (me.cx != targetX || me.cy != targetY || me.cxSend != targetX || me.cySend != targetY || dx > 0 || dy > 0)
 		{
 			me.cdir = (targetX >= me.cx) ? 1 : (-1);
-			TeleportTo(targetX, targetY);
-			return false;
-		}
-
-		if (me.cx != targetX || me.cy != targetY || me.cxSend != targetX || me.cySend != targetY)
-		{
 			TeleportTo(targetX, targetY);
 		}
 		return true;
 	}
 
 	/// <summary>
-	/// Tính toán tọa độ X nằm gọn bên trong vùng [wp.minX, wp.maxX] và biên bản đồ an toàn.
+	/// Tính toán tọa độ X nằm gọn bên trong vùng [wp.minX, wp.maxX] để kích hoạt chuyển map (chuẩn Xmap gốc: 15 hoặc pxw - 15).
 	/// </summary>
 	public static int GetWaypointTargetX(Waypoint wp)
 	{
@@ -181,25 +261,76 @@ public static class ModWaypoint
 
 		if (maxX <= 60)
 		{
-			int target = System.Math.Max(12, minX + 12);
-			if (target > maxX - 2)
+			if (15 >= minX && 15 <= maxX)
 			{
-				target = center;
+				return 15;
 			}
-			return System.Math.Max(6, target);
+			return System.Math.Max(6, center);
 		}
 
 		if (minX >= TileMap.pxw - 60)
 		{
-			int target = System.Math.Min(TileMap.pxw - 12, maxX - 12);
-			if (target < minX + 2)
+			int rightTarget = TileMap.pxw - 15;
+			if (rightTarget >= minX && rightTarget <= maxX)
 			{
-				target = center;
+				return rightTarget;
 			}
-			return System.Math.Min(TileMap.pxw - 6, target);
+			return System.Math.Min(TileMap.pxw - 6, center);
 		}
 
 		return center;
+	}
+
+	/// <summary>
+	/// Tính toán tọa độ tiếp cận (Phase 1) tại cột đất hợp lệ sát mép cổng (x = 35 hoặc pxw - 35) để Server xác nhận RESET_POINT trước khi bước vào cổng.
+	/// </summary>
+	public static int GetWaypointApproachX(Waypoint wp, int wpTargetX, int wpTargetY)
+	{
+		if (wp == null)
+		{
+			return wpTargetX;
+		}
+
+		bool isLeftEdge = wp.maxX <= 60;
+		bool isRightEdge = !isLeftEdge && wp.minX >= TileMap.pxw - 60;
+		if (!isLeftEdge && !isRightEdge)
+		{
+			return wpTargetX;
+		}
+
+		bool isAirOrTower = TileMap.isInAirMap() || TileMap.mapID == 45 || TileMap.mapID == 46 || TileMap.mapID == 47 || TileMap.mapID == 48;
+		if (isLeftEdge)
+		{
+			int baseApproachX = System.Math.Max(35, wpTargetX + 20);
+			if (isAirOrTower || TileMap.tileTypeAt(baseApproachX, wpTargetY, 2))
+			{
+				return baseApproachX;
+			}
+			for (int testX = baseApproachX + 12; testX <= 96; testX += 12)
+			{
+				if (TileMap.tileTypeAt(testX, wpTargetY, 2))
+				{
+					return testX;
+				}
+			}
+			return baseApproachX;
+		}
+		else
+		{
+			int baseApproachX = System.Math.Min(TileMap.pxw - 35, wpTargetX - 20);
+			if (isAirOrTower || TileMap.tileTypeAt(baseApproachX, wpTargetY, 2))
+			{
+				return baseApproachX;
+			}
+			for (int testX = baseApproachX - 12; testX >= TileMap.pxw - 96; testX -= 12)
+			{
+				if (TileMap.tileTypeAt(testX, wpTargetY, 2))
+				{
+					return testX;
+				}
+			}
+			return baseApproachX;
+		}
 	}
 
 	/// <summary>
@@ -222,7 +353,9 @@ public static class ModWaypoint
 	}
 
 	/// <summary>
-	/// Thực thi dịch chuyển vào đúng tâm cổng Waypoint và gửi yêu cầu chuyển map lên Server.
+	/// Thực thi dịch chuyển 2 pha chuẩn Xmap gốc:
+	/// Pha 1: Dịch chuyển tới cột đất sát cổng (approachX = 35 hoặc pxw - 35) và đợi Server xác nhận vị trí.
+	/// Pha 2: Bước thường (SendNormalMove <= 24px, không gửi y+1) vào tâm cổng (wpTargetX = 15 hoặc pxw - 15) và gửi requestChangeMap.
 	/// </summary>
 	public static bool StepToWaypoint(Waypoint wp)
 	{
@@ -251,13 +384,23 @@ public static class ModWaypoint
 				isAirBottomActive = false;
 				wpInitTime = now;
 				hasTeleportedToWp = false;
+				isWpPosConfirmed = false;
+				isWaitingTeleportConfirm = false;
 				lastTeleportTime = 0;
 				edgeWalkAttempts = 0;
 			}
 
-			if (hasTeleportedToWp && now - lastTeleportTime < 140)
+			if (isWaitingTeleportConfirm)
 			{
-				return false;
+				if (now - lastTeleportTime < 550)
+				{
+					return false;
+				}
+				isWaitingTeleportConfirm = false;
+				if (hasTeleportedToWp)
+				{
+					isWpPosConfirmed = true;
+				}
 			}
 
 			bool isLeftEdge = wp.maxX <= 60;
@@ -265,35 +408,63 @@ public static class ModWaypoint
 
 			int wpTargetX = GetWaypointTargetX(wp);
 			int wpTargetY = GetWaypointTargetY(wp, wpTargetX);
+			int approachX = GetWaypointApproachX(wp, wpTargetX, wpTargetY);
+			if (approachX != wpTargetX)
+			{
+				wpTargetY = GetWaypointTargetY(wp, approachX);
+			}
 
-			int dx = Res.abs(me.cx - wpTargetX);
-			int dy = Res.abs(me.cy - wpTargetY);
 			me.cdir = isLeftEdge ? (-1) : (isRightEdge ? 1 : ((me.cx <= wpTargetX) ? 1 : (-1)));
 
-			if (!hasTeleportedToWp || dx > 24 || dy > 24)
+			// Pha 1: Dịch chuyển tới tọa độ tiếp cận sát cổng (cột đất hợp lệ) và đợi Server xác nhận
+			if (!hasTeleportedToWp)
 			{
-				if (ModNextMap.useSafeMovement || ModNextMap.resetPenaltyCount > 0)
+				if (MoveSteppedTo(approachX, wpTargetY))
 				{
-					if (MoveSteppedTo(wpTargetX, wpTargetY))
+					hasTeleportedToWp = true;
+					if (!isWaitingTeleportConfirm)
 					{
-						hasTeleportedToWp = true;
+						isWpPosConfirmed = true;
 					}
 				}
-				else
-				{
-					TeleportTo(wpTargetX, wpTargetY);
-					hasTeleportedToWp = true;
-				}
-				lastTeleportTime = now;
 				wpInitTime = now;
-				ModTdltLogger.Log("NEXT_MAP_STEP", $"Teleport to waypoint '{wp.name}' -> target=({wpTargetX},{wpTargetY}), map={TileMap.mapID}");
+				ModTdltLogger.Log("NEXT_MAP_STEP", $"Phase 1 teleport to ({me.cx},{me.cy}) -> approach=({approachX},{wpTargetY}) for '{wp.name}' target=({wpTargetX},{wpTargetY}), map={TileMap.mapID}");
 				return false;
 			}
 
-			// Đảm bảo nhân vật đứng chính xác trong lòng cổng trước khi gửi gói chuyển map
+			if (!isWpPosConfirmed)
+			{
+				if (now - lastTeleportTime >= 550)
+				{
+					isWpPosConfirmed = true;
+				}
+				else
+				{
+					return false;
+				}
+			}
+
+			// Kiểm tra nếu nhân vật bị lệch xa khỏi vùng tiếp cận thì quay lại Pha 1
+			if (Res.abs(me.cx - wpTargetX) > 84 || Res.abs(me.cy - wpTargetY) > 48)
+			{
+				hasTeleportedToWp = false;
+				isWpPosConfirmed = false;
+				return false;
+			}
+
+			// Pha 2: Bước thường (<= 24px, không gửi y+1) từ approachX vào đúng wpTargetX rồi yêu cầu chuyển map
+			int dxToTarget = wpTargetX - me.cx;
+			if (Res.abs(dxToTarget) > 24)
+			{
+				int stepX = me.cx + ((dxToTarget > 0) ? 24 : (-24));
+				SendNormalMove(stepX, wpTargetY);
+				lastTeleportTime = now;
+				return false;
+			}
+
 			if (me.cx != wpTargetX || me.cy != wpTargetY || me.cxSend != wpTargetX || me.cySend != wpTargetY)
 			{
-				TeleportTo(wpTargetX, wpTargetY);
+				SendNormalMove(wpTargetX, wpTargetY);
 			}
 
 			if (wp.isOffline || TileMap.isOfflineMap() || TileMap.isTrainingMap())
@@ -342,43 +513,53 @@ public static class ModWaypoint
 				isAirBottomActive = true;
 				wpInitTime = now;
 				hasTeleportedToWp = false;
+				isWpPosConfirmed = false;
+				isWaitingTeleportConfirm = false;
 				lastTeleportTime = 0;
 			}
 
-			if (hasTeleportedToWp && now - lastTeleportTime < 140)
+			if (isWaitingTeleportConfirm)
 			{
-				return false;
+				if (now - lastTeleportTime < 550)
+				{
+					return false;
+				}
+				isWaitingTeleportConfirm = false;
+				if (hasTeleportedToWp)
+				{
+					isWpPosConfirmed = true;
+				}
 			}
 
 			int targetX = System.Math.Max(48, System.Math.Min(TileMap.pxw - 48, me.cx));
 			int targetY = TileMap.pxh - 24;
 
-			int dx = Res.abs(me.cx - targetX);
-			int dy = Res.abs(me.cy - targetY);
-
-			if (!hasTeleportedToWp || dx > 24 || dy > 24)
+			if (!hasTeleportedToWp)
 			{
-				if (ModNextMap.useSafeMovement || ModNextMap.resetPenaltyCount > 0)
+				if (MoveSteppedTo(targetX, targetY))
 				{
-					if (MoveSteppedTo(targetX, targetY))
+					hasTeleportedToWp = true;
+					if (!isWaitingTeleportConfirm)
 					{
-						hasTeleportedToWp = true;
+						isWpPosConfirmed = true;
 					}
 				}
-				else
-				{
-					TeleportTo(targetX, targetY);
-					hasTeleportedToWp = true;
-				}
-				lastTeleportTime = now;
 				return false;
 			}
 
-			if (me.cx != targetX || me.cy != targetY || me.cxSend != targetX || me.cySend != targetY)
+			if (!isWpPosConfirmed)
 			{
-				TeleportTo(targetX, targetY);
+				if (now - lastTeleportTime >= 550)
+				{
+					isWpPosConfirmed = true;
+				}
+				else
+				{
+					return false;
+				}
 			}
 
+			SendNormalMove(targetX, TileMap.pxh - 12);
 			Char.ischangingMap = true;
 			Service.gI().requestChangeMap();
 			ResetWaypointState();
@@ -403,15 +584,25 @@ public static class ModWaypoint
 				return false;
 			}
 
-			if (!MoveSteppedTo(shipNpc.cx, shipNpc.cy))
+			long now = mSystem.currentTimeMillis();
+			if (isWaitingTeleportConfirm)
 			{
+				if (now - lastTeleportTime < 550)
+				{
+					return false;
+				}
+				isWaitingTeleportConfirm = false;
+			}
+
+			if (Res.abs(me.cx - shipNpc.cx) > 24 || Res.abs(me.cy - shipNpc.cy) > 24)
+			{
+				MoveSteppedTo(shipNpc.cx, shipNpc.cy);
 				return false;
 			}
 
 			me.focusManualTo(shipNpc);
 			int npcTemplateId = (shipNpc.template != null) ? shipNpc.template.npcTemplateId : shipNpc.npcId;
 
-			long now = mSystem.currentTimeMillis();
 			if (isWaitingShipMenu && now - lastShipOpenMenuTime < 2500)
 			{
 				return true;
