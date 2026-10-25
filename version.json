@@ -1,9 +1,9 @@
 {
-  "version": "2.5.54",
+  "version": "2.5.55",
   "buildDate": "2026-10-25",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.54/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.54/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.54/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.54/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.54: Đồng nhất tuyệt đối quy tắc di chuyển Tàn Sát Cooler theo địa hình base map (bỏ hoàn toàn chu kỳ hẹn giờ hồi lượt): (1) Quái nằm trên cùng 1 base mặt đất liền mạch thì luôn chạy bộ tàn sát quét sạch toàn bộ base; (2) Khi chuyển sang quái nằm ở base phía trên, base phía dưới, hoặc ở xa hai bên có base/vực chắn ngang thì dịch chuyển tức thời qua luôn."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.55/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.55/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.55/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.55/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.55: Triệt tiêu hoàn toàn lỗi nhảy giật lên xuống không đánh được quái bay lơ lửng (Quái da xanh / quái bay type 4-5): Nhận diện trạng thái đang bay lên giữa không trung để không tái kích hoạt TeleportTo kéo ngược về mặt đất, tự tìm điểm tựa mặt đất không vướng trần đá và vọt thẳng lên tâm quái bay mượt mà 0ms."
 }

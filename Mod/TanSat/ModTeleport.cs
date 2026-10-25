@@ -821,6 +821,71 @@ public static class ModTeleport
 		return true;
 	}
 
+	private static bool TryFindColdFlyingAnchor(int targetX, int targetY, int preferFromX, out int anchorX, out int anchorY)
+	{
+		anchorX = targetX;
+		anchorY = -1;
+		int preferredSign = (preferFromX <= targetX) ? -1 : 1;
+
+		for (int offset = 0; offset <= 144; offset += 24)
+		{
+			int attempts = (offset == 0) ? 1 : 2;
+			for (int a = 0; a < attempts; a++)
+			{
+				int dir = (a == 0) ? preferredSign : (-preferredSign);
+				int candX = (offset == 0) ? targetX : (targetX + dir * offset);
+				if (candX < 24 || (TileMap.pxw > 0 && candX > TileMap.pxw - 24))
+				{
+					continue;
+				}
+				for (int dy = 0; dy <= 480; dy += 12)
+				{
+					int sampleY = targetY + dy;
+					if (TileMap.pxh > 0 && sampleY > TileMap.pxh - 12)
+					{
+						break;
+					}
+					if (!TileMap.tileTypeAt(candX, sampleY, TileMap.T_TOP))
+					{
+						continue;
+					}
+					int gy = TileMap.tileYofPixel(sampleY);
+					int guard = 0;
+					while (gy >= 24 && guard < 6 && TileMap.tileTypeAt(candX, gy - 24, TileMap.T_TOP))
+					{
+						gy -= 24;
+						guard++;
+					}
+					if (gy >= targetY - 16 &&
+					    IsValidColdSurfaceAt(candX, gy) &&
+					    !ModTanSatTargeting.IsInsideWaypoint(candX, gy) &&
+					    IsColdAirSegmentClear(candX, System.Math.Max(24, gy - 4), targetX, targetY, strictAir: false))
+					{
+						anchorX = candX;
+						anchorY = gy;
+						return true;
+					}
+					if (gy > sampleY)
+					{
+						dy = gy - targetY;
+					}
+				}
+			}
+		}
+
+		int fallbackGy = ModTanSatTargeting.FindGroundY(targetX, targetY, 360);
+		if (fallbackGy != -1 &&
+		    fallbackGy >= targetY - 24 &&
+		    !IsPointUndergroundOrBlocked(targetX, fallbackGy) &&
+		    !ModTanSatTargeting.IsInsideWaypoint(targetX, fallbackGy))
+		{
+			anchorX = targetX;
+			anchorY = fallbackGy;
+			return true;
+		}
+		return false;
+	}
+
 	private static bool MoveColdAntiCheckTo(Char me, int targetX, int targetY, bool isTargetOnGround, bool allowLongTeleport, long now)
 	{
 		if (Res.abs(targetX - coldTrackedTargetX) > 36 || Res.abs(targetY - coldTrackedTargetY) > 36 || coldTrackedStartTime <= 0)
@@ -841,7 +906,6 @@ public static class ModTeleport
 		int maxClampStep = conservativeSpeed ? 48 : 84;
 		int maxWalk = conservativeSpeed ? 48 : ColdMaxWalkStepX;
 
-		// 1. Cùng 1 base mặt đất liền mạch: Luôn chạy bộ tàn sát dọc theo base (không dịch chuyển)
 		if (isTargetOnGround && TryTraceSameColdGroundBase(me.cx, me.cy, targetX, targetY, maxWalk, out int walkX, out int walkY))
 		{
 			SendSingleCharMove(walkX, walkY);
@@ -856,8 +920,11 @@ public static class ModTeleport
 			return walkDone;
 		}
 
-		// 2. Bước nhích ngắn trực tiếp trên cùng cao độ hoặc khi đang bám theo quái đang đánh (!allowLongTeleport)
-		if ((!allowLongTeleport || dy <= 24) && dx <= maxFlyAxis && dy <= maxFlyAxis && (dx + dy) <= maxFlyManhattan && IsColdLandingSegmentClear(me.cx, me.cy, targetX, targetY))
+		int startAirY = TileMap.tileTypeAt(me.cx, me.cy, TileMap.T_TOP) ? System.Math.Max(24, me.cy - 4) : me.cy;
+		bool canStepDirect = mustLandExact
+			? ((!allowLongTeleport || dy <= 24) && IsColdLandingSegmentClear(me.cx, me.cy, targetX, targetY))
+			: (!IsColdPositionBlocked(targetX, targetY) && IsColdAirSegmentClear(me.cx, startAirY, targetX, targetY, strictAir: false));
+		if (canStepDirect && dx <= maxFlyAxis && dy <= maxFlyAxis && (dx + dy) <= maxFlyManhattan)
 		{
 			SendSingleCharMove(targetX, targetY);
 			lastStepTime = now;
@@ -867,7 +934,6 @@ public static class ModTeleport
 			return true;
 		}
 
-		// 3. Khác base (ở xa nằm phía trên base map, ở dưới, hoặc phía 2 bên có base/vực che): Dịch chuyển thẳng qua luôn, không giới hạn chu kỳ thời gian
 		if (allowLongTeleport)
 		{
 			if (mustLandExact && !ModTanSatTargeting.IsInsideWaypoint(targetX, targetY))
@@ -878,23 +944,46 @@ public static class ModTeleport
 				isWaitingSettle = false;
 				return true;
 			}
-			if (!mustLandExact)
+			if (!mustLandExact && TryFindColdFlyingAnchor(targetX, targetY, me.cx, out int anchorX, out int anchorY))
 			{
-				int groundAnchorY = ModTanSatTargeting.FindGroundY(targetX, targetY, 320);
-				if (groundAnchorY != -1 &&
-				    !IsPointUndergroundOrBlocked(targetX, groundAnchorY) &&
-				    !ModTanSatTargeting.IsInsideWaypoint(targetX, groundAnchorY))
+				bool onSameAnchorBase = Res.abs(me.cx - anchorX) <= 168 &&
+				                        TryTraceSameColdGroundBase(me.cx, me.cy, anchorX, anchorY, maxWalk, out _, out _);
+				bool alreadyAtAnchor = Res.abs(me.cx - anchorX) <= 16 && Res.abs(me.cy - anchorY) <= 8;
+				bool alreadyClimbingInAir = !TileMap.tileTypeAt(me.cx, me.cy, TileMap.T_TOP) &&
+				                            Res.abs(me.cx - targetX) <= 192 &&
+				                            me.cy <= anchorY + 8 &&
+				                            Res.abs(me.cy - targetY) <= 380 &&
+				                            (IsColdAirSegmentClear(me.cx, startAirY, targetX, targetY, strictAir: false) ||
+				                             (FindColdAirPath(me.cx, me.cy, targetX, targetY, out int climbLen, out _) && climbLen > 0 && climbLen <= 14));
+				if (!onSameAnchorBase && !alreadyAtAnchor && !alreadyClimbingInAir)
 				{
-					bool alreadyUnderTarget = Res.abs(me.cx - targetX) <= 144 &&
-					                          TryTraceSameColdGroundBase(me.cx, me.cy, targetX, groundAnchorY, maxWalk, out _, out _);
-					if (!alreadyUnderTarget)
-					{
-						TeleportTo(targetX, groundAnchorY);
-						lastStepTime = now;
-						isWaitingSettle = true;
-						return false;
-					}
+					TeleportTo(anchorX, anchorY);
+					lastStepTime = now;
+					isWaitingSettle = true;
+					return false;
 				}
+			}
+		}
+
+		if (!mustLandExact && !IsColdPositionBlocked(targetX, targetY) && IsColdAirSegmentClear(me.cx, startAirY, targetX, targetY, strictAir: false))
+		{
+			int stepDy = ClampInt(targetY - me.cy, -maxFlyAxis, maxFlyAxis);
+			int maxRemDx = System.Math.Min(maxFlyAxis, maxFlyManhattan - Res.abs(stepDy));
+			int stepDx = ClampInt(targetX - me.cx, -maxRemDx, maxRemDx);
+			int climbX = me.cx + stepDx;
+			int climbY = me.cy + stepDy;
+			if ((climbX != me.cx || climbY != me.cy) && IsColdAirSegmentClear(me.cx, startAirY, climbX, climbY, strictAir: false))
+			{
+				SendSingleCharMove(climbX, climbY);
+				lastStepTime = now;
+				isCurrentPosSynced = true;
+				bool climbDone = Res.abs(climbX - targetX) <= 12 && Res.abs(climbY - targetY) <= arriveTolY;
+				isWaitingSettle = !climbDone;
+				if (climbDone)
+				{
+					ResetColdStepTracking();
+				}
+				return climbDone;
 			}
 		}
 
@@ -1167,7 +1256,7 @@ public static class ModTeleport
 			int minStepInterval = coldAntiCheck ? ColdStepIntervalMs : 120;
 			if (now - lastStepTime < minStepInterval)
 			{
-				if (coldAntiCheck && !TileMap.tileTypeAt(me.cx, me.cy, 2))
+				if (!TileMap.tileTypeAt(me.cx, me.cy, 2))
 				{
 					me.statusMe = 1;
 					me.delayFall = 0;
@@ -1204,13 +1293,19 @@ public static class ModTeleport
 			// 3. Mục tiêu là quái bay trên không trung: Nếu còn ở xa, dịch chuyển tức thời tới mặt đất gần quái bay trước, sau đó bay lên
 			if (dx > 96 || dy > 84)
 			{
-				int groundY = ModTanSatTargeting.FindGroundY(targetX, targetY, 240);
-				if (groundY != -1 && (Res.abs(me.cx - targetX) > 48 || Res.abs(me.cy - groundY) > 24))
+				if (TryFindColdFlyingAnchor(targetX, targetY, me.cx, out int anchorX, out int anchorY))
 				{
-					TeleportTo(targetX, groundY);
-					lastStepTime = now;
-					isWaitingSettle = true;
-					return false;
+					bool alreadyClimbingAir = !TileMap.tileTypeAt(me.cx, me.cy, 2) &&
+					                          Res.abs(me.cx - targetX) <= 120 &&
+					                          me.cy <= anchorY + 8 &&
+					                          Res.abs(me.cy - targetY) <= 380;
+					if (!alreadyClimbingAir && (Res.abs(me.cx - anchorX) > 64 || Res.abs(me.cy - anchorY) > 24))
+					{
+						TeleportTo(anchorX, anchorY);
+						lastStepTime = now;
+						isWaitingSettle = true;
+						return false;
+					}
 				}
 			}
 
