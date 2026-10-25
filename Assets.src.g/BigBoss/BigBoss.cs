@@ -8,6 +8,8 @@ public partial class BigBoss : Mob, IMapObject
 
 	public static EffectData data;
 
+	public static int lastDataId = 101;
+
 	public int xTo;
 
 	public int yTo;
@@ -172,6 +174,7 @@ public partial class BigBoss : Mob, IMapObject
 		{
 			data = null;
 			data = new EffectData();
+			lastDataId = 100;
 			string patch = "/x" + mGraphics.zoomLevel + "/effectdata/" + 100 + "/data";
 			try
 			{
@@ -191,6 +194,7 @@ public partial class BigBoss : Mob, IMapObject
 		{
 			data = null;
 			data = new EffectData();
+			lastDataId = 101;
 			string patch = "/x" + mGraphics.zoomLevel + "/effectdata/" + 101 + "/data";
 			try
 			{

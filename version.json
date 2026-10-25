@@ -1,9 +1,9 @@
 {
-  "version": "2.5.60",
+  "version": "2.5.61",
   "buildDate": "2026-10-25",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.60/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.60/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.60/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.60/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.60: Chuyển chế độ đồ hoạ Pixel sang Đồ Hoạ Java chuẩn 100% logic src Java gốc (J2ME DragonBoy): loại bỏ hoàn toàn post-shader làm mờ/vỡ khối giả lập, nạp trực tiếp kho tài nguyên /x1/ gốc nhân 2x Nearest-Neighbor sắc nét, kết xuất font bitmap mFont gốc từng ký tự kèm đổ bóng 1px, nạp tile lẻ t_01..t_99, SmallImage/Big0..4, BgItem không blend và đồng bộ làm mới tài nguyên tức thì khi nhấn F10 hoặc chọn trong menu Đồ Hoạ trên cả 4 nền tảng."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.61/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.61/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.61/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.61/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.61: Đồng bộ kết xuất Đồ Hoạ Java cho toàn bộ quái vật (Mob), Boss (NewBoss, BigBoss, BigBoss2, BachTuoc, Mabu), hiệu ứng kỹ năng (EffectData) và sprite tải động từ máy chủ bằng lượng tử hoá lưới điểm ảnh J2ME 1x chuẩn alpha nhị phân (0/255) nhân 2x Nearest-Neighbor, cập nhật tức thì 0ms khi chuyển đổi Đồ Hoạ Java <-> Đồ Hoạ HD trên cả 4 nền tảng."
 }

@@ -39,11 +39,7 @@ public partial class Controller : IMessageHandler
 						if (num154 >= 0)
 						{
 							SmallImage.ensureImgNew(num154);
-							Image imgSmall = createImage(array17);
-							if (imgSmall != null)
-							{
-								imgSmall.isZoomScaled = true;
-							}
+							Image imgSmall = (mGraphics.zoomLevel > 1) ? Image.createServerZoomImage(array17, 0, array17.Length) : createImage(array17);
 							if (SmallImage.imgNew[num154] == null)
 							{
 								SmallImage.imgNew[num154] = new Small(imgSmall, num154);
@@ -92,11 +88,7 @@ public partial class Controller : IMessageHandler
 						effDataById.readDataNewBoss(data3, b64);
 					}
 					sbyte[] array15 = NinjaUtil.readByteArray(msg);
-					effDataById.img = Image.createImage(array15, 0, array15.Length);
-					if (mGraphics.zoomLevel > 1 && effDataById.img != null && !effDataById.img.isZoomScaled)
-					{
-						effDataById.img.isZoomScaled = true;
-					}
+					effDataById.img = (mGraphics.zoomLevel > 1) ? Image.createServerZoomImage(array15, 0, array15.Length) : Image.createImage(array15, 0, array15.Length);
 					break;
 				}
 				case -32:
@@ -112,11 +104,7 @@ public partial class Controller : IMessageHandler
 						{
 							array11[num137] = msg.reader().readByte();
 						}
-						image = Image.createImage(array11, 0, num136);
-						if (mGraphics.zoomLevel > 1 && image != null && !image.isZoomScaled)
-						{
-							image.isZoomScaled = true;
-						}
+						image = (mGraphics.zoomLevel > 1) ? Image.createServerZoomImage(array11, 0, num136) : Image.createImage(array11, 0, num136);
 						BgItem.imgNew.put(num135 + string.Empty, image);
 					}
 					catch (Exception)

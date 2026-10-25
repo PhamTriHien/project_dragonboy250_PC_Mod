@@ -247,6 +247,33 @@ public class Effect
 	/// <summary>
 	/// Truy xuất và trả về dữ liệu của getEffDataById.
 	/// </summary>
+	public static void ReloadForGraphicsMode()
+	{
+		if (vEffData == null)
+		{
+			return;
+		}
+		for (int i = 0; i < vEffData.size(); i++)
+		{
+			if (vEffData.elementAt(i) is EffectData ed)
+			{
+				if (ed.img != null && ed.img.rawServerPngBytes != null)
+				{
+					ed.img = Image.refreshServerZoomImage(ed.img);
+				}
+				else
+				{
+					int resolvedId = (ed.ID >= 42 && ed.ID <= 46) ? 106 : ed.ID;
+					string dataPath = "/x" + mGraphics.zoomLevel + "/effectdata/" + resolvedId + "/data";
+					if (MyStream.readFile(dataPath) != null)
+					{
+						ed.img = GameCanvas.loadImage("/effectdata/" + resolvedId + "/img.png");
+					}
+				}
+			}
+		}
+	}
+
 	public static EffectData getEffDataById(int id)
 	{
 		for (int i = 0; i < vEffData.size(); i++)

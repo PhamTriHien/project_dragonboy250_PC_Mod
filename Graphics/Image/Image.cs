@@ -5,7 +5,13 @@ using UnityEngine;
 
 public class Image
 {
+	private struct ServerTexPair
+	{
+		public Texture2D hd;
+		public Texture2D java;
+	}
 	private static readonly Dictionary<string, Texture2D> s_JavaScaledTextures = new Dictionary<string, Texture2D>();
+	private static readonly Dictionary<ulong, ServerTexPair> s_ServerZoomTextures = new Dictionary<ulong, ServerTexPair>();
 	private const int INTERVAL = 5;
 
 	private const int MAXTIME = 500;
@@ -39,6 +45,137 @@ public class Image
 	public Color colorBlend = Color.black;
 
 	public bool isZoomScaled;
+
+	public byte[] rawServerPngBytes;
+
+	private static ulong ComputePngHash(byte[] data)
+	{
+		ulong hash = 14695981039346656037UL;
+		for (int i = 0; i < data.Length; i++)
+		{
+			hash ^= data[i];
+			hash *= 1099511628211UL;
+		}
+		return hash;
+	}
+
+	private static Texture2D QuantizeTextureJava2x2(Texture2D src)
+	{
+		if (src == null || src.width < 2 || src.height < 2)
+		{
+			return src;
+		}
+		int w = src.width;
+		int h = src.height;
+		Color32[] pixels = src.GetPixels32();
+		for (int y = 0; y + 1 < h; y += 2)
+		{
+			int row0 = (h - 1 - y) * w;
+			int row1 = (h - 2 - y) * w;
+			for (int x = 0; x + 1 < w; x += 2)
+			{
+				Color32 c0 = pixels[row0 + x];
+				Color32 c1 = pixels[row0 + x + 1];
+				Color32 c2 = pixels[row1 + x];
+				Color32 c3 = pixels[row1 + x + 1];
+
+				int sumA = c0.a + c1.a + c2.a + c3.a;
+				Color32 outCol;
+				if (sumA >= 256)
+				{
+					int ar = (c0.r * c0.a + c1.r * c1.a + c2.r * c2.a + c3.r * c3.a) / sumA;
+					int ag = (c0.g * c0.a + c1.g * c1.a + c2.g * c2.a + c3.g * c3.a) / sumA;
+					int ab = (c0.b * c0.a + c1.b * c1.a + c2.b * c2.a + c3.b * c3.a) / sumA;
+
+					Color32 best = default;
+					int bestDist = int.MaxValue;
+					if (c0.a >= 128) { int d = System.Math.Abs(c0.r - ar) + System.Math.Abs(c0.g - ag) + System.Math.Abs(c0.b - ab); if (d < bestDist) { bestDist = d; best = c0; } }
+					if (c1.a >= 128) { int d = System.Math.Abs(c1.r - ar) + System.Math.Abs(c1.g - ag) + System.Math.Abs(c1.b - ab); if (d < bestDist) { bestDist = d; best = c1; } }
+					if (c2.a >= 128) { int d = System.Math.Abs(c2.r - ar) + System.Math.Abs(c2.g - ag) + System.Math.Abs(c2.b - ab); if (d < bestDist) { bestDist = d; best = c2; } }
+					if (c3.a >= 128) { int d = System.Math.Abs(c3.r - ar) + System.Math.Abs(c3.g - ag) + System.Math.Abs(c3.b - ab); if (d < bestDist) { bestDist = d; best = c3; } }
+					outCol = (bestDist == int.MaxValue)
+						? new Color32((byte)ar, (byte)ag, (byte)ab, 255)
+						: new Color32(best.r, best.g, best.b, 255);
+				}
+				else
+				{
+					outCol = new Color32(0, 0, 0, 0);
+				}
+
+				pixels[row0 + x] = outCol;
+				pixels[row0 + x + 1] = outCol;
+				pixels[row1 + x] = outCol;
+				pixels[row1 + x + 1] = outCol;
+			}
+		}
+		Texture2D dst = new Texture2D(w, h, TextureFormat.RGBA32, false);
+		dst.SetPixels32(pixels);
+		dst.Apply(false, false);
+		setTextureQuality(dst);
+		return dst;
+	}
+
+	public static Image createServerZoomImage(sbyte[] imageData, int offset, int length)
+	{
+		if (imageData == null || offset < 0 || length <= 0 || offset + length > imageData.Length)
+		{
+			return null;
+		}
+		byte[] array = new byte[length];
+		for (int i = 0; i < length; i++)
+		{
+			array[i] = convertSbyteToByte(imageData[i + offset]);
+		}
+		return createServerZoomImage(array);
+	}
+
+	public static Image createServerZoomImage(byte[] pngBytes)
+	{
+		if (pngBytes == null || pngBytes.Length == 0)
+		{
+			return null;
+		}
+		ulong key = ComputePngHash(pngBytes) ^ ((ulong)pngBytes.Length * 1099511628211UL);
+		ServerTexPair pair;
+		if (!s_ServerZoomTextures.TryGetValue(key, out pair) || pair.hd == null)
+		{
+			Image decoded = createImage(pngBytes);
+			if (decoded == null || decoded.texture == null)
+			{
+				return decoded;
+			}
+			pair = new ServerTexPair { hd = decoded.texture, java = null };
+			s_ServerZoomTextures[key] = pair;
+		}
+		Texture2D chosen = pair.hd;
+		if (mGraphics.zoomLevel == 2 && ModGraphics.IsJavaGraphics)
+		{
+			if (pair.java == null)
+			{
+				pair.java = QuantizeTextureJava2x2(pair.hd);
+				s_ServerZoomTextures[key] = pair;
+			}
+			chosen = pair.java ?? pair.hd;
+		}
+		setTextureQuality(chosen);
+		return new Image
+		{
+			texture = chosen,
+			w = chosen.width,
+			h = chosen.height,
+			isZoomScaled = true,
+			rawServerPngBytes = pngBytes
+		};
+	}
+
+	public static Image refreshServerZoomImage(Image current)
+	{
+		if (current == null || current.rawServerPngBytes == null || current.rawServerPngBytes.Length == 0)
+		{
+			return current;
+		}
+		return createServerZoomImage(current.rawServerPngBytes);
+	}
 
 	public static Image createEmptyImage()
 	{

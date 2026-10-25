@@ -236,8 +236,16 @@ public static class ModGraphics
 				GameCanvas.instance.loadDust();
 				GameCanvas.instance.loadWaterSplash();
 			}
+			for (int j = 0; j < 7; j++)
+			{
+				GameCanvas.imgBlue[j] = GameCanvas.loadImage("/effectdata/blue/" + j + ".png");
+				GameCanvas.imgViolet[j] = GameCanvas.loadImage("/effectdata/violet/" + j + ".png");
+			}
 			GameScr.ReloadHudImages();
 			SmallImage.ReloadForGraphicsMode();
+			Mob.ReloadForGraphicsMode();
+			Effect.ReloadForGraphicsMode();
+			ImgByName.ReloadForGraphicsMode();
 			TileMap.loadBg();
 			if (TileMap.tileID > 0)
 			{

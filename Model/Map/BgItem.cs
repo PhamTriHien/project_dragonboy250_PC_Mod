@@ -141,10 +141,9 @@ public class BgItem
 			}
 			if (!needRequest)
 			{
-				image = Image.createImage(array, 0, array.Length);
+				image = (mGraphics.zoomLevel > 1) ? Image.createServerZoomImage(array, 0, array.Length) : Image.createImage(array, 0, array.Length);
 				if (image != null)
 				{
-					image.isZoomScaled = true;
 					return image;
 				}
 				needRequest = true;

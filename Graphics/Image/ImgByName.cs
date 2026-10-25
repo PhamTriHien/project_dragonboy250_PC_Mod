@@ -64,7 +64,7 @@ public class ImgByName
 		{
 			result = new MainImage();
 			result.nFrame = array[0];
-			result.img = Image.createImage(array, 1, array.Length - 1);
+			result.img = (mGraphics.zoomLevel > 1) ? Image.createServerZoomImage(array, 1, array.Length - 1) : Image.createImage(array, 1, array.Length - 1);
 			if (mGraphics.zoomLevel > 1 && result.img != null && !result.img.isZoomScaled)
 			{
 				result.img.isZoomScaled = true;
@@ -105,6 +105,22 @@ public class ImgByName
 	/// <summary>
 	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của checkDelHash.
 	/// </summary>
+	public static void ReloadForGraphicsMode()
+	{
+		if (hashImagePath == null)
+		{
+			return;
+		}
+		IDictionaryEnumerator enumerator = hashImagePath.GetEnumerator();
+		while (enumerator.MoveNext())
+		{
+			if (enumerator.Value is MainImage mi && mi.img != null && mi.img.rawServerPngBytes != null)
+			{
+				mi.img = Image.refreshServerZoomImage(mi.img);
+			}
+		}
+	}
+
 	public static void checkDelHash(MyHashTable hash, int minute, bool isTrue)
 	{
 		MyVector myVector = new MyVector("checkDelHash");

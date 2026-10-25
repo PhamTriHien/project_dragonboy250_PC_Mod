@@ -20,8 +20,7 @@ public partial class Controller : IMessageHandler
 				sbyte nFrame = msg.reader().readByte();
 				sbyte[] array = null;
 				array = NinjaUtil.readByteArray(msg);
-				Image img = createImage(array);
-				if (img != null) { img.isZoomScaled = true; }
+				Image img = (mGraphics.zoomLevel > 1) ? Image.createServerZoomImage(array, 0, array.Length) : createImage(array);
 				ImgByName.SetImage(name, img, nFrame);
 				if (array == null)
 				{

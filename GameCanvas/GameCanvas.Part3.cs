@@ -38,7 +38,7 @@ public partial class GameCanvas : IActionListener
 					sbyte[] array2 = Rms.loadRMS(filename);
 					if (array2 != null && array2.Length > 0)
 					{
-						result = Image.createImage(array2, 0, array2.Length);
+						result = (mGraphics.zoomLevel > 1) ? Image.createServerZoomImage(array2, 0, array2.Length) : Image.createImage(array2, 0, array2.Length);
 						array2 = null;
 					}
 				}

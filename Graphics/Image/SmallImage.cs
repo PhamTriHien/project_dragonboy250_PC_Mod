@@ -224,7 +224,7 @@ public class SmallImage
 				if (!flag)
 				{
 					Image image3 = null;
-					try { image3 = Image.createImage(array, 0, array.Length); } catch { }
+					try { image3 = (mGraphics.zoomLevel > 1) ? Image.createServerZoomImage(array, 0, array.Length) : Image.createImage(array, 0, array.Length); } catch { }
 					if (image3 != null)
 					{
 						setSmall(id, new Small(image3, id));

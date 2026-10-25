@@ -120,6 +120,69 @@ public partial class Mob
 					attack2 = new int[3] { 7, 8, 9 };
 				}
 			}
+	public static void ReloadForGraphicsMode()
+			{
+				imgHP = GameCanvas.loadImage("/mainImage/myTexture2dmobHP.png");
+				NewBoss.shadowBig = mSystem.loadImage("/mainImage/shadowBig.png");
+				NewBoss.imgHP = mSystem.loadImage("/mainImage/myTexture2dmobHP.png");
+				BigBoss.shadowBig = GameCanvas.loadImage("/mainImage/shadowBig.png");
+				if (BigBoss.data != null)
+				{
+					BigBoss.data.img = GameCanvas.loadImage("/effectdata/" + BigBoss.lastDataId + "/img.png");
+				}
+				BigBoss2.shadowBig = GameCanvas.loadImage("/mainImage/shadowBig.png");
+				BigBoss2.imgHP = GameCanvas.loadImage("/mainImage/myTexture2dmobHP.png");
+				if (BigBoss2.data != null)
+				{
+					BigBoss2.data.img = GameCanvas.loadImage("/effectdata/" + 109 + "/img.png");
+				}
+				BachTuoc.shadowBig = GameCanvas.loadImage("/mainImage/shadowBig.png");
+				BachTuoc.imgHP = GameCanvas.loadImage("/mainImage/myTexture2dmobHP.png");
+				if (BachTuoc.data != null)
+				{
+					BachTuoc.data.img = GameCanvas.loadImage("/effectdata/" + 108 + "/img.png");
+				}
+				if (Mabu.data1 != null)
+				{
+					Mabu.data1.img = GameCanvas.loadImage("/effectdata/" + 102 + "/img.png");
+				}
+				if (Mabu.data2 != null)
+				{
+					Mabu.data2.img = GameCanvas.loadImage("/effectdata/" + 103 + "/img.png");
+				}
+				if (MobCapcha.imgMob != null)
+				{
+					MobCapcha.init();
+				}
+				if (arrMobTemplate != null)
+				{
+					for (int i = 0; i < arrMobTemplate.Length; i++)
+					{
+						MobTemplate tpl = arrMobTemplate[i];
+						if (tpl != null && tpl.data != null)
+						{
+							if (tpl.data.img != null && tpl.data.img.rawServerPngBytes != null)
+							{
+								tpl.data.img = Image.refreshServerZoomImage(tpl.data.img);
+							}
+							else if (MyStream.readFile("/Mob/" + i) != null)
+							{
+								tpl.data.img = GameCanvas.loadImage("/Mob/" + i + "/img.png");
+							}
+						}
+					}
+				}
+				if (GameScr.vMob != null)
+				{
+					for (int j = 0; j < GameScr.vMob.size(); j++)
+					{
+						if (GameScr.vMob.elementAt(j) is Mob mob)
+						{
+							mob.updateHp_bar();
+						}
+					}
+				}
+			}
 	public void getData()
 			{
 				if (arrMobTemplate[templateId].data == null)
