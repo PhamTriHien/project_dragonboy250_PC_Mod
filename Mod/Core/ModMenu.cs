@@ -218,6 +218,7 @@ public static class ModMenu
 	#region Core State & Lifecycle
 
 	private static bool inited = false;
+	private static int _lastUiInputFrame = -1;
 	private static long mapChangeWatchdogTime = 0;
 	public static bool modMenuOpen = false;
 	private static Command[] cmds;
@@ -326,13 +327,18 @@ public static class ModMenu
 			// Đồng bộ độ phân giải màn hình khi thay đổi kích thước cửa sổ / toàn màn hình
 			ModGraphics.UpdateResolutionWatcher();
 
-			// Tương tác giao diện Modal
-			ModUI.HandleTap();
-
-			// Click logo trên màn hình để mở Mod UI
-			if (GameCanvas.isPointerJustRelease && ModLogo.IsPointerInsideLogo(GameCanvas.px, GameCanvas.py))
+			int curUiFrame = Time.frameCount;
+			if (curUiFrame <= 0 || curUiFrame != _lastUiInputFrame)
 			{
-				OpenMenu();
+				_lastUiInputFrame = curUiFrame;
+				// Tương tác giao diện Modal
+				ModUI.HandleTap();
+
+				// Click logo trên màn hình để mở Mod UI
+				if (GameCanvas.isPointerJustRelease && ModLogo.IsPointerInsideLogo(GameCanvas.px, GameCanvas.py))
+				{
+					OpenMenu();
+				}
 			}
 
 			// Tự động kết nối lại & đăng nhập lại khi mất kết nối mạng

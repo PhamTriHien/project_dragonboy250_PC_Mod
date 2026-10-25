@@ -376,6 +376,9 @@ public static class ModUI
 			bool useDetailScroll = (selectedTab == 4 && !ModUIBackground.isOpen);
 			if (useDetailScroll)
 			{
+				int maxPaintDetailScroll = (ModUIGraphics.ContentHeight - (detailH - 4) > 0) ? (ModUIGraphics.ContentHeight - (detailH - 4)) : 0;
+				if (detailScrollY > maxPaintDetailScroll) detailScrollY = maxPaintDetailScroll;
+				if (detailScrollY < 0) detailScrollY = 0;
 				g.translate(0, -detailScrollY);
 			}
 
@@ -480,7 +483,7 @@ public static class ModUI
 				int detailY = uiY + 24;
 				int detailW = uiW - (colW + 17);
 				int detailH = uiH - 30;
-				int maxDetailScroll = (345 - (detailH - 4) > 0) ? (345 - (detailH - 4)) : 0;
+				int maxDetailScroll = (ModUIGraphics.ContentHeight - (detailH - 4) > 0) ? (ModUIGraphics.ContentHeight - (detailH - 4)) : 0;
 
 				// Đọc trạng thái chuột & cảm ứng đáng tin cậy
 				bool isDown = Input.GetMouseButton(0) || GameCanvas.isPointerDown;

@@ -79,6 +79,7 @@ public class Main : MonoBehaviour
 		mSystem.isTest = true; // Kích hoạt log Engine & Network gốc vào output_log.txt
 		Application.runInBackground = true; // DUY TRÌ GAME CHẠY LIÊN TỤC 24/7 KHI THU NHỎ HOẶC CHẠY DƯỚI NỀN
 		ModConfig.LoadConfig();
+		ModGraphics.ApplyAnimSpeed();
 		ModTdltLogger.InitSession();
 		ModFps.LoadFPS();
 		if (started)
@@ -134,7 +135,7 @@ public class Main : MonoBehaviour
 	private void OnHideUnity(bool isGameShown)
 	{
 		// Luôn duy trì Time.timeScale = 1f để nhân vật tiếp tục di chuyển và nhận gói tin mạng
-		Time.timeScale = 1f;
+		Time.timeScale = ModGraphics.GetAnimSpeed();
 	}
 
 	private void OnApplicationFocus(bool hasFocus)
@@ -336,10 +337,16 @@ public class Main : MonoBehaviour
 
 	public void Update()
 	{
-		if (Time.fixedDeltaTime != 0.02f)
+		float animSpeed = ModGraphics.GetAnimSpeed();
+		if (Time.timeScale != animSpeed)
+		{
+			Time.timeScale = animSpeed;
+		}
+		float maxDt = (animSpeed > 1f) ? (0.1f * animSpeed) : 0.1f;
+		if (Time.fixedDeltaTime != 0.02f || Time.maximumDeltaTime != maxDt)
 		{
 			Time.fixedDeltaTime = 0.02f;
-			Time.maximumDeltaTime = 0.1f;
+			Time.maximumDeltaTime = maxDt;
 		}
 	}
 
