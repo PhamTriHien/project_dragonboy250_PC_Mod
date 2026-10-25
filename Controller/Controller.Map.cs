@@ -748,46 +748,53 @@ public partial class Controller : IMessageHandler
 				case 10:
 					try
 					{
-						Char.isLoadingMap = true;
 						Res.outz("REQUEST MAP TEMPLATE");
-						GameCanvas.isLoading = true;
-						TileMap.maps = null;
-						TileMap.types = null;
-						mSystem.gcc();
-						GameCanvas.debug("SA99", 2);
-						TileMap.tmw = msg.reader().readByte();
-						TileMap.tmh = msg.reader().readByte();
-						TileMap.maps = new int[TileMap.tmw * TileMap.tmh];
-						Res.err("   M apsize= " + TileMap.tmw * TileMap.tmh);
-						for (int i = 0; i < TileMap.maps.Length; i++)
+						int templateTmw = msg.reader().readByte();
+						int templateTmh = msg.reader().readByte();
+						int[] templateMaps = new int[templateTmw * templateTmh];
+						Res.err("   M apsize= " + templateMaps.Length);
+						for (int i = 0; i < templateMaps.Length; i++)
 						{
 							int num = msg.reader().readByte();
 							if (num < 0)
 							{
 								num += 256;
 							}
-							TileMap.maps[i] = (ushort)num;
+							templateMaps[i] = (ushort)num;
 						}
+						int expectedMapId = (pendingMapTemplates.Count > 0) ? pendingMapTemplates.Dequeue().mapId : TileMap.mapID;
+						if (messWait == null || pendingMapTemplates.Count > 0 || expectedMapId != TileMap.mapID)
+						{
+							break;
+						}
+						Char.isLoadingMap = true;
+						GameCanvas.isLoading = true;
+						TileMap.maps = null;
+						TileMap.types = null;
+						mSystem.gcc();
+						GameCanvas.debug("SA99", 2);
+						TileMap.tmw = templateTmw;
+						TileMap.tmh = templateTmh;
+						TileMap.maps = templateMaps;
 						TileMap.types = new int[TileMap.maps.Length];
-						msg = messWait;
-						loadInfoMap(msg);
+						Message waitMsg = messWait;
+						messWait = null;
+						loadInfoMap(waitMsg);
 						try
 						{
-							sbyte b2 = msg.reader().readByte();
+							sbyte b2 = waitMsg.reader().readByte();
 							TileMap.isMapDouble = ((b2 != 0) ? true : false);
 						}
 						catch (Exception ex)
 						{
 							Res.err(" 1 LOI TAI CASE REQUEST_MAPTEMPLATE " + ex.ToString());
 						}
+						waitMsg.cleanup();
 					}
 					catch (Exception ex2)
 					{
 						Res.err("2 LOI TAI CASE REQUEST_MAPTEMPLATE " + ex2.ToString());
 					}
-					msg.cleanup();
-					messWait.cleanup();
-					msg = (messWait = null);
 					GameScr.gI().switchToMe();
 					break;
 				case 9:

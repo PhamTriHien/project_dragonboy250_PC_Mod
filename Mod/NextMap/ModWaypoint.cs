@@ -411,9 +411,10 @@ public static class ModWaypoint
 				edgeWalkAttempts = 0;
 			}
 
+			long confirmTimeoutMs = (Controller.lastServerPacketTime >= lastTeleportTime) ? 550 : 2500;
 			if (isWaitingTeleportConfirm)
 			{
-				if (now - lastTeleportTime < 550)
+				if (now - lastTeleportTime < confirmTimeoutMs)
 				{
 					return false;
 				}
@@ -455,7 +456,7 @@ public static class ModWaypoint
 
 			if (!isWpPosConfirmed)
 			{
-				if (now - lastTeleportTime >= 550)
+				if (now - lastTeleportTime >= confirmTimeoutMs)
 				{
 					isWpPosConfirmed = true;
 				}
@@ -539,9 +540,10 @@ public static class ModWaypoint
 				lastTeleportTime = 0;
 			}
 
+			long airConfirmTimeoutMs = (Controller.lastServerPacketTime >= lastTeleportTime) ? 550 : 2500;
 			if (isWaitingTeleportConfirm)
 			{
-				if (now - lastTeleportTime < 550)
+				if (now - lastTeleportTime < airConfirmTimeoutMs)
 				{
 					return false;
 				}
@@ -570,7 +572,7 @@ public static class ModWaypoint
 
 			if (!isWpPosConfirmed)
 			{
-				if (now - lastTeleportTime >= 550)
+				if (now - lastTeleportTime >= airConfirmTimeoutMs)
 				{
 					isWpPosConfirmed = true;
 				}
@@ -664,9 +666,10 @@ public static class ModWaypoint
 			}
 
 			long now = mSystem.currentTimeMillis();
+			long shipConfirmTimeoutMs = (Controller.lastServerPacketTime >= lastTeleportTime) ? 550 : 2500;
 			if (isWaitingTeleportConfirm)
 			{
-				if (now - lastTeleportTime < 550)
+				if (now - lastTeleportTime < shipConfirmTimeoutMs)
 				{
 					return false;
 				}

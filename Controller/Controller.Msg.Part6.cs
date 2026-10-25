@@ -364,6 +364,8 @@ public partial class Controller : IMessageHandler
 					Res.outz("***************MAP_INFO**************");
 					GameScr.isPickNgocRong = false;
 					Char.isLoadingMap = true;
+					GameCanvas.waitingTimeChangeMap = mSystem.currentTimeMillis() + 5000;
+					messWait = null;
 					Cout.println("GET MAP INFO");
 					GameScr.gI().magicTree = null;
 					GameCanvas.isLoading = true;
@@ -390,6 +392,16 @@ public partial class Controller : IMessageHandler
 					}
 					catch (Exception)
 					{
+						long reqNow = mSystem.currentTimeMillis();
+						while (pendingMapTemplates.Count > 0 && reqNow - pendingMapTemplates.Peek().requestTime > 15000)
+						{
+							pendingMapTemplates.Dequeue();
+						}
+						pendingMapTemplates.Enqueue(new PendingMapTemplateRequest
+						{
+							mapId = TileMap.mapID,
+							requestTime = reqNow
+						});
 						Service.gI().requestMaptemplate(TileMap.mapID);
 						messWait = msg;
 						break;

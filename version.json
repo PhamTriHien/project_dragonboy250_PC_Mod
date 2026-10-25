@@ -1,9 +1,9 @@
 {
-  "version": "2.5.50",
+  "version": "2.5.51",
   "buildDate": "2026-10-25",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.50/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.50/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.50/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.50/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.50: Tối ưu tầng sâu Tàn Sát & GoBack riêng cho Cooler/Cold (Map 105-110): Mở khóa bước bay BFS 3 ô gạch (72px-76px/92ms ~ 760px/s, 0 RESET_POINT, nhanh hơn +85%), chạy lướt sàn băng 76px/92ms (tầm 640px), bổ sung Hybrid Teleport tiếp đất dưới chân quái bay (rút chặng 3.3s xuống ~0.4s), kẹp trần an toàn Cold < 95 Packet 46 chống kick tuyệt đối, tự thoát kẹt ngầm (295,192) và sửa triệt để lỗi rơi tàu vũ trụ / xác chết nhận Packet 46."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.51/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.51/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.51/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.51/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.51: Sửa triệt để lỗi dội ngược map và văng kết nối ra màn hình chọn Server khi mạng/server lag dài (11s+) lúc chạy Next Map: (1) Hàng đợi FIFO kiểm soát gói REQUEST_MAPTEMPLATE (case 10) loại bỏ gói template trễ hạn, chống ghi đè TileMap và chống NullReferenceException trên messWait; (2) Giữ khóa isLoadingMap cho đến khi nạp xong template bản đồ, không xóa nhầm cạnh đồ thị khi vGo chưa tải; (3) Nhận diện kết nối treo qua thời điểm gói tin Server cuối để chặn dồn hàng loạt requestChangeMap gây dội ngược cổng."
 }

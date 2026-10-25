@@ -197,6 +197,7 @@ public partial class Controller : IMessageHandler
 					InfoDlg.hide();
 					LoginScr.isContinueToLogin = false;
 					Char.isLoadingMap = false;
+					ClearPendingMapTemplates();
 					Char.ischangingMap = false;
 					Char.isLockKey = false;
 					Controller.isStopReadMessage = false;

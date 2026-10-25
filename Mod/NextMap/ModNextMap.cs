@@ -515,7 +515,7 @@ public static class ModNextMap
 		}
 
 		Char me = Char.myCharz();
-		if (me == null || Char.isLoadingMap || Controller.isStopReadMessage)
+		if (me == null || Char.isLoadingMap || Controller.isStopReadMessage || Controller.gI().messWait != null)
 		{
 			return;
 		}
@@ -573,26 +573,31 @@ public static class ModNextMap
 			{
 				lastChangeAttemptTime = now;
 			}
-			else if (now - lastChangeAttemptTime > 2500)
+			else
 			{
-				Char.ischangingMap = false;
-				Char.isLockKey = false;
-				me.isLockAttack = false;
-				me.isLockMove = false;
-				me.isTeleport = false;
-				Controller.isStopReadMessage = false;
-				GameScr.lockTick = 0;
-				if (Teleport.vTeleport != null)
+				long watchdogTimeoutMs = (Controller.lastServerPacketTime >= lastChangeAttemptTime) ? 2500 : 12000;
+				if (now - lastChangeAttemptTime > watchdogTimeoutMs)
 				{
-					Teleport.vTeleport.removeAllElements();
+					Char.ischangingMap = false;
+					Char.isLockKey = false;
+					me.isLockAttack = false;
+					me.isLockMove = false;
+					me.isTeleport = false;
+					Controller.isStopReadMessage = false;
+					GameScr.lockTick = 0;
+					if (Teleport.vTeleport != null)
+					{
+						Teleport.vTeleport.removeAllElements();
+					}
+					InfoDlg.hide();
+					GameCanvas.endDlg();
+					lastChangeAttemptTime = 0;
+					nextMapCooldown = 3;
+					mapEnterWaitUntil = now + 180;
+					Char.entranceWaypoint = null;
+					me.cxSend = -1;
+					ModWaypoint.ResetWaypointState();
 				}
-				InfoDlg.hide();
-				GameCanvas.endDlg();
-				lastChangeAttemptTime = 0;
-				nextMapCooldown = 3;
-				mapEnterWaitUntil = now + 180;
-				Char.entranceWaypoint = null;
-				ModWaypoint.ResetWaypointState();
 			}
 			return;
 		}
@@ -676,6 +681,7 @@ public static class ModNextMap
 		{
 			nextMapFailCount++;
 			if (nextMapFailCount >= 2 &&
+			    TileMap.vGo != null && TileMap.vGo.size() > 0 &&
 			    ModNextMapData.mapWaypoints.TryGetValue(TileMap.mapID, out List<int> currNeighbors) &&
 			    currNeighbors.Count > 1 &&
 			    currNeighbors.Remove(nextMapId))
