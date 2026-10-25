@@ -1,9 +1,9 @@
 {
-  "version": "2.5.53",
+  "version": "2.5.54",
   "buildDate": "2026-10-25",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.53/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.53/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.53/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.53/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.53: Tối ưu chuyên sâu tốc độ Tàn Sát Cooler (Map 105-110) giữ vững 100% độ ổn định treo dài hạn (0 phạt RESET_POINT, 0 kick máy chủ): (1) Khôi phục tức thời hồi chiêu của đòn vung dở chưa kịp gửi gói sendPlayerAttack khi quái chết, giúp xuất đòn 0ms ngay khoảnh khắc chạm quái kế tiếp; (2) Mở rộng bước bay/đi bộ chuẩn an toàn 84px ở nhịp 82ms kèm nội suy đường bay liên tục và chống bước lùi lúc cất cánh; (3) Quét dứt điểm quái cùng tầng phẳng theo hướng di chuyển, mở tầm cận chiến khi đang giao chiến tránh nhích bước thừa, nhặt đồ rơi sát chân 0ms tại chỗ và phân bổ ngân sách Hybrid Teleport cho quãng nhảy xa xuyên map."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.54/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.54/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.54/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.54/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.54: Đồng nhất tuyệt đối quy tắc di chuyển Tàn Sát Cooler theo địa hình base map (bỏ hoàn toàn chu kỳ hẹn giờ hồi lượt): (1) Quái nằm trên cùng 1 base mặt đất liền mạch thì luôn chạy bộ tàn sát quét sạch toàn bộ base; (2) Khi chuyển sang quái nằm ở base phía trên, base phía dưới, hoặc ở xa hai bên có base/vực chắn ngang thì dịch chuyển tức thời qua luôn."
 }

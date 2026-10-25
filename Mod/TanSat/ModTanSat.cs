@@ -263,33 +263,36 @@ public static class ModTanSat
 				ignoredMobUntil.Remove(m.mobId);
 			}
 
+			bool isFlyingMob = (Mob.arrMobTemplate != null &&
+			                    m.templateId >= 0 &&
+			                    m.templateId < Mob.arrMobTemplate.Length &&
+			                    Mob.arrMobTemplate[m.templateId] != null &&
+			                    (Mob.arrMobTemplate[m.templateId].type == 4 || Mob.arrMobTemplate[m.templateId].type == 5));
+			bool sameColdBase = coldBfs && !isFlyingMob && ModTeleport.IsSameColdGroundBase(me.cx, me.cy, m.x, m.y);
 			int euclidDist = Res.distance(me.cx, me.cy, m.x, m.y);
-			int dist = coldBfs
-				? (ModTeleport.GetColdTravelTileCost(me.cx, me.cy, m.x, m.y) * 24 + (euclidDist / 10))
-				: euclidDist;
-
-			if (coldBfs)
+			int dist;
+			if (sameColdBase)
 			{
-				if (ModTeleport.IsColdSameFlatPlatform(me.cx, me.cy, m.x, m.y))
-				{
-					int absDx = Res.abs(m.x - me.cx);
-					dist -= (absDx <= 420) ? 96 : 60;
-					if ((m.x - me.cx) * me.cdir >= 0)
-					{
-						dist -= 18;
-					}
-				}
-				else if (Res.abs(m.y - me.cy) <= 16 && Res.abs(m.x - me.cx) <= 640)
+				dist = Res.abs(m.x - me.cx) - 20000;
+				if ((m.x - me.cx) * me.cdir >= 0)
 				{
 					dist -= 24;
 				}
 			}
+			else if (coldBfs)
+			{
+				dist = euclidDist + (ModTeleport.GetColdTravelTileCost(me.cx, me.cy, m.x, m.y) * 6);
+			}
+			else
+			{
+				dist = euclidDist;
+			}
 
-			if (ModDropRate.isLastHitLock && m.hp < (m.maxHp / 3) && dist < 150)
+			if (ModDropRate.isLastHitLock && m.hp < (m.maxHp / 3) && euclidDist < 150)
 			{
 				dist -= 50;
 			}
-			if (ModDropRate.isInstantRespawnAttack && m.hp >= m.maxHp && dist < 120)
+			if (ModDropRate.isInstantRespawnAttack && m.hp >= m.maxHp && euclidDist < 120)
 			{
 				dist -= 30;
 			}
