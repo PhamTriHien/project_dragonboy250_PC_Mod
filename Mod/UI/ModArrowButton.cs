@@ -1,13 +1,14 @@
 using System;
 
 /// <summary>
-/// CLASS ModArrowButton: Định nghĩa và điều phối nút mở Mod Menu và cụm nút tác vụ nhanh bên phải màn hình.
+/// Quản lý nút mở Menu Mod và cụm nút tác vụ nhanh (Bông Tai, Khóa Mục Tiêu, Capsule, Khu, Qua Map Nhanh, Dừng Xmap) bằng 100% asset gốc NRO.
 /// </summary>
 public static class ModArrowButton
 {
-	private static readonly short[] PotaraTemplateIds = new short[] { 921, 454, 933, 1155, 1165, 1228, 1852 };
+	public static readonly short[] PotaraTemplateIds = new short[] { 1884, 921, 454, 933, 1155, 1165, 1228, 1852 };
 
-	// Vị trí và kích thước vùng bấm nút tam giác / mũi tên menu sát mép phải màn hình
+	public static bool showExtraQuickButtons = false;
+
 	public static void GetBounds(out int x, out int y, out int w, out int h)
 	{
 		Image img = (GameScr.imgMenu != null) ? GameScr.imgMenu : GameScr.imgArrow;
@@ -16,10 +17,7 @@ public static class ModArrowButton
 
 		w = imgW + 12;
 		h = imgH + 12;
-
-		// Nằm sát mép phải màn hình có tính toán Safe Area
 		x = GameCanvas.w - w - SafeArea.Right;
-		// Căn giữa chiều cao bên phải màn hình, tránh đè lên cụm nút nhanh phía dưới trên màn hình thấp
 		y = GameCanvas.h / 2 - h / 2;
 		int maxMenuY = GameCanvas.h - 150 - h;
 		if (y > maxMenuY && maxMenuY > 40)
@@ -28,7 +26,6 @@ public static class ModArrowButton
 		}
 	}
 
-	// Vị trí nút Khóa Mục Tiêu (Gim) bên phải màn hình (nằm ngay phía trên nút Đổi Mục Tiêu gốc)
 	public static void GetLockTargetBounds(out int x, out int y, out int w, out int h)
 	{
 		w = 32;
@@ -37,13 +34,47 @@ public static class ModArrowButton
 		y = GameCanvas.h - 146;
 	}
 
-	// Vị trí nút Hợp Thể Bông Tai Porata bên phải màn hình (nằm kế bên trái nút Khóa Mục Tiêu)
 	public static void GetPotaraBounds(out int x, out int y, out int w, out int h)
 	{
 		w = 32;
 		h = 32;
 		x = GameCanvas.w - 76 - SafeArea.Right;
 		y = GameCanvas.h - 146;
+	}
+
+	public static void GetCapsuleBounds(out int x, out int y, out int w, out int h)
+	{
+		w = 32;
+		h = 32;
+		x = GameCanvas.w - 112 - SafeArea.Right;
+		y = GameCanvas.h - 146;
+	}
+
+	public static void GetZoneBounds(out int x, out int y, out int w, out int h)
+	{
+		w = 32;
+		h = 32;
+		x = GameCanvas.w - 148 - SafeArea.Right;
+		y = GameCanvas.h - 146;
+	}
+
+	public static void GetMapDirBounds(int dir, out int x, out int y, out int w, out int h)
+	{
+		w = 28;
+		h = 28;
+		int cx = GameCanvas.w / 2;
+		y = GameCanvas.h - 86;
+		if (dir == 0) x = cx - 46;
+		else if (dir == 2) x = cx - 14;
+		else x = cx + 18;
+	}
+
+	public static void GetStopActionBounds(out int x, out int y, out int w, out int h)
+	{
+		w = 72;
+		h = 20;
+		x = GameCanvas.w / 2 - w / 2;
+		y = 60;
 	}
 
 	public static bool IsQuickButtonsVisible()
@@ -70,7 +101,7 @@ public static class ModArrowButton
 		return true;
 	}
 
-	private static bool FindPotaraInBag(out int bagIndex, out int iconId, out string itemName)
+	public static bool FindPotaraInBag(out int bagIndex, out int iconId, out string itemName)
 	{
 		bagIndex = -1;
 		iconId = 3893;
@@ -133,6 +164,70 @@ public static class ModArrowButton
 		return false;
 	}
 
+	public static bool FindCapsuleInBag(out int bagIndex, out int iconId)
+	{
+		bagIndex = -1;
+		iconId = 1088;
+		ItemTemplate tpl194 = ItemTemplates.get(194);
+		if (tpl194 != null && tpl194.iconID > 0) iconId = tpl194.iconID;
+
+		Char me = Char.myCharz();
+		if (me == null || me.arrItemBag == null) return false;
+
+		short[] ids = new short[] { 194, 193 };
+		for (int k = 0; k < ids.Length; k++)
+		{
+			for (int i = 0; i < me.arrItemBag.Length; i++)
+			{
+				Item it = me.arrItemBag[i];
+				if (it != null && it.template != null && it.template.id == ids[k])
+				{
+					bagIndex = i;
+					if (it.template.iconID > 0) iconId = it.template.iconID;
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	public static void UseCapsuleQuick()
+	{
+		Char me = Char.myCharz();
+		if (me == null || Char.isLoadingMap || Char.ischangingMap || me.isDie || me.statusMe == 14) return;
+		int idx;
+		int iconId;
+		if (FindCapsuleInBag(out idx, out iconId) && idx >= 0)
+		{
+			Service.gI().useItem(0, 1, (sbyte)idx, -1);
+			SoundMn.gI().buttonClick();
+		}
+		else
+		{
+			GameScr.info1.addInfo("Không tìm thấy Capsule (194/193) trong hành trang!", 0);
+		}
+	}
+
+	public static void UseTdltQuick()
+	{
+		Char me = Char.myCharz();
+		if (me == null || Char.isLoadingMap || Char.ischangingMap || me.isDie || me.statusMe == 14) return;
+		if (me.arrItemBag != null)
+		{
+			for (int i = 0; i < me.arrItemBag.Length; i++)
+			{
+				Item it = me.arrItemBag[i];
+				if (it != null && it.template != null && it.template.id == 521)
+				{
+					Service.gI().useItem(0, 1, (sbyte)i, -1);
+					SoundMn.gI().buttonClick();
+					return;
+				}
+			}
+		}
+		GameScr.info1.addInfo("Không tìm thấy Tự Động Luyện Tập (521) trong hành trang!", 0);
+	}
+
 	public static void UsePotaraFusion()
 	{
 		Char me = Char.myCharz();
@@ -157,9 +252,11 @@ public static class ModArrowButton
 		}
 	}
 
-	/// <summary>
-	/// Thực hiện vẽ toàn bộ đối tượng và các lớp hiển thị lên canvas mGraphics.
-	/// </summary>
+	private static bool HasStoppableTask()
+	{
+		return ModNextMap.isNextMapActive || ModBossNotice.isAutoScanBossZone;
+	}
+
 	public static void Paint(mGraphics g)
 	{
 		try
@@ -169,40 +266,17 @@ public static class ModArrowButton
 				return;
 			}
 
-			// Nạp hình ảnh asset gốc của game nếu chưa có
-			if (GameScr.imgMenu == null)
-			{
-				GameScr.imgMenu = GameCanvas.loadImage("/mainImage/myTexture2dmenu.png");
-			}
-			if (GameScr.imgArrow == null)
-			{
-				GameScr.imgArrow = GameCanvas.loadImage("/mainImage/myTexture2darrow.png");
-			}
-			if (GameScr.imgArrow2 == null)
-			{
-				GameScr.imgArrow2 = GameCanvas.loadImage("/mainImage/myTexture2darrow2.png");
-			}
-			if (GameScr.imgNut == null)
-			{
-				GameScr.imgNut = GameCanvas.loadImage("/mainImage/myTexture2dnut.png");
-			}
-			if (GameScr.imgNutF == null)
-			{
-				GameScr.imgNutF = GameCanvas.loadImage("/mainImage/myTexture2dnutF.png");
-			}
-			if (GameScr.imgFocus == null)
-			{
-				GameScr.imgFocus = GameCanvas.loadImage("/mainImage/myTexture2dfocus.png");
-			}
-			if (GameScr.imgFocus2 == null)
-			{
-				GameScr.imgFocus2 = GameCanvas.loadImage("/mainImage/myTexture2dfocus2.png");
-			}
+			if (GameScr.imgMenu == null) GameScr.imgMenu = GameCanvas.loadImage("/mainImage/myTexture2dmenu.png");
+			if (GameScr.imgArrow == null) GameScr.imgArrow = GameCanvas.loadImage("/mainImage/myTexture2darrow.png");
+			if (GameScr.imgArrow2 == null) GameScr.imgArrow2 = GameCanvas.loadImage("/mainImage/myTexture2darrow2.png");
+			if (GameScr.imgNut == null) GameScr.imgNut = GameCanvas.loadImage("/mainImage/myTexture2dnut.png");
+			if (GameScr.imgNutF == null) GameScr.imgNutF = GameCanvas.loadImage("/mainImage/myTexture2dnutF.png");
+			if (GameScr.imgFocus == null) GameScr.imgFocus = GameCanvas.loadImage("/mainImage/myTexture2dfocus.png");
+			if (GameScr.imgFocus2 == null) GameScr.imgFocus2 = GameCanvas.loadImage("/mainImage/myTexture2dfocus2.png");
 
 			g.translate(-g.getTranslateX(), -g.getTranslateY());
 			g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
 
-			// Trạng thái Mod Menu đang mở hay đóng
 			bool isOpen = (ModMenu.modMenuOpen && GameCanvas.menu != null && GameCanvas.menu.showMenu) || ModUI.uiCustomOpen;
 
 			int hitX, hitY, hitW, hitH;
@@ -215,13 +289,9 @@ public static class ModArrowButton
 				int imgH = mGraphics.getImageHeight(menuImg);
 				int drawX = GameCanvas.w - imgW - SafeArea.Right;
 				int drawY = hitY + (hitH - imgH) / 2;
-
-				// transform = 2 (TRANS_MIRROR): Nút tam giác quay vào trong (<) khi menu đang đóng
-				// transform = 0 (Normal): Nút tam giác quay ra ngoài (>) khi menu đang mở
 				int transform = isOpen ? 0 : 2;
 				g.drawRegion(menuImg, 0, 0, imgW, imgH, transform, drawX, drawY, 0);
 
-				// Hiệu ứng rê chuột (hover flare gốc của game)
 				if (GameCanvas.px >= hitX && GameCanvas.px <= GameCanvas.w - SafeArea.Right && GameCanvas.py >= hitY && GameCanvas.py <= hitY + hitH)
 				{
 					if (ItemMap.imageFlare != null)
@@ -232,7 +302,6 @@ public static class ModArrowButton
 			}
 			else
 			{
-				// Fallback dùng asset mũi tên tam giác imgArrow / imgArrow2 nếu thiếu imgMenu
 				Image arrowImg = isOpen ? GameScr.imgArrow : GameScr.imgArrow2;
 				if (arrowImg != null)
 				{
@@ -241,23 +310,13 @@ public static class ModArrowButton
 					int drawX = GameCanvas.w - aw - 2 - SafeArea.Right;
 					int drawY = hitY + (hitH - ah) / 2;
 					g.drawImage(arrowImg, drawX, drawY, 0);
-
-					if (GameCanvas.px >= hitX && GameCanvas.px <= GameCanvas.w - SafeArea.Right && GameCanvas.py >= hitY && GameCanvas.py <= hitY + hitH)
-					{
-						if (ItemMap.imageFlare != null)
-						{
-							g.drawImage(ItemMap.imageFlare, drawX + aw / 2, drawY + ah / 2, 3);
-						}
-					}
 				}
 			}
 
-			// Vẽ cụm 2 nút tác vụ nhanh bên phải: Hợp Thể Bông Tai & Khóa Mục Tiêu
 			if (IsQuickButtonsVisible())
 			{
 				Char me = Char.myCharz();
 
-				// 1. Nút Hợp Thể Bông Tai Porata (chỉ hiển thị nút tròn + icon bông tai, không hiển thị chữ)
 				int potX, potY, potW, potH;
 				GetPotaraBounds(out potX, out potY, out potW, out potH);
 				int potCenterX = potX + potW / 2;
@@ -277,7 +336,6 @@ public static class ModArrowButton
 				FindPotaraInBag(out bagIdx, out potIconId, out potName);
 				SmallImage.drawSmallImage(g, potIconId, potCenterX, potCenterY, 0, mGraphics.VCENTER | mGraphics.HCENTER);
 
-				// 2. Nút Khóa Mục Tiêu (Gim Mục Tiêu)
 				int lockX, lockY, lockW, lockH;
 				GetLockTargetBounds(out lockX, out lockY, out lockW, out lockH);
 				int lockCenterX = lockX + lockW / 2;
@@ -311,6 +369,45 @@ public static class ModArrowButton
 						mFont.tahoma_7_yellow.drawString(g, "GIM", lockCenterX, lockY + lockH - 10, mFont.CENTER, mFont.tahoma_7_grey);
 					}
 				}
+
+				if (HasStoppableTask())
+				{
+					int sx, sy, sw, sh;
+					GetStopActionBounds(out sx, out sy, out sw, out sh);
+					PopUp.paintPopUp(g, sx, sy, sw, sh, 1, isButton: true);
+					mFont.tahoma_7b_red.drawString(g, "DỪNG CHẠY", sx + sw / 2, sy + 3, mFont.CENTER);
+				}
+
+				if (showExtraQuickButtons)
+				{
+					int capX, capY, capW, capH;
+					GetCapsuleBounds(out capX, out capY, out capW, out capH);
+					bool hoverCap = GameCanvas.px >= capX && GameCanvas.px <= capX + capW && GameCanvas.py >= capY && GameCanvas.py <= capY + capH;
+					Image capBg = hoverCap ? GameScr.imgNutF : GameScr.imgNut;
+					if (capBg != null) g.drawImage(capBg, capX + capW / 2, capY + capH / 2, mGraphics.HCENTER | mGraphics.VCENTER);
+					int capIdx, capIcon;
+					FindCapsuleInBag(out capIdx, out capIcon);
+					SmallImage.drawSmallImage(g, capIcon, capX + capW / 2, capY + capH / 2, 0, mGraphics.VCENTER | mGraphics.HCENTER);
+
+					int znX, znY, znW, znH;
+					GetZoneBounds(out znX, out znY, out znW, out znH);
+					bool hoverZn = GameCanvas.px >= znX && GameCanvas.px <= znX + znW && GameCanvas.py >= znY && GameCanvas.py <= znY + znH;
+					Image znBg = hoverZn ? GameScr.imgNutF : GameScr.imgNut;
+					if (znBg != null) g.drawImage(znBg, znX + znW / 2, znY + znH / 2, mGraphics.HCENTER | mGraphics.VCENTER);
+					mFont.tahoma_7b_yellow.drawString(g, "K." + TileMap.zoneID, znX + znW / 2, znY + znH / 2 - 5, mFont.CENTER, mFont.tahoma_7_grey);
+
+					int[] dirs = new int[] { 0, 2, 1 };
+					string[] dirLabels = new string[] { "<", "^", ">" };
+					for (int d = 0; d < dirs.Length; d++)
+					{
+						int dx, dy, dw, dh;
+						GetMapDirBounds(dirs[d], out dx, out dy, out dw, out dh);
+						bool hoverDir = GameCanvas.px >= dx && GameCanvas.px <= dx + dw && GameCanvas.py >= dy && GameCanvas.py <= dy + dh;
+						Image dirBg = hoverDir ? GameScr.imgNutF : GameScr.imgNut;
+						if (dirBg != null) g.drawImage(dirBg, dx + dw / 2, dy + dh / 2, mGraphics.HCENTER | mGraphics.VCENTER);
+						mFont.tahoma_7b_white.drawString(g, dirLabels[d], dx + dw / 2, dy + dh / 2 - 5, mFont.CENTER, mFont.tahoma_7_grey);
+					}
+				}
 			}
 
 			g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
@@ -320,9 +417,6 @@ public static class ModArrowButton
 		}
 	}
 
-	/// <summary>
-	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của CheckClick.
-	/// </summary>
 	public static bool CheckClick()
 	{
 		try
@@ -332,9 +426,29 @@ public static class ModArrowButton
 				return false;
 			}
 
-			// Kiểm tra click cụm nút tác vụ nhanh bên phải (Hợp Thể Bông Tai & Khóa Mục Tiêu)
 			if (IsQuickButtonsVisible())
 			{
+				if (HasStoppableTask())
+				{
+					int sx, sy, sw, sh;
+					GetStopActionBounds(out sx, out sy, out sw, out sh);
+					if (GameCanvas.isPointerHoldIn(sx, sy, sw, sh))
+					{
+						mScreen.keyTouch = -1;
+						GameCanvas.isPointerJustDown = false;
+						if (GameCanvas.isPointerClick || GameCanvas.isPointerJustRelease)
+						{
+							GameCanvas.clearAllPointerEvent();
+							StopCharacterClickMove();
+							if (ModNextMap.isNextMapActive) ModNextMap.StopNextMap();
+							if (ModBossNotice.isAutoScanBossZone) ModBossNotice.StopAutoScanZone();
+							SoundMn.gI().buttonClick();
+							return true;
+						}
+						return true;
+					}
+				}
+
 				int potX, potY, potW, potH;
 				GetPotaraBounds(out potX, out potY, out potW, out potH);
 				if (GameCanvas.isPointerHoldIn(potX, potY, potW, potH))
@@ -366,6 +480,63 @@ public static class ModArrowButton
 					}
 					return true;
 				}
+
+				if (showExtraQuickButtons)
+				{
+					int capX, capY, capW, capH;
+					GetCapsuleBounds(out capX, out capY, out capW, out capH);
+					if (GameCanvas.isPointerHoldIn(capX, capY, capW, capH))
+					{
+						mScreen.keyTouch = -1;
+						GameCanvas.isPointerJustDown = false;
+						if (GameCanvas.isPointerClick || GameCanvas.isPointerJustRelease)
+						{
+							GameCanvas.clearAllPointerEvent();
+							StopCharacterClickMove();
+							UseCapsuleQuick();
+							return true;
+						}
+						return true;
+					}
+
+					int znX, znY, znW, znH;
+					GetZoneBounds(out znX, out znY, out znW, out znH);
+					if (GameCanvas.isPointerHoldIn(znX, znY, znW, znH))
+					{
+						mScreen.keyTouch = -1;
+						GameCanvas.isPointerJustDown = false;
+						if (GameCanvas.isPointerClick || GameCanvas.isPointerJustRelease)
+						{
+							GameCanvas.clearAllPointerEvent();
+							StopCharacterClickMove();
+							Service.gI().openUIZone();
+							SoundMn.gI().buttonClick();
+							return true;
+						}
+						return true;
+					}
+
+					int[] dirs = new int[] { 0, 2, 1 };
+					for (int d = 0; d < dirs.Length; d++)
+					{
+						int dx, dy, dw, dh;
+						GetMapDirBounds(dirs[d], out dx, out dy, out dw, out dh);
+						if (GameCanvas.isPointerHoldIn(dx, dy, dw, dh))
+						{
+							mScreen.keyTouch = -1;
+							GameCanvas.isPointerJustDown = false;
+							if (GameCanvas.isPointerClick || GameCanvas.isPointerJustRelease)
+							{
+								GameCanvas.clearAllPointerEvent();
+								StopCharacterClickMove();
+								ModNextMap.LoadMapDirection(dirs[d]);
+								SoundMn.gI().buttonClick();
+								return true;
+							}
+							return true;
+						}
+					}
+				}
 			}
 
 			int x, y, w, h;
@@ -380,7 +551,7 @@ public static class ModArrowButton
 					ModHotkey.ToggleModMenu();
 					return true;
 				}
-				return true; // Giữ chuột trên nút -> chặn click xuyên qua
+				return true;
 			}
 		}
 		catch

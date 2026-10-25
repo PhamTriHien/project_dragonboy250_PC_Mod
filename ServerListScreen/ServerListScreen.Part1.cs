@@ -294,6 +294,7 @@ public partial class ServerListScreen : mScreen, IActionListener
 			}
 			ModAutoUpdate.UpdateTick();
 			ModAutoUpdate.UpdateLobbyInput();
+			ModProxyServer.UpdateLobbyInput();
 			base.update();
 			if (LoginScr.isUpdateAll && !LoginScr.isUpdateData && !LoginScr.isUpdateItem && !LoginScr.isUpdateMap && !LoginScr.isUpdateSkill)
 			{

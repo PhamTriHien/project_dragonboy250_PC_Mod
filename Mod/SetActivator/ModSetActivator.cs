@@ -20,6 +20,8 @@ public static class ModSetActivator
 		MovingToHomeBox,
 		InteractingBox,
 		StoringToBox,
+		MovingToSanta,
+		BuyingTdltAtSanta,
 		ReturningToFarm,
 		SwitchingZone,
 		TeleportingToSpot
@@ -40,6 +42,70 @@ public static class ModSetActivator
 	public static bool autoUseTdlt = false;
 	public static bool autoBuyTdlt = false;
 	private static long lastTdltActionTime = 0;
+	private static int s_SantaBuyStep = 0;
+
+	private class IdListChatListener : IChatable
+	{
+		public bool isSellList;
+
+		public void onChatFromMe(string text, string to)
+		{
+			ChatTextField.gI().isShow = false;
+			ChatTextField.gI().parentScreen = GameScr.gI();
+			string cleaned = (text ?? string.Empty).Trim();
+			if (isSellList)
+			{
+				sellItemIdsRaw = cleaned;
+				GameScr.info1.addInfo(string.IsNullOrEmpty(cleaned) ? "Đã xóa danh sách ID bán thêm" : ("ID bán thêm: " + cleaned), 0);
+			}
+			else
+			{
+				keepItemIdsRaw = cleaned;
+				GameScr.info1.addInfo(string.IsNullOrEmpty(cleaned) ? "Đã xóa danh sách ID giữ lại" : ("ID giữ lại: " + cleaned), 0);
+			}
+			ModConfig.SaveConfig();
+		}
+
+		public void onCancelChat()
+		{
+			ChatTextField.gI().isShow = false;
+			ChatTextField.gI().parentScreen = GameScr.gI();
+		}
+	}
+
+	private static readonly IdListChatListener s_IdListChatListener = new IdListChatListener();
+
+	public static void ShowInputKeepIds()
+	{
+		s_IdListChatListener.isSellList = false;
+		ChatTextField.gI().strChat = "Nhập các ID vật phẩm giữ lại (cách nhau dấu ;)";
+		ChatTextField.gI().tfChat.name = "ID giữ lại (VD: 521;1523;1524)";
+		ChatTextField.gI().tfChat.setIputType(TField.INPUT_TYPE_ANY);
+		ChatTextField.gI().startChat2(s_IdListChatListener, string.Empty);
+		ChatTextField.gI().tfChat.setText(keepItemIdsRaw ?? string.Empty);
+	}
+
+	public static void ShowInputSellIds()
+	{
+		s_IdListChatListener.isSellList = true;
+		ChatTextField.gI().strChat = "Nhập các ID vật phẩm ép bán (cách nhau dấu ;)";
+		ChatTextField.gI().tfChat.name = "ID ép bán (để trống = tắt)";
+		ChatTextField.gI().tfChat.setIputType(TField.INPUT_TYPE_ANY);
+		ChatTextField.gI().startChat2(s_IdListChatListener, string.Empty);
+		ChatTextField.gI().tfChat.setText(sellItemIdsRaw ?? string.Empty);
+	}
+
+	public static void CycleSellMaxLevel()
+	{
+		if (sellMaxLevel <= 5) sellMaxLevel = 8;
+		else if (sellMaxLevel <= 8) sellMaxLevel = 10;
+		else if (sellMaxLevel <= 10) sellMaxLevel = 12;
+		else if (sellMaxLevel <= 12) sellMaxLevel = 13;
+		else sellMaxLevel = 5;
+		ModConfig.SaveConfig();
+		GameScr.info1.addInfo("Bán trang bị tối đa Cấp <= " + sellMaxLevel, 0);
+		SoundMn.gI().buttonClick();
+	}
 
 	public static SetActivatorState currentState = SetActivatorState.Idle;
 
@@ -63,7 +129,7 @@ public static class ModSetActivator
 	{
 		get
 		{
-			return isActive && currentState != SetActivatorState.Idle && currentState != SetActivatorState.Farming;
+			return currentState != SetActivatorState.Idle && currentState != SetActivatorState.Farming;
 		}
 	}
 
@@ -221,8 +287,9 @@ public static class ModSetActivator
 			if (opt == null || opt.optionTemplate == null) continue;
 			int optId = opt.optionTemplate.id;
 
-			// Dải ID option của các bộ set kích hoạt chuẩn trong NRO
-			if ((optId >= 127 && optId <= 144) || (optId >= 210 && optId <= 225))
+			// Dải ID option của các bộ set kích hoạt chuẩn trong NRO (bao gồm cả 15 bộ SKH thế hệ mới)
+			if ((optId >= 127 && optId <= 144) || (optId >= 210 && optId <= 225) ||
+			    (optId >= 233 && optId <= 248) || (optId >= 254 && optId <= 257))
 			{
 				return true;
 			}
@@ -291,6 +358,12 @@ public static class ModSetActivator
 			string tag = null;
 			switch (opt.optionTemplate.id)
 			{
+				case 9:
+					if (item.template != null && item.template.type == 32)
+					{
+						tag = opt.param + "p";
+					}
+					break;
 				case 50: tag = opt.param + "%SĐ"; break;
 				case 77: tag = opt.param + "%HP"; break;
 				case 80: tag = opt.param + "%HP/30s"; break;
@@ -521,13 +594,22 @@ public static class ModSetActivator
 		{
 			Npc npc = (Npc)GameScr.vNpc.elementAt(i);
 			if (npc == null || npc.template == null) continue;
+			int tid = npc.template.npcTemplateId;
+			if (tid == 16 || tid == 7 || tid == 8 || tid == 9)
+			{
+				return npc;
+			}
+		}
+		for (int i = 0; i < GameScr.vNpc.size(); i++)
+		{
+			Npc npc = (Npc)GameScr.vNpc.elementAt(i);
+			if (npc == null || npc.template == null || npc.template.name == null) continue;
 			string name = npc.template.name.ToLower();
 			if (name.Contains("uron") || name.Contains("urôn") || name.Contains("u-rôn") || name.Contains("oolong"))
 			{
 				return npc;
 			}
 		}
-
 		for (int i = 0; i < GameScr.vNpc.size(); i++)
 		{
 			Npc npc = (Npc)GameScr.vNpc.elementAt(i);
@@ -538,6 +620,53 @@ public static class ModSetActivator
 			}
 		}
 		return null;
+	}
+
+	private static Npc FindSantaNpc()
+	{
+		if (GameScr.vNpc == null) return null;
+		for (int i = 0; i < GameScr.vNpc.size(); i++)
+		{
+			Npc npc = (Npc)GameScr.vNpc.elementAt(i);
+			if (npc == null || npc.template == null) continue;
+			if (npc.template.npcTemplateId == 39)
+			{
+				return npc;
+			}
+			string name = (npc.template.name ?? string.Empty).ToLower();
+			if (name.Contains("santa") || name.Contains("satan") || name.Contains("héc-quyn"))
+			{
+				return npc;
+			}
+		}
+		return null;
+	}
+
+	public static void StartBuyTdltNow()
+	{
+		Char me = Char.myCharz();
+		if (me == null || !ModMenu.IsInGame() || me.isDie) return;
+		if ((me.luong + me.luongKhoa) < 1)
+		{
+			GameScr.info1.addInfo("Không đủ Ngọc/Hồng Ngọc để mua TĐLT!", 0);
+			return;
+		}
+		if (TileMap.mapID != 5 && savedFarmMapId < 0)
+		{
+			savedFarmMapId = TileMap.mapID;
+			savedFarmZoneId = TileMap.zoneID;
+			savedFarmX = me.cx;
+			savedFarmY = me.cy;
+			ModConfig.SaveConfig();
+		}
+		currentState = SetActivatorState.MovingToSanta;
+		s_SantaBuyStep = 0;
+		stateTimer = mSystem.currentTimeMillis();
+		GameScr.info1.addInfo("Đang sang Đảo Kamê gặp Santa mua TĐLT...", 0);
+		if (TileMap.mapID != 5)
+		{
+			ModNextMap.StartNextMap(5);
+		}
 	}
 
 	/// <summary>
@@ -695,15 +824,20 @@ public static class ModSetActivator
 					}
 					me.focusManualTo(uron);
 
-					if (now - stateTimer > 1000)
+					if (now - stateTimer > 900)
 					{
 						stateTimer = now;
 						int npcTmplId = (uron.template != null) ? uron.template.npcTemplateId : uron.npcId;
 						Service.gI().openMenu(npcTmplId);
+						Service.gI().confirmMenu((short)npcTmplId, 0);
+						if (GameCanvas.menu != null)
+						{
+							GameCanvas.menu.showMenu = false;
+						}
 
 						currentState = SetActivatorState.SellingJunk;
 						isSellingJunk = true;
-						lastSellActionTime = now;
+						lastSellActionTime = now + 350;
 						currentSellingBagIndex = -1;
 						sellFailTimeoutCount = 0;
 					}
@@ -863,6 +997,110 @@ public static class ModSetActivator
 				}
 				break;
 
+			case SetActivatorState.MovingToSanta:
+				if (TileMap.mapID == 5 && !Char.isLoadingMap && !Char.ischangingMap)
+				{
+					if (ModNextMap.isNextMapActive)
+					{
+						ModNextMap.StopNextMap();
+					}
+					currentState = SetActivatorState.BuyingTdltAtSanta;
+					s_SantaBuyStep = 0;
+					stateTimer = now;
+				}
+				else if (!ModNextMap.isNextMapActive && !Char.isLoadingMap && !Char.ischangingMap && now - stateTimer > 3000)
+				{
+					stateTimer = now;
+					ModNextMap.StartNextMap(5);
+				}
+				break;
+
+			case SetActivatorState.BuyingTdltAtSanta:
+				if (Char.isLoadingMap || Char.ischangingMap) break;
+				Npc santa = FindSantaNpc();
+				if (santa == null)
+				{
+					if (now - stateTimer > 5000)
+					{
+						GameScr.info1.addInfo("Không tìm thấy NPC Santa tại Đảo Kamê!", 0);
+						ReturnToSavedFarm();
+					}
+					break;
+				}
+
+				int santaY = TileMap.tileYofPixel(santa.cy - 3);
+				if (Res.distance(me.cx, me.cy, santa.cx, santaY) > 28)
+				{
+					ModTeleport.TeleportTo(santa.cx, santaY);
+				}
+				me.focusManualTo(santa);
+				int santaId = (santa.template != null) ? santa.template.npcTemplateId : 39;
+
+				if (s_SantaBuyStep == 0 && now - stateTimer >= 700)
+				{
+					Service.gI().openMenu(santaId);
+					Service.gI().confirmMenu((short)santaId, 0);
+					if (GameCanvas.menu != null)
+					{
+						GameCanvas.menu.showMenu = false;
+					}
+					s_SantaBuyStep = 1;
+					stateTimer = now;
+				}
+				else if (s_SantaBuyStep == 1 && now - stateTimer >= 900)
+				{
+					int totalGems = me.luong + me.luongKhoa;
+					int tdltBuyId = 521;
+					sbyte tdltBuyType = 1;
+					if (me.arrItemShop != null)
+					{
+						int[] prefIds = new int[] { 1524, 1523, 521 };
+						bool matchedInShop = false;
+						for (int p = 0; p < prefIds.Length && !matchedInShop; p++)
+						{
+							for (int t = 0; t < me.arrItemShop.Length && !matchedInShop; t++)
+							{
+								if (me.arrItemShop[t] == null) continue;
+								for (int k = 0; k < me.arrItemShop[t].Length; k++)
+								{
+									Item sIt = me.arrItemShop[t][k];
+									if (sIt != null && sIt.template != null && sIt.template.id == prefIds[p])
+									{
+										if (sIt.isBuySpec && sIt.buySpec > 0)
+										{
+											continue;
+										}
+										if (sIt.buyGold > 0 && totalGems >= sIt.buyGold)
+										{
+											tdltBuyId = prefIds[p];
+											tdltBuyType = 1;
+											matchedInShop = true;
+											break;
+										}
+										if (sIt.buyGold <= 0 && sIt.buyCoin > 0 && me.xu >= sIt.buyCoin)
+										{
+											tdltBuyId = prefIds[p];
+											tdltBuyType = 0;
+											matchedInShop = true;
+											break;
+										}
+									}
+								}
+							}
+						}
+					}
+					Service.gI().buyItem(tdltBuyType, tdltBuyId, 0);
+					s_SantaBuyStep = 2;
+					stateTimer = now;
+				}
+				else if (s_SantaBuyStep == 2 && now - stateTimer >= 800)
+				{
+					TryUseUnexpiredTdltInBag(me);
+					GameScr.info1.addInfo("Đã mua & kích hoạt TĐLT tại Santa!", 0);
+					ReturnToSavedFarm();
+				}
+				break;
+
 			case SetActivatorState.ReturningToFarm:
 				if (savedFarmMapId == -1)
 				{
@@ -989,7 +1227,7 @@ public static class ModSetActivator
 	/// </summary>
 	public static string GetStatusText()
 	{
-		if (!isActive) return "Đang TẮT";
+		if (!isActive && !isBusy) return "Đang TẮT";
 		switch (currentState)
 		{
 			case SetActivatorState.Farming:
@@ -999,7 +1237,7 @@ public static class ModSetActivator
 			case SetActivatorState.MovingToUron:
 				return "Đang đến Trạm Tàu gặp Urôn";
 			case SetActivatorState.InteractingUron:
-				return "Đang tương tác với Urôn";
+				return "Đang mở cửa hàng Urôn";
 			case SetActivatorState.SellingJunk:
 				return "Đang bán đồ rác tại Urôn";
 			case SetActivatorState.MovingToHomeBox:
@@ -1008,6 +1246,10 @@ public static class ModSetActivator
 				return "Đang mở Rương Đồ tại nhà";
 			case SetActivatorState.StoringToBox:
 				return "Đang cất đồ SKH/Sao vào Rương";
+			case SetActivatorState.MovingToSanta:
+				return "Đang sang Đảo Kamê gặp Santa";
+			case SetActivatorState.BuyingTdltAtSanta:
+				return "Đang mua TĐLT tại Santa";
 			case SetActivatorState.ReturningToFarm:
 				return "Đang quay lại bản đồ bãi úp";
 			case SetActivatorState.SwitchingZone:
@@ -1019,52 +1261,128 @@ public static class ModSetActivator
 		}
 	}
 
-	/// <summary>
-	/// Tự động sử dụng hoặc mua Tự Động Luyện Tập (ID 521) khi hết hiệu lực ItemTime 4387.
-	/// </summary>
+	private static bool TryUseUnexpiredTdltInBag(Char me)
+	{
+		if (me == null || me.arrItemBag == null) return false;
+		for (int i = 0; i < me.arrItemBag.Length; i++)
+		{
+			Item item = me.arrItemBag[i];
+			if (item == null || item.template == null) continue;
+			int tid = item.template.id;
+			if (tid != 521 && tid != 1523 && tid != 1524) continue;
+
+			bool expired = false;
+			if (item.itemOption != null)
+			{
+				for (int j = 0; j < item.itemOption.Length; j++)
+				{
+					ItemOption opt = item.itemOption[j];
+					if (opt == null || opt.optionTemplate == null) continue;
+					int oid = opt.optionTemplate.id;
+					if ((oid == 1 || oid == 63 || oid == 64 || oid == 65 || oid == 73 || oid == 93) && opt.param <= 0)
+					{
+						expired = true;
+						break;
+					}
+				}
+			}
+			if (!expired)
+			{
+				Service.gI().useItem(0, 1, (sbyte)i, -1);
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private static void UpdateAutoTdlt(Char me, long now)
 	{
 		if (!autoUseTdlt || me == null || me.isDie) return;
+		if (isBusy || ModNextMap.isNextMapActive || ModGoBack.isReturning || Char.isLoadingMap || Char.ischangingMap) return;
 		if (now - lastTdltActionTime < 3500) return;
 		if (ItemTime.isExistItem(4387)) return;
 
 		lastTdltActionTime = now;
-		if (me.arrItemBag != null)
+		if (TryUseUnexpiredTdltInBag(me))
 		{
-			for (int i = 0; i < me.arrItemBag.Length; i++)
-			{
-				Item item = me.arrItemBag[i];
-				if (item != null && item.template != null && item.template.id == 521)
-				{
-					bool expired = false;
-					if (item.itemOption != null)
-					{
-						for (int j = 0; j < item.itemOption.Length; j++)
-						{
-							ItemOption opt = item.itemOption[j];
-							if (opt != null && opt.optionTemplate != null && (opt.optionTemplate.id == 93 || opt.optionTemplate.id == 73) && opt.param <= 0)
-							{
-								expired = true;
-								break;
-							}
-						}
-					}
-					if (!expired)
-					{
-						Service.gI().useItem(0, 1, (sbyte)i, -1);
-						return;
-					}
-				}
-			}
+			return;
 		}
 
 		if (autoBuyTdlt && (me.luong + me.luongKhoa) >= 1)
 		{
-			Service.gI().buyItem(0, 521, 0);
+			StartBuyTdltNow();
 		}
 	}
 
-	private static void ScanArrayForSkh(Item[] arr, int[,] counts)
+	private static readonly string[] s_SkhSetNames = new string[]
+	{
+		"Songoku",
+		"Thiên Xin Hăng",
+		"Krillin",
+		"Kaioshin",
+		"Gohan",
+		"Piccolo",
+		"Nail",
+		"Daimao",
+		"Nail M",
+		"Champa",
+		"Kakarot",
+		"Cađíc",
+		"Nappa",
+		"Cađíc M",
+		"SKH Khác"
+	};
+
+	private static int ClassifySkhSetIndex(Item item)
+	{
+		if (item == null || item.itemOption == null) return -1;
+		for (int i = 0; i < item.itemOption.Length; i++)
+		{
+			ItemOption opt = item.itemOption[i];
+			if (opt == null || opt.optionTemplate == null) continue;
+			switch (opt.optionTemplate.id)
+			{
+				case 129: case 141: return 0; // Songoku
+				case 127: case 139: return 1; // Thiên Xin Hăng
+				case 128: case 140: return 2; // Krillin
+				case 245: case 246: case 247: case 248: return 3; // Kaioshin
+				case 233: case 234: return 4; // Gohan
+				case 130: case 142: return 5; // Piccolo
+				case 131: case 143: return 6; // Nail
+				case 132: case 144: return 7; // Daimao
+				case 237: case 238: case 239: case 240: return 8; // Nail M
+				case 254: case 255: case 256: case 257: return 9; // Champa
+				case 133: case 136: return 10; // Kakarot
+				case 134: case 137: return 11; // Cađíc
+				case 135: case 138: return 12; // Nappa
+				case 241: case 242: case 243: case 244: return 13; // Cađíc M
+			}
+		}
+
+		for (int i = 0; i < item.itemOption.Length; i++)
+		{
+			ItemOption opt = item.itemOption[i];
+			if (opt == null || opt.optionTemplate == null || string.IsNullOrEmpty(opt.optionTemplate.name)) continue;
+			string low = opt.optionTemplate.name.ToLower();
+			if (low.Contains("songoku") || low.Contains("kamejoko")) return 0;
+			if (low.Contains("tienshinhan") || low.Contains("thiên xin") || low.Contains("thien xin")) return 1;
+			if (low.Contains("krillin") || low.Contains("kirin")) return 2;
+			if (low.Contains("kaioshin") || low.Contains("kaio-ken") || low.Contains("kaioken") || low.Contains("thần vũ trụ")) return 3;
+			if (low.Contains("gohan")) return 4;
+			if (low.Contains("piccolo daimao") || low.Contains("daimao")) return 7;
+			if (low.Contains("piccolo") || low.Contains("pikkoro") || low.Contains("ốc tiêu") || low.Contains("oc tieu")) return 5;
+			if (low.Contains("nail namek")) return 8;
+			if (low.Contains("nail")) return 6;
+			if (low.Contains("champa")) return 9;
+			if (low.Contains("kakarot") || low.Contains("galick")) return 10;
+			if (low.Contains("vegeta m") || low.Contains("cađíc m") || low.Contains("cadic m")) return 13;
+			if (low.Contains("cađíc") || low.Contains("cadic") || low.Contains("vegeta")) return 11;
+			if (low.Contains("nappa")) return 12;
+		}
+		return IsSetKichHoat(item) ? 14 : -1;
+	}
+
+	private static void ScanArrayForSkh(Item[] arr, int[,] planetCounts, int[,] setCounts)
 	{
 		if (arr == null) return;
 		for (int i = 0; i < arr.Length; i++)
@@ -1076,20 +1394,23 @@ public static class ModSetActivator
 			int gender = item.template.gender;
 			if (type == 4 || gender < 0 || gender > 2)
 			{
-				counts[0, 4]++;
-				counts[1, 4]++;
-				counts[2, 4]++;
+				planetCounts[0, 4]++;
+				planetCounts[1, 4]++;
+				planetCounts[2, 4]++;
 			}
 			else
 			{
-				counts[gender, type]++;
+				planetCounts[gender, type]++;
+			}
+
+			int setIdx = ClassifySkhSetIndex(item);
+			if (setIdx >= 0 && setIdx < s_SkhSetNames.Length)
+			{
+				setCounts[setIdx, type]++;
 			}
 		}
 	}
 
-	/// <summary>
-	/// Vẽ bảng thống kê 5 món Set Kích Hoạt [Áo, Quần, Găng, Giày, Rada] theo từng hành tinh trên màn hình.
-	/// </summary>
 	public static void PaintSkhHUD(mGraphics g)
 	{
 		if (!showSkhHud || !ModMenu.IsInGame() || GameCanvas.panel.isShow || ModUI.uiCustomOpen) return;
@@ -1098,20 +1419,40 @@ public static class ModSetActivator
 			Char me = Char.myCharz();
 			if (me == null) return;
 
-			int[,] counts = new int[3, 5];
-			ScanArrayForSkh(me.arrItemBody, counts);
-			ScanArrayForSkh(me.arrItemBag, counts);
-			ScanArrayForSkh(me.arrItemBox, counts);
+			int[,] planetCounts = new int[3, 5];
+			int[,] setCounts = new int[s_SkhSetNames.Length, 5];
+			ScanArrayForSkh(me.arrItemBody, planetCounts, setCounts);
+			ScanArrayForSkh(me.arrItemBag, planetCounts, setCounts);
+			ScanArrayForSkh(me.arrItemBox, planetCounts, setCounts);
 
 			int x = 6;
 			int y = 92;
-			mFont.tahoma_7b_yellow.drawString(g, "-- THÔNG TIN SKH --", x, y, mFont.LEFT, mFont.tahoma_7_grey);
+			mFont.tahoma_7b_yellow.drawString(g, "-- THỐNG KÊ 15 BỘ SKH [Áo,Quần,Găng,Giày,Rada] --", x, y, mFont.LEFT, mFont.tahoma_7_grey);
+			int row = 1;
 			string[] pNames = new string[] { "TĐ", "NM", "XD" };
 			for (int p = 0; p < 3; p++)
 			{
-				string line = pNames[p] + ": [Áo:" + counts[p, 0] + " Quần:" + counts[p, 1] + " Găng:" + counts[p, 2] + " Giày:" + counts[p, 3] + " Rada:" + counts[p, 4] + "]";
+				string line = pNames[p] + ": [" + planetCounts[p, 0] + "," + planetCounts[p, 1] + "," + planetCounts[p, 2] + "," + planetCounts[p, 3] + "," + planetCounts[p, 4] + "]";
 				mFont font = (me.cgender == p) ? mFont.tahoma_7_green2 : mFont.tahoma_7_white;
-				font.drawString(g, line, x, y + 11 * (p + 1), mFont.LEFT, mFont.tahoma_7_grey);
+				font.drawString(g, line, x, y + 11 * row, mFont.LEFT, mFont.tahoma_7_grey);
+				row++;
+			}
+
+			for (int s = 0; s < s_SkhSetNames.Length; s++)
+			{
+				int total = 0;
+				int slotsFilled = 0;
+				for (int t = 0; t < 5; t++)
+				{
+					total += setCounts[s, t];
+					if (setCounts[s, t] > 0) slotsFilled++;
+				}
+				if (total <= 0) continue;
+
+				string sLine = "• " + s_SkhSetNames[s] + ": [" + setCounts[s, 0] + "," + setCounts[s, 1] + "," + setCounts[s, 2] + "," + setCounts[s, 3] + "," + setCounts[s, 4] + "] (" + slotsFilled + "/5)";
+				mFont sFont = (slotsFilled >= 5) ? mFont.tahoma_7b_green2 : mFont.tahoma_7_yellow;
+				sFont.drawString(g, sLine, x, y + 11 * row, mFont.LEFT, mFont.tahoma_7_grey);
+				row++;
 			}
 		}
 		catch

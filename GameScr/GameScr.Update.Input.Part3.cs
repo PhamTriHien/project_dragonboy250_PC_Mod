@@ -180,6 +180,10 @@ public partial class GameScr : mScreen, IChatable
 						{
 							continue;
 						}
+						if (mapObject2 is Char hiddenChar && ModGraphics.ShouldHideChar(hiddenChar))
+						{
+							continue;
+						}
 						if (mapObject2 is Mob)
 						{
 							Mob mob = (Mob)mapObject2;

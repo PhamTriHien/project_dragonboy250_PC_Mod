@@ -860,6 +860,20 @@ public static class ModWaypoint
 					selectedIndex = i;
 					break;
 				}
+				if (targetPlanet >= 85 && targetPlanet <= 91 && (text.Contains("đến") || text.Contains("den") || text.Contains("tham gia") || text.Contains("join") || text.Contains("go")))
+				{
+					selectedIndex = i;
+					break;
+				}
+			}
+
+			if (selectedIndex == -1 && targetPlanet >= 85 && targetPlanet <= 91 && menuItems.Length >= 7)
+			{
+				selectedIndex = targetPlanet - 85;
+			}
+			else if (selectedIndex == -1 && TileMap.mapID >= 85 && TileMap.mapID <= 91 && (targetPlanet == 24 || targetPlanet == 25 || targetPlanet == 26))
+			{
+				selectedIndex = 0;
 			}
 
 			if (selectedIndex == -1)
@@ -874,7 +888,8 @@ public static class ModWaypoint
 
 			int npcTemplateId = (npc != null && npc.template != null) ? npc.template.npcTemplateId : ((npc != null) ? npc.npcId : 10);
 			Service.gI().confirmMenu((short)npcTemplateId, (sbyte)selectedIndex);
-			if (TileMap.mapID == 48 && targetPlanet == 50 && selectedIndex == 3)
+			if ((TileMap.mapID == 48 && targetPlanet == 50 && selectedIndex == 3) ||
+			    ((TileMap.mapID == 24 || TileMap.mapID == 25 || TileMap.mapID == 26) && targetPlanet >= 85 && targetPlanet <= 91 && menuItems.Length < 7))
 			{
 				isWaitingShipMenu = true;
 				lastShipOpenMenuTime = mSystem.currentTimeMillis();

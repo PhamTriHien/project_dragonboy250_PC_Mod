@@ -31,7 +31,27 @@ public static class ModMapEntityHUD
 
 	public static bool isShowMapEntityHUD = true;
 	public static bool isShowTargetStatus = true;
+	public static bool isShowMasterHUD = false;
+	public static long selfHuytSaoExpireMs = 0;
 	public static bool isLockTarget = false;
+
+	public static void OnSelfHuytSao()
+	{
+		selfHuytSaoExpireMs = mSystem.currentTimeMillis() + 30000L;
+	}
+
+	public static void OnRemoveSelfHuytSao()
+	{
+		selfHuytSaoExpireMs = 0;
+	}
+
+	public static void ToggleMasterHUD()
+	{
+		isShowMasterHUD = !isShowMasterHUD;
+		ModConfig.SaveConfig();
+		GameScr.info1.addInfo("HUD Sư Phụ (TTSP): " + (isShowMasterHUD ? "BẬT" : "TẮT"), 0);
+		SoundMn.gI().buttonClick();
+	}
 	public static int lockedCharId = 0;
 	public static int lockedMobId = -1;
 	public static int lockedNpcId = -1;
@@ -273,7 +293,7 @@ public static class ModMapEntityHUD
 				if (target.holdEffID != 0) effStr += "[Bị trói] ";
 				if (target.sleepEff) effStr += "[Thôi miên] ";
 				if (target.blindEff) effStr += "[TDHS] ";
-				if (target.isFreez) effStr += "[Choáng/Băng] ";
+				if (target.isFreez) effStr += "[Choáng/Băng" + (target.freezSeconds > 0 ? (" " + target.freezSeconds + "s") : string.Empty) + "] ";
 				if (target.stone) effStr += "[Hóa đá] ";
 				if (target.isMonkey == 1) effStr += "[Biến khỉ] ";
 				if (target.isCharge) effStr += "[Tái tạo] ";
@@ -438,6 +458,7 @@ public static class ModMapEntityHUD
 	public static void Paint(mGraphics g)
 	{
 		PaintTargetStatusHUD(g);
+		PaintMasterHUD(g);
 		if (!isShowMapEntityHUD || !ModMenu.IsInGame() || g == null)
 		{
 			return;
@@ -552,6 +573,94 @@ public static class ModMapEntityHUD
 			catch
 			{
 			}
+		}
+	}
+
+	public static void PaintMasterHUD(mGraphics g)
+	{
+		if (!isShowMasterHUD || !ModMenu.IsInGame() || g == null) return;
+		if ((GameCanvas.panel != null && GameCanvas.panel.isShow) ||
+		    (GameCanvas.panel2 != null && GameCanvas.panel2.isShow) ||
+		    (GameCanvas.menu != null && GameCanvas.menu.showMenu) ||
+		    GameCanvas.currentDialog != null ||
+		    ModUI.uiCustomOpen)
+		{
+			return;
+		}
+
+		try
+		{
+			Char me = Char.myCharz();
+			if (me == null) return;
+
+			g.translate(-g.getTranslateX(), -g.getTranslateY());
+			g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
+
+			int x = 6 + SafeArea.Left;
+			int y = ModSetActivator.showSkhHud ? 150 : 88;
+			int lineH = 11;
+
+			mFont.tahoma_7b_yellow.drawString(g, "-- SƯ PHỤ --", x, y, mFont.LEFT, mFont.tahoma_7_grey);
+			y += lineH;
+
+			long hpMax = me.cHPFull > 0 ? me.cHPFull : 1;
+			long mpMax = me.cMPFull > 0 ? me.cMPFull : 1;
+			long hpPct = (me.cHP * 100L) / hpMax;
+			long mpPct = (me.cMP * 100L) / mpMax;
+
+			mFont.tahoma_7_white.drawString(g, "SM: " + FormatHp(me.cPower) + " | TN: " + FormatHp(me.cTiemNang), x, y, mFont.LEFT, mFont.tahoma_7_grey);
+			y += lineH;
+			mFont.tahoma_7_green2.drawString(g, "HP: " + FormatHp(me.cHP) + "/" + FormatHp(me.cHPFull) + " (" + hpPct + "%)", x, y, mFont.LEFT, mFont.tahoma_7_grey);
+			y += lineH;
+			mFont.tahoma_7_blue1.drawString(g, "KI: " + FormatHp(me.cMP) + "/" + FormatHp(me.cMPFull) + " (" + mpPct + "%)", x, y, mFont.LEFT, mFont.tahoma_7_grey);
+			y += lineH;
+			mFont.tahoma_7_white.drawString(g, "SĐ: " + FormatHp(me.cDamFull) + " | Giáp: " + FormatHp(me.cDefull) + " | Vàng: " + FormatHp(me.xu), x, y, mFont.LEFT, mFont.tahoma_7_grey);
+			y += lineH;
+
+			long now = mSystem.currentTimeMillis();
+			if (me.blindEff)
+			{
+				mFont.tahoma_7_yellow.drawString(g, "Bị TDHS" + (me.freezSeconds > 0 ? (": " + me.freezSeconds + "s") : string.Empty), x, y, mFont.LEFT, mFont.tahoma_7_grey);
+				y += lineH;
+			}
+			if (me.isFreez)
+			{
+				mFont.tahoma_7_yellow.drawString(g, "Bị choáng: " + me.freezSeconds + "s", x, y, mFont.LEFT, mFont.tahoma_7_grey);
+				y += lineH;
+			}
+			if (me.sleepEff)
+			{
+				mFont.tahoma_7_yellow.drawString(g, "Bị thôi miên", x, y, mFont.LEFT, mFont.tahoma_7_grey);
+				y += lineH;
+			}
+			if (me.holdEffID != 0)
+			{
+				mFont.tahoma_7_yellow.drawString(g, "Bị trói", x, y, mFont.LEFT, mFont.tahoma_7_grey);
+				y += lineH;
+			}
+			if (me.stone)
+			{
+				mFont.tahoma_7_yellow.drawString(g, "Hóa đá", x, y, mFont.LEFT, mFont.tahoma_7_grey);
+				y += lineH;
+			}
+			if (me.protectEff)
+			{
+				mFont.tahoma_7_green2.drawString(g, "Khiên năng lượng", x, y, mFont.LEFT, mFont.tahoma_7_grey);
+				y += lineH;
+			}
+			if (me.isMonkey == 1)
+			{
+				mFont.tahoma_7_green2.drawString(g, "Biến khỉ", x, y, mFont.LEFT, mFont.tahoma_7_grey);
+				y += lineH;
+			}
+			if (selfHuytSaoExpireMs > now)
+			{
+				long remSec = (selfHuytSaoExpireMs - now + 999L) / 1000L;
+				mFont.tahoma_7_green2.drawString(g, "Huýt sáo: " + remSec + "s", x, y, mFont.LEFT, mFont.tahoma_7_grey);
+			}
+		}
+		catch
+		{
 		}
 	}
 

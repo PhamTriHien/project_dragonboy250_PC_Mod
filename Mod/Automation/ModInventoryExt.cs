@@ -1,0 +1,465 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+/// <summary>
+/// Mở rộng Hành Trang & Cửa Hàng: Quản lý Set Đồ 1 & 2, Mua Số Lượng Lớn (Mua SLL) và Auto Sử Dụng vật phẩm trong túi.
+/// </summary>
+public sealed class ModInventoryExt : IActionListener
+{
+	private static readonly ModInventoryExt s_Instance = new ModInventoryExt();
+
+	public const int ACT_SET1_ADD = 29001;
+	public const int ACT_SET1_REMOVE = 29002;
+	public const int ACT_SET2_ADD = 29003;
+	public const int ACT_SET2_REMOVE = 29004;
+	public const int ACT_SHOP_BULK_BUY = 29005;
+	public const int ACT_SHOP_BULK_STOP = 29006;
+	public const int ACT_BAG_AUTO_USE = 29007;
+	public const int ACT_BAG_AUTO_STOP = 29008;
+
+	private const int DLG_BULK_BUY_QTY = 29021;
+	private const int DLG_AUTO_USE_SEC = 29022;
+
+	public static string equipSet1Raw = string.Empty;
+	public static string equipSet2Raw = string.Empty;
+
+	private static readonly List<string> s_EquipQueue = new List<string>();
+	private static long s_LastEquipTick = 0;
+
+	public static bool isBulkBuying = false;
+	public static int bulkBuyTargetId = -1;
+	public static string bulkBuyItemName = string.Empty;
+	public static sbyte bulkBuyCurrencyType = 0;
+	public static int bulkBuyTotalQty = 0;
+	public static int bulkBuyDoneQty = 0;
+	private static long s_LastBulkBuyTick = 0;
+	private static Item s_PendingShopItem = null;
+	private static int s_PendingShopSelected = -1;
+	private static int s_PendingShopType = 0;
+
+	public static int autoUseTemplateId = -1;
+	public static string autoUseItemName = string.Empty;
+	public static int autoUseIntervalSec = 10;
+	private static long s_LastAutoUseTick = 0;
+	private static Item s_PendingBagItem = null;
+
+	public static ModInventoryExt gI()
+	{
+		return s_Instance;
+	}
+
+	public static bool IsWearableItem(Item item)
+	{
+		if (item == null || item.template == null) return false;
+		if (item.isTypeBody()) return true;
+		int t = item.template.type;
+		return (t >= 0 && t <= 5) || t == 11 || t == 23 || t == 32 || t == 35 || t == 72;
+	}
+
+	/// <summary>
+	/// Sinh chuỗi định danh duy nhất cho trang bị dựa trên ID mẫu, cấp cường hóa và danh sách chỉ số.
+	/// </summary>
+	public static string BuildItemSignature(Item item)
+	{
+		if (item == null || item.template == null) return string.Empty;
+		StringBuilder sb = new StringBuilder();
+		sb.Append(item.template.id).Append('#');
+		if (item.itemOption != null)
+		{
+			for (int i = 0; i < item.itemOption.Length; i++)
+			{
+				ItemOption opt = item.itemOption[i];
+				if (opt == null || opt.optionTemplate == null) continue;
+				int oid = opt.optionTemplate.id;
+				if (oid == 93 || oid == 73) continue;
+				sb.Append(oid).Append(':').Append(opt.param).Append(',');
+			}
+		}
+		return sb.ToString();
+	}
+
+	private static List<string> ParseSetList(string raw)
+	{
+		List<string> list = new List<string>();
+		if (string.IsNullOrEmpty(raw)) return list;
+		string[] parts = raw.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
+		for (int i = 0; i < parts.Length; i++)
+		{
+			string trimmed = parts[i].Trim();
+			if (trimmed.Length > 0) list.Add(trimmed);
+		}
+		return list;
+	}
+
+	private static string JoinSetList(List<string> list)
+	{
+		if (list == null || list.Count == 0) return string.Empty;
+		return string.Join("|", list.ToArray());
+	}
+
+	public static int GetSetCount(int setIndex)
+	{
+		return ParseSetList(setIndex == 1 ? equipSet1Raw : equipSet2Raw).Count;
+	}
+
+	public static bool IsInSet(int setIndex, Item item)
+	{
+		string sig = BuildItemSignature(item);
+		if (sig.Length == 0) return false;
+		List<string> list = ParseSetList(setIndex == 1 ? equipSet1Raw : equipSet2Raw);
+		return list.Contains(sig);
+	}
+
+	public static void AddToSet(int setIndex, Item item)
+	{
+		if (item == null || item.template == null) return;
+		string sig = BuildItemSignature(item);
+		if (sig.Length == 0) return;
+
+		List<string> list = ParseSetList(setIndex == 1 ? equipSet1Raw : equipSet2Raw);
+		int sameTypeSlot = item.template.type;
+		for (int i = list.Count - 1; i >= 0; i--)
+		{
+			int hashIdx = list[i].IndexOf('#');
+			if (hashIdx > 0)
+			{
+				int tid;
+				if (int.TryParse(list[i].Substring(0, hashIdx), out tid))
+				{
+					ItemTemplate tmpl = ItemTemplates.get((short)tid);
+					if (tmpl != null && tmpl.type == sameTypeSlot)
+					{
+						list.RemoveAt(i);
+					}
+				}
+			}
+		}
+		if (!list.Contains(sig))
+		{
+			list.Add(sig);
+		}
+		if (setIndex == 1) equipSet1Raw = JoinSetList(list);
+		else equipSet2Raw = JoinSetList(list);
+		ModConfig.SaveConfig();
+		GameScr.info1.addInfo("Đã lưu [" + item.template.name + "] vào Set " + setIndex + " (" + list.Count + " món)", 0);
+	}
+
+	public static void RemoveFromSet(int setIndex, Item item)
+	{
+		string sig = BuildItemSignature(item);
+		if (sig.Length == 0) return;
+		List<string> list = ParseSetList(setIndex == 1 ? equipSet1Raw : equipSet2Raw);
+		if (list.Remove(sig))
+		{
+			if (setIndex == 1) equipSet1Raw = JoinSetList(list);
+			else equipSet2Raw = JoinSetList(list);
+			ModConfig.SaveConfig();
+			string name = (item != null && item.template != null) ? item.template.name : "Trang bị";
+			GameScr.info1.addInfo("Đã xóa [" + name + "] khỏi Set " + setIndex, 0);
+		}
+	}
+
+	public static void ClearSets()
+	{
+		equipSet1Raw = string.Empty;
+		equipSet2Raw = string.Empty;
+		s_EquipQueue.Clear();
+		ModConfig.SaveConfig();
+		GameScr.info1.addInfo("Đã xóa toàn bộ dữ liệu Set Đồ 1 & Set Đồ 2.", 0);
+		SoundMn.gI().buttonClick();
+	}
+
+	public static void EquipSet(int setIndex)
+	{
+		List<string> list = ParseSetList(setIndex == 1 ? equipSet1Raw : equipSet2Raw);
+		if (list.Count == 0)
+		{
+			GameScr.info1.addInfo("Set Đồ " + setIndex + " đang trống! Mở Hành Trang bấm vào đồ để Thêm Vào Set.", 0);
+			return;
+		}
+		s_EquipQueue.Clear();
+		for (int i = 0; i < list.Count; i++)
+		{
+			s_EquipQueue.Add(list[i]);
+		}
+		GameScr.info1.addInfo("Đang mặc Set Đồ " + setIndex + " (" + list.Count + " món)...", 0);
+		SoundMn.gI().buttonClick();
+	}
+
+	/// <summary>
+	/// Nối các lệnh Set Đồ 1/2 và Auto Sử Dụng vào menu Hành Trang.
+	/// </summary>
+	public static void AppendInventoryCommands(MyVector menu, Panel panel, Item currItem, bool isBodySlot)
+	{
+		if (menu == null || panel == null || currItem == null || currItem.template == null) return;
+		if (panel.type == 12 || panel.type == 13) return;
+
+		if (IsWearableItem(currItem))
+		{
+			if (IsInSet(1, currItem))
+				menu.addElement(new Command("Xóa Khỏi\nSet 1", panel, ACT_SET1_REMOVE, currItem));
+			else
+				menu.addElement(new Command("Thêm Vào\nSet 1", panel, ACT_SET1_ADD, currItem));
+
+			if (IsInSet(2, currItem))
+				menu.addElement(new Command("Xóa Khỏi\nSet 2", panel, ACT_SET2_REMOVE, currItem));
+			else
+				menu.addElement(new Command("Thêm Vào\nSet 2", panel, ACT_SET2_ADD, currItem));
+		}
+		else if (!isBodySlot && currItem.template.id != 457)
+		{
+			if (autoUseTemplateId == currItem.template.id)
+				menu.addElement(new Command("Ngưng Auto\nSử Dụng", panel, ACT_BAG_AUTO_STOP, currItem));
+			else
+				menu.addElement(new Command("Auto\nSử Dụng", panel, ACT_BAG_AUTO_USE, currItem));
+		}
+	}
+
+	/// <summary>
+	/// Nối lệnh Mua SLL / Dừng Mua vào menu Cửa Hàng.
+	/// </summary>
+	public static void AppendShopCommands(MyVector menu, Panel panel, Item currItem, int selectedIdx, int typeShop)
+	{
+		if (menu == null || panel == null || currItem == null || currItem.template == null) return;
+		if (panel.type == 17 || typeShop == 4 || typeShop == 0) return;
+
+		bool canBuy = (currItem.isBuySpec && currItem.buySpec > 0) ||
+		              currItem.buyCoin > 0 ||
+		              currItem.buyGold > 0;
+		if (!canBuy) return;
+
+		if (isBulkBuying)
+		{
+			menu.addElement(new Command("Dừng Mua\nSLL", panel, ACT_SHOP_BULK_STOP, currItem));
+		}
+		else
+		{
+			s_PendingShopSelected = selectedIdx;
+			s_PendingShopType = typeShop;
+			menu.addElement(new Command("Mua SLL", panel, ACT_SHOP_BULK_BUY, currItem));
+		}
+	}
+
+	/// <summary>
+	/// Xử lý các idAction mở rộng từ Panel.perform.
+	/// </summary>
+	public static bool PerformPanelAction(int idAction, object p)
+	{
+		Item item = p as Item;
+		switch (idAction)
+		{
+			case ACT_SET1_ADD:
+				AddToSet(1, item);
+				return true;
+			case ACT_SET1_REMOVE:
+				RemoveFromSet(1, item);
+				return true;
+			case ACT_SET2_ADD:
+				AddToSet(2, item);
+				return true;
+			case ACT_SET2_REMOVE:
+				RemoveFromSet(2, item);
+				return true;
+			case ACT_SHOP_BULK_BUY:
+				if (item != null && item.template != null)
+				{
+					s_PendingShopItem = item;
+					GameCanvas.inputDlg.show(
+						"Nhập số lượng cần mua [" + item.template.name + "]:",
+						new Command(mResources.OK, gI(), DLG_BULK_BUY_QTY, null),
+						TField.INPUT_TYPE_NUMERIC);
+					GameCanvas.inputDlg.tfInput.setText("10");
+				}
+				return true;
+			case ACT_SHOP_BULK_STOP:
+				StopBulkBuy("Đã dừng Mua SLL.");
+				return true;
+			case ACT_BAG_AUTO_USE:
+				if (item != null && item.template != null)
+				{
+					s_PendingBagItem = item;
+					GameCanvas.inputDlg.show(
+						"Nhập chu kỳ giây sử dụng [" + item.template.name + "]:",
+						new Command(mResources.OK, gI(), DLG_AUTO_USE_SEC, null),
+						TField.INPUT_TYPE_NUMERIC);
+					GameCanvas.inputDlg.tfInput.setText(autoUseIntervalSec.ToString());
+				}
+				return true;
+			case ACT_BAG_AUTO_STOP:
+				autoUseTemplateId = -1;
+				autoUseItemName = string.Empty;
+				GameScr.info1.addInfo("Đã ngưng Auto Sử Dụng vật phẩm.", 0);
+				return true;
+		}
+		return false;
+	}
+
+	public static void StopBulkBuy(string reason)
+	{
+		isBulkBuying = false;
+		bulkBuyTargetId = -1;
+		bulkBuyTotalQty = 0;
+		bulkBuyDoneQty = 0;
+		if (!string.IsNullOrEmpty(reason))
+		{
+			GameScr.info1.addInfo(reason, 0);
+		}
+	}
+
+	public void perform(int idAction, object p)
+	{
+		if (idAction == DLG_BULK_BUY_QTY)
+		{
+			string txt = (GameCanvas.inputDlg.tfInput.getText() ?? string.Empty).Trim();
+			GameCanvas.endDlg();
+			int qty;
+			if (!int.TryParse(txt, out qty) || qty <= 0 || s_PendingShopItem == null || s_PendingShopItem.template == null)
+			{
+				GameScr.info1.addInfo("Số lượng mua không hợp lệ!", 0);
+				return;
+			}
+			if (s_PendingShopItem.isBuySpec && s_PendingShopItem.buySpec > 0)
+			{
+				bulkBuyCurrencyType = 3;
+			}
+			else if (s_PendingShopItem.buyCoin > 0)
+			{
+				bulkBuyCurrencyType = 0;
+			}
+			else
+			{
+				bulkBuyCurrencyType = 1;
+			}
+			bulkBuyTargetId = (s_PendingShopType == 8) ? s_PendingShopSelected : s_PendingShopItem.template.id;
+			bulkBuyItemName = s_PendingShopItem.template.name;
+			bulkBuyTotalQty = qty;
+			bulkBuyDoneQty = 0;
+			isBulkBuying = true;
+			s_LastBulkBuyTick = 0;
+			GameScr.info1.addInfo("Bắt đầu Mua SLL: " + qty + " x " + bulkBuyItemName, 0);
+		}
+		else if (idAction == DLG_AUTO_USE_SEC)
+		{
+			string txt = (GameCanvas.inputDlg.tfInput.getText() ?? string.Empty).Trim();
+			GameCanvas.endDlg();
+			int sec;
+			if (!int.TryParse(txt, out sec) || sec < 1 || s_PendingBagItem == null || s_PendingBagItem.template == null)
+			{
+				GameScr.info1.addInfo("Chu kỳ giây phải >= 1!", 0);
+				return;
+			}
+			autoUseIntervalSec = sec;
+			autoUseTemplateId = s_PendingBagItem.template.id;
+			autoUseItemName = s_PendingBagItem.template.name;
+			s_LastAutoUseTick = 0;
+			if (GameCanvas.panel != null && GameCanvas.panel.isShow)
+			{
+				GameCanvas.panel.hide();
+			}
+			GameScr.info1.addInfo("Auto Sử Dụng [" + autoUseItemName + "] mỗi " + autoUseIntervalSec + "s: BẬT", 0);
+		}
+	}
+
+	private static int FindBagIndexBySignature(Item[] bag, string sig)
+	{
+		if (bag == null || string.IsNullOrEmpty(sig)) return -1;
+		for (int i = bag.Length - 1; i >= 0; i--)
+		{
+			if (bag[i] != null && string.Equals(BuildItemSignature(bag[i]), sig, StringComparison.Ordinal))
+			{
+				return i;
+			}
+		}
+		int hashIdx = sig.IndexOf('#');
+		if (hashIdx > 0)
+		{
+			int tid;
+			if (int.TryParse(sig.Substring(0, hashIdx), out tid))
+			{
+				for (int i = bag.Length - 1; i >= 0; i--)
+				{
+					if (bag[i] != null && bag[i].template != null && bag[i].template.id == tid)
+					{
+						return i;
+					}
+				}
+			}
+		}
+		return -1;
+	}
+
+	public static void Update()
+	{
+		if (!ModMenu.IsInGame()) return;
+		Char me = Char.myCharz();
+		if (me == null || me.isDie) return;
+
+		long now = mSystem.currentTimeMillis();
+
+		if (s_EquipQueue.Count > 0 && now - s_LastEquipTick >= 120)
+		{
+			s_LastEquipTick = now;
+			string nextSig = s_EquipQueue[0];
+			s_EquipQueue.RemoveAt(0);
+			int bagIdx = FindBagIndexBySignature(me.arrItemBag, nextSig);
+			if (bagIdx >= 0)
+			{
+				Service.gI().getItem(4, (sbyte)bagIdx);
+			}
+			if (s_EquipQueue.Count == 0)
+			{
+				GameScr.info1.addInfo("Đã hoàn tất mặc Set Đồ!", 0);
+			}
+		}
+
+		if (isBulkBuying && now - s_LastBulkBuyTick >= 1500)
+		{
+			s_LastBulkBuyTick = now;
+			if (bulkBuyDoneQty >= bulkBuyTotalQty)
+			{
+				StopBulkBuy("Đã mua đủ " + bulkBuyTotalQty + " [" + bulkBuyItemName + "]!");
+			}
+			else if (ModSetActivator.GetFreeBagSlots() <= 0)
+			{
+				StopBulkBuy("Hành trang đã đầy! Dừng Mua SLL (" + bulkBuyDoneQty + "/" + bulkBuyTotalQty + ").");
+			}
+			else
+			{
+				Service.gI().buyItem(bulkBuyCurrencyType, bulkBuyTargetId, 0);
+				bulkBuyDoneQty++;
+				if (bulkBuyDoneQty >= bulkBuyTotalQty)
+				{
+					StopBulkBuy("Đã mua xong " + bulkBuyDoneQty + " [" + bulkBuyItemName + "]!");
+				}
+			}
+		}
+
+		if (autoUseTemplateId >= 0 && GameCanvas.gameTick % 5 == 0 && now - s_LastAutoUseTick >= autoUseIntervalSec * 1000L)
+		{
+			s_LastAutoUseTick = now;
+			int foundIdx = -1;
+			if (me.arrItemBag != null)
+			{
+				for (int i = 0; i < me.arrItemBag.Length; i++)
+				{
+					Item it = me.arrItemBag[i];
+					if (it != null && it.template != null && it.template.id == autoUseTemplateId)
+					{
+						foundIdx = i;
+						break;
+					}
+				}
+			}
+			if (foundIdx >= 0)
+			{
+				Service.gI().useItem(0, 1, (sbyte)foundIdx, -1);
+			}
+			else
+			{
+				autoUseTemplateId = -1;
+				GameScr.info1.addInfo("Hết [" + autoUseItemName + "] trong túi! Đã tắt Auto Sử Dụng.", 0);
+			}
+		}
+	}
+}

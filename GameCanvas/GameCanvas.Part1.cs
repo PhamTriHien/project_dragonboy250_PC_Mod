@@ -222,6 +222,7 @@ public partial class GameCanvas : IActionListener
 		{
 			if (!Session_ME.gI().isConnected())
 			{
+				ModProxyServer.ResolveSelectedServerEndpoint(ref GameMidlet.IP, ref GameMidlet.PORT);
 				Session_ME.gI().connect(GameMidlet.IP, GameMidlet.PORT);
 			}
 		}

@@ -48,9 +48,9 @@ public static class ModUINextMap
 	public static void UpdateDragScroll(int px, int py, int uiX, int uiY, int uiW, int uiH)
 	{
 		int listX = uiX + 4;
-		int listY = uiY + 56;
+		int listY = uiY + 73;
 		int listW = uiW - 8;
-		int listH = uiH - 60;
+		int listH = uiH - 77;
 		if (listH < 40) listH = 40;
 
 		if (ModNextMap.selectedPlanetTab < 0 || ModNextMap.selectedPlanetTab >= ModNextMap.planetMapIds.Length)
@@ -123,23 +123,43 @@ public static class ModUINextMap
 			ModNextMap.selectedPlanetTab = 0;
 		}
 
-		// 6 Nút chọn hành tinh / khu vực (2 hàng x 3 cột: Trái Đất, Namếc, Xayda, Nappa, Cooler, Tương Lai)
-		int pBtnW = (uiW - 16) / 3;
-		for (int t = 0; t < ModNextMap.planetMapIds.Length && t < 6; t++)
+		// 7 Nút chọn hành tinh / khu vực (Hàng 1: 3 cột; Hàng 2: 4 cột)
+		int row1BtnW = (uiW - 16) / 3;
+		int row2Count = System.Math.Max(1, ModNextMap.planetMapIds.Length - 3);
+		int row2BtnW = (uiW - 8 - (row2Count - 1) * 4) / row2Count;
+		for (int t = 0; t < ModNextMap.planetMapIds.Length; t++)
 		{
-			int col = t % 3;
-			int row = t / 3;
-			int bx = uiX + 4 + col * (pBtnW + 4);
-			int by = uiY + 22 + row * 16;
+			int bx;
+			int by;
+			int bw;
+			if (t < 3)
+			{
+				bw = row1BtnW;
+				bx = uiX + 4 + t * (row1BtnW + 4);
+				by = uiY + 22;
+			}
+			else
+			{
+				int col2 = t - 3;
+				bw = row2BtnW;
+				bx = uiX + 4 + col2 * (row2BtnW + 4);
+				by = uiY + 38;
+			}
 			string tabLabel = ModNextMapData.planetTabNames[t] + " (" + ModNextMap.planetMapIds[t].Length + ")";
-			ModUI.PaintNativeButton(bx, by, pBtnW, 15, tabLabel, ModNextMap.selectedPlanetTab == t, g);
+			ModUI.PaintNativeButton(bx, by, bw, 15, tabLabel, ModNextMap.selectedPlanetTab == t, g);
 		}
+
+		// Hàng tùy chọn Xmap nhanh: CS VIP, CS Thường, Tua Tàu
+		int optBtnW = (uiW - 16) / 3;
+		ModUI.PaintNativeButton(uiX + 4, uiY + 55, optBtnW, 15, "CS VIP: " + (ModNextMap.useCapsuleVip ? "BẬT" : "TẮT"), ModNextMap.useCapsuleVip, g);
+		ModUI.PaintNativeButton(uiX + 8 + optBtnW, uiY + 55, optBtnW, 15, "CS Thường: " + (ModNextMap.useNormalCapsule ? "BẬT" : "TẮT"), ModNextMap.useNormalCapsule, g);
+		ModUI.PaintNativeButton(uiX + 12 + optBtnW * 2, uiY + 55, optBtnW, 15, "Tua Tàu: " + (ModNextMap.speedBoostTransport ? "BẬT" : "TẮT"), ModNextMap.speedBoostTransport, g);
 
 		// Khung danh sách các map co dãn động
 		int listX = uiX + 4;
-		int listY = uiY + 56;
+		int listY = uiY + 73;
 		int listW = uiW - 8;
-		int listH = uiH - 60;
+		int listH = uiH - 77;
 		if (listH < 40) listH = 40;
 
 		GameCanvas.paintz.paintFrameSimple(listX, listY, listW, listH, g);
@@ -225,14 +245,15 @@ public static class ModUINextMap
 			}
 		}
 
-		int pBtnW = (uiW - 16) / 3;
-		for (int t = 0; t < ModNextMap.planetMapIds.Length && t < 6; t++)
+		int row1BtnW = (uiW - 16) / 3;
+		int row2Count = System.Math.Max(1, ModNextMap.planetMapIds.Length - 3);
+		int row2BtnW = (uiW - 8 - (row2Count - 1) * 4) / row2Count;
+		for (int t = 0; t < ModNextMap.planetMapIds.Length; t++)
 		{
-			int col = t % 3;
-			int row = t / 3;
-			int bx = uiX + 4 + col * (pBtnW + 4);
-			int by = uiY + 22 + row * 16;
-			if (px >= bx && px <= bx + pBtnW && py >= by && py <= by + 15)
+			int bw = (t < 3) ? row1BtnW : row2BtnW;
+			int bx = (t < 3) ? (uiX + 4 + t * (row1BtnW + 4)) : (uiX + 4 + (t - 3) * (row2BtnW + 4));
+			int by = (t < 3) ? (uiY + 22) : (uiY + 38);
+			if (px >= bx && px <= bx + bw && py >= by && py <= by + 15)
 			{
 				ModNextMap.selectedPlanetTab = t;
 				scrollMapY = 0;
@@ -241,10 +262,36 @@ public static class ModUINextMap
 			}
 		}
 
+		int optBtnW = (uiW - 16) / 3;
+		if (py >= uiY + 54 && py <= uiY + 71)
+		{
+			if (px >= uiX + 4 && px <= uiX + 4 + optBtnW)
+			{
+				ModNextMap.useCapsuleVip = !ModNextMap.useCapsuleVip;
+				ModConfig.SaveConfig();
+				SoundMn.gI().buttonClick();
+				return true;
+			}
+			if (px >= uiX + 8 + optBtnW && px <= uiX + 8 + optBtnW * 2)
+			{
+				ModNextMap.useNormalCapsule = !ModNextMap.useNormalCapsule;
+				ModConfig.SaveConfig();
+				SoundMn.gI().buttonClick();
+				return true;
+			}
+			if (px >= uiX + 12 + optBtnW * 2 && px <= uiX + 12 + optBtnW * 3)
+			{
+				ModNextMap.speedBoostTransport = !ModNextMap.speedBoostTransport;
+				ModConfig.SaveConfig();
+				SoundMn.gI().buttonClick();
+				return true;
+			}
+		}
+
 		int listX = uiX + 4;
-		int listY = uiY + 56;
+		int listY = uiY + 73;
 		int listW = uiW - 8;
-		int listH = uiH - 60;
+		int listH = uiH - 77;
 		if (listH < 40) listH = 40;
 		int btnW = (listW - 10) / 2;
 		int btnH = 16;

@@ -71,6 +71,62 @@ public static class ModAutoHeal
 		ChatTextField.gI().tfChat.setText(donateTargetNamesRaw ?? string.Empty);
 	}
 
+	private class MinThresholdChatListener : IChatable
+	{
+		public bool isMp;
+
+		public void onChatFromMe(string text, string to)
+		{
+			ChatTextField.gI().isShow = false;
+			ChatTextField.gI().parentScreen = GameScr.gI();
+			long val = 0;
+			if (!string.IsNullOrEmpty(text))
+			{
+				long.TryParse(text.Trim(), out val);
+				if (val < 0) val = 0;
+			}
+			if (isMp)
+			{
+				autoPeanMinMp = val;
+				GameScr.info1.addInfo((val > 0) ? ("Ăn đậu khi KI < " + Res.formatNumber(val)) : "Đã tắt mức KI tuyệt đối", 0);
+			}
+			else
+			{
+				autoPeanMinHp = val;
+				GameScr.info1.addInfo((val > 0) ? ("Ăn đậu khi HP < " + Res.formatNumber(val)) : "Đã tắt mức HP tuyệt đối", 0);
+			}
+			ModConfig.SaveConfig();
+		}
+
+		public void onCancelChat()
+		{
+			ChatTextField.gI().isShow = false;
+			ChatTextField.gI().parentScreen = GameScr.gI();
+		}
+	}
+
+	private static readonly MinThresholdChatListener s_MinThresholdListener = new MinThresholdChatListener();
+
+	public static void ShowInputMinHp()
+	{
+		s_MinThresholdListener.isMp = false;
+		ChatTextField.gI().strChat = "Nhập mức HP tuyệt đối ăn đậu (0 = tắt)";
+		ChatTextField.gI().tfChat.name = "HP tối thiểu (0 = tắt)";
+		ChatTextField.gI().tfChat.setIputType(TField.INPUT_TYPE_NUMERIC);
+		ChatTextField.gI().startChat2(s_MinThresholdListener, string.Empty);
+		ChatTextField.gI().tfChat.setText((autoPeanMinHp > 0) ? autoPeanMinHp.ToString() : "0");
+	}
+
+	public static void ShowInputMinMp()
+	{
+		s_MinThresholdListener.isMp = true;
+		ChatTextField.gI().strChat = "Nhập mức KI tuyệt đối ăn đậu (0 = tắt)";
+		ChatTextField.gI().tfChat.name = "KI tối thiểu (0 = tắt)";
+		ChatTextField.gI().tfChat.setIputType(TField.INPUT_TYPE_NUMERIC);
+		ChatTextField.gI().startChat2(s_MinThresholdListener, string.Empty);
+		ChatTextField.gI().tfChat.setText((autoPeanMinMp > 0) ? autoPeanMinMp.ToString() : "0");
+	}
+
 	public static void CyclePetEatBeanPercent()
 	{
 		if (petEatBeanHpPercent <= 20) petEatBeanHpPercent = 30;
@@ -304,6 +360,7 @@ public static class ModAutoHeal
 			}
 
 			long now = mSystem.currentTimeMillis();
+			ModGoBack.TryPickHomeChicken(me);
 
 			// 1. Tự ăn đậu thần cho bản thân khi HP/MP xuống thấp
 			bool needHeal = false;

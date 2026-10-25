@@ -72,6 +72,86 @@ public static class ModTanSat
 	private static long lastResetZoneTime = 0;
 	public static readonly HashSet<int> frozenSkillIds = new HashSet<int>();
 	public static readonly Dictionary<int, int> customSkillDelays = new Dictionary<int, int>();
+	private static int editingSkillDelayId = -1;
+	private static string editingSkillDelayName = string.Empty;
+	private static bool reopenUiAfterSkillDelayInput = false;
+
+	public static void ToggleSkillFrozen(int skillTplId)
+	{
+		if (skillTplId < 0) return;
+		bool nowFrozen;
+		if (frozenSkillIds.Contains(skillTplId))
+		{
+			frozenSkillIds.Remove(skillTplId);
+			nowFrozen = false;
+		}
+		else
+		{
+			frozenSkillIds.Add(skillTplId);
+			nowFrozen = true;
+		}
+		ModConfig.SaveConfig();
+		Skill sk = ModTanSatFilter.FindSkillByTemplateId(skillTplId);
+		string name = (sk != null && sk.template != null && !string.IsNullOrEmpty(sk.template.name)) ? sk.template.name : ("Skill #" + skillTplId);
+		GameScr.info1?.addInfo("Đóng băng chiêu [" + name + "]: " + (nowFrozen ? "BẬT" : "TẮT"), 0);
+	}
+
+	public static void ShowInputCustomSkillDelay(int skillTplId, string skillName)
+	{
+		if (skillTplId < 0 || GameCanvas.inputDlg == null) return;
+		editingSkillDelayId = skillTplId;
+		editingSkillDelayName = string.IsNullOrEmpty(skillName) ? ("Skill #" + skillTplId) : skillName;
+		reopenUiAfterSkillDelayInput = ModUI.uiCustomOpen;
+		ModUI.uiCustomOpen = false;
+		ModMenu.modMenuOpen = false;
+		int curVal = 0;
+		customSkillDelays.TryGetValue(skillTplId, out curVal);
+		GameCanvas.inputDlg.show("Độ trễ riêng [" + editingSkillDelayName + "] (ms, 0 = Mặc định):", new Command("OK", new SkillDelayActionListener(), 1, null), TField.INPUT_TYPE_NUMERIC);
+		if (GameCanvas.inputDlg.tfInput != null)
+		{
+			GameCanvas.inputDlg.tfInput.setMaxTextLenght(7);
+			GameCanvas.inputDlg.tfInput.setText(curVal > 0 ? curVal.ToString() : "0");
+			if (!Main.isPC) GameCanvas.inputDlg.tfInput.setFocusWithKb(isFocus: true);
+		}
+	}
+
+	private class SkillDelayActionListener : IActionListener
+	{
+		public void perform(int idAction, object p)
+		{
+			try
+			{
+				if (idAction == 1 && GameCanvas.inputDlg != null && GameCanvas.inputDlg.tfInput != null && editingSkillDelayId >= 0)
+				{
+					string raw = (GameCanvas.inputDlg.tfInput.getText() ?? string.Empty).Trim();
+					if (int.TryParse(raw, out int ms) && ms > 0)
+					{
+						if (ms < 50) ms = 50;
+						if (ms > 600000) ms = 600000;
+						customSkillDelays[editingSkillDelayId] = ms;
+						GameScr.info1?.addInfo("Độ trễ [" + editingSkillDelayName + "]: " + ms + "ms", 0);
+					}
+					else
+					{
+						customSkillDelays.Remove(editingSkillDelayId);
+						GameScr.info1?.addInfo("Độ trễ [" + editingSkillDelayName + "]: Mặc định (" + timeAttack + "ms)", 0);
+					}
+					ModConfig.SaveConfig();
+					SoundMn.gI().buttonClick();
+				}
+				GameCanvas.endDlg();
+				if (reopenUiAfterSkillDelayInput)
+				{
+					reopenUiAfterSkillDelayInput = false;
+					ModUI.uiCustomOpen = true;
+				}
+			}
+			catch
+			{
+				GameCanvas.endDlg();
+			}
+		}
+	}
 
 	public static Mob currentFarmTarget = null;
 	public static long targetLockTime = 0;
@@ -583,7 +663,7 @@ public static class ModTanSat
 		{
 			if (!autoTanSat) return;
 
-			if (ModNextMap.isNextMapActive || ModGoBack.isReturning || ModSetActivator.isBusy || ModAutoBuyBua.isBusy || Char.isLoadingMap) return;
+			if (ModNextMap.isNextMapActive || ModGoBack.isReturning || ModSetActivator.isBusy || ModAutoBuyBua.isBusy || Char.isLoadingMap || ModAutoCaptcha.IsCaptchaActive()) return;
 			if (ModAutoPick.isBusy)
 			{
 				if (currentFarmTarget != null && (currentFarmTarget.status == 0 || currentFarmTarget.status == 1 || currentFarmTarget.hp <= 0))

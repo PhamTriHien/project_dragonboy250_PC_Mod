@@ -199,6 +199,7 @@ public partial class ChatPopup : Effect2, IActionListener
 		{
 			chat = Res.changeString(chat);
 			ModBossNotice.ProcessServerBossNotice(chat);
+			ModAutoPet.OnCharChatMap(c, chat);
 			performDelay = 10;
 			ChatPopup chatPopup = new ChatPopup();
 			chatPopup.sayWidth = GameCanvas.w - 30 - (GameCanvas.menu.showMenu ? GameCanvas.menu.menuX : 0);

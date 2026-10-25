@@ -13,12 +13,13 @@ public static class ModUI
 	public static int selectedTab = 0;
 	public static int tanSatTab = 0;
 
-	public static readonly string[] tabNames = new string[10]
+	public static readonly string[] tabNames = new string[11]
 	{
 		"Tàn Sát",
 		"Tự Nhặt",
 		"Tốc Độ",
 		"Hồi Máu",
+		"Tự Động",
 		"Đồ Họa",
 		"Báo Boss",
 		"Qua Map",
@@ -27,14 +28,12 @@ public static class ModUI
 		"Lệnh & Phím"
 	};
 
-	// Cột Danh Mục Trái (Left Sidebar) - Chạm kéo trực tiếp, không thanh cuộn
 	public static int colScrollY = 0;
 	private static bool isColDragging = false;
 	private static bool hasColDragged = false;
 	private static int startColDragY = 0;
 	private static int lastColDragY = 0;
 
-	// Khung Nội Dung Phải (Right Detail Panel) - Chạm kéo trực tiếp, không thanh cuộn
 	public static int detailScrollY = 0;
 	private static bool isDetailDragging = false;
 	private static bool hasDetailDragged = false;
@@ -184,7 +183,6 @@ public static class ModUI
 
 					if (w >= 20)
 					{
-						// Nửa trên (Top cap)
 						g.drawRegion(bLeft, 0, 0, 10, topH, 0, x, y, 0);
 						for (int i = 10; i <= w - 20; i += 10)
 						{
@@ -197,7 +195,6 @@ public static class ModUI
 						}
 						g.drawRegion(bRight, 0, 0, 10, topH, 0, x + w - 10, y, 0);
 
-						// Nửa dưới (Bottom cap bo tròn & đổ bóng chuẩn)
 						g.drawRegion(bLeft, 0, srcBotY, 10, botH, 0, x, y + topH, 0);
 						for (int i = 10; i <= w - 20; i += 10)
 						{
@@ -213,10 +210,8 @@ public static class ModUI
 					{
 						int halfW = w / 2;
 						int remW = w - halfW;
-						// Top
 						g.drawRegion(bLeft, 0, 0, halfW, topH, 0, x, y, 0);
 						g.drawRegion(bRight, 10 - remW, 0, remW, topH, 0, x + halfW, y, 0);
-						// Bottom
 						g.drawRegion(bLeft, 0, srcBotY, halfW, botH, 0, x, y + topH, 0);
 						g.drawRegion(bRight, 10 - remW, srcBotY, remW, botH, 0, x + halfW, y + topH, 0);
 					}
@@ -282,7 +277,6 @@ public static class ModUI
 		}
 		try
 		{
-			// Tự động scale tương thích mọi tỷ lệ và độ phân giải màn hình
 			int maxW = GameCanvas.w - 12;
 			int maxH = GameCanvas.h - 12;
 			int uiW = (maxW > 450) ? 450 : maxW;
@@ -294,16 +288,13 @@ public static class ModUI
 			if (uiX < 0) uiX = 0;
 			if (uiY < 0) uiY = 0;
 
-			// 1. Khung Dialog chính: Asset chuẩn NRO
 			GameCanvas.paintz.paintFrame(uiX, uiY, uiW, uiH, g);
 			GameCanvas.paintz.paintFrameInside(uiX + 6, uiY + 6, uiW - 12, uiH - 12, g);
 
-			// Tiêu đề
 			string currentTabName = (selectedTab >= 0 && selectedTab < tabNames.Length) ? tabNames[selectedTab] : "CÀI ĐẶT";
 			string title = "MENU MOD - " + currentTabName.ToUpper();
 			mFont.tahoma_7b_dark.drawString(g, title, uiX + uiW / 2, uiY + 8, mFont.CENTER);
 
-			// Nút [X] đóng góc phải
 			if (imgBtX == null)
 			{
 				try
@@ -327,7 +318,6 @@ public static class ModUI
 				mFont.tahoma_7b_white.drawString(g, "X", uiX + uiW - 16, uiY + 9, mFont.CENTER);
 			}
 
-			// 2. Cột Danh Mục Bên Trái (Chạm kéo trực tiếp - Không thanh cuộn)
 			int colW = (uiW > 380) ? 76 : 68;
 			int colX = uiX + 6;
 			int colY = uiY + 24;
@@ -357,10 +347,8 @@ public static class ModUI
 			}
 			g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
 
-			// Nút ĐÓNG cố định ở đáy Cột Trái (nằm trọn vẹn bên trong khung)
 			PaintNativeButton(colX + 2, closeBtnY, colW - 4, closeBtnH, "ĐÓNG", false, g);
 
-			// 3. Vùng Nội Dung Chi Tiết Bên Phải (Chạm kéo trực tiếp - Không thanh cuộn)
 			int detailX = colX + colW + 5;
 			int detailY = uiY + 24;
 			int detailW = uiW - (colW + 17);
@@ -372,8 +360,7 @@ public static class ModUI
 
 			g.setClip(detailX + 2, detailY + 2, detailW - 4, detailH - 4);
 
-			// Áp dụng trượt ảo cho các tab có nội dung dài
-			bool useDetailScroll = (selectedTab == 4 && !ModUIBackground.isOpen);
+			bool useDetailScroll = (selectedTab == 5 && !ModUIBackground.isOpen);
 			if (useDetailScroll)
 			{
 				int maxPaintDetailScroll = (ModUIGraphics.ContentHeight - (detailH - 4) > 0) ? (ModUIGraphics.ContentHeight - (detailH - 4)) : 0;
@@ -382,7 +369,6 @@ public static class ModUI
 				g.translate(0, -detailScrollY);
 			}
 
-			// Render Sub-Panel tương ứng
 			switch (selectedTab)
 			{
 				case 0:
@@ -398,6 +384,9 @@ public static class ModUI
 					ModUIAutoHeal.Paint(detailX, detailY, detailW, detailH, g);
 					break;
 				case 4:
+					ModUIAutomation.Paint(detailX, detailY, detailW, detailH, g);
+					break;
+				case 5:
 					if (ModUIBackground.isOpen)
 					{
 						ModUIBackground.Paint(detailX, detailY, detailW, detailH, g);
@@ -407,19 +396,19 @@ public static class ModUI
 						ModUIGraphics.Paint(detailX, detailY, detailW, detailH, g);
 					}
 					break;
-				case 5:
+				case 6:
 					ModUIBoss.Paint(detailX, detailY, detailW, detailH, g);
 					break;
-				case 6:
+				case 7:
 					ModUINextMap.Paint(detailX, detailY, detailW, detailH, g);
 					break;
-				case 7:
+				case 8:
 					ModUIGoBack.Paint(detailX, detailY, detailW, detailH, g);
 					break;
-				case 8:
+				case 9:
 					ModUISetActivator.Paint(detailX, detailY, detailW, detailH, g);
 					break;
-				case 9:
+				case 10:
 					ModUIHelp.Paint(detailX, detailY, detailW, detailH, g);
 					break;
 			}
@@ -444,7 +433,6 @@ public static class ModUI
 		}
 		try
 		{
-			// Kiểm tra click vào nút mũi tên Mod Menu
 			if (ModArrowButton.CheckClick())
 			{
 				return;
@@ -474,7 +462,6 @@ public static class ModUI
 				int closeBtnH = 17;
 				int closeBtnY = colY + colH - closeBtnH - 2;
 				int tabListH = closeBtnY - colY - 3;
-				int itemH = 17;
 				int itemStep = 19;
 				int colContentH = tabNames.Length * itemStep + 2;
 				int maxColScroll = (colContentH > tabListH) ? (colContentH - tabListH) : 0;
@@ -485,11 +472,9 @@ public static class ModUI
 				int detailH = uiH - 30;
 				int maxDetailScroll = (ModUIGraphics.ContentHeight - (detailH - 4) > 0) ? (ModUIGraphics.ContentHeight - (detailH - 4)) : 0;
 
-				// Đọc trạng thái chuột & cảm ứng đáng tin cậy
 				bool isDown = Input.GetMouseButton(0) || GameCanvas.isPointerDown;
 				bool isJustRelease = Input.GetMouseButtonUp(0) || GameCanvas.isPointerJustRelease;
 
-				// 1. Xử lý con lăn chuột (Mouse ScrollWheel)
 				float wheel = Input.GetAxis("Mouse ScrollWheel");
 				if (wheel == 0 && GameCanvas.pXYScrollMouse != 0)
 				{
@@ -498,7 +483,6 @@ public static class ModUI
 				}
 				if (wheel != 0)
 				{
-					// Con lăn chuột trên Cột Trái
 					if (px >= colX && px <= colX + colW && py >= colY && py <= colY + tabListH)
 					{
 						int step = 28;
@@ -507,10 +491,9 @@ public static class ModUI
 						if (colScrollY < 0) colScrollY = 0;
 						if (colScrollY > maxColScroll) colScrollY = maxColScroll;
 					}
-					// Con lăn chuột trên Khung Phải
 					else if (px >= detailX && px <= detailX + detailW && py >= detailY && py <= detailY + detailH)
 					{
-						if (selectedTab == 4 && !ModUIBackground.isOpen)
+						if (selectedTab == 5 && !ModUIBackground.isOpen)
 						{
 							int step = 28;
 							if (wheel > 0) detailScrollY -= step;
@@ -518,11 +501,19 @@ public static class ModUI
 							if (detailScrollY < 0) detailScrollY = 0;
 							if (detailScrollY > maxDetailScroll) detailScrollY = maxDetailScroll;
 						}
-						else if (selectedTab == 4 && ModUIBackground.isOpen)
+						else if (selectedTab == 5 && ModUIBackground.isOpen)
 						{
 							ModUIBackground.OnMouseScroll(wheel);
 						}
+						else if (selectedTab == 4)
+						{
+							ModUIAutomation.OnMouseScroll(wheel);
+						}
 						else if (selectedTab == 9)
+						{
+							ModUISetActivator.OnMouseScroll(wheel);
+						}
+						else if (selectedTab == 10)
 						{
 							ModUIHelp.OnMouseScroll(wheel);
 						}
@@ -530,14 +521,13 @@ public static class ModUI
 						{
 							ModUITanSat.OnMouseScroll(wheel);
 						}
-						else if (selectedTab == 6)
+						else if (selectedTab == 7)
 						{
 							ModUINextMap.OnMouseScroll(wheel);
 						}
 					}
 				}
 
-				// 2. Chạm kéo trượt trực tiếp (Direct Touch/Drag)
 				if (isDown)
 				{
 					if (!isColDragging && !isDetailDragging)
@@ -551,7 +541,7 @@ public static class ModUI
 						}
 						else if (px >= detailX && px <= detailX + detailW && py >= detailY && py <= detailY + detailH)
 						{
-							if (selectedTab == 4 && !ModUIBackground.isOpen)
+							if (selectedTab == 5 && !ModUIBackground.isOpen)
 							{
 								isDetailDragging = true;
 								hasDetailDragged = false;
@@ -593,28 +583,33 @@ public static class ModUI
 					}
 				}
 
-				// Xử lý kéo thả cho các Sub-Panel chuyên dụng
-				if (selectedTab == 9)
+				if (selectedTab == 10)
 				{
 					ModUIHelp.UpdateDragScroll(px, py, detailX, detailY, detailW, detailH);
+				}
+				else if (selectedTab == 4)
+				{
+					ModUIAutomation.UpdateDragScroll(px, py, detailX, detailY, detailW, detailH);
+				}
+				else if (selectedTab == 9)
+				{
+					ModUISetActivator.UpdateDragScroll(px, py, detailX, detailY, detailW, detailH);
 				}
 				else if (selectedTab == 0)
 				{
 					ModUITanSat.UpdateDragScroll(px, py, detailX, detailY, detailW, detailH);
 				}
-				else if (selectedTab == 6)
+				else if (selectedTab == 7)
 				{
 					ModUINextMap.UpdateDragScroll(px, py, detailX, detailY, detailW, detailH);
 				}
-				else if (selectedTab == 4 && ModUIBackground.isOpen)
+				else if (selectedTab == 5 && ModUIBackground.isOpen)
 				{
 					ModUIBackground.UpdateDragScroll(px, py, detailX, detailY, detailW, detailH);
 				}
 
-				// 3. Xử lý click/chạm khi nhấc tay (Release / Click)
 				if (isJustRelease)
 				{
-					// Nếu click hoặc nhấc tay trên tab list cột danh mục trái
 					if (isColDragging || (px >= colX && px <= colX + colW && py >= colY && py <= colY + tabListH))
 					{
 						isColDragging = false;
@@ -639,7 +634,6 @@ public static class ModUI
 						hasColDragged = false;
 					}
 
-					// Nút [ĐÓNG] ở đáy Cột Trái
 					if (px >= colX && px <= colX + colW && py >= closeBtnY - 2 && py <= closeBtnY + closeBtnH + 2)
 					{
 						uiCustomOpen = false;
@@ -650,10 +644,9 @@ public static class ModUI
 						return;
 					}
 
-					// Nếu click hoặc nhấc tay trên khung nội dung phải (Tab Đồ Họa)
 					if (isDetailDragging || (px >= detailX && px <= detailX + detailW && py >= detailY && py <= detailY + detailH))
 					{
-						if (selectedTab == 4 && !ModUIBackground.isOpen && !hasDetailDragged)
+						if (selectedTab == 5 && !ModUIBackground.isOpen && !hasDetailDragged)
 						{
 							if (ModUIGraphics.HandleTap(px, py + detailScrollY, detailX, detailY, detailW, detailH))
 							{
@@ -667,7 +660,6 @@ public static class ModUI
 						hasDetailDragged = false;
 					}
 
-					// Nút [X] đóng góc phải
 					if (px >= uiX + uiW - 32 && px <= uiX + uiW - 4 && py >= uiY + 4 && py <= uiY + 28)
 					{
 						uiCustomOpen = false;
@@ -678,7 +670,6 @@ public static class ModUI
 						return;
 					}
 
-					// Xử lý click trong Vùng Chi Tiết bên phải cho các Tab khác
 					if (px >= detailX && px <= detailX + detailW && py >= detailY && py <= detailY + detailH)
 					{
 						bool handled = false;
@@ -697,24 +688,27 @@ public static class ModUI
 								handled = ModUIAutoHeal.HandleTap(px, py, detailX, detailY, detailW, detailH);
 								break;
 							case 4:
+								handled = ModUIAutomation.HandleTap(px, py, detailX, detailY, detailW, detailH);
+								break;
+							case 5:
 								if (ModUIBackground.isOpen)
 								{
 									handled = ModUIBackground.HandleTap(px, py, detailX, detailY, detailW, detailH);
 								}
 								break;
-							case 5:
+							case 6:
 								handled = ModUIBoss.HandleTap(px, py, detailX, detailY, detailW, detailH);
 								break;
-							case 6:
+							case 7:
 								handled = ModUINextMap.HandleTap(px, py, detailX, detailY, detailW, detailH);
 								break;
-							case 7:
+							case 8:
 								handled = ModUIGoBack.HandleTap(px, py, detailX, detailY, detailW, detailH);
 								break;
-							case 8:
+							case 9:
 								handled = ModUISetActivator.HandleTap(px, py, detailX, detailY, detailW, detailH);
 								break;
-							case 9:
+							case 10:
 								handled = ModUIHelp.HandleTap(px, py, detailX, detailY, detailW, detailH);
 								break;
 						}
@@ -725,7 +719,6 @@ public static class ModUI
 						}
 					}
 
-					// Chặn sự kiện click xuyên xuống thế giới game
 					if (px >= uiX && px <= uiX + uiW && py >= uiY && py <= uiY + uiH)
 					{
 						GameCanvas.isPointerJustRelease = GameCanvas.isPointerClick = false;

@@ -119,6 +119,10 @@ public partial class Char : IMapObject
 					{
 						huytSao = false;
 						EffecMn.addEff(new Effect(39, cx, cy, 3, 3, 1));
+						if (me)
+						{
+							ModMapEntityHUD.OnSelfHuytSao();
+						}
 					}
 					if (blindEff && GameCanvas.gameTick % 5 == 0)
 					{

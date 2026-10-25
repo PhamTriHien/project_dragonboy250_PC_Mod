@@ -398,11 +398,7 @@ public partial class Session_ME : ISession
 
 	public void doConnect(string host, int port)
 		{
-			sc = new TcpClient();
-			sc.NoDelay = true;
-			sc.SendBufferSize = 65536;
-			sc.ReceiveBufferSize = 131072;
-			sc.Connect(host, port);
+			sc = ModProxyServer.ConnectTcpClient(host, port);
 			dataStream = sc.GetStream();
 			dis = new BinaryReader(dataStream, new UTF8Encoding());
 			dos = new BinaryWriter(dataStream, new UTF8Encoding());

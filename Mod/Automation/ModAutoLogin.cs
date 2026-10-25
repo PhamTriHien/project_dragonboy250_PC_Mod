@@ -109,11 +109,26 @@ public static class ModAutoLogin
 		}
 	}
 
+	public static void TriggerScheduledReconnect()
+	{
+		if (!isEnabled) return;
+		hasEnteredGameOnce = true;
+		isReconnecting = true;
+		retryCount = 0;
+		lastRetryTime = 0;
+		statusMessage = "Đến giờ hẹn lịch! Đang tự động đăng nhập lại...";
+	}
+
 	/// <summary>
 	/// Bộ xử lý sự kiện tiếp nhận và phản hồi OnDisconnected.
 	/// </summary>
 	public static void OnDisconnected()
 	{
+		if (ModSchedule.isEnabled && ModSchedule.disconnectOnOffWindow && ModSchedule.isOffWindowDisconnected)
+		{
+			isReconnecting = false;
+			return;
+		}
 		if (!isEnabled || !hasEnteredGameOnce || isReconnecting) return;
 		if (GameCanvas.currentScreen == GameCanvas.loginScr || GameCanvas.currentScreen == GameCanvas.serverScreen)
 		{
@@ -147,6 +162,11 @@ public static class ModAutoLogin
 		}
 
 		if (!isEnabled || !isReconnecting) return;
+		if (ModSchedule.isEnabled && ModSchedule.disconnectOnOffWindow && ModSchedule.isOffWindowDisconnected)
+		{
+			isReconnecting = false;
+			return;
+		}
 
 		// Khi da vao lai map on dinh
 		if (ModMenu.IsInGame() && !Char.isLoadingMap)

@@ -513,6 +513,19 @@ public static class ModTanSatFilter
 		}
 	}
 
+	public static int GetEffectiveSkillCooldown(Skill s)
+	{
+		if (s == null) return 300;
+		int baseCd = (ModTanSat.freezeSkillCooldown || (s.template != null && ModTanSat.frozenSkillIds.Contains(s.template.id)))
+			? ModTanSat.timeAttack
+			: ((s.coolDown < ModTanSat.timeAttack) ? ModTanSat.timeAttack : s.coolDown);
+		if (s.template != null && ModTanSat.customSkillDelays.TryGetValue(s.template.id, out int customDelay) && customDelay > 0)
+		{
+			if (customDelay > baseCd) baseCd = customDelay;
+		}
+		return baseCd;
+	}
+
 	/// <summary>
 	/// Thực thi phương thức nghiệp vụ HasEnoughMp.
 	/// </summary>
@@ -560,7 +573,7 @@ public static class ModTanSatFilter
 				Skill s = FindSkillByTemplateId(tplId);
 				if (s != null && s.template != null && IsAttackSkill(s))
 				{
-					int effCd = (s.coolDown < 300) ? 300 : s.coolDown;
+					int effCd = GetEffectiveSkillCooldown(s);
 					if (now - s.lastTimeUseThisSkill >= effCd && HasEnoughMp(me, s))
 					{
 						return s;
@@ -585,7 +598,7 @@ public static class ModTanSatFilter
 			for (int i = 0; i < GameScr.keySkill.Length; i++)
 			{
 				Skill s = GameScr.keySkill[i];
-				if (s != null && IsAutoAttackSkill(s) && now - s.lastTimeUseThisSkill >= s.coolDown && HasEnoughMp(me, s))
+				if (s != null && IsAutoAttackSkill(s) && now - s.lastTimeUseThisSkill >= GetEffectiveSkillCooldown(s) && HasEnoughMp(me, s))
 				{
 					return s;
 				}
@@ -602,7 +615,7 @@ public static class ModTanSatFilter
 			for (int j = 0; j < GameScr.onScreenSkill.Length; j++)
 			{
 				Skill s = GameScr.onScreenSkill[j];
-				if (s != null && IsAutoAttackSkill(s) && now - s.lastTimeUseThisSkill >= s.coolDown && HasEnoughMp(me, s))
+				if (s != null && IsAutoAttackSkill(s) && now - s.lastTimeUseThisSkill >= GetEffectiveSkillCooldown(s) && HasEnoughMp(me, s))
 				{
 					return s;
 				}
@@ -619,7 +632,7 @@ public static class ModTanSatFilter
 			for (int k = 0; k < me.vSkillFight.size(); k++)
 			{
 				Skill s = (Skill)me.vSkillFight.elementAt(k);
-				if (s != null && IsAutoAttackSkill(s) && now - s.lastTimeUseThisSkill >= s.coolDown && HasEnoughMp(me, s))
+				if (s != null && IsAutoAttackSkill(s) && now - s.lastTimeUseThisSkill >= GetEffectiveSkillCooldown(s) && HasEnoughMp(me, s))
 				{
 					return s;
 				}
@@ -636,7 +649,7 @@ public static class ModTanSatFilter
 			for (int m = 0; m < me.vSkill.size(); m++)
 			{
 				Skill s2 = (Skill)me.vSkill.elementAt(m);
-				if (s2 != null && IsAutoAttackSkill(s2) && now - s2.lastTimeUseThisSkill >= s2.coolDown && HasEnoughMp(me, s2))
+				if (s2 != null && IsAutoAttackSkill(s2) && now - s2.lastTimeUseThisSkill >= GetEffectiveSkillCooldown(s2) && HasEnoughMp(me, s2))
 				{
 					return s2;
 				}

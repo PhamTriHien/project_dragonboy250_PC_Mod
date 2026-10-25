@@ -126,6 +126,12 @@ public class TransportScr : mScreen, IActionListener
 			currSpeed += 2;
 		}
 		Controller.isStopReadMessage = false;
+		if (ModNextMap.speedBoostTransport && !transNow)
+		{
+			isSpeed = true;
+			center = null;
+			currSpeed = GameCanvas.w / 2 + 30;
+		}
 		cmx = (((GameCanvas.w / 2 + cmx) / 2 + cmx) / 2 + cmx) / 2;
 		if (type == 1)
 		{

@@ -1462,6 +1462,7 @@ public partial class Panel : IActionListener, IChatable
 				}
 			}
 			int menuY = GetInventorySplitMenuY();
+			ModInventoryExt.AppendInventoryCommands(menu, this, currItem, invSplitIsBody);
 			if (menuY < yScroll)
 			{
 				menuY = yScroll;

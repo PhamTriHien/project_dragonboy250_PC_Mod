@@ -444,6 +444,10 @@ public partial class Controller : IMessageHandler
 						GameCanvas.panel.mapNames[num91] = msg.reader().readUTF();
 						GameCanvas.panel.planetNames[num91] = msg.reader().readUTF();
 					}
+					if (ModNextMap.OnCapsuleMapListReceived(GameCanvas.panel.mapNames))
+					{
+						break;
+					}
 					GameCanvas.panel.setTypeMapTrans();
 					GameCanvas.panel.show();
 					break;
@@ -670,6 +674,7 @@ public partial class Controller : IMessageHandler
 						GameScr.gI().strCapcha = msg.reader().readUTF();
 						GameScr.gI().keyCapcha = new int[GameScr.gI().strCapcha.Length];
 						GameScr.gI().mobCapcha = new Mob();
+						ModAutoCaptcha.OnCaptchaReceived(ArrayCast.cast(data2));
 						GameScr.gI().right = null;
 					}
 					if (b26 == 1)

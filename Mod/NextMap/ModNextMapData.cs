@@ -14,18 +14,20 @@ public static class ModNextMapData
 		"Xayda",
 		"Nappa",
 		"Cooler",
-		"Tương Lai"
+		"Tương Lai",
+		"Khác/NRSD"
 	};
 
-	// Danh sách ID bản đồ theo 6 khu vực: Trái Đất, Namếc, Xayda, Nappa/Fide, Cooler/Cold, Tương Lai
-	public static readonly int[][] planetMapIds = new int[6][]
+	// Danh sách ID bản đồ theo 7 khu vực: Trái Đất, Namếc, Xayda, Nappa/Fide, Cooler/Cold, Tương Lai, Khác/NRSD
+	public static readonly int[][] planetMapIds = new int[7][]
 	{
 		new int[] { 21, 0, 1, 2, 24, 3, 4, 5, 6, 27, 28, 29, 30, 42, 47, 111, 46, 45, 48, 50 },
 		new int[] { 22, 7, 8, 9, 25, 11, 12, 13, 10, 31, 32, 33, 34, 43 },
 		new int[] { 23, 14, 15, 16, 26, 17, 18, 20, 19, 35, 36, 37, 38, 44, 52, 84 },
 		new int[] { 68, 69, 70, 71, 72, 64, 65, 63, 66, 67, 73, 74, 75, 76, 77, 81, 82, 83, 79, 80, 131, 132, 133 },
 		new int[] { 105, 106, 107, 108, 109, 110 },
-		new int[] { 102, 92, 93, 94, 96, 97, 98, 99, 100, 103 }
+		new int[] { 102, 92, 93, 94, 96, 97, 98, 99, 100, 103 },
+		new int[] { 85, 86, 87, 88, 89, 90, 91, 53, 58, 59, 60, 61, 62, 55, 56, 54, 57, 149, 147, 152, 151, 148, 153, 155, 166, 160 }
 	};
 
 	// Chuỗi liên kết cổng trái (-1) / phải (+1) chuẩn xác từ Xmap gốc (a.g.c.sk)
@@ -82,6 +84,8 @@ public static class ModNextMapData
 		if ((currMapId == 27 || currMapId == 28 || currMapId == 29) && nextMapId == 102) return true;
 		if (currMapId == 102 && (nextMapId == 27 || nextMapId == 28 || nextMapId == 29)) return true;
 		if ((currMapId == 48 && nextMapId == 50) || (currMapId == 50 && nextMapId == 48)) return true;
+		if ((currMapId == 24 || currMapId == 25 || currMapId == 26) && nextMapId >= 85 && nextMapId <= 91) return true;
+		if (currMapId >= 85 && currMapId <= 91 && (nextMapId == 24 || nextMapId == 25 || nextMapId == 26)) return true;
 		return false;
 	}
 
@@ -110,7 +114,7 @@ public static class ModNextMapData
 		{ 48, new List<int> { 45, 50 } },
 		{ 50, new List<int> { 48, 49 } },
 		{ 49, new List<int> { 50 } },
-		{ 24, new List<int> { 2, 25, 26, 84 } },
+		{ 24, new List<int> { 2, 25, 26, 84, 85, 86, 87, 88, 89, 90, 91 } },
 
 		// Hành tinh Namếc
 		{ 7, new List<int> { 22, 8, 43 } },
@@ -127,7 +131,7 @@ public static class ModNextMapData
 		{ 34, new List<int> { 33 } },
 		{ 40, new List<int> { 7, 43 } },
 		{ 43, new List<int> { 7 } },
-		{ 25, new List<int> { 9, 24, 26, 84 } },
+		{ 25, new List<int> { 9, 24, 26, 84, 85, 86, 87, 88, 89, 90, 91 } },
 
 		// Hành tinh Xayda
 		{ 14, new List<int> { 23, 15, 44 } },
@@ -145,7 +149,7 @@ public static class ModNextMapData
 		{ 41, new List<int> { 14, 44 } },
 		{ 44, new List<int> { 14, 52 } },
 		{ 52, new List<int> { 44 } },
-		{ 26, new List<int> { 16, 24, 25, 84 } },
+		{ 26, new List<int> { 16, 24, 25, 84, 85, 86, 87, 88, 89, 90, 91 } },
 		{ 84, new List<int> { 24, 25, 26, 104 } },
 		{ 104, new List<int> { 84 } },
 
@@ -192,7 +196,37 @@ public static class ModNextMapData
 		{ 107, new List<int> { 108, 110, 106 } },
 		{ 108, new List<int> { 109, 107, 105 } },
 		{ 109, new List<int> { 108, 105, 106 } },
-		{ 110, new List<int> { 107, 106 } }
+		{ 110, new List<int> { 107, 106 } },
+
+		// Ngọc Rồng Sao Đen (85..91)
+		{ 85, new List<int> { 24 } },
+		{ 86, new List<int> { 24 } },
+		{ 87, new List<int> { 24 } },
+		{ 88, new List<int> { 24 } },
+		{ 89, new List<int> { 24 } },
+		{ 90, new List<int> { 24 } },
+		{ 91, new List<int> { 24 } },
+
+		// Doanh Trại Độc Nhãn (53..62)
+		{ 53, new List<int> { 58 } },
+		{ 58, new List<int> { 53, 59 } },
+		{ 59, new List<int> { 58, 60 } },
+		{ 60, new List<int> { 59, 61 } },
+		{ 61, new List<int> { 60, 62 } },
+		{ 62, new List<int> { 61, 55 } },
+		{ 55, new List<int> { 62, 56 } },
+		{ 56, new List<int> { 55, 54 } },
+		{ 54, new List<int> { 56, 57 } },
+		{ 57, new List<int> { 54 } },
+
+		// Khí Gas Hủy Diệt (149, 147, 152, 151, 148) & Hành Tinh Ngục Tù (155, 166)
+		{ 149, new List<int> { 147 } },
+		{ 147, new List<int> { 149, 152 } },
+		{ 152, new List<int> { 147, 151 } },
+		{ 151, new List<int> { 152, 148 } },
+		{ 148, new List<int> { 151 } },
+		{ 155, new List<int> { 166 } },
+		{ 166, new List<int> { 155 } }
 	};
 
 	/// <summary>

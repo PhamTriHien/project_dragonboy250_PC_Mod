@@ -1,9 +1,9 @@
 {
-  "version": "2.5.63",
+  "version": "2.5.64",
   "buildDate": "2026-10-26",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.63/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.63/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.63/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.63/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.63: Bổ sung mục Tốc độ hoạt ảnh game (x1.0 Gốc, x1.25, x1.5, x2.0, x2.5, x3.0, x4.0, x5.0) trực tiếp trong Menu Mod -> Đồ Họa trên toàn bộ 4 nền tảng (PC Native, Web WASM, Android, PC Unity), đồng bộ nhịp mô phỏng hoạt ảnh nhân vật, chiêu thức, đạn bay, tàu vũ trụ, quái vật và hiệu ứng mượt mà không ảnh hưởng bộ hẹn giờ chống quét máy chủ."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.64/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.64/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.64/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.64/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.64: Hoàn thiện trọn vẹn 100% hệ thống tính năng Mod so với Mod Java và đồng bộ đầy đủ trên cả 4 nền tảng (PC Native .NET 8, Android APK, Web WASM, PC Unity Assembly-CSharp.dll):\n- Bổ sung Tab Tự Động chuyên sâu: Set đồ nhanh 1 & 2 (tích hợp trong Hành trang & Cửa hàng), Mua SLL, Auto Sử Dụng vật phẩm trong túi, Auto NV Tân Thủ (Task 0 -> 10), Auto Giải Captcha qua API HTTP, Tự sát nhanh, Auto Cộng Chỉ Số đa mục tiêu 5 dòng, Spam Bông Tai 11s, Auto Đệ Tử nâng cao (Sủa đánh mồi, Auto KOK, Đạt SM ngắt, Né Boss thông minh), Lịch Hẹn Giờ 6 khung giờ.\n- Bổ sung Proxy SOCKS5/HTTP CONNECT & Máy chủ tùy chỉnh IP:Port trực tiếp tại màn hình sảnh đăng nhập.\n- Bổ sung Xmap Capsule (193/194), Tàu Tương Lai Siêu Tốc, Đóng băng hồi chiêu từng kỹ năng, Xóa người chơi khác giữ Boss & Đệ, HUD Trạng thái Sư Phụ (TTSP) & % chỉ số trang bị, nút nhanh màn hình có thể bật/tắt, hệ thống phím tắt nhanh PC (bảo toàn WASD di chuyển) và sửa dứt điểm lỗi hiển thị tiếng Việt bảng Cập Nhật."
 }

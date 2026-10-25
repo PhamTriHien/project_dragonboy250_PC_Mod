@@ -352,6 +352,7 @@ public partial class ServerListScreen : mScreen, IActionListener
 			}
 			GameMidlet.IP = address[ipSelect];
 			GameMidlet.PORT = port[ipSelect];
+			ModProxyServer.ResolveSelectedServerEndpoint(ref GameMidlet.IP, ref GameMidlet.PORT);
 			if (language != null && ipSelect < language.Length)
 			{
 				mResources.loadLanguague(language[ipSelect]);

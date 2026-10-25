@@ -10,6 +10,9 @@ public static class ModNextMap
 	public static bool isNextMapActive = false;
 	public static int nextMapTargetId = -1;
 	public static bool useSafeMovement = false;
+	public static bool useCapsuleVip = true;
+	public static bool useNormalCapsule = false;
+	public static bool speedBoostTransport = true;
 	public static int lastMapId = -1;
 	public static Waypoint currentTargetWaypoint = null;
 	public static int resetPenaltyCount = 0;
@@ -19,6 +22,8 @@ public static class ModNextMap
 	private static long lastChangeAttemptTime = 0;
 	private static long mapEnterWaitUntil = 0;
 	private static long lastStepUpdateTime = 0;
+	private static bool s_WaitingCapsuleMenu = false;
+	private static long s_LastCapsuleUseTime = 0;
 
 	/// <summary>
 	/// Phản hồi khi server gửi gói RESET_POINT (cmd 46) kéo lùi nhân vật để tạm hoãn và giảm bước nhảy chống giật lặp lại.
@@ -133,6 +138,8 @@ public static class ModNextMap
 		lastChangeAttemptTime = 0;
 		mapEnterWaitUntil = 0;
 		lastStepUpdateTime = 0;
+		s_WaitingCapsuleMenu = false;
+		s_LastCapsuleUseTime = 0;
 		Char.ischangingMap = false;
 		Char.isLockKey = false;
 		InfoDlg.hide();
@@ -163,6 +170,7 @@ public static class ModNextMap
 		lastChangeAttemptTime = 0;
 		mapEnterWaitUntil = 0;
 		lastStepUpdateTime = 0;
+		s_WaitingCapsuleMenu = false;
 		Char.entranceWaypoint = null;
 		Char.ischangingMap = false;
 		Char.isLockKey = false;
@@ -499,9 +507,225 @@ public static class ModNextMap
 			{
 				if (tplId == 44 || tplId == 20) return npc;
 			}
+			else if ((currMapId == 24 || currMapId == 25 || currMapId == 26) && nextMapId >= 85 && nextMapId <= 91)
+			{
+				if (tplId == 29) return npc;
+			}
+			else if (currMapId >= 85 && currMapId <= 91 && (nextMapId == 24 || nextMapId == 25 || nextMapId == 26))
+			{
+				if (tplId >= 30 && tplId <= 36) return npc;
+			}
 		}
 
 		return null;
+	}
+
+	private static int FindBagItemIndex(Char me, int templateId, int minQuantity = 1)
+	{
+		if (me == null || me.arrItemBag == null)
+		{
+			return -1;
+		}
+		for (int i = 0; i < me.arrItemBag.Length; i++)
+		{
+			Item it = me.arrItemBag[i];
+			if (it != null && it.template != null && it.template.id == templateId && it.quantity >= minQuantity)
+			{
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	private static string ExtractCapsuleMapLabel(string rawEntry)
+	{
+		if (string.IsNullOrEmpty(rawEntry))
+		{
+			return string.Empty;
+		}
+		int colonIdx = rawEntry.IndexOf(':');
+		if (colonIdx >= 0 && colonIdx + 1 < rawEntry.Length)
+		{
+			return rawEntry.Substring(colonIdx + 1).Trim();
+		}
+		return rawEntry.Trim();
+	}
+
+	public static bool OnCapsuleMapListReceived(string[] mapNames)
+	{
+		if (!isNextMapActive || !s_WaitingCapsuleMenu)
+		{
+			return false;
+		}
+		s_WaitingCapsuleMenu = false;
+		if (mapNames == null || mapNames.Length == 0 || nextMapTargetId < 0)
+		{
+			return true;
+		}
+
+		List<int> path = FindPath(TileMap.mapID, nextMapTargetId);
+		int bestMenuIndex = -1;
+
+		if (path != null && path.Count > 0)
+		{
+			for (int p = path.Count - 1; p >= 1 && bestMenuIndex < 0; p--)
+			{
+				int candidateMapId = path[p];
+				for (int k = 0; k < mapNames.Length; k++)
+				{
+					string label = ExtractCapsuleMapLabel(mapNames[k]);
+					if (FindMapIdByName(label) == candidateMapId || ModNextMapData.MatchMapId(label, candidateMapId))
+					{
+						bestMenuIndex = k;
+						break;
+					}
+				}
+			}
+		}
+
+		if (bestMenuIndex < 0)
+		{
+			for (int k = 0; k < mapNames.Length; k++)
+			{
+				string label = ExtractCapsuleMapLabel(mapNames[k]);
+				if (FindMapIdByName(label) == nextMapTargetId || ModNextMapData.MatchMapId(label, nextMapTargetId))
+				{
+					bestMenuIndex = k;
+					break;
+				}
+			}
+		}
+
+		if (bestMenuIndex >= 0)
+		{
+			long now = mSystem.currentTimeMillis();
+			Char.ischangingMap = true;
+			lastChangeAttemptTime = now;
+			mapEnterWaitUntil = now + 650;
+			Service.gI().requestMapSelect(bestMenuIndex);
+		}
+		return true;
+	}
+
+	public static void LoadMapDirection(int dir)
+	{
+		try
+		{
+			if (!ModMenu.IsInGame() || Char.isLoadingMap || Char.ischangingMap)
+			{
+				return;
+			}
+			Char me = Char.myCharz();
+			if (me == null || me.isDie || me.cHP <= 0)
+			{
+				return;
+			}
+			if (isNextMapActive)
+			{
+				StopNextMap();
+			}
+
+			int currMap = TileMap.mapID;
+			if (dir == 2 && currMap >= 85 && currMap <= 91 && GameScr.vNpc != null)
+			{
+				for (int i = 0; i < GameScr.vNpc.size(); i++)
+				{
+					Npc npc = (Npc)GameScr.vNpc.elementAt(i);
+					if (npc != null && npc.template != null && npc.template.npcTemplateId >= 30 && npc.template.npcTemplateId <= 36)
+					{
+						ModTeleport.TeleportTo(npc.cx, TileMap.tileYofPixel(npc.cy - 3));
+						Service.gI().openMenu(npc.template.npcTemplateId);
+						return;
+					}
+				}
+			}
+
+			Waypoint targetWp = null;
+			if (TileMap.vGo != null && TileMap.vGo.size() > 0)
+			{
+				for (int i = 0; i < TileMap.vGo.size(); i++)
+				{
+					Waypoint wp = (Waypoint)TileMap.vGo.elementAt(i);
+					if (wp == null) continue;
+					if (dir == 0 && wp.maxX <= 60)
+					{
+						targetWp = wp;
+						break;
+					}
+					if (dir == 1 && wp.minX >= TileMap.pxw - 60)
+					{
+						targetWp = wp;
+						break;
+					}
+					if (dir == 2 && wp.minX > 60 && wp.maxX < TileMap.pxw - 60)
+					{
+						targetWp = wp;
+						break;
+					}
+				}
+
+				if (targetWp == null)
+				{
+					if (dir == 0)
+					{
+						int minX = int.MaxValue;
+						for (int i = 0; i < TileMap.vGo.size(); i++)
+						{
+							Waypoint wp = (Waypoint)TileMap.vGo.elementAt(i);
+							if (wp != null && wp.minX < TileMap.pxw / 3 && wp.minX < minX)
+							{
+								minX = wp.minX;
+								targetWp = wp;
+							}
+						}
+					}
+					else if (dir == 1)
+					{
+						int maxX = int.MinValue;
+						for (int i = 0; i < TileMap.vGo.size(); i++)
+						{
+							Waypoint wp = (Waypoint)TileMap.vGo.elementAt(i);
+							if (wp != null && wp.maxX > (TileMap.pxw * 2) / 3 && wp.maxX > maxX)
+							{
+								maxX = wp.maxX;
+								targetWp = wp;
+							}
+						}
+					}
+				}
+			}
+
+			if (targetWp != null)
+			{
+				int tx = ModWaypoint.GetWaypointTargetX(targetWp);
+				int ty = ModWaypoint.GetWaypointTargetY(targetWp, tx);
+				ModTeleport.TeleportTo(tx, ty);
+				Char.ischangingMap = true;
+				if (targetWp.isOffline || TileMap.isOfflineMap() || TileMap.isTrainingMap())
+				{
+					Service.gI().getMapOffline();
+				}
+				else
+				{
+					Service.gI().requestChangeMap();
+				}
+				return;
+			}
+
+			if (dir == 2 && (currMap == 45 || currMap == 46 || currMap == 48))
+			{
+				int tx = System.Math.Max(48, System.Math.Min(TileMap.pxw - 48, me.cx));
+				ModTeleport.TeleportTo(tx, TileMap.pxh - 12);
+				Char.ischangingMap = true;
+				Service.gI().requestChangeMap();
+				return;
+			}
+
+			GameScr.info1.addInfo("Không có cổng qua map ở hướng này!", 0);
+		}
+		catch
+		{
+		}
 	}
 
 	/// <summary>
@@ -618,12 +842,50 @@ public static class ModNextMap
 		lastStepUpdateTime = now;
 
 		ModNextMapData.SyncLiveWaypointsForCurrentMap();
+		if (nextMapTargetId == 160 && TileMap.mapID != 160 && now - s_LastCapsuleUseTime > 3000)
+		{
+			int ringIdx = FindBagItemIndex(me, 992, 1);
+			if (ringIdx >= 0)
+			{
+				s_LastCapsuleUseTime = now;
+				Service.gI().useItem(0, 1, (sbyte)ringIdx, -1);
+				mapEnterWaitUntil = now + 800;
+				return;
+			}
+		}
+
+		if (s_WaitingCapsuleMenu)
+		{
+			if (now - s_LastCapsuleUseTime < 1800)
+			{
+				return;
+			}
+			s_WaitingCapsuleMenu = false;
+		}
+
 		List<int> path = FindPath(TileMap.mapID, nextMapTargetId);
 		if (path == null || path.Count == 0)
 		{
 			GameScr.info1.addInfo("Không tìm thấy đường đi đến " + GetMapName(nextMapTargetId), 0);
 			StopNextMap();
 			return;
+		}
+
+		if (path.Count >= 4 && (useCapsuleVip || useNormalCapsule) && now - s_LastCapsuleUseTime > 6000 &&
+		    !TileMap.isInAirMap() && !(TileMap.mapID >= 85 && TileMap.mapID <= 91) && !ModTeleport.IsColdPlanetAntiCheckActive())
+		{
+			int capIdx = useCapsuleVip ? FindBagItemIndex(me, 194, 1) : -1;
+			if (capIdx < 0 && useNormalCapsule)
+			{
+				capIdx = FindBagItemIndex(me, 193, 1);
+			}
+			if (capIdx >= 0)
+			{
+				s_WaitingCapsuleMenu = true;
+				s_LastCapsuleUseTime = now;
+				Service.gI().useItem(0, 1, (sbyte)capIdx, -1);
+				return;
+			}
 		}
 
 		int nextMapId = path[0];

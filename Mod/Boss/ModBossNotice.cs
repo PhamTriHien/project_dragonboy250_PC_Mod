@@ -96,6 +96,11 @@ public static class ModBossNotice
 		SoundMn.gI().buttonClick();
 	}
 
+	public static void StopAutoScanZone()
+	{
+		isAutoScanBossZone = false;
+	}
+
 	/// <summary>
 	/// Bật hoặc tắt tự động khóa mục tiêu và tấn công Boss trong map.
 	/// </summary>

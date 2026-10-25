@@ -119,6 +119,7 @@ public partial class ServerListScreen : mScreen, IActionListener
 			}
 			base.paint(g);
 			ModAutoUpdate.PaintLobbyUI(g);
+			ModProxyServer.PaintLobbyUI(g);
 		}
 
 	public static void paintDeleteData(mGraphics g)

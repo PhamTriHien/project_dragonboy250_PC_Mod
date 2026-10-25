@@ -70,6 +70,55 @@ public static class ModAutoChat
 		}
 	}
 
+	public static void ShowInputIntervalSeconds()
+	{
+		if (GameCanvas.inputDlg == null) return;
+		reopenModUiAfterInput = ModUI.uiCustomOpen;
+		ModUI.uiCustomOpen = false;
+		ModMenu.modMenuOpen = false;
+		int curSec = System.Math.Max(5, intervalMs / 1000);
+		GameCanvas.inputDlg.show("Nhập chu kỳ Auto Chat (giây, tối thiểu 5s):", new Command("OK", new AutoChatIntervalListener(), 1, null), TField.INPUT_TYPE_NUMERIC);
+		if (GameCanvas.inputDlg.tfInput != null)
+		{
+			GameCanvas.inputDlg.tfInput.setMaxTextLenght(5);
+			GameCanvas.inputDlg.tfInput.setText(curSec.ToString());
+			if (!Main.isPC) GameCanvas.inputDlg.tfInput.setFocusWithKb(isFocus: true);
+		}
+	}
+
+	private class AutoChatIntervalListener : IActionListener
+	{
+		public void perform(int idAction, object p)
+		{
+			try
+			{
+				if (idAction == 1 && GameCanvas.inputDlg != null && GameCanvas.inputDlg.tfInput != null)
+				{
+					string raw = (GameCanvas.inputDlg.tfInput.getText() ?? string.Empty).Trim();
+					if (int.TryParse(raw, out int sec) && sec >= 5)
+					{
+						if (sec > 3600) sec = 3600;
+						intervalMs = sec * 1000;
+						nextSendAt = 0;
+						ModConfig.SaveConfig();
+						GameScr.info1?.addInfo("Chu kỳ Auto Chat: " + sec + " giây.", 0);
+						SoundMn.gI().buttonClick();
+					}
+				}
+				GameCanvas.endDlg();
+				if (reopenModUiAfterInput)
+				{
+					reopenModUiAfterInput = false;
+					ModUI.uiCustomOpen = true;
+				}
+			}
+			catch
+			{
+				GameCanvas.endDlg();
+			}
+		}
+	}
+
 	/// <summary>
 	/// CLASS AutoChatActionListener: Định nghĩa và điều phối logic trong hệ thống game.
 	/// </summary>

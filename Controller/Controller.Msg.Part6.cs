@@ -301,7 +301,7 @@ public partial class Controller : IMessageHandler
 							}
 							GameScr.gI().createMenu(array7, npc);
 							ChatPopup.addChatPopup(chat, 100000, npc);
-							if (ModWaypoint.isWaitingShipMenu && (num76 == 10 || num76 == 11 || num76 == 12))
+							if (ModWaypoint.isWaitingShipMenu && (num76 == 10 || num76 == 11 || num76 == 12 || num76 == 20 || (num76 >= 29 && num76 <= 36) || num76 == 38 || num76 == 44 || num76 == 53 || num76 == 60))
 							{
 								ModWaypoint.OnReceiveShipMenu(array7, npc);
 							}
@@ -327,7 +327,7 @@ public partial class Controller : IMessageHandler
 					Res.outz((Char.myCharz().npcFocus == null) ? "null" : "!null");
 					GameScr.gI().createMenu(array8, npc2);
 					ChatPopup.addChatPopup(chat2, 100000, npc2);
-					if (ModWaypoint.isWaitingShipMenu && (num76 == 10 || num76 == 11 || num76 == 12))
+					if (ModWaypoint.isWaitingShipMenu && (num76 == 10 || num76 == 11 || num76 == 12 || num76 == 20 || (num76 >= 29 && num76 <= 36) || num76 == 38 || num76 == 44 || num76 == 53 || num76 == 60))
 					{
 						ModWaypoint.OnReceiveShipMenu(array8, npc2);
 					}

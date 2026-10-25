@@ -1,13 +1,10 @@
 using System;
 
 /// <summary>
-/// Module Auto Mua Bùa: Tự động mua và gia hạn các loại bùa hỗ trợ tại NPC Bà Hạt Mít.
+/// Module Auto Mua Bùa: Tự động mua và gia hạn đồng thời nhiều loại bùa hỗ trợ trong 10 loại bùa tại NPC Bà Hạt Mít.
 /// </summary>
 public static class ModAutoBuyBua
 {
-	/// <summary>
-	/// ENUM AutoBuyBuaState: Định nghĩa và điều phối logic trong hệ thống game.
-	/// </summary>
 	public enum AutoBuyBuaState
 	{
 		Idle,
@@ -19,11 +16,41 @@ public static class ModAutoBuyBua
 		SwitchingZone
 	}
 
-	// Cấu hình
-	public static bool isAutoRebuy = false; // Tự động mua lại khi hết hạn
-	public static int selectedBuaType = 0;   // 0..9: 10 loại bùa Bà Hạt Mít
-	public static int selectedPackage = 0;   // 0: 1 Giờ, 1: 8 Giờ, 2: 1 Tháng
+	private sealed class CharmMenuListener : IActionListener
+	{
+		public void perform(int idAction, object p)
+		{
+			if (idAction >= 100 && idAction < 110)
+			{
+				int idx = idAction - 100;
+				ToggleBuaIndex(idx);
+				ShowCharmChecklistMenu();
+			}
+			else if (idAction == 120)
+			{
+				buaEnabledMask = (1 << buaTypeNames.Length) - 1;
+				ModConfig.SaveConfig();
+				GameScr.info1.addInfo("Đã chọn mua tất cả 10 loại Bùa!", 0);
+				SoundMn.gI().buttonClick();
+			}
+			else if (idAction == 121)
+			{
+				buaEnabledMask = 1 << selectedBuaType;
+				ModConfig.SaveConfig();
+				GameScr.info1.addInfo("Chỉ giữ Bùa: " + buaTypeNames[selectedBuaType], 0);
+				SoundMn.gI().buttonClick();
+			}
+		}
+	}
+
+	private static readonly CharmMenuListener s_MenuListener = new CharmMenuListener();
+
+	public static bool isAutoRebuy = false;
+	public static int selectedBuaType = 0;
+	public static int buaEnabledMask = 1;
+	public static int selectedPackage = 0;
 	public static bool showCharmHud = false;
+	public static readonly long[] charmExpireTimestamps = new long[10];
 
 	public static string[] buaTypeNames = new string[]
 	{
@@ -74,7 +101,6 @@ public static class ModAutoBuyBua
 		"1 Tháng"
 	};
 
-	// Trạng thái vận hành
 	public static AutoBuyBuaState currentState = AutoBuyBuaState.Idle;
 	public static bool isBusy => currentState != AutoBuyBuaState.Idle;
 
@@ -85,27 +111,114 @@ public static class ModAutoBuyBua
 
 	private static long stateTimer = 0;
 	private static long lastAutoCheckTime = 0;
-	private static long lastBuySuccessTime = 0;
+	private static long lastShopBuyStepTime = 0;
+	private static int s_BoughtSessionMask = 0;
 	private static int retryOpenMenuCount = 0;
 	private static int retryShopCount = 0;
 	private static long lastZoneAttemptTime = 0;
 	private static int zoneAttemptCount = 0;
 
-	/// <summary>
-	/// Truy xuất và trả về dữ liệu của GetHomeVachNuiMapId.
-	/// </summary>
+	public static bool IsBuaSelected(int index)
+	{
+		if (index < 0 || index >= buaTypeNames.Length) return false;
+		if (buaEnabledMask == 0)
+		{
+			return index == selectedBuaType;
+		}
+		return ((buaEnabledMask >> index) & 1) != 0;
+	}
+
+	public static int GetSelectedCount()
+	{
+		int count = 0;
+		for (int i = 0; i < buaTypeNames.Length; i++)
+		{
+			if (IsBuaSelected(i)) count++;
+		}
+		return count;
+	}
+
+	public static string GetSelectedButtonLabel()
+	{
+		int count = 0;
+		int singleIdx = -1;
+		for (int i = 0; i < buaTypeNames.Length; i++)
+		{
+			if (IsBuaSelected(i))
+			{
+				count++;
+				singleIdx = i;
+			}
+		}
+		if (count <= 0) return "Chọn Bùa";
+		if (count == 1) return buaTypeNames[singleIdx];
+		return "Bùa (" + count + "/10)";
+	}
+
+	public static void ToggleBuaIndex(int index)
+	{
+		if (index < 0 || index >= buaTypeNames.Length) return;
+		if (buaEnabledMask == 0)
+		{
+			buaEnabledMask = 1 << selectedBuaType;
+		}
+		buaEnabledMask ^= (1 << index);
+		if (buaEnabledMask == 0)
+		{
+			buaEnabledMask = 1 << index;
+		}
+		selectedBuaType = index;
+		ModConfig.SaveConfig();
+		SoundMn.gI().buttonClick();
+	}
+
+	public static void ShowCharmChecklistMenu()
+	{
+		MyVector vec = new MyVector();
+		for (int i = 0; i < buaTypeNames.Length; i++)
+		{
+			bool on = IsBuaSelected(i);
+			string prefix = on ? "[x] " : "[ ] ";
+			vec.addElement(new Command(prefix + buaTypeNames[i], s_MenuListener, 100 + i, null));
+		}
+		vec.addElement(new Command("Chọn Tất Cả (10)", s_MenuListener, 120, null));
+		vec.addElement(new Command("Chỉ Giữ 1 Bùa", s_MenuListener, 121, null));
+		GameCanvas.menu.startAt(vec, 3);
+	}
+
+	public static string ExportExpireTimestamps()
+	{
+		string res = string.Empty;
+		for (int i = 0; i < charmExpireTimestamps.Length; i++)
+		{
+			if (i > 0) res += ";";
+			res += charmExpireTimestamps[i].ToString();
+		}
+		return res;
+	}
+
+	public static void ImportExpireTimestamps(string raw)
+	{
+		if (string.IsNullOrEmpty(raw)) return;
+		string[] parts = raw.Split(new char[] { ';', ',' });
+		for (int i = 0; i < parts.Length && i < charmExpireTimestamps.Length; i++)
+		{
+			if (long.TryParse(parts[i].Trim(), out long ts) && ts >= 0)
+			{
+				charmExpireTimestamps[i] = ts;
+			}
+		}
+	}
+
 	public static int GetHomeVachNuiMapId()
 	{
 		Char me = Char.myCharz();
 		if (me == null) return 42;
-		if (me.cgender == 1) return 43; // Vách Moori (Namếc)
-		if (me.cgender == 2) return 44; // Vách Kakarot (Xayda)
-		return 42;                      // Vách Aru (Trái Đất)
+		if (me.cgender == 1) return 43;
+		if (me.cgender == 2) return 44;
+		return 42;
 	}
 
-	/// <summary>
-	/// Thực thi phương thức nghiệp vụ FindBaHatMit.
-	/// </summary>
 	public static Npc FindBaHatMit()
 	{
 		if (GameScr.vNpc == null) return null;
@@ -114,14 +227,17 @@ public static class ModAutoBuyBua
 			Npc npc = (Npc)GameScr.vNpc.elementAt(i);
 			if (npc != null && npc.template != null)
 			{
-				string name = ModNextMapData.RemoveAccents(npc.template.name).ToLower();
+				if (npc.template.npcTemplateId == 21)
+				{
+					return npc;
+				}
+				string name = ModNextMapData.RemoveAccents(npc.template.name ?? string.Empty).ToLower();
 				if (name.Contains("hat mit") || name.Contains("ba hat mit"))
 				{
 					return npc;
 				}
 			}
 		}
-		// Fallback nếu map 42, 43, 44 chỉ có 1 NPC
 		if (GameScr.vNpc.size() > 0)
 		{
 			return (Npc)GameScr.vNpc.elementAt(0);
@@ -129,15 +245,11 @@ public static class ModAutoBuyBua
 		return null;
 	}
 
-	/// <summary>
-	/// Thực thi phương thức nghiệp vụ StartBuyBuaNow.
-	/// </summary>
 	public static void StartBuyBuaNow()
 	{
 		Char me = Char.myCharz();
 		if (me == null || me.cHP <= 0) return;
 
-		// Lưu lại vị trí bãi farm hiện tại
 		savedFarmMapId = TileMap.mapID;
 		savedFarmZoneId = TileMap.zoneID;
 		savedFarmX = me.cx;
@@ -146,10 +258,12 @@ public static class ModAutoBuyBua
 		int targetMap = GetHomeVachNuiMapId();
 		currentState = AutoBuyBuaState.GoingToVachNui;
 		stateTimer = mSystem.currentTimeMillis();
+		s_BoughtSessionMask = 0;
+		lastShopBuyStepTime = 0;
 		retryOpenMenuCount = 0;
 		retryShopCount = 0;
 
-		GameScr.info1.addInfo("Bắt đầu đi mua " + buaTypeNames[selectedBuaType] + " tại Vách Núi...", 0);
+		GameScr.info1.addInfo("Bắt đầu đi mua " + GetSelectedCount() + " loại bùa tại Vách Núi...", 0);
 		SoundMn.gI().buttonClick();
 
 		if (TileMap.mapID != targetMap)
@@ -158,22 +272,19 @@ public static class ModAutoBuyBua
 		}
 	}
 
-	/// <summary>
-	/// Thực thi phương thức nghiệp vụ StopAutoBuyBua.
-	/// </summary>
 	public static void StopAutoBuyBua()
 	{
 		currentState = AutoBuyBuaState.Idle;
-		if (GameCanvas.panel.isShow)
+		if (GameCanvas.panel != null && GameCanvas.panel.isShow)
 		{
 			GameCanvas.panel.hideNow();
 		}
-		GameCanvas.menu.showMenu = false;
+		if (GameCanvas.menu != null)
+		{
+			GameCanvas.menu.showMenu = false;
+		}
 	}
 
-	/// <summary>
-	/// Bật hoặc tắt trạng thái kích hoạt của ToggleAutoRebuy.
-	/// </summary>
 	public static void ToggleAutoRebuy()
 	{
 		isAutoRebuy = !isAutoRebuy;
@@ -182,20 +293,15 @@ public static class ModAutoBuyBua
 		SoundMn.gI().buttonClick();
 	}
 
-	/// <summary>
-	/// Thực thi phương thức nghiệp vụ CycleBuaType.
-	/// </summary>
 	public static void CycleBuaType()
 	{
 		selectedBuaType = (selectedBuaType + 1) % buaTypeNames.Length;
+		buaEnabledMask = 1 << selectedBuaType;
 		ModConfig.SaveConfig();
 		GameScr.info1.addInfo("Chọn mua: " + buaTypeNames[selectedBuaType], 0);
 		SoundMn.gI().buttonClick();
 	}
 
-	/// <summary>
-	/// Thực thi phương thức nghiệp vụ CyclePackage.
-	/// </summary>
 	public static void CyclePackage()
 	{
 		selectedPackage = (selectedPackage + 1) % packageNames.Length;
@@ -204,9 +310,6 @@ public static class ModAutoBuyBua
 		SoundMn.gI().buttonClick();
 	}
 
-	/// <summary>
-	/// Truy xuất và trả về dữ liệu của GetStatusText.
-	/// </summary>
 	public static string GetStatusText()
 	{
 		switch (currentState)
@@ -218,18 +321,54 @@ public static class ModAutoBuyBua
 			case AutoBuyBuaState.WaitingMenu:
 				return "Đang mở menu bùa...";
 			case AutoBuyBuaState.WaitingShop:
-				return "Đang mua bùa trong cửa hàng...";
+				return "Đang mua bùa (" + GetSelectedCount() + " loại)...";
 			case AutoBuyBuaState.ReturningToFarm:
 			case AutoBuyBuaState.SwitchingZone:
 				return "Đang quay lại bãi farm...";
 			default:
-				return isAutoRebuy ? "Sẵn sàng (Tự mua khi hết)" : "Sẵn sàng";
+				return isAutoRebuy ? "Sẵn sàng (Tự gia hạn)" : "Sẵn sàng";
 		}
 	}
 
-	/// <summary>
-	/// Cập nhật trạng thái logic của đối tượng theo từng chu kỳ khung hình.
-	/// </summary>
+	private static long GetShopItemRemainMinutes(Item item)
+	{
+		if (item == null || item.itemOption == null) return 0;
+		long totalMins = 0;
+		for (int i = 0; i < item.itemOption.Length; i++)
+		{
+			ItemOption opt = item.itemOption[i];
+			if (opt == null || opt.optionTemplate == null) continue;
+			int oid = opt.optionTemplate.id;
+			if (oid == 63 && opt.param > 0)
+			{
+				totalMins += (long)opt.param * 1440L;
+			}
+			else if (oid == 64 && opt.param > 0)
+			{
+				totalMins += (long)opt.param * 60L;
+			}
+			else if ((oid == 65 || oid == 1) && opt.param > 0)
+			{
+				totalMins += opt.param;
+			}
+		}
+		return totalMins;
+	}
+
+	private static bool AnySelectedCharmNeedsRebuy(long now)
+	{
+		for (int i = 0; i < buaTypeNames.Length; i++)
+		{
+			if (!IsBuaSelected(i)) continue;
+			long exp = charmExpireTimestamps[i];
+			if (exp <= 0 || exp - now <= 120000L)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public static void Update()
 	{
 		if (!ModMenu.IsInGame()) return;
@@ -239,14 +378,12 @@ public static class ModAutoBuyBua
 
 		long now = mSystem.currentTimeMillis();
 
-		// Kiểm tra tự động mua lại khi hết hạn bùa
-		if (isAutoRebuy && currentState == AutoBuyBuaState.Idle)
+		if (isAutoRebuy && currentState == AutoBuyBuaState.Idle && !ModNextMap.isNextMapActive && !ModGoBack.isReturning && !ModSetActivator.isBusy)
 		{
-			if (now - lastAutoCheckTime > 30000) // Kiểm tra mỗi 30 giây
+			if (now - lastAutoCheckTime > 30000)
 			{
 				lastAutoCheckTime = now;
-				long durationMs = (selectedPackage == 0) ? 3600000L : ((selectedPackage == 1) ? 28800000L : 2592000000L);
-				if (lastBuySuccessTime == 0 || now - lastBuySuccessTime > durationMs)
+				if ((me.luong + me.luongKhoa) >= 1 && AnySelectedCharmNeedsRebuy(now))
 				{
 					StartBuyBuaNow();
 					return;
@@ -256,8 +393,7 @@ public static class ModAutoBuyBua
 
 		if (currentState == AutoBuyBuaState.Idle) return;
 
-		// Watchdog chống kẹt tổng thể (quá 60 giây tự động hủy về bãi)
-		if (now - stateTimer > 60000)
+		if (now - stateTimer > 65000)
 		{
 			GameScr.info1.addInfo("Quá thời gian mua bùa! Quay lại bãi farm...", 0);
 			ReturnToFarmSpot();
@@ -271,6 +407,10 @@ public static class ModAutoBuyBua
 			case AutoBuyBuaState.GoingToVachNui:
 				if (TileMap.mapID == vachMapId && !Char.isLoadingMap && !Char.ischangingMap)
 				{
+					if (ModNextMap.isNextMapActive)
+					{
+						ModNextMap.StopNextMap();
+					}
 					currentState = AutoBuyBuaState.ApproachingBaHatMit;
 					stateTimer = now;
 				}
@@ -315,7 +455,6 @@ public static class ModAutoBuyBua
 					Npc npc = FindBaHatMit();
 					int tmplId = (npc != null && npc.template != null) ? npc.template.npcTemplateId : 21;
 
-					// Tìm menu tương ứng với gói thời hạn đã chọn
 					int targetIndex = -1;
 					string searchPkg = (selectedPackage == 0) ? "1 gio" : ((selectedPackage == 1) ? "8 gio" : "1 thang");
 
@@ -325,7 +464,7 @@ public static class ModAutoBuyBua
 						if (cmd != null && !string.IsNullOrEmpty(cmd.caption))
 						{
 							string cap = ModNextMapData.RemoveAccents(cmd.caption).ToLower();
-							if (cap.Contains(searchPkg))
+							if (cap.Contains(searchPkg) || (selectedPackage == 0 && cap.Contains("1h")) || (selectedPackage == 1 && cap.Contains("8h")))
 							{
 								targetIndex = i;
 								break;
@@ -333,7 +472,6 @@ public static class ModAutoBuyBua
 						}
 					}
 
-					// Nếu chưa ở menu chọn gói mà đang ở menu cấp 1 ("Cửa hàng Bùa"), bấm vào "Cửa hàng Bùa" và tiếp tục chờ menu cấp 2
 					if (targetIndex == -1)
 					{
 						int shopMenuIdx = -1;
@@ -365,6 +503,8 @@ public static class ModAutoBuyBua
 					GameCanvas.menu.showMenu = false;
 					currentState = AutoBuyBuaState.WaitingShop;
 					stateTimer = now;
+					lastShopBuyStepTime = now;
+					s_BoughtSessionMask = 0;
 					retryShopCount = 0;
 				}
 				else if (now - stateTimer > 2500)
@@ -389,35 +529,73 @@ public static class ModAutoBuyBua
 				break;
 
 			case AutoBuyBuaState.WaitingShop:
-				if (now - stateTimer < 600) break;
+				if (now - stateTimer < 650 || now - lastShopBuyStepTime < 500) break;
 
-				Item buaItem = FindTargetBuaInShop();
-				if (buaItem != null && buaItem.template != null)
+				if (!HasAnyCharmInShop(me))
 				{
-					// Gửi lệnh mua bùa bằng ngọc
-					Service.gI().buyItem(1, buaItem.template.id, 0);
-					lastBuySuccessTime = now;
-					GameScr.info1.addInfo("ĐÃ MUA: " + buaItem.template.name + " (" + packageNames[selectedPackage] + ")!", 0);
+					if (now - stateTimer > 4000)
+					{
+						retryShopCount++;
+						if (retryShopCount >= 2)
+						{
+							GameScr.info1.addInfo("Cửa hàng bùa chưa tải xong! Quay lại bãi...", 0);
+							ReturnToFarmSpot();
+						}
+						else
+						{
+							stateTimer = now;
+						}
+					}
+					break;
+				}
 
-					if (GameCanvas.panel.isShow)
+				SyncAllShopCharmTimers(me, now);
+
+				int nextCharmIdx = -1;
+				Item nextCharmItem = null;
+				for (int c = 0; c < buaTypeNames.Length; c++)
+				{
+					if (!IsBuaSelected(c)) continue;
+					if ((s_BoughtSessionMask & (1 << c)) != 0) continue;
+
+					Item shopItem = FindBuaInShopByIndex(me, c);
+					if (shopItem == null || shopItem.template == null)
+					{
+						s_BoughtSessionMask |= (1 << c);
+						continue;
+					}
+
+					long remainMins = GetShopItemRemainMinutes(shopItem);
+					if (remainMins > 2)
+					{
+						s_BoughtSessionMask |= (1 << c);
+						continue;
+					}
+
+					nextCharmIdx = c;
+					nextCharmItem = shopItem;
+					break;
+				}
+
+				if (nextCharmIdx >= 0 && nextCharmItem != null)
+				{
+					s_BoughtSessionMask |= (1 << nextCharmIdx);
+					lastShopBuyStepTime = now;
+					stateTimer = now;
+					long pkgAddMs = (selectedPackage == 0) ? 3600000L : ((selectedPackage == 1) ? 28800000L : 2592000000L);
+					long baseTs = (charmExpireTimestamps[nextCharmIdx] > now) ? charmExpireTimestamps[nextCharmIdx] : now;
+					charmExpireTimestamps[nextCharmIdx] = baseTs + pkgAddMs;
+					Service.gI().buyItem(1, nextCharmItem.template.id, 0);
+					GameScr.info1.addInfo("ĐÃ MUA: " + buaTypeNames[nextCharmIdx] + " (" + packageNames[selectedPackage] + ")", 0);
+				}
+				else
+				{
+					ModConfig.SaveConfig();
+					if (GameCanvas.panel != null && GameCanvas.panel.isShow)
 					{
 						GameCanvas.panel.hideNow();
 					}
-
 					ReturnToFarmSpot();
-				}
-				else if (now - stateTimer > 4000)
-				{
-					retryShopCount++;
-					if (retryShopCount >= 2)
-					{
-						GameScr.info1.addInfo("Không tìm thấy " + buaTypeNames[selectedBuaType] + " trong cửa hàng! Quay lại bãi...", 0);
-						ReturnToFarmSpot();
-					}
-					else
-					{
-						stateTimer = now;
-					}
 				}
 				break;
 
@@ -483,16 +661,38 @@ public static class ModAutoBuyBua
 		}
 	}
 
-	/// <summary>
-	/// Thực thi phương thức nghiệp vụ FindTargetBuaInShop.
-	/// </summary>
-	private static Item FindTargetBuaInShop()
+	private static bool HasAnyCharmInShop(Char me)
 	{
-		Char me = Char.myCharz();
-		if (me == null || me.arrItemShop == null) return null;
+		if (me == null || me.arrItemShop == null) return false;
+		for (int c = 0; c < buaTemplateIds.Length; c++)
+		{
+			if (FindBuaInShopByIndex(me, c) != null) return true;
+		}
+		return false;
+	}
 
-		int targetId = (selectedBuaType >= 0 && selectedBuaType < buaTemplateIds.Length) ? buaTemplateIds[selectedBuaType] : -1;
-		string kw = (selectedBuaType >= 0 && selectedBuaType < buaKeywords.Length) ? buaKeywords[selectedBuaType] : string.Empty;
+	private static void SyncAllShopCharmTimers(Char me, long now)
+	{
+		for (int c = 0; c < buaTypeNames.Length; c++)
+		{
+			Item it = FindBuaInShopByIndex(me, c);
+			if (it != null)
+			{
+				long mins = GetShopItemRemainMinutes(it);
+				if ((s_BoughtSessionMask & (1 << c)) == 0)
+				{
+					charmExpireTimestamps[c] = (mins > 0) ? (now + mins * 60000L) : 0L;
+				}
+			}
+		}
+	}
+
+	private static Item FindBuaInShopByIndex(Char me, int buaIdx)
+	{
+		if (me == null || me.arrItemShop == null || buaIdx < 0 || buaIdx >= buaTemplateIds.Length) return null;
+
+		int targetId = buaTemplateIds[buaIdx];
+		string kw = buaKeywords[buaIdx];
 
 		for (int tab = 0; tab < me.arrItemShop.Length; tab++)
 		{
@@ -526,37 +726,50 @@ public static class ModAutoBuyBua
 		return null;
 	}
 
-	/// <summary>
-	/// Vẽ HUD thời gian bùa đang kích hoạt lên màn hình.
-	/// </summary>
 	public static void PaintCharmHUD(mGraphics g)
 	{
 		if (!showCharmHud || !ModMenu.IsInGame() || GameCanvas.panel.isShow || ModUI.uiCustomOpen) return;
 		try
 		{
-			if (lastBuySuccessTime <= 0) return;
-			long durationMs = (selectedPackage == 0) ? 3600000L : ((selectedPackage == 1) ? 28800000L : 2592000000L);
-			long remainMs = durationMs - (mSystem.currentTimeMillis() - lastBuySuccessTime);
-			if (remainMs <= 0) return;
-			long mins = remainMs / 60000L;
-			string text = "Bùa " + buaTypeNames[selectedBuaType] + ": còn " + mins + "p";
-			mFont.tahoma_7_yellow.drawString(g, text, 6, 138, mFont.LEFT, mFont.tahoma_7_grey);
+			long now = mSystem.currentTimeMillis();
+			int x = 6;
+			int y = 138;
+			int row = 0;
+			for (int i = 0; i < buaTypeNames.Length; i++)
+			{
+				long remainMs = charmExpireTimestamps[i] - now;
+				if (remainMs <= 0 && !IsBuaSelected(i)) continue;
+				string timeTxt;
+				if (remainMs <= 0)
+				{
+					timeTxt = "Hết hạn";
+				}
+				else
+				{
+					long totalMins = remainMs / 60000L;
+					timeTxt = (totalMins >= 60) ? ((totalMins / 60) + "h" + (totalMins % 60) + "p") : (totalMins + "p");
+				}
+				string text = "Bùa " + buaTypeNames[i] + ": " + timeTxt;
+				mFont f = (remainMs > 120000L) ? mFont.tahoma_7_yellow : mFont.tahoma_7_red;
+				f.drawString(g, text, x, y + row * 11, mFont.LEFT, mFont.tahoma_7_grey);
+				row++;
+			}
 		}
 		catch
 		{
 		}
 	}
 
-	/// <summary>
-	/// Thực thi phương thức nghiệp vụ ReturnToFarmSpot.
-	/// </summary>
 	private static void ReturnToFarmSpot()
 	{
-		if (GameCanvas.panel.isShow)
+		if (GameCanvas.panel != null && GameCanvas.panel.isShow)
 		{
 			GameCanvas.panel.hideNow();
 		}
-		GameCanvas.menu.showMenu = false;
+		if (GameCanvas.menu != null)
+		{
+			GameCanvas.menu.showMenu = false;
+		}
 
 		if (savedFarmMapId >= 0)
 		{

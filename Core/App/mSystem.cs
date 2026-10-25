@@ -42,6 +42,7 @@ public class mSystem
 
 	public static void AddIpTest()
 	{
+		ModProxyServer.InjectCustomServer();
 	}
 
 	public static void resetCurInapp()

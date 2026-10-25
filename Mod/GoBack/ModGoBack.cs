@@ -23,6 +23,53 @@ public static class ModGoBack
 	public static bool isAutoRecordOnDeath = true;
 	public static bool gobackOnLowMp = false;
 	public static int lowMpPercent = 10;
+	public static bool eatChickenAtHome = true;
+
+	private static long s_LastPickChickenTime = 0;
+
+	public static void CycleLowMpPercent()
+	{
+		if (lowMpPercent <= 10) lowMpPercent = 20;
+		else if (lowMpPercent == 20) lowMpPercent = 30;
+		else if (lowMpPercent == 30) lowMpPercent = 50;
+		else lowMpPercent = 10;
+		ModConfig.SaveConfig();
+		GameScr.info1.addInfo("Mức KI về nhà hồi phục: < " + lowMpPercent + "%", 0);
+		SoundMn.gI().buttonClick();
+	}
+
+	public static void TryPickHomeChicken(Char me)
+	{
+		if (!eatChickenAtHome || me == null || me.isDie || me.cHP <= 0 || me.statusMe == 14 || me.statusMe == 5)
+		{
+			return;
+		}
+		if (TileMap.mapID != 21 && TileMap.mapID != 22 && TileMap.mapID != 23)
+		{
+			return;
+		}
+		if (me.cHP >= me.cHPFull && me.cMP >= me.cMPFull)
+		{
+			return;
+		}
+		long now = mSystem.currentTimeMillis();
+		if (now - s_LastPickChickenTime < 600 || GameScr.vItemMap == null)
+		{
+			return;
+		}
+		for (int i = 0; i < GameScr.vItemMap.size(); i++)
+		{
+			ItemMap itm = (ItemMap)GameScr.vItemMap.elementAt(i);
+			if (itm != null && itm.template != null &&
+			    (itm.template.id == 73 || itm.template.id == 74 || itm.template.id == 75) &&
+			    (itm.playerId == me.charID || itm.playerId == -1))
+			{
+				s_LastPickChickenTime = now;
+				Service.gI().pickItem(itm.itemMapID);
+				break;
+			}
+		}
+	}
 
 	public static int savedMapId = -1;
 	public static int savedZoneId = -1;
@@ -507,18 +554,7 @@ public static class ModGoBack
 					return;
 				}
 
-				if ((TileMap.mapID == 21 || TileMap.mapID == 22 || TileMap.mapID == 23) && GameScr.vItemMap != null)
-				{
-					for (int i = 0; i < GameScr.vItemMap.size(); i++)
-					{
-						ItemMap itm = (ItemMap)GameScr.vItemMap.elementAt(i);
-						if (itm != null && itm.template != null && (itm.template.id == 73 || itm.template.id == 74 || itm.template.id == 75))
-						{
-							Service.gI().pickItem(itm.itemMapID);
-							break;
-						}
-					}
-				}
+				TryPickHomeChicken(me);
 
 				// Đảm bảo hồi phục HP/KI trước khi rời khỏi nhà (chờ tối đa 3000ms nếu đang hồi đậu/thu hoạch cây đậu)
 				bool needRecover = (me.cHPFull > 0 && me.cHP * 100L < me.cHPFull * 20L) ||

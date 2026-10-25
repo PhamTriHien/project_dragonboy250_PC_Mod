@@ -83,7 +83,7 @@ public partial class GameScr : mScreen, IChatable
 				for (int i = 0; i < vCharInMap.size(); i++)
 				{
 					Char @char = (Char)vCharInMap.elementAt(i);
-					if (@char.isMabuHold && TileMap.mapID == 128)
+					if (@char.isMabuHold && TileMap.mapID == 128 && !ModGraphics.ShouldHideChar(@char))
 					{
 						@char.paintHeadWithXY(g, @char.cx, @char.cy, 0);
 					}
@@ -149,7 +149,7 @@ public partial class GameScr : mScreen, IChatable
 					{
 						Cout.LogError("Loi ham paint char gamesc: " + ex.ToString());
 					}
-					if (char2 != null && char2.isPaint() && (!GameCanvas.panel.isShow || !GameCanvas.panel.isTypeShop()) && char2.isShadown)
+					if (char2 != null && !ModGraphics.ShouldHideChar(char2) && char2.isPaint() && (!GameCanvas.panel.isShow || !GameCanvas.panel.isTypeShop()) && char2.isShadown)
 					{
 						char2.paintShadow(g);
 					}
@@ -177,7 +177,7 @@ public partial class GameScr : mScreen, IChatable
 					catch (Exception)
 					{
 					}
-					if (char3 != null && (!GameCanvas.panel.isShow || !GameCanvas.panel.isTypeShop()))
+					if (char3 != null && !ModGraphics.ShouldHideChar(char3) && (!GameCanvas.panel.isShow || !GameCanvas.panel.isTypeShop()))
 					{
 						char3.paint(g);
 					}
@@ -199,7 +199,7 @@ public partial class GameScr : mScreen, IChatable
 					{
 						Cout.LogError("Loi ham paint char gamescr: " + ex3.ToString());
 					}
-					if (char4 != null && char4.isPaint() && (!GameCanvas.panel.isShow || !GameCanvas.panel.isTypeShop()) && char4.skillPaint != null && char4.skillInfoPaint() != null && char4.indexSkill < char4.skillInfoPaint().Length)
+					if (char4 != null && !ModGraphics.ShouldHideChar(char4) && char4.isPaint() && (!GameCanvas.panel.isShow || !GameCanvas.panel.isTypeShop()) && char4.skillPaint != null && char4.skillInfoPaint() != null && char4.indexSkill < char4.skillInfoPaint().Length)
 					{
 						char4.paintCharWithSkill(g);
 						char4.paintMount2(g);
@@ -247,7 +247,7 @@ public partial class GameScr : mScreen, IChatable
 					catch (Exception)
 					{
 					}
-					if (char5 != null && char5.isPaint() && char5.chatInfo != null)
+					if (char5 != null && !ModGraphics.ShouldHideChar(char5) && char5.isPaint() && char5.chatInfo != null)
 					{
 						char5.chatInfo.paint(g, char5.cx, char5.cy - char5.ch, char5.cdir);
 					}

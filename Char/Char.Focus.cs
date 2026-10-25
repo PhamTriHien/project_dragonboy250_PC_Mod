@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Assets.src.e;
 using Assets.src.g;
 using UnityEngine;
@@ -241,7 +241,7 @@ public partial class Char : IMapObject
 					for (int num23 = 0; num23 < GameScr.vCharInMap.size(); num23++)
 					{
 						Char @char = (Char)GameScr.vCharInMap.elementAt(num23);
-						if (@char.statusMe != 15 && !@char.isInvisiblez && wdx == 0 && wdy == 0)
+						if (@char.statusMe != 15 && !@char.isInvisiblez && !ModGraphics.ShouldHideChar(@char) && wdx == 0 && wdy == 0)
 						{
 							int num24 = Math.abs(myCharz().cx - @char.cx);
 							int num25 = Math.abs(myCharz().cy - @char.cy);
@@ -265,7 +265,7 @@ public partial class Char : IMapObject
 					for (int num27 = 0; num27 < GameScr.vCharInMap.size(); num27++)
 					{
 						Char char2 = (Char)GameScr.vCharInMap.elementAt(num27);
-						if (char2.statusMe != 15 && !char2.isInvisiblez && wdx == 0 && wdy == 0)
+						if (char2.statusMe != 15 && !char2.isInvisiblez && !ModGraphics.ShouldHideChar(char2) && wdx == 0 && wdy == 0)
 						{
 							int num28 = Math.abs(myCharz().cx - char2.cx);
 							int num29 = Math.abs(myCharz().cy - char2.cy);
@@ -354,7 +354,7 @@ public partial class Char : IMapObject
 				for (int i = 0; i < GameScr.vCharInMap.size(); i++)
 				{
 					Char @char = (Char)GameScr.vCharInMap.elementAt(i);
-					if (@char.statusMe != 15 && !@char.isInvisiblez && num2 <= @char.cx && @char.cx <= num3 && num4 <= @char.cy && @char.cy <= num5 && @char.charID != -114 && (TileMap.mapID != 129 || (TileMap.mapID == 129 && myCharz().cy > 264)))
+					if (@char.statusMe != 15 && !@char.isInvisiblez && !ModGraphics.ShouldHideChar(@char) && num2 <= @char.cx && @char.cx <= num3 && num4 <= @char.cy && @char.cy <= num5 && @char.charID != -114 && (TileMap.mapID != 129 || (TileMap.mapID == 129 && myCharz().cy > 264)))
 					{
 						focus.addElement(@char);
 						if (charFocus != null && @char.Equals(charFocus))

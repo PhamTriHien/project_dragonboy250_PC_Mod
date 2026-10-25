@@ -180,6 +180,10 @@ public partial class Panel : IActionListener, IChatable
 				}
 				if (currItem != null)
 				{
+					if (currentTabIndex < currentTabName.Length - ((GameCanvas.panel2 == null) ? 1 : 0))
+					{
+						ModInventoryExt.AppendShopCommands(myVector, this, currItem, selected, typeShop);
+					}
 					Char.myCharz().setPartTemp(currItem.headTemp, currItem.bodyTemp, currItem.legTemp, currItem.bagTemp);
 					GameCanvas.menu.startAt(myVector, X, (selected + 1) * ITEM_HEIGHT - cmy + yScroll);
 					addItemDetail(currItem);

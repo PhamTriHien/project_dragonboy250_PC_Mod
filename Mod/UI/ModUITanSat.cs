@@ -408,12 +408,27 @@ public static class ModUITanSat
 				else
 				{
 					Skill sk = skills[idx - 4];
-					int slot = ModTanSatFilter.GetSkillHotbarSlot(sk.template.id);
-					string slotPrefix = (slot >= 0) ? ("[Ô " + ((slot == 9) ? 0 : (slot + 1)) + "] ") : "";
-					string skName = slotPrefix + ((sk != null && sk.template != null) ? sk.template.name : ("Skill #" + idx));
-					bool isTicked = ModTanSat.IsSkillTicked(sk.template.id);
+					int tplId = (sk != null && sk.template != null) ? sk.template.id : -1;
+					int slot = ModTanSatFilter.GetSkillHotbarSlot(tplId);
+					string slotPrefix = (slot >= 0) ? (((slot == 9) ? 0 : (slot + 1)) + ":") : "";
+					string rawName = (sk != null && sk.template != null) ? sk.template.name : ("Skill #" + idx);
+					if (rawName.StartsWith("Chiêu ")) rawName = rawName.Substring(6).Trim();
+					string skName = slotPrefix + rawName;
+					if (skName.Length > 12) skName = skName.Substring(0, 12);
+					bool isTicked = ModTanSat.IsSkillTicked(tplId);
 					ModUI.DrawCheckbox(itemX, itemY + 1, isTicked, g);
-					(isTicked ? mFont.tahoma_7_green2 : mFont.tahoma_7_grey).drawString(g, skName, itemX + 22, itemY + 2, mFont.LEFT);
+					(isTicked ? mFont.tahoma_7_green2 : mFont.tahoma_7_grey).drawString(g, skName, itemX + 19, itemY + 2, mFont.LEFT);
+
+					int delayBtnW = 34;
+					int delayBtnX = itemX + colW - delayBtnW;
+					int freezeBtnW = 28;
+					int freezeBtnX = delayBtnX - freezeBtnW - 2;
+					bool isFrozen = ModTanSat.freezeSkillCooldown || (tplId >= 0 && ModTanSat.frozenSkillIds.Contains(tplId));
+					int customMs = 0;
+					if (tplId >= 0) ModTanSat.customSkillDelays.TryGetValue(tplId, out customMs);
+					string delayLabel = (customMs > 0) ? ((customMs >= 1000 && customMs % 1000 == 0) ? ((customMs / 1000) + "s") : (customMs + "")) : "MĐ";
+					ModUI.PaintNativeButton(freezeBtnX, itemY + 1, freezeBtnW, 15, "Băng", isFrozen, g);
+					ModUI.PaintNativeButton(delayBtnX, itemY + 1, delayBtnW, 15, delayLabel, customMs > 0, g);
 				}
 			}
 			g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
@@ -744,10 +759,29 @@ public static class ModUITanSat
 						else
 						{
 							Skill chosen = skills[idx - 4];
-							ModTanSat.ToggleSkillTicked(chosen.template.id);
-							if (ModTanSatFilter.skillSelectionMode == 0 && chosen.template != null)
+							if (chosen != null && chosen.template != null)
 							{
-								GameScr.info1?.addInfo("Chỉ định chiêu Tàn Sát: " + chosen.template.name, 0);
+								int delayBtnW = 34;
+								int delayBtnX = itemX + colW - delayBtnW;
+								int freezeBtnW = 28;
+								int freezeBtnX = delayBtnX - freezeBtnW - 2;
+								if (px >= freezeBtnX && px <= freezeBtnX + freezeBtnW)
+								{
+									ModTanSat.ToggleSkillFrozen(chosen.template.id);
+									SoundMn.gI().buttonClick();
+									return true;
+								}
+								if (px >= delayBtnX && px <= delayBtnX + delayBtnW)
+								{
+									SoundMn.gI().buttonClick();
+									ModTanSat.ShowInputCustomSkillDelay(chosen.template.id, chosen.template.name);
+									return true;
+								}
+								ModTanSat.ToggleSkillTicked(chosen.template.id);
+								if (ModTanSatFilter.skillSelectionMode == 0)
+								{
+									GameScr.info1?.addInfo("Chỉ định chiêu Tàn Sát: " + chosen.template.name, 0);
+								}
 							}
 						}
 						SoundMn.gI().buttonClick();

@@ -31,6 +31,31 @@ public static class ModGraphics
 	public static readonly string[] resolutionNames = new string[4] { "1024x600", "1280x720", "1600x900", "1920x1080" };
 	public static bool isFullscreen = false;
 	public static bool isAfkLowCpu = false;
+	public static bool hideOtherPlayers = false;
+
+	public static void ToggleHideOtherPlayers()
+	{
+		hideOtherPlayers = !hideOtherPlayers;
+		ModConfig.SaveConfig();
+		if (GameScr.info1 != null)
+		{
+			GameScr.info1.addInfo("Xóa người chơi khác: " + (hideOtherPlayers ? "BẬT" : "TẮT"), 0);
+		}
+		SoundMn.gI().buttonClick();
+	}
+
+	public static bool ShouldHideChar(Char c)
+	{
+		if (!hideOtherPlayers || c == null) return false;
+		Char me = Char.myCharz();
+		if (c == me || c.me) return false;
+		if (me != null && (c.charID == -me.charID || me.charFocus == c)) return false;
+		if (c.head == 31) return false;
+		if (c.cTypePk == 5 || c.cTypePk == 3) return false;
+		if (c.charID < 0 && !c.isPet && !c.isMiniPet) return false;
+		if (!string.IsNullOrEmpty(c.cName) && ModBossNotice.IsBossName(c.cName)) return false;
+		return true;
+	}
 
 	public static int fontSizeIndex = 0;
 	public static readonly string[] fontSizeNames = new string[4] { "Chuẩn 60%", "Vừa 75%", "Lớn 90%", "Gốc 100%" };

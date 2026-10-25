@@ -430,12 +430,195 @@ public partial class GameScr : mScreen, IChatable
 			}
 			if (text.Equals("bg", StringComparison.OrdinalIgnoreCase) || text.Equals("phongcanh", StringComparison.OrdinalIgnoreCase))
 			{
-				ModUI.selectedTab = 4;
+				ModUI.selectedTab = 5;
 				ModUIBackground.isOpen = true;
 				ModUI.uiCustomOpen = true;
 				SoundMn.gI().buttonClick();
 				return;
 			}
+			if (text.Equals("stopmap", StringComparison.OrdinalIgnoreCase))
+			{
+				ModNextMap.StopNextMap();
+				info1.addInfo("Đã dừng Next Map", 0);
+				return;
+			}
+			if (text.StartsWith("nextmap=", StringComparison.OrdinalIgnoreCase))
+			{
+				string arg = text.Substring(8).Trim();
+				ModNextMap.useSafeMovement = true;
+				if (arg.StartsWith("safe:", StringComparison.OrdinalIgnoreCase)) arg = arg.Substring(5).Trim();
+				else if (arg.StartsWith("fast:", StringComparison.OrdinalIgnoreCase))
+				{
+					ModNextMap.useSafeMovement = false;
+					arg = arg.Substring(5).Trim();
+				}
+				if (int.TryParse(arg, out int targetMap))
+				{
+					ModNextMap.StartNextMap(targetMap);
+				}
+				else
+				{
+					info1.addInfo("Dùng nextmap=safe:ID hoặc nextmap=fast:ID", 0);
+				}
+				return;
+			}
+			if (text.Equals("autochat", StringComparison.OrdinalIgnoreCase))
+			{
+				ModAutoChat.Toggle();
+				return;
+			}
+			if (text.StartsWith("autochat=", StringComparison.OrdinalIgnoreCase))
+			{
+				string value = text.Substring(9).Trim();
+				int interval = 30000;
+				int separator = value.LastIndexOf('|');
+				if (separator >= 0 && int.TryParse(value.Substring(separator + 1).Trim(), out int parsedInterval))
+				{
+					interval = parsedInterval;
+					value = value.Substring(0, separator).Trim();
+				}
+				ModAutoChat.Configure(value, interval);
+				GameScr.info1?.addInfo("Auto Chat: " + (ModAutoChat.isEnabled ? "đã đặt nội dung" : "nội dung rỗng"), 0);
+				return;
+			}
+			if (text.Equals("boxsort", StringComparison.OrdinalIgnoreCase))
+			{
+				ModAutoBoxSort.SortNow();
+				return;
+			}
+			if (text.Equals("autoboxsort", StringComparison.OrdinalIgnoreCase))
+			{
+				ModAutoBoxSort.Toggle();
+				return;
+			}
+			if (text.Equals("autopoint", StringComparison.OrdinalIgnoreCase))
+			{
+				ModAutoPoint.Toggle();
+				return;
+			}
+			if (text.StartsWith("autopoint=", StringComparison.OrdinalIgnoreCase))
+			{
+				string[] cfg = text.Substring(10).Split('|');
+				int type, amount = ModAutoPoint.pointsPerTick, interval = ModAutoPoint.intervalMs;
+				if (cfg.Length > 0 && int.TryParse(cfg[0], out type))
+				{
+					if (cfg.Length > 1) int.TryParse(cfg[1], out amount);
+					if (cfg.Length > 2) int.TryParse(cfg[2], out interval);
+					ModAutoPoint.Configure(type, amount, interval);
+					ModAutoPoint.isEnabled = true;
+					ModConfig.SaveConfig();
+					info1.addInfo("AutoPoint type|điểm|ms: " + ModAutoPoint.targetType + "|" + ModAutoPoint.pointsPerTick + "|" + ModAutoPoint.intervalMs, 0);
+				}
+				return;
+			}
+			if (text.Equals("autoitem", StringComparison.OrdinalIgnoreCase))
+			{
+				ModAutoItem.Toggle();
+				return;
+			}
+			if (text.StartsWith("autoitem=", StringComparison.OrdinalIgnoreCase))
+			{
+				string value = text.Substring(9).Trim();
+				int interval = ModAutoItem.intervalMs;
+				int separator = value.LastIndexOf('|');
+				if (separator >= 0 && int.TryParse(value.Substring(separator + 1).Trim(), out int parsedInterval))
+				{
+					interval = parsedInterval;
+					value = value.Substring(0, separator).Trim();
+				}
+				ModAutoItem.Configure(value, interval);
+				info1.addInfo("Auto Item: " + (ModAutoItem.isEnabled ? "ĐÃ BẬT" : "ID KHÔNG HỢP LỆ"), 0);
+				return;
+			}
+			if (text.StartsWith("autoitemhp=", StringComparison.OrdinalIgnoreCase) || text.StartsWith("autoitemmp=", StringComparison.OrdinalIgnoreCase))
+			{
+				bool hp = text.StartsWith("autoitemhp=", StringComparison.OrdinalIgnoreCase);
+				string[] cfg = text.Substring(11).Split('|');
+				if (cfg.Length >= 2 && int.TryParse(cfg[1], out int percent))
+				{
+					int interval = ModAutoItem.intervalMs;
+					if (cfg.Length > 2) int.TryParse(cfg[2], out interval);
+					ModAutoItem.Configure(cfg[0], interval);
+					ModAutoItem.conditionType = hp ? 1 : 2;
+					ModAutoItem.thresholdPercent = percent < 1 ? 1 : (percent > 99 ? 99 : percent);
+					ModConfig.SaveConfig();
+					info1.addInfo("Auto Item điều kiện " + (hp ? "HP" : "MP") + " dưới " + ModAutoItem.thresholdPercent + "%", 0);
+				}
+				return;
+			}
+			if (text.Equals("schedule", StringComparison.OrdinalIgnoreCase))
+			{
+				ModSchedule.Toggle();
+				return;
+			}
+			if (text.StartsWith("schedule=", StringComparison.OrdinalIgnoreCase))
+			{
+				bool ok = ModSchedule.Configure(text.Substring(9).Trim());
+				info1.addInfo(ok ? "Lịch Auto đã đặt (HH:mm-HH:mm)" : "Sai định dạng lịch, dùng HH:mm-HH:mm", 0);
+				return;
+			}
+			if (text.Equals("autorevive", StringComparison.OrdinalIgnoreCase))
+			{
+				ModAutoRevive.Toggle();
+				return;
+			}
+			if (text.Equals("autopet", StringComparison.OrdinalIgnoreCase))
+			{
+				ModAutoPet.Toggle();
+				return;
+			}
+			if (text.StartsWith("autopet=", StringComparison.OrdinalIgnoreCase))
+			{
+				string[] petCfg = text.Substring(8).Split('|');
+				if (int.TryParse(petCfg[0], out int petStatus))
+				{
+					int interval = ModAutoPet.intervalMs;
+					if (petCfg.Length > 1) int.TryParse(petCfg[1], out interval);
+					ModAutoPet.Configure(petStatus, interval);
+					info1.addInfo("Auto Pet status|ms: " + ModAutoPet.status + "|" + ModAutoPet.intervalMs, 0);
+				}
+				return;
+			}
+			if (text.Equals("autofusion", StringComparison.OrdinalIgnoreCase))
+			{
+				ModAutoFusion.Toggle();
+				return;
+			}
+			if (text.StartsWith("autofusion=", StringComparison.OrdinalIgnoreCase))
+			{
+				string[] fusionCfg = text.Substring(11).Split('|');
+				if (int.TryParse(fusionCfg[0], out int fusionType))
+				{
+					int interval = ModAutoFusion.intervalMs;
+					if (fusionCfg.Length > 1) int.TryParse(fusionCfg[1], out interval);
+					ModAutoFusion.Configure(fusionType, interval);
+					info1.addInfo("Auto Fusion type|ms: " + ModAutoFusion.fusionType + "|" + ModAutoFusion.intervalMs, 0);
+				}
+				return;
+			}
+			if (text.Equals("autofreeze", StringComparison.OrdinalIgnoreCase))
+			{
+				ModTanSat.freezeSkillCooldown = !ModTanSat.freezeSkillCooldown;
+				ModConfig.SaveConfig();
+				info1.addInfo("Đóng băng hồi chiêu tất cả chiêu: " + (ModTanSat.freezeSkillCooldown ? "BẬT" : "TẮT"), 0);
+				return;
+			}
+			if (text.StartsWith("autofreeze=", StringComparison.OrdinalIgnoreCase))
+			{
+				if (int.TryParse(text.Substring(11).Trim(), out int skillId))
+				{
+					ModTanSat.ToggleSkillFrozen(skillId);
+				}
+				return;
+			}
+			if (text.Equals("set1", StringComparison.OrdinalIgnoreCase)) { ModInventoryExt.EquipSet(1); return; }
+			if (text.Equals("set2", StringComparison.OrdinalIgnoreCase)) { ModInventoryExt.EquipSet(2); return; }
+			if (text.Equals("xoaset", StringComparison.OrdinalIgnoreCase)) { ModInventoryExt.ClearSets(); return; }
+			if (text.Equals("xoanguoi", StringComparison.OrdinalIgnoreCase)) { ModGraphics.ToggleHideOtherPlayers(); return; }
+			if (text.Equals("ttsp", StringComparison.OrdinalIgnoreCase)) { ModMapEntityHUD.isShowTargetStatus = !ModMapEntityHUD.isShowTargetStatus; ModConfig.SaveConfig(); info1.addInfo("HUD Trạng thái Sư Phụ (TTSP): " + (ModMapEntityHUD.isShowTargetStatus ? "BẬT" : "TẮT"), 0); return; }
+			if (text.Equals("tusat", StringComparison.OrdinalIgnoreCase)) { ModSelfKill.Toggle(); return; }
+			if (text.Equals("captcha", StringComparison.OrdinalIgnoreCase)) { if (string.IsNullOrEmpty(ModAutoCaptcha.captchaApiUrl)) ModAutoCaptcha.PromptApiUrl(); else { ModAutoCaptcha.isEnabled = !ModAutoCaptcha.isEnabled; ModConfig.SaveConfig(); info1.addInfo("Auto Giải Captcha: " + (ModAutoCaptcha.isEnabled ? "BẬT" : "TẮT"), 0); } return; }
+			if (text.StartsWith("captcha=", StringComparison.OrdinalIgnoreCase)) { ModAutoCaptcha.captchaApiUrl = text.Substring(8).Trim(); ModAutoCaptcha.isEnabled = !string.IsNullOrEmpty(ModAutoCaptcha.captchaApiUrl); ModConfig.SaveConfig(); info1.addInfo(ModAutoCaptcha.isEnabled ? ("Đã đặt API Captcha & BẬT: " + ModAutoCaptcha.captchaApiUrl) : "Đã xóa API Captcha.", 0); return; }
 			if (to.Equals(mResources.chat_player))
 			{
 				if (info2.playerID != Char.myCharz().charID)

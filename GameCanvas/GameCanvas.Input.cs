@@ -30,6 +30,11 @@ public partial class GameCanvas : IActionListener
 				keyAsciiPress = 0;
 				return;
 			}
+			if (ModHotkey.HandleKeyPressed(keyCode))
+			{
+				keyAsciiPress = 0;
+				return;
+			}
 			currentScreen.keyPress(keyCode);
 			switch (keyCode)
 			{

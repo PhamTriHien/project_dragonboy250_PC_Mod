@@ -57,7 +57,7 @@ public static class ModAutoItem
 		new int[] { 379 },
 		new int[] { 764 },
 		new int[] { 1628 },
-		new int[] { 1635 },
+		new int[] { 859, 1635 },
 		new int[] { 381, 1099, 382, 1100, 383, 1101, 384, 1102 }
 	};
 
@@ -70,7 +70,8 @@ public static class ModAutoItem
 		new int[] { 384, 1102 },
 		new int[] { 385, 1103 },
 		new int[] { 663, 664, 665, 666, 667 },
-		new int[] { 880, 881, 882 }
+		new int[] { 880, 881, 882 },
+		new int[] { 859, 1635 }
 	};
 
 	// Bảng ánh xạ chính xác từ ID template vật phẩm sang danh sách idIcon trong Char.vItemTime (trích xuất từ m_0.java & dữ liệu gốc)
@@ -97,8 +98,9 @@ public static class ModAutoItem
 		{ 881, new short[] { 8060, 8061, 8062 } },
 		{ 882, new short[] { 8060, 8061, 8062 } },
 		{ 764, new short[] { 7149 } },
+		{ 859, new short[] { 7992, 13618 } },
 		{ 1628, new short[] { 13540 } },
-		{ 1635, new short[] { 13618 } }
+		{ 1635, new short[] { 13618, 7992 } }
 	};
 
 	/// <summary>

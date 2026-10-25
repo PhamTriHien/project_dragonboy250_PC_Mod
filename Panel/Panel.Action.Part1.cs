@@ -273,6 +273,8 @@ public partial class Panel : IActionListener, IChatable
 					if (currItem != null)
 					{
 						Char.myCharz().setPartTemp(currItem.headTemp, currItem.bodyTemp, currItem.legTemp, currItem.bagTemp);
+						bool isBodyLegacy = isnewInventory ? (newSelected == 0) : GetInventorySelect_isbody(selected, newSelected, Char.myCharz().arrItemBody);
+						ModInventoryExt.AppendInventoryCommands(myVector, this, currItem, isBodyLegacy);
 						if (GameCanvas.panel.type != 12 && GameCanvas.panel.type != 13)
 						{
 							if (position == 0)

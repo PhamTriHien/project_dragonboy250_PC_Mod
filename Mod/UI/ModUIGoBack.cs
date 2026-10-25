@@ -15,11 +15,15 @@ public static class ModUIGoBack
 		ModUI.PaintNativeButton(uiX + 8 + r1W, uiY + 4, r1W, 17, "Lưu Chết: " + (ModGoBack.isAutoRecordOnDeath ? "BẬT" : "TẮT"), ModGoBack.isAutoRecordOnDeath, g);
 		ModUI.PaintNativeButton(uiX + 12 + r1W * 2, uiY + 4, r1W, 17, "Về KI<" + ModGoBack.lowMpPercent + "%: " + (ModGoBack.gobackOnLowMp ? "BẬT" : "TẮT"), ModGoBack.gobackOnLowMp, g);
 
+		int r2W = (uiW - 12) / 2;
+		ModUI.PaintNativeButton(uiX + 4, uiY + 23, r2W, 16, "Mức KI Về: < " + ModGoBack.lowMpPercent + "%", ModGoBack.gobackOnLowMp, g);
+		ModUI.PaintNativeButton(uiX + 8 + r2W, uiY + 23, r2W, 16, "Ăn Đùi Gà Nhà: " + (ModGoBack.eatChickenAtHome ? "BẬT" : "TẮT"), ModGoBack.eatChickenAtHome, g);
+
 		int footerH = 18;
 		int footerY = uiY + uiH - footerH - 4;
 
 		// Khung hiển thị thông tin toạ độ đã lưu co dãn động
-		int listY = uiY + 24;
+		int listY = uiY + 42;
 		int listW = uiW - 8;
 		int listH = (footerY - 4) - listY;
 		if (listH < 40) listH = 40;
@@ -97,6 +101,24 @@ public static class ModUIGoBack
 				ModGoBack.gobackOnLowMp = !ModGoBack.gobackOnLowMp;
 				ModConfig.SaveConfig();
 				GameScr.info1.addInfo("Về nhà hồi KI khi KI < " + ModGoBack.lowMpPercent + "%: " + (ModGoBack.gobackOnLowMp ? "BẬT" : "TẮT"), 0);
+				SoundMn.gI().buttonClick();
+				return true;
+			}
+		}
+
+		int r2W = (uiW - 12) / 2;
+		if (py >= uiY + 22 && py <= uiY + 40)
+		{
+			if (px >= uiX + 4 && px <= uiX + 4 + r2W)
+			{
+				ModGoBack.CycleLowMpPercent();
+				return true;
+			}
+			if (px >= uiX + 8 + r2W && px <= uiX + 8 + r2W * 2)
+			{
+				ModGoBack.eatChickenAtHome = !ModGoBack.eatChickenAtHome;
+				ModConfig.SaveConfig();
+				GameScr.info1.addInfo("Tự ăn Đùi Gà ở nhà: " + (ModGoBack.eatChickenAtHome ? "BẬT" : "TẮT"), 0);
 				SoundMn.gI().buttonClick();
 				return true;
 			}

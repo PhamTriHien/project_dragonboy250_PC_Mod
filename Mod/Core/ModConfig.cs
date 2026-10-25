@@ -4,6 +4,9 @@ using System.IO;
 using System.Text;
 using UnityEngine;
 
+/// <summary>
+/// Bộ quản lý cấu hình Mod tập trung: Lưu trữ, đọc và ghi toàn bộ cài đặt tùy biến của người chơi vào file mod_config.ini.
+/// </summary>
 public static class ModConfig
 {
 	public static bool isTranslate = true;
@@ -14,7 +17,28 @@ public static class ModConfig
 		{
 			try
 			{
-				return Path.Combine(Application.dataPath, "../mod_config.ini");
+#if NET8_0_OR_GREATER
+				if (OperatingSystem.IsBrowser() || OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || Application.CurrentTabId > 1)
+				{
+					string dir = Application.persistentDataPath;
+					if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+					{
+						Directory.CreateDirectory(dir);
+					}
+					return Path.Combine(dir, "mod_config.ini");
+				}
+#endif
+				string legacyDesktop = Path.Combine(Application.dataPath, "../mod_config.ini");
+				if (File.Exists(legacyDesktop))
+				{
+					return legacyDesktop;
+				}
+				string pDir = Application.persistentDataPath;
+				if (!string.IsNullOrEmpty(pDir) && !Directory.Exists(pDir))
+				{
+					Directory.CreateDirectory(pDir);
+				}
+				return Path.Combine(pDir, "mod_config.ini");
 			}
 			catch
 			{
@@ -23,6 +47,9 @@ public static class ModConfig
 		}
 	}
 
+	/// <summary>
+	/// Lưu trữ toàn bộ giá trị cài đặt cấu hình hiện tại vào tệp mod_config.ini.
+	/// </summary>
 	public static void SaveConfig()
 	{
 		try
@@ -83,7 +110,7 @@ public static class ModConfig
 
 			// Tốc Chạy
 			sb.AppendLine("speedHack=" + ModSpeed.speedHack);
-			sb.AppendLine("speedMult=" + ModSpeed.speedMult);
+			sb.AppendLine("speedMult=" + ModSpeed.speedMult.ToString(System.Globalization.CultureInfo.InvariantCulture));
 
 			// Bơm Đậu & HP
 			sb.AppendLine("autoPean=" + ModAutoHeal.autoPean);
@@ -96,6 +123,8 @@ public static class ModConfig
 			sb.AppendLine("autoFeedPetOnAsk=" + ModAutoHeal.autoFeedPetOnAsk);
 			sb.AppendLine("donateTargetNames=" + ModAutoHeal.donateTargetNamesRaw);
 			sb.AppendLine("petEatBeanHpPercent=" + ModAutoHeal.petEatBeanHpPercent);
+			sb.AppendLine("autoPeanMinHp=" + ModAutoHeal.autoPeanMinHp);
+			sb.AppendLine("autoPeanMinMp=" + ModAutoHeal.autoPeanMinMp);
 
 			// Đồ Họa & FPS
 			sb.AppendLine("graphicsQuality=" + ModGraphics.graphicsQuality);
@@ -103,11 +132,17 @@ public static class ModConfig
 			sb.AppendLine("renderBitDepth=" + ModGraphics.renderBitDepth);
 			sb.AppendLine("resolutionIndex=" + ModGraphics.resolutionIndex);
 			sb.AppendLine("isFullscreen=" + ModGraphics.isFullscreen);
+#if NET8_0_OR_GREATER
+			sb.AppendLine("fontTheme=" + ModGraphics.fontTheme);
+#endif
 			sb.AppendLine("fontSizePreset=" + ModGraphics.fontSizeIndex);
 			sb.AppendLine("targetFps=" + ModFps.targetFps);
 			sb.AppendLine("isAutoFps=" + ModFps.isAutoFps);
 			sb.AppendLine("animSpeedIndex=" + ModGraphics.animSpeedIndex);
 			sb.AppendLine("isAfkLowCpu=" + ModGraphics.isAfkLowCpu);
+			sb.AppendLine("isHideOtherPlayers=" + ModGraphics.hideOtherPlayers);
+			sb.AppendLine("enableQuickPcHotkeys=" + ModHotkey.enableQuickPcHotkeys);
+			sb.AppendLine("showExtraQuickButtons=" + ModArrowButton.showExtraQuickButtons);
 			sb.AppendLine("isAnalog=" + (GameScr.isAnalog == 1));
 
 			// Thông Báo Boss & Săn Boss
@@ -127,15 +162,26 @@ public static class ModConfig
 			sb.AppendLine("isShowTargetStatus=" + ModMapEntityHUD.isShowTargetStatus);
 			sb.AppendLine("isLockTarget=" + ModMapEntityHUD.isLockTarget);
 
-			// GoBack Map
+#if NET8_0_OR_GREATER
+			// Menu HUB Nổi Trên Màn Hình (Floating HUD)
+			sb.AppendLine("isShowFloatingHUD=" + ModFloatingHUD.isShowFloatingHUD);
+			sb.AppendLine("floatingBubbleX=" + ModFloatingHUD.bubbleX);
+			sb.AppendLine("floatingBubbleY=" + ModFloatingHUD.bubbleY);
+#endif
+
+			// GoBack Map & Xmap Capsule
 			sb.AppendLine("isGoBackActive=" + ModGoBack.isGoBackActive);
 			sb.AppendLine("isAutoRecordOnDeath=" + ModGoBack.isAutoRecordOnDeath);
 			sb.AppendLine("gobackOnLowMp=" + ModGoBack.gobackOnLowMp);
 			sb.AppendLine("lowMpPercent=" + ModGoBack.lowMpPercent);
+			sb.AppendLine("eatChickenAtHome=" + ModGoBack.eatChickenAtHome);
 			sb.AppendLine("savedMapId=" + ModGoBack.savedMapId);
 			sb.AppendLine("savedZoneId=" + ModGoBack.savedZoneId);
 			sb.AppendLine("savedX=" + ModGoBack.savedX);
 			sb.AppendLine("savedY=" + ModGoBack.savedY);
+			sb.AppendLine("useCapsuleVip=" + ModNextMap.useCapsuleVip);
+			sb.AppendLine("useNormalCapsule=" + ModNextMap.useNormalCapsule);
+			sb.AppendLine("speedBoostTransport=" + ModNextMap.speedBoostTransport);
 
 			// Úp Set Kích Hoạt & Lọc Đồ
 			sb.AppendLine("autoSetKHActive=" + ModSetActivator.isActive);
@@ -171,6 +217,8 @@ public static class ModConfig
 			// Auto Mua Bùa Bà Hạt Mít
 			sb.AppendLine("isAutoRebuyBua=" + ModAutoBuyBua.isAutoRebuy);
 			sb.AppendLine("selectedBuaType=" + ModAutoBuyBua.selectedBuaType);
+			sb.AppendLine("buaEnabledMask=" + ModAutoBuyBua.buaEnabledMask);
+			sb.AppendLine("buaExpireTimestamps=" + ModAutoBuyBua.ExportExpireTimestamps());
 			sb.AppendLine("selectedBuaPackage=" + ModAutoBuyBua.selectedPackage);
 			sb.AppendLine("showCharmHud=" + ModAutoBuyBua.showCharmHud);
 
@@ -195,6 +243,7 @@ public static class ModConfig
 			sb.AppendLine("autoPointAmount=" + ModAutoPoint.pointsPerTick);
 			sb.AppendLine("autoPointIntervalMs=" + ModAutoPoint.intervalMs);
 			sb.AppendLine("autoPointMaxStat=" + ModAutoPoint.maxTargetStat);
+			sb.AppendLine("autoPointMultiTargets=" + ModAutoPoint.ExportMultiStatTargets());
 			sb.AppendLine("autoItem=" + ModAutoItem.isEnabled);
 			sb.AppendLine("autoItemIds=" + ModAutoItem.itemIdsRaw);
 			sb.AppendLine("autoItemIntervalMs=" + ModAutoItem.intervalMs);
@@ -202,6 +251,7 @@ public static class ModConfig
 			sb.AppendLine("autoItemThreshold=" + ModAutoItem.thresholdPercent);
 			sb.AppendLine("autoOpenCskb=" + ModAutoItem.autoOpenCskb);
 			sb.AppendLine("schedule=" + ModSchedule.isEnabled);
+			sb.AppendLine("scheduleDisconnectOff=" + ModSchedule.disconnectOnOffWindow);
 			sb.AppendLine("scheduleStartMinute=" + ModSchedule.startMinute);
 			sb.AppendLine("scheduleEndMinute=" + ModSchedule.endMinute);
 			for (int s = 0; s < 6; s++)
@@ -216,18 +266,41 @@ public static class ModConfig
 			sb.AppendLine("petAvoidBoss=" + ModAutoPet.petAvoidBoss);
 			sb.AppendLine("petAutoFlag=" + ModAutoPet.petAutoFlag);
 			sb.AppendLine("autoNamekHeal=" + ModAutoPet.autoNamekHeal);
+			sb.AppendLine("petAutoAttackOnBark=" + ModAutoPet.petAutoAttackOnBark);
+			sb.AppendLine("petAutoKok=" + ModAutoPet.petAutoKok);
+			sb.AppendLine("disconnectOnPetPowerLimit=" + ModAutoPet.disconnectOnPetPowerLimit);
 			sb.AppendLine("exitOnPetPowerLimit=" + ModAutoPet.exitOnPetPowerLimit);
 			sb.AppendLine("autoFusion=" + ModAutoFusion.isEnabled);
+			sb.AppendLine("spamPotaraMode=" + ModAutoFusion.spamPotaraMode);
 			sb.AppendLine("autoFusionType=" + ModAutoFusion.fusionType);
 			sb.AppendLine("autoFusionIntervalMs=" + ModAutoFusion.intervalMs);
 
-			File.WriteAllText(ConfigPath, sb.ToString());
+			// Proxy, Custom Server, Set Đồ Nhanh & Auto Captcha
+			sb.AppendLine("proxyRaw=" + (ModProxyServer.proxyRaw ?? string.Empty));
+			sb.AppendLine("customSvName=" + (ModProxyServer.customSvName ?? string.Empty));
+			sb.AppendLine("customSvIp=" + (ModProxyServer.customSvIp ?? string.Empty));
+			sb.AppendLine("customSvPort=" + ModProxyServer.customSvPort);
+			sb.AppendLine("equipSet1Raw=" + (ModInventoryExt.equipSet1Raw ?? string.Empty));
+			sb.AppendLine("equipSet2Raw=" + (ModInventoryExt.equipSet2Raw ?? string.Empty));
+			sb.AppendLine("autoCaptchaEnabled=" + ModAutoCaptcha.isEnabled);
+			sb.AppendLine("captchaDisconnectOnFail=" + ModAutoCaptcha.disconnectOnFail);
+			sb.AppendLine("captchaMaxFailCount=" + ModAutoCaptcha.maxFailCount);
+			sb.AppendLine("captchaApiUrl=" + (ModAutoCaptcha.captchaApiUrl ?? string.Empty));
+
+			string content = sb.ToString();
+			File.WriteAllText(ConfigPath, content);
+#if BROWSER
+			if (OperatingSystem.IsBrowser()) DragonBoy_Web_Host.WebStorageSync.OnTextFileSaved(ConfigPath, content);
+#endif
 		}
 		catch
 		{
 		}
 	}
 
+	/// <summary>
+	/// Đọc và áp dụng toàn bộ giá trị cài đặt cấu hình từ tệp mod_config.ini.
+	/// </summary>
 	public static void LoadConfig()
 	{
 		try
@@ -258,6 +331,78 @@ public static class ModConfig
 
 				switch (key)
 				{
+					case "autoPoint":
+						bool.TryParse(val, out ModAutoPoint.isEnabled);
+						break;
+					case "autoPointType":
+						if (int.TryParse(val, out int apt)) ModAutoPoint.Configure(apt, ModAutoPoint.pointsPerTick, ModAutoPoint.intervalMs);
+						break;
+					case "autoPointAmount":
+						if (int.TryParse(val, out int apa)) ModAutoPoint.Configure(ModAutoPoint.targetType, apa, ModAutoPoint.intervalMs);
+						break;
+					case "autoPointIntervalMs":
+						if (int.TryParse(val, out int api)) ModAutoPoint.Configure(ModAutoPoint.targetType, ModAutoPoint.pointsPerTick, api);
+						break;
+					case "autoPointMaxStat":
+						if (long.TryParse(val, out long apm) && apm >= 0) ModAutoPoint.maxTargetStat = apm;
+						break;
+					case "autoItem":
+						bool.TryParse(val, out ModAutoItem.isEnabled);
+						break;
+					case "autoItemIds":
+						ModAutoItem.LoadIds(val);
+						break;
+					case "autoItemIntervalMs":
+						if (int.TryParse(val, out int aii)) ModAutoItem.intervalMs = aii < 1000 ? 1000 : (aii > 3600000 ? 3600000 : aii);
+						break;
+					case "autoItemCondition":
+						int.TryParse(val, out ModAutoItem.conditionType);
+						break;
+					case "autoItemThreshold":
+						if (int.TryParse(val, out int ait)) ModAutoItem.thresholdPercent = ait < 1 ? 1 : (ait > 99 ? 99 : ait);
+						break;
+					case "schedule":
+						bool.TryParse(val, out ModSchedule.isEnabled);
+						break;
+					case "scheduleStartMinute":
+						int.TryParse(val, out ModSchedule.startMinute);
+						break;
+					case "scheduleEndMinute":
+						int.TryParse(val, out ModSchedule.endMinute);
+						break;
+					case "autoRevive":
+						bool.TryParse(val, out ModAutoRevive.isEnabled);
+						break;
+					case "autoPet":
+						bool.TryParse(val, out ModAutoPet.isEnabled);
+						break;
+					case "autoPetStatus":
+						if (int.TryParse(val, out int aps)) ModAutoPet.status = (aps >= 0 && aps <= 3) ? aps : 2;
+						break;
+					case "autoPetIntervalMs":
+						if (int.TryParse(val, out int apiPet)) ModAutoPet.intervalMs = apiPet < 1000 ? 1000 : (apiPet > 3600000 ? 3600000 : apiPet);
+						break;
+					case "showPetHUD":
+						bool.TryParse(val, out ModAutoPet.showPetHUD);
+						break;
+					case "petAvoidBoss":
+						bool.TryParse(val, out ModAutoPet.petAvoidBoss);
+						break;
+					case "petAutoFlag":
+						bool.TryParse(val, out ModAutoPet.petAutoFlag);
+						break;
+					case "autoNamekHeal":
+						bool.TryParse(val, out ModAutoPet.autoNamekHeal);
+						break;
+					case "autoFusion":
+						bool.TryParse(val, out ModAutoFusion.isEnabled);
+						break;
+					case "autoFusionType":
+						int.TryParse(val, out ModAutoFusion.fusionType);
+						break;
+					case "autoFusionIntervalMs":
+						if (int.TryParse(val, out int afi)) ModAutoFusion.intervalMs = afi < 3000 ? 3000 : (afi > 3600000 ? 3600000 : afi);
+						break;
 					case "autoTanSat":
 						ModTanSat.autoTanSat = false;
 						break;
@@ -304,8 +449,7 @@ public static class ModConfig
 						bool.TryParse(val, out ModTanSatFilter.selectAllSkills);
 						break;
 					case "skillSelectionMode":
-						int ssm;
-						if (int.TryParse(val, out ssm) && ssm >= 0 && ssm <= 2) ModTanSatFilter.skillSelectionMode = ssm;
+						if (int.TryParse(val, out int ssm) && ssm >= 0 && ssm <= 2) ModTanSatFilter.skillSelectionMode = ssm;
 						break;
 					case "tickedSkillTemplateIds":
 						ModTanSat.tickedSkillTemplateIds.Clear();
@@ -408,8 +552,7 @@ public static class ModConfig
 						ModAutoPick.LoadFilterNames(val);
 						break;
 					case "maxPickDistance":
-						int mpd;
-						if (int.TryParse(val, out mpd) && mpd >= 0) ModAutoPick.maxPickDistance = mpd;
+						if (int.TryParse(val, out int mpd) && mpd >= 0) ModAutoPick.maxPickDistance = mpd;
 						break;
 					case "autoDropItem":
 						bool.TryParse(val, out ModAutoPick.autoDropItem);
@@ -430,7 +573,7 @@ public static class ModConfig
 						bool.TryParse(val, out ModSpeed.speedHack);
 						break;
 					case "speedMult":
-						float.TryParse(val, out ModSpeed.speedMult);
+						if (float.TryParse(val.Replace(',', '.'), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float parsedSpeedMult)) { ModSpeed.speedMult = parsedSpeedMult < 1.0f ? 1.0f : (parsedSpeedMult > 5.0f ? 5.0f : parsedSpeedMult); }
 						break;
 					case "autoPean":
 						bool.TryParse(val, out ModAutoHeal.autoPean);
@@ -482,11 +625,22 @@ public static class ModConfig
 					case "isFullscreen":
 						bool.TryParse(val, out ModGraphics.isFullscreen);
 						break;
+#if NET8_0_OR_GREATER
+					case "fontTheme":
+						if (int.TryParse(val, out int ft) && ft >= 0 && ft < ModGraphics.fontThemeNames.Length)
+						{
+							ModGraphics.fontTheme = ft;
+							mFont.InvalidateFontMetrics();
+						}
+						break;
+#endif
 					case "fontSizePreset":
 						if (int.TryParse(val, out int fsi) && fsi >= 0 && fsi < ModGraphics.fontSizeNames.Length)
 						{
 							ModGraphics.fontSizeIndex = fsi;
+#if NET8_0_OR_GREATER
 							mFont.InvalidateFontMetrics();
+#endif
 						}
 						break;
 					case "targetFps":
@@ -496,8 +650,7 @@ public static class ModConfig
 						bool.TryParse(val, out ModFps.isAutoFps);
 						break;
 					case "animSpeedIndex":
-						int asi;
-						if (int.TryParse(val, out asi))
+						if (int.TryParse(val, out int asi))
 						{
 							ModGraphics.SetAnimSpeed(asi, false);
 						}
@@ -538,6 +691,17 @@ public static class ModConfig
 					case "isLockTarget":
 						bool.TryParse(val, out ModMapEntityHUD.isLockTarget);
 						break;
+#if NET8_0_OR_GREATER
+					case "isShowFloatingHUD":
+						bool.TryParse(val, out ModFloatingHUD.isShowFloatingHUD);
+						break;
+					case "floatingBubbleX":
+						int.TryParse(val, out ModFloatingHUD.bubbleX);
+						break;
+					case "floatingBubbleY":
+						int.TryParse(val, out ModFloatingHUD.bubbleY);
+						break;
+#endif
 					case "isGoBackActive":
 						bool.TryParse(val, out ModGoBack.isGoBackActive);
 						break;
@@ -688,47 +852,92 @@ public static class ModConfig
 					case "autoBoxSortIntervalMs":
 						if (int.TryParse(val, out int boxSortInterval)) ModAutoBoxSort.intervalMs = boxSortInterval < 15000 ? 15000 : (boxSortInterval > 3600000 ? 3600000 : boxSortInterval);
 						break;
-					case "autoPoint":
-						bool.TryParse(val, out ModAutoPoint.isEnabled);
-						break;
-					case "autoPointType":
-						if (int.TryParse(val, out int apt)) ModAutoPoint.Configure(apt, ModAutoPoint.pointsPerTick, ModAutoPoint.intervalMs);
-						break;
-					case "autoPointAmount":
-						if (int.TryParse(val, out int apa)) ModAutoPoint.Configure(ModAutoPoint.targetType, apa, ModAutoPoint.intervalMs);
-						break;
-					case "autoPointIntervalMs":
-						if (int.TryParse(val, out int api)) ModAutoPoint.Configure(ModAutoPoint.targetType, ModAutoPoint.pointsPerTick, api);
-						break;
-					case "autoPointMaxStat":
-						if (long.TryParse(val, out long apm) && apm >= 0) ModAutoPoint.maxTargetStat = apm;
-						break;
-					case "autoItem":
-						bool.TryParse(val, out ModAutoItem.isEnabled);
-						break;
-					case "autoItemIds":
-						ModAutoItem.LoadIds(val);
-						break;
-					case "autoItemIntervalMs":
-						if (int.TryParse(val, out int aii)) ModAutoItem.intervalMs = aii < 1000 ? 1000 : (aii > 3600000 ? 3600000 : aii);
-						break;
-					case "autoItemCondition":
-						int.TryParse(val, out ModAutoItem.conditionType);
-						break;
-					case "autoItemThreshold":
-						if (int.TryParse(val, out int ait)) ModAutoItem.thresholdPercent = ait < 1 ? 1 : (ait > 99 ? 99 : ait);
-						break;
 					case "autoOpenCskb":
 						bool.TryParse(val, out ModAutoItem.autoOpenCskb);
 						break;
-					case "schedule":
-						bool.TryParse(val, out ModSchedule.isEnabled);
+					case "exitOnPetPowerLimit":
+						if (long.TryParse(val, out long eppl) && eppl >= 0) ModAutoPet.exitOnPetPowerLimit = eppl;
 						break;
-					case "scheduleStartMinute":
-						int.TryParse(val, out ModSchedule.startMinute);
+					case "autoPeanMinHp":
+						if (long.TryParse(val, out long apmHp) && apmHp >= 0) ModAutoHeal.autoPeanMinHp = apmHp;
 						break;
-					case "scheduleEndMinute":
-						int.TryParse(val, out ModSchedule.endMinute);
+					case "autoPeanMinMp":
+						if (long.TryParse(val, out long apmMp) && apmMp >= 0) ModAutoHeal.autoPeanMinMp = apmMp;
+						break;
+					case "isHideOtherPlayers":
+						bool.TryParse(val, out ModGraphics.hideOtherPlayers);
+						break;
+					case "enableQuickPcHotkeys":
+						bool.TryParse(val, out ModHotkey.enableQuickPcHotkeys);
+						break;
+					case "showExtraQuickButtons":
+						bool.TryParse(val, out ModArrowButton.showExtraQuickButtons);
+						break;
+					case "eatChickenAtHome":
+						bool.TryParse(val, out ModGoBack.eatChickenAtHome);
+						break;
+					case "useCapsuleVip":
+						bool.TryParse(val, out ModNextMap.useCapsuleVip);
+						break;
+					case "useNormalCapsule":
+						bool.TryParse(val, out ModNextMap.useNormalCapsule);
+						break;
+					case "speedBoostTransport":
+						bool.TryParse(val, out ModNextMap.speedBoostTransport);
+						break;
+					case "buaEnabledMask":
+						if (int.TryParse(val, out int bem) && bem >= 0) ModAutoBuyBua.buaEnabledMask = bem;
+						break;
+					case "buaExpireTimestamps":
+						ModAutoBuyBua.ImportExpireTimestamps(val);
+						break;
+					case "autoPointMultiTargets":
+						ModAutoPoint.ImportMultiStatTargets(val);
+						break;
+					case "scheduleDisconnectOff":
+						bool.TryParse(val, out ModSchedule.disconnectOnOffWindow);
+						break;
+					case "petAutoAttackOnBark":
+						bool.TryParse(val, out ModAutoPet.petAutoAttackOnBark);
+						break;
+					case "petAutoKok":
+						bool.TryParse(val, out ModAutoPet.petAutoKok);
+						break;
+					case "disconnectOnPetPowerLimit":
+						bool.TryParse(val, out ModAutoPet.disconnectOnPetPowerLimit);
+						break;
+					case "spamPotaraMode":
+						bool.TryParse(val, out ModAutoFusion.spamPotaraMode);
+						break;
+					case "proxyRaw":
+						ModProxyServer.proxyRaw = val ?? string.Empty;
+						break;
+					case "customSvName":
+						ModProxyServer.customSvName = val ?? string.Empty;
+						break;
+					case "customSvIp":
+						ModProxyServer.customSvIp = val ?? string.Empty;
+						break;
+					case "customSvPort":
+						if (int.TryParse(val, out int csp) && csp >= 0 && csp <= 65535) ModProxyServer.customSvPort = csp;
+						break;
+					case "equipSet1Raw":
+						ModInventoryExt.equipSet1Raw = val ?? string.Empty;
+						break;
+					case "equipSet2Raw":
+						ModInventoryExt.equipSet2Raw = val ?? string.Empty;
+						break;
+					case "autoCaptchaEnabled":
+						bool.TryParse(val, out ModAutoCaptcha.isEnabled);
+						break;
+					case "captchaDisconnectOnFail":
+						bool.TryParse(val, out ModAutoCaptcha.disconnectOnFail);
+						break;
+					case "captchaMaxFailCount":
+						if (int.TryParse(val, out int cmfc) && cmfc >= 1 && cmfc <= 20) ModAutoCaptcha.maxFailCount = cmfc;
+						break;
+					case "captchaApiUrl":
+						ModAutoCaptcha.captchaApiUrl = val ?? string.Empty;
 						break;
 					case "trainSlot0":
 					case "trainSlot1":
@@ -739,43 +948,11 @@ public static class ModConfig
 						int slotIdx = key[key.Length - 1] - '0';
 						if (slotIdx >= 0 && slotIdx < 6) ModSchedule.trainSlotsRaw[slotIdx] = val ?? "";
 						break;
-					case "autoRevive":
-						bool.TryParse(val, out ModAutoRevive.isEnabled);
-						break;
-					case "autoPet":
-						bool.TryParse(val, out ModAutoPet.isEnabled);
-						break;
-					case "autoPetStatus":
-						if (int.TryParse(val, out int aps)) ModAutoPet.status = (aps >= 0 && aps <= 3) ? aps : 2;
-						break;
-					case "autoPetIntervalMs":
-						if (int.TryParse(val, out int apiPet)) ModAutoPet.intervalMs = apiPet < 1000 ? 1000 : (apiPet > 3600000 ? 3600000 : apiPet);
-						break;
-					case "showPetHUD":
-						bool.TryParse(val, out ModAutoPet.showPetHUD);
-						break;
-					case "petAvoidBoss":
-						bool.TryParse(val, out ModAutoPet.petAvoidBoss);
-						break;
-					case "petAutoFlag":
-						bool.TryParse(val, out ModAutoPet.petAutoFlag);
-						break;
-					case "autoNamekHeal":
-						bool.TryParse(val, out ModAutoPet.autoNamekHeal);
-						break;
-					case "exitOnPetPowerLimit":
-						if (long.TryParse(val, out long eppl) && eppl >= 0) ModAutoPet.exitOnPetPowerLimit = eppl;
-						break;
-					case "autoFusion":
-						bool.TryParse(val, out ModAutoFusion.isEnabled);
-						break;
-					case "autoFusionType":
-						int.TryParse(val, out ModAutoFusion.fusionType);
-						break;
-					case "autoFusionIntervalMs":
-						if (int.TryParse(val, out int afi)) ModAutoFusion.intervalMs = afi < 3000 ? 3000 : (afi > 3600000 ? 3600000 : afi);
-						break;
 				}
+			}
+			if (ModProxyServer.HasCustomServer() && ServerListScreen.nameServer != null && ServerListScreen.nameServer.Length > 0)
+			{
+				ModProxyServer.InjectCustomServer();
 			}
 		}
 		catch
