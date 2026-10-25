@@ -116,7 +116,41 @@ public partial class Char : IMapObject
 	/// </summary>
 	private void checkHideCharName()
 			{
+				if (GameCanvas.gameTick % 20 != 0 || charID < 0)
+				{
+					return;
+				}
 				paintName = true;
+				for (int i = 0; i < GameScr.vCharInMap.size(); i++)
+				{
+					Char @char = null;
+					try
+					{
+						@char = (Char)GameScr.vCharInMap.elementAt(i);
+					}
+					catch (Exception)
+					{
+					}
+					if (@char != null && !@char.Equals(this) && ((@char.cy == cy && Res.abs(@char.cx - cx) < 35) || (cy - @char.cy < 32 && cy - @char.cy > 0 && Res.abs(@char.cx - cx) < 24)))
+					{
+						paintName = false;
+					}
+				}
+				for (int j = 0; j < GameScr.vNpc.size(); j++)
+				{
+					Npc npc = null;
+					try
+					{
+						npc = (Npc)GameScr.vNpc.elementAt(j);
+					}
+					catch (Exception)
+					{
+					}
+					if (npc != null && npc.cy == cy && Res.abs(npc.cx - cx) < 24)
+					{
+						paintName = false;
+					}
+				}
 			}
 
 	/// <summary>

@@ -1,9 +1,9 @@
 {
-  "version": "2.5.57",
+  "version": "2.5.58",
   "buildDate": "2026-10-25",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.57/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.57/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.57/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.57/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.57: Tối ưu triệt để Tàn Sát Hành Tinh Cooler (Map 105-110) chống bị Server đẩy về nhà & khóa 30p: Loại bỏ hoàn toàn gói dịch chuyển gây cộng dồn 100 điểm phạt Packet 46 (RESET_POINT); nâng cấp bay trượt Vector chéo thẳng 84px/82ms (~1,180 px/s, 0 Packet 46) kết hợp String-Pulling BFS vượt trần đá, tối ưu thứ tự quét bệ và khóa an toàn GoBack."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.58/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.58/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.58/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.58/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.58: Khôi phục chuẩn logic hiển thị Player khác (vCharInMap) theo bản gốc 2.5.0 (sửa kẹt cưỡi thú dưới đất & ẩn tên chống rối khi đông người); sửa triệt để lỗi lệch vị trí & trượt cmyLim âm bảng Đổi Khu Vực (Panel TYPE_ZONE); tối ưu kích thước Font chữ mặc định game về Chuẩn 60% sắc nét 1:1 trên PC, Web và Android."
 }

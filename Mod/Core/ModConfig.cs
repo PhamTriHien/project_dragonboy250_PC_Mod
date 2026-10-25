@@ -101,6 +101,7 @@ public static class ModConfig
 			sb.AppendLine("renderBitDepth=" + ModGraphics.renderBitDepth);
 			sb.AppendLine("resolutionIndex=" + ModGraphics.resolutionIndex);
 			sb.AppendLine("isFullscreen=" + ModGraphics.isFullscreen);
+			sb.AppendLine("fontSizePreset=" + ModGraphics.fontSizeIndex);
 			sb.AppendLine("targetFps=" + ModFps.targetFps);
 			sb.AppendLine("isAutoFps=" + ModFps.isAutoFps);
 			sb.AppendLine("isAfkLowCpu=" + ModGraphics.isAfkLowCpu);
@@ -473,6 +474,13 @@ public static class ModConfig
 						break;
 					case "isFullscreen":
 						bool.TryParse(val, out ModGraphics.isFullscreen);
+						break;
+					case "fontSizePreset":
+						if (int.TryParse(val, out int fsi) && fsi >= 0 && fsi < ModGraphics.fontSizeNames.Length)
+						{
+							ModGraphics.fontSizeIndex = fsi;
+							mFont.InvalidateFontMetrics();
+						}
 						break;
 					case "targetFps":
 						int.TryParse(val, out ModFps.targetFps);

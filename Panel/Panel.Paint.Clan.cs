@@ -248,8 +248,8 @@ public partial class Panel : IActionListener, IChatable
 					{
 						g.setColor((i != selected) ? 15196114 : 16383818);
 						g.fillRect(xScroll, num2, wScroll, h);
-						mFont.tahoma_7b_blue.drawString(g, mapNames[i], 5, num2 + 1, 0);
-						mFont.tahoma_7_grey.drawString(g, planetNames[i], 5, num2 + 11, 0);
+						mFont.tahoma_7b_blue.drawString(g, mapNames[i], xScroll + 5, num2 + 1, 0);
+						mFont.tahoma_7_grey.drawString(g, planetNames[i], xScroll + 5, num2 + 11, 0);
 					}
 				}
 				paintScrollArrow(g);
@@ -265,7 +265,12 @@ public partial class Panel : IActionListener, IChatable
 				g.translate(0, -cmy);
 				int[] zones = GameScr.gI().zones;
 				int[] pts = GameScr.gI().pts;
-				for (int i = 0; i < pts.Length; i++)
+				if (zones == null || pts == null)
+				{
+					return;
+				}
+				int count = System.Math.Min(zones.Length, pts.Length);
+				for (int i = 0; i < count; i++)
 				{
 					int num = xScroll + 36;
 					int num2 = yScroll + i * ITEM_HEIGHT;
@@ -281,7 +286,8 @@ public partial class Panel : IActionListener, IChatable
 					}
 					g.setColor((i != selected) ? 15196114 : 16383818);
 					g.fillRect(num, num2, num3, h);
-					g.setColor(zoneColor[pts[i]]);
+					int ptIdx = ((pts[i] >= 0 && pts[i] < zoneColor.Length) ? pts[i] : 0);
+					g.setColor(zoneColor[ptIdx]);
 					g.fillRect(num4, y, num5, h2);
 					if (zones[i] != -1)
 					{
@@ -293,12 +299,18 @@ public partial class Panel : IActionListener, IChatable
 						{
 							mFont.tahoma_7_grey.drawString(g, zones[i] + string.Empty, num4 + num5 / 2, num2 + 6, mFont.CENTER);
 						}
-						mFont.tahoma_7_green2.drawString(g, GameScr.gI().numPlayer[i] + "/" + GameScr.gI().maxPlayer[i], num + 5, num2 + 6, 0);
+						if (GameScr.gI().numPlayer != null && GameScr.gI().maxPlayer != null && i < GameScr.gI().numPlayer.Length && i < GameScr.gI().maxPlayer.Length)
+						{
+							mFont.tahoma_7_green2.drawString(g, GameScr.gI().numPlayer[i] + "/" + GameScr.gI().maxPlayer[i], num + 5, num2 + 6, 0);
+						}
 					}
-					if (GameScr.gI().rankName1[i] != null)
+					if (GameScr.gI().rankName1 != null && i < GameScr.gI().rankName1.Length && GameScr.gI().rankName1[i] != null)
 					{
 						mFont.tahoma_7_grey.drawString(g, GameScr.gI().rankName1[i] + "(Top " + GameScr.gI().rank1[i] + ")", num + num3 - 2, num2 + 1, mFont.RIGHT);
-						mFont.tahoma_7_grey.drawString(g, GameScr.gI().rankName2[i] + "(Top " + GameScr.gI().rank2[i] + ")", num + num3 - 2, num2 + 11, mFont.RIGHT);
+						if (GameScr.gI().rankName2 != null && i < GameScr.gI().rankName2.Length && GameScr.gI().rankName2[i] != null)
+						{
+							mFont.tahoma_7_grey.drawString(g, GameScr.gI().rankName2[i] + "(Top " + GameScr.gI().rank2[i] + ")", num + num3 - 2, num2 + 11, mFont.RIGHT);
+						}
 					}
 				}
 				paintScrollArrow(g);
@@ -530,9 +542,9 @@ public partial class Panel : IActionListener, IChatable
 	/// </summary>
 	private void paintZoneInfo(mGraphics g)
 			{
-				mFont.tahoma_7b_white.drawString(g, mResources.zone + " " + TileMap.zoneID, 60, 4, mFont.LEFT, mFont.tahoma_7b_dark);
-				mFont.tahoma_7_yellow.drawString(g, TileMap.mapName, 60, 16, mFont.LEFT, mFont.tahoma_7_grey);
-				mFont.tahoma_7b_white.drawString(g, TileMap.zoneID + string.Empty, 25, 27, mFont.CENTER);
+				mFont.tahoma_7b_white.drawString(g, mResources.zone + " " + TileMap.zoneID, X + 60, 4, mFont.LEFT, mFont.tahoma_7b_dark);
+				mFont.tahoma_7_yellow.drawString(g, TileMap.mapName, X + 60, 16, mFont.LEFT, mFont.tahoma_7_grey);
+				mFont.tahoma_7b_white.drawString(g, TileMap.zoneID + string.Empty, X + 25, 27, mFont.CENTER);
 			}
 
 	/// <summary>
@@ -540,21 +552,21 @@ public partial class Panel : IActionListener, IChatable
 	/// </summary>
 	private void paintMapInfo(mGraphics g)
 			{
-				mFont.tahoma_7b_white.drawString(g, mResources.MENUGENDER[TileMap.planetID], 60, 4, mFont.LEFT);
+				mFont.tahoma_7b_white.drawString(g, mResources.MENUGENDER[TileMap.planetID], X + 60, 4, mFont.LEFT);
 				string text = string.Empty;
 				if (TileMap.mapID >= 135 && TileMap.mapID <= 138)
 				{
 					text = " " + mResources.tang + TileMap.zoneID;
 				}
-				mFont.tahoma_7_yellow.drawString(g, TileMap.mapName + text, 60, 16, mFont.LEFT);
-				mFont.tahoma_7b_white.drawString(g, mResources.quest_place + ": ", 60, 27, mFont.LEFT);
+				mFont.tahoma_7_yellow.drawString(g, TileMap.mapName + text, X + 60, 16, mFont.LEFT);
+				mFont.tahoma_7b_white.drawString(g, mResources.quest_place + ": ", X + 60, 27, mFont.LEFT);
 				if (GameScr.getTaskMapId() >= 0 && GameScr.getTaskMapId() <= TileMap.mapNames.Length - 1)
 				{
-					mFont.tahoma_7_yellow.drawString(g, TileMap.mapNames[GameScr.getTaskMapId()], 60, 38, mFont.LEFT);
+					mFont.tahoma_7_yellow.drawString(g, TileMap.mapNames[GameScr.getTaskMapId()], X + 60, 38, mFont.LEFT);
 				}
 				else
 				{
-					mFont.tahoma_7_yellow.drawString(g, mResources.random, 60, 38, mFont.LEFT);
+					mFont.tahoma_7_yellow.drawString(g, mResources.random, X + 60, 38, mFont.LEFT);
 				}
 			}
 

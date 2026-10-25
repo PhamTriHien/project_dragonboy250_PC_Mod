@@ -576,8 +576,12 @@ public partial class Panel : IActionListener, IChatable
 	private void setTabMapTrans()
 		{
 			ITEM_HEIGHT = 24;
-			currentListLength = mapNames.Length;
+			currentListLength = ((mapNames != null) ? mapNames.Length : 0);
 			cmyLim = currentListLength * ITEM_HEIGHT - hScroll;
+			if (cmyLim < 0)
+			{
+				cmyLim = 0;
+			}
 			cmy = (cmtoY = 0);
 			selected = (GameCanvas.isTouch ? (-1) : 0);
 		}
@@ -585,8 +589,12 @@ public partial class Panel : IActionListener, IChatable
 	private void setTabZone()
 		{
 			ITEM_HEIGHT = 24;
-			currentListLength = GameScr.gI().zones.Length;
+			currentListLength = ((GameScr.gI().zones != null) ? GameScr.gI().zones.Length : 0);
 			cmyLim = currentListLength * ITEM_HEIGHT - hScroll;
+			if (cmyLim < 0)
+			{
+				cmyLim = 0;
+			}
 			cmy = (cmtoY = 0);
 			selected = (GameCanvas.isTouch ? (-1) : 0);
 		}

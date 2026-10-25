@@ -202,6 +202,7 @@ public partial class mFont
 			return getWidthExactOf(s);
 		}
 
+	private static readonly System.Collections.Generic.List<mFont> s_AllInstances = new System.Collections.Generic.List<mFont>(40);
 	private readonly System.Collections.Generic.Dictionary<string, int> widthCache = new System.Collections.Generic.Dictionary<string, int>(128);
 	private static readonly GUIStyle s_CachedMeasureStyle = new GUIStyle();
 	private static readonly GUIContent s_CachedMeasureContent = new GUIContent(string.Empty);
@@ -218,7 +219,21 @@ public partial class mFont
 				s_CachedMeasureStyle.font = myFont;
 				s_CachedMeasureContent.text = s;
 				int zoom = (mGraphics.zoomLevel > 0) ? mGraphics.zoomLevel : 1;
-				int calculated = (int)(s_CachedMeasureStyle.CalcSize(s_CachedMeasureContent).x / (float)zoom + 0.5f);
+				float scale = ModGraphics.GetFontSizeScale();
+				float rawW;
+				if (myFont != null && myFont.dynamic && Mathf.Abs(scale - 1f) > 0.001f)
+				{
+					int refSize = (myFont.fontSize > 0) ? myFont.fontSize : (14 * zoom);
+					s_CachedMeasureStyle.fontSize = Mathf.Max(7, Mathf.RoundToInt(refSize * scale));
+					rawW = s_CachedMeasureStyle.CalcSize(s_CachedMeasureContent).x;
+					s_CachedMeasureStyle.fontSize = 0;
+				}
+				else
+				{
+					s_CachedMeasureStyle.fontSize = 0;
+					rawW = s_CachedMeasureStyle.CalcSize(s_CachedMeasureContent).x * scale;
+				}
+				int calculated = (int)(rawW / (float)zoom + 0.5f);
 				if (widthCache.Count < 512)
 				{
 					widthCache[s] = calculated;
@@ -227,6 +242,7 @@ public partial class mFont
 			}
 			catch (Exception ex)
 			{
+				s_CachedMeasureStyle.fontSize = 0;
 				Cout.LogError("GET WIDTH OF " + s + " FAIL.\n" + ex.Message + "\n" + ex.StackTrace);
 				return getWidthNotExactOf(s);
 			}
@@ -245,20 +261,45 @@ public partial class mFont
 			}
 			if (height > 0)
 			{
-				return height / mGraphics.zoomLevel;
+				return System.Math.Max(9, height / mGraphics.zoomLevel);
 			}
 			GUIStyle gUIStyle = new GUIStyle();
 			gUIStyle.font = myFont;
 			try
 			{
-				height = (int)gUIStyle.CalcSize(new GUIContent("Adg")).y + 2;
+				int zoom = (mGraphics.zoomLevel > 0) ? mGraphics.zoomLevel : 2;
+				float scale = ModGraphics.GetFontSizeScale();
+				if (myFont != null && myFont.dynamic && Mathf.Abs(scale - 1f) > 0.001f)
+				{
+					int refSize = (myFont.fontSize > 0) ? myFont.fontSize : (14 * zoom);
+					gUIStyle.fontSize = Mathf.Max(7, Mathf.RoundToInt(refSize * scale));
+					height = (int)gUIStyle.CalcSize(new GUIContent("Adg")).y + 4;
+				}
+				else
+				{
+					height = (int)(gUIStyle.CalcSize(new GUIContent("Adg")).y * scale) + 4;
+				}
 			}
 			catch (Exception ex)
 			{
 				Cout.LogError("FAIL GET HEIGHT " + ex.StackTrace);
 				height = 20;
 			}
-			return height / mGraphics.zoomLevel;
+			return System.Math.Max(9, height / mGraphics.zoomLevel);
+		}
+
+	public static void InvalidateFontMetrics()
+		{
+			for (int i = 0; i < s_AllInstances.Count; i++)
+			{
+				mFont f = s_AllInstances[i];
+				if (f != null)
+				{
+					f.widthCache.Clear();
+					f.height = 0;
+					f.wO = f.getWidthExactOf("o");
+				}
+			}
 		}
 
 	public static string[] splitStringSv(string _text, string _searchStr)

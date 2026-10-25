@@ -165,14 +165,15 @@ public partial class Panel : IActionListener, IChatable
 			}
 			if (cmRun != 0 && !pointerIsDowning)
 			{
+				int maxCmy = ((cmyLim > 0) ? cmyLim : 0);
 				cmtoY += cmRun / 100;
 				if (cmtoY < 0)
 				{
 					cmtoY = 0;
 				}
-				else if (cmtoY > cmyLim)
+				else if (cmtoY > maxCmy)
 				{
-					cmtoY = cmyLim;
+					cmtoY = maxCmy;
 				}
 				else
 				{

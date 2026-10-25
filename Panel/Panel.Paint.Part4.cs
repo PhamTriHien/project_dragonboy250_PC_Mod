@@ -226,47 +226,47 @@ public partial class Panel : IActionListener, IChatable
 				{
 					g.setColor(13524492);
 					g.fillRect(X + 1, 78, W - 2, 1);
-					mFont.tahoma_7b_dark.drawString(g, mResources.select_zone, startTabPos + TAB_W / 2, 59, mFont.CENTER);
+					mFont.tahoma_7b_dark.drawString(g, mResources.select_zone, xScroll + wScroll / 2, 59, mFont.CENTER);
 					return;
 				}
 				if (type == 14)
 				{
 					g.setColor(13524492);
 					g.fillRect(X + 1, 78, W - 2, 1);
-					mFont.tahoma_7b_dark.drawString(g, mResources.select_map, startTabPos + TAB_W / 2, 59, mFont.CENTER);
+					mFont.tahoma_7b_dark.drawString(g, mResources.select_map, xScroll + wScroll / 2, 59, mFont.CENTER);
 					return;
 				}
 				if (type == 4)
 				{
-					mFont.tahoma_7b_dark.drawString(g, mResources.map, startTabPos + TAB_W / 2, 59, mFont.CENTER);
+					mFont.tahoma_7b_dark.drawString(g, mResources.map, xScroll + wScroll / 2, 59, mFont.CENTER);
 					g.setColor(13524492);
 					g.fillRect(X + 1, 78, W - 2, 1);
 					return;
 				}
 				if (type == 7)
 				{
-					mFont.tahoma_7b_dark.drawString(g, mResources.trangbi, startTabPos + TAB_W / 2, 59, mFont.CENTER);
+					mFont.tahoma_7b_dark.drawString(g, mResources.trangbi, xScroll + wScroll / 2, 59, mFont.CENTER);
 					g.setColor(13524492);
 					g.fillRect(X + 1, 78, W - 2, 1);
 					return;
 				}
 				if (type == 17)
 				{
-					mFont.tahoma_7b_dark.drawString(g, mResources.kigui, startTabPos + TAB_W / 2, 59, mFont.CENTER);
+					mFont.tahoma_7b_dark.drawString(g, mResources.kigui, xScroll + wScroll / 2, 59, mFont.CENTER);
 					g.setColor(13524492);
 					g.fillRect(X + 1, 78, W - 2, 1);
 					return;
 				}
 				if (type == 8)
 				{
-					mFont.tahoma_7b_dark.drawString(g, mResources.msg, startTabPos + TAB_W / 2, 59, mFont.CENTER);
+					mFont.tahoma_7b_dark.drawString(g, mResources.msg, xScroll + wScroll / 2, 59, mFont.CENTER);
 					g.setColor(13524492);
 					g.fillRect(X + 1, 78, W - 2, 1);
 					return;
 				}
 				if (type == 10)
 				{
-					mFont.tahoma_7b_dark.drawString(g, mResources.wat_do_u_want, startTabPos + TAB_W / 2, 59, mFont.CENTER);
+					mFont.tahoma_7b_dark.drawString(g, mResources.wat_do_u_want, xScroll + wScroll / 2, 59, mFont.CENTER);
 					g.setColor(13524492);
 					g.fillRect(X + 1, 78, W - 2, 1);
 					return;
@@ -307,7 +307,7 @@ public partial class Panel : IActionListener, IChatable
 					PaintPetTabButton(g);
 				}
 				g.setColor(13524492);
-				g.fillRect(1, 78, W - 2, 1);
+				g.fillRect(X + 1, 78, W - 2, 1);
 			}
 	private void paintBottomMoneyInfo(mGraphics g)
 			{

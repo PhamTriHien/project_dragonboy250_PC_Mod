@@ -24,6 +24,10 @@ public static class ModGraphics
 	public static bool isFullscreen = false;
 	public static bool isAfkLowCpu = false;
 
+	public static int fontSizeIndex = 0;
+	public static readonly string[] fontSizeNames = new string[4] { "Chuẩn 60%", "Vừa 75%", "Lớn 90%", "Gốc 100%" };
+	public static readonly float[] fontSizeScales = new float[4] { 0.60f, 0.75f, 0.90f, 1.0f };
+
 	public static void ToggleAfkLowCpu()
 	{
 		isAfkLowCpu = !isAfkLowCpu;
@@ -173,6 +177,23 @@ public static class ModGraphics
 		if (depth < 0 || depth >= bitDepthNames.Length) depth = 1;
 		renderBitDepth = depth;
 		ApplyBitDepth();
+		ModConfig.SaveConfig();
+	}
+
+	public static float GetFontSizeScale()
+	{
+		if (fontSizeIndex >= 0 && fontSizeIndex < fontSizeScales.Length)
+		{
+			return fontSizeScales[fontSizeIndex];
+		}
+		return 0.60f;
+	}
+
+	public static void SetFontSize(int index)
+	{
+		if (index < 0 || index >= fontSizeNames.Length) index = 0;
+		fontSizeIndex = index;
+		mFont.InvalidateFontMetrics();
 		ModConfig.SaveConfig();
 	}
 

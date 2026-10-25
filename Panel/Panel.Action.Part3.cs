@@ -272,6 +272,10 @@ public partial class Panel : IActionListener, IChatable
 					cp = null;
 				}
 				cmyLim = currentListLength * ITEM_HEIGHT - hScroll;
+				if (cmyLim < 0)
+				{
+					cmyLim = 0;
+				}
 			}
 
 }

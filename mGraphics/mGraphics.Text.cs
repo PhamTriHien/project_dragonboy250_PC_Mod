@@ -58,6 +58,46 @@ public partial class mGraphics
 			}
 		}
 
+	private static void DrawScaledLabel(Rect rect, string s, GUIStyle style)
+		{
+			if (style == null || style.fontSize > 0)
+			{
+				GUI.Label(rect, s, style);
+				return;
+			}
+			float scale = ModGraphics.GetFontSizeScale();
+			if (Mathf.Abs(scale - 1f) <= 0.001f)
+			{
+				GUI.Label(rect, s, style);
+				return;
+			}
+			if (style.font != null && style.font.dynamic)
+			{
+				int refSize = (style.font.fontSize > 0) ? style.font.fontSize : (14 * zoomLevel);
+				int targetSize = Mathf.Max(7, Mathf.RoundToInt(refSize * scale));
+				int origSize = style.fontSize;
+				style.fontSize = targetSize;
+				Rect adjusted = new Rect(rect.x, rect.y + (refSize - targetSize) / 2, rect.width, rect.height);
+				GUI.Label(adjusted, s, style);
+				style.fontSize = origSize;
+				return;
+			}
+			float anchorX = rect.x;
+			if (style.alignment == TextAnchor.UpperCenter || style.alignment == TextAnchor.MiddleCenter || style.alignment == TextAnchor.LowerCenter)
+			{
+				anchorX = rect.x + rect.width * 0.5f;
+			}
+			else if (style.alignment == TextAnchor.UpperRight || style.alignment == TextAnchor.MiddleRight || style.alignment == TextAnchor.LowerRight)
+			{
+				anchorX = rect.x + rect.width;
+			}
+			float anchorY = rect.y + (14f * zoomLevel) * 0.5f;
+			Matrix4x4 prevMatrix = GUI.matrix;
+			GUIUtility.ScaleAroundPivot(new Vector2(scale, scale), new Vector2(anchorX, anchorY));
+			GUI.Label(rect, s, style);
+			GUI.matrix = prevMatrix;
+		}
+
 	public void drawString(string s, int x, int y, GUIStyle style)
 		{
 			x *= zoomLevel;
@@ -87,7 +127,7 @@ public partial class mGraphics
 			{
 				GUI.BeginGroup(new Rect(num, num2, num3, num4));
 			}
-			GUI.Label(new Rect(x - num, y - num2, ScaleGUI.WIDTH, 100f), s, style);
+			DrawScaledLabel(new Rect(x - num, y - num2, ScaleGUI.WIDTH, 100f), s, style);
 			if (isClip)
 			{
 				GUI.EndGroup();
@@ -134,7 +174,7 @@ public partial class mGraphics
 			{
 				GUI.BeginGroup(new Rect(num, num2, num3, num4));
 			}
-			GUI.Label(new Rect(x - num, y - num2 - 4, w, 100f), s, style);
+			DrawScaledLabel(new Rect(x - num, y - num2 - 4, w, 100f), s, style);
 			if (isClip)
 			{
 				GUI.EndGroup();
