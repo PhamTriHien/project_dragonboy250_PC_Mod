@@ -282,8 +282,8 @@ public static class ModGoBack
 		{
 			if (TileMap.mapID != 21 && TileMap.mapID != 22 && TileMap.mapID != 23)
 			{
-				bool isColdMap = TileMap.mapID >= 105 && TileMap.mapID <= 110;
-				bool canSaveCoords = !isColdMap || (!me.isTeleport && me.cy > 36 && !ModTeleport.IsColdPositionBlocked(me.cx, me.cy));
+				bool strictCoordGuard = ModTeleport.IsAntiScanModeActive() || ModTeleport.IsColdPlanetMap();
+				bool canSaveCoords = !strictCoordGuard || (!me.isTeleport && me.cy > 36 && !ModTeleport.IsColdPositionBlocked(me.cx, me.cy));
 				if (canSaveCoords)
 				{
 					lastAliveMapId = TileMap.mapID;
@@ -317,9 +317,10 @@ public static class ModGoBack
 			}
 			else if (lastAliveMapId >= 0 && lastAliveMapId != 21 && lastAliveMapId != 22 && lastAliveMapId != 23)
 			{
-				bool wasOnColdPlanet = (lastAliveMapId >= 105 && lastAliveMapId <= 110) || (now - lastColdKickSignalTime <= 15000);
+				bool wasAntiScanKick = ModTanSat.antiScanMode &&
+				                       ((lastAliveMapId != 0 && lastAliveMapId != 7 && lastAliveMapId != 14) || (now - lastColdKickSignalTime <= 15000));
 				bool wasForcedFromFarMap = isGoBackActive && ModTanSat.autoTanSat && lastAliveMapId != 0 && lastAliveMapId != 7 && lastAliveMapId != 14;
-				if ((ModTanSat.autoTanSat || isGoBackActive) && (wasOnColdPlanet || wasForcedFromFarMap))
+				if ((ModTanSat.autoTanSat || isGoBackActive) && (wasAntiScanKick || wasForcedFromFarMap))
 				{
 					bool useLastAlive = !isGoBackActive || isAutoRecordOnDeath || savedMapId < 0;
 					activeReturnMapId = useLastAlive ? lastAliveMapId : savedMapId;
@@ -336,7 +337,7 @@ public static class ModGoBack
 						ModConfig.SaveConfig();
 					}
 
-					if (wasOnColdPlanet)
+					if (ModTanSat.antiScanMode || (lastAliveMapId >= 105 && lastAliveMapId <= 110) || (now - lastColdKickSignalTime <= 15000))
 					{
 						if (lastForcedColdReturnTime > 0 && now - lastForcedColdReturnTime > 1200000)
 						{
@@ -370,14 +371,15 @@ public static class ModGoBack
 		{
 			if (!isGoBackActive && !isForcedHomeReturnActive)
 			{
-				bool diedWhileColdTanSat = ModTanSat.autoTanSat &&
-				                           ((TileMap.mapID >= 105 && TileMap.mapID <= 110) || (lastAliveMapId >= 105 && lastAliveMapId <= 110));
-				if (!diedWhileColdTanSat)
+				int candidateMap = (lastAliveMapId >= 0 && lastAliveMapId != 21 && lastAliveMapId != 22 && lastAliveMapId != 23) ? lastAliveMapId : TileMap.mapID;
+				bool diedWhileAntiScanTanSat = ModTanSat.autoTanSat && ModTanSat.antiScanMode &&
+				                               candidateMap >= 0 && candidateMap != 21 && candidateMap != 22 && candidateMap != 23;
+				if (!diedWhileAntiScanTanSat)
 				{
 					return;
 				}
-				activeReturnMapId = (lastAliveMapId >= 105 && lastAliveMapId <= 110) ? lastAliveMapId : TileMap.mapID;
-				activeReturnZoneId = (lastAliveMapId >= 105 && lastAliveMapId <= 110) ? lastAliveZoneId : TileMap.zoneID;
+				activeReturnMapId = candidateMap;
+				activeReturnZoneId = (candidateMap == lastAliveMapId && lastAliveZoneId >= 0) ? lastAliveZoneId : TileMap.zoneID;
 				activeReturnX = (lastAliveX > 0) ? lastAliveX : me.cx;
 				activeReturnY = (lastAliveY > 36) ? lastAliveY : -1;
 				isForcedHomeReturnActive = true;
@@ -598,7 +600,7 @@ public static class ModGoBack
 				{
 					return;
 				}
-				if (ModTeleport.IsColdPlanetMap() && !TileMap.tileTypeAt(me.cx, me.cy, 2) && now - stateTimer < 3800)
+				if ((ModTeleport.IsColdPlanetMap() || ModTeleport.IsColdPlanetAntiCheckActive()) && !TileMap.tileTypeAt(me.cx, me.cy, 2) && now - stateTimer < 3800)
 				{
 					if (me.statusMe == 1 && me.cy <= 48)
 					{

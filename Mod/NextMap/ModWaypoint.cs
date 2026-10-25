@@ -443,8 +443,14 @@ public static class ModWaypoint
 			{
 				if (ModTeleport.IsColdPlanetAntiCheckActive())
 				{
+					bool isAirOrTower = TileMap.isInAirMap() || TileMap.mapID == 45 || TileMap.mapID == 46 || TileMap.mapID == 47 || TileMap.mapID == 48;
 					int coldApproachY = wpTargetY;
-					if (ModTeleport.IsColdPositionBlocked(approachX, coldApproachY))
+					if (isAirOrTower)
+					{
+						if (coldApproachY < 16) coldApproachY = 16;
+						if (TileMap.pxh > 32 && coldApproachY > TileMap.pxh - 16) coldApproachY = TileMap.pxh - 16;
+					}
+					else if (ModTeleport.IsColdPositionBlocked(approachX, coldApproachY, allowEnterWaypoint: true))
 					{
 						int fixedY = ModTanSatTargeting.FindGroundY(approachX, coldApproachY, 96);
 						if (fixedY != -1)
@@ -452,7 +458,7 @@ public static class ModWaypoint
 							coldApproachY = fixedY;
 						}
 					}
-					if (ModTeleport.MoveSteppedTo(approachX, coldApproachY, isTargetFlying: false, allowColdLongTeleport: false))
+					if (ModTeleport.MoveSteppedTo(approachX, coldApproachY, isTargetFlying: isAirOrTower, allowColdLongTeleport: false, allowEnterWaypoint: true))
 					{
 						hasTeleportedToWp = true;
 						isWpPosConfirmed = true;
@@ -579,6 +585,16 @@ public static class ModWaypoint
 
 			if (!hasTeleportedToWp)
 			{
+				if (ModTeleport.IsColdPlanetAntiCheckActive())
+				{
+					if (ModTeleport.MoveSteppedTo(targetX, targetY, isTargetFlying: true, allowColdLongTeleport: false, allowEnterWaypoint: true))
+					{
+						hasTeleportedToWp = true;
+						isWpPosConfirmed = true;
+						isWaitingTeleportConfirm = false;
+					}
+					return false;
+				}
 				if (MoveSteppedTo(targetX, targetY))
 				{
 					hasTeleportedToWp = true;
@@ -705,6 +721,11 @@ public static class ModWaypoint
 
 			if (Res.abs(me.cx - npcX) > 24 || Res.abs(me.cy - npcY) > 24)
 			{
+				if (ModTeleport.IsColdPlanetAntiCheckActive())
+				{
+					ModTeleport.MoveSteppedTo(npcX, npcY, isTargetFlying: false, allowColdLongTeleport: false, allowEnterWaypoint: true);
+					return false;
+				}
 				MoveSteppedTo(npcX, npcY);
 				ModTdltLogger.Log("NEXT_MAP_SHIP", $"Teleport to NPC at ({npcX},{npcY}) [rawCy={shipNpc.cy}], map={TileMap.mapID}");
 				return false;

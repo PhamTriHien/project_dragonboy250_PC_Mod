@@ -27,18 +27,66 @@ public static class ModUITanSat
 		return prefix + raw;
 	}
 
+	private static void ComputeLayout(
+		int uiX,
+		int uiY,
+		int uiW,
+		int uiH,
+		out int row0Y,
+		out int modeRowY,
+		out int skillRowY,
+		out int row1Y,
+		out int row2Y,
+		out int footerY,
+		out int listX,
+		out int listY,
+		out int listW,
+		out int listH)
+	{
+		row0Y = uiY + 3;
+		modeRowY = row0Y + 18;
+		skillRowY = modeRowY + 18;
+		row1Y = skillRowY + 18;
+		row2Y = row1Y + 19;
+		footerY = uiY + uiH - 20;
+		listX = uiX + 4;
+		listY = row2Y + 18;
+		listW = uiW - 8;
+		listH = (footerY - 3) - listY;
+		if (listH < 36)
+		{
+			listH = 36;
+		}
+	}
+
+	private static int GetCurrentInnerListHeight()
+	{
+		int safeTop = SafeArea.Top;
+		int safeBottom = SafeArea.Bottom;
+		int maxH = GameCanvas.h - 12 - safeTop - safeBottom;
+		int outerH = (maxH > 260) ? 260 : maxH;
+		if (outerH < 200)
+		{
+			outerH = GameCanvas.h - safeTop - safeBottom;
+		}
+		int detailH = outerH - 30;
+		ComputeLayout(0, 0, 353, detailH, out _, out _, out _, out _, out _, out _, out _, out _, out _, out int listH);
+		return System.Math.Max(32, listH - 4);
+	}
+
 	/// <summary>
 	/// Bộ xử lý sự kiện tiếp nhận và phản hồi OnMouseScroll.
 	/// </summary>
 	public static void OnMouseScroll(float wheel)
 	{
 		int step = 22;
+		int innerH = GetCurrentInnerListHeight();
 		if (ModUI.tanSatTab == 0)
 		{
 			List<int> mobIds = ModUI.GetUniqueMobTemplateIds();
 			int totalRows = (mobIds.Count + 8 + 1) / 2;
-			int contentH = totalRows * 19 + 4;
-			int maxScroll = (contentH > 108) ? (contentH - 108) : 0;
+			int contentH = totalRows * 18 + 4;
+			int maxScroll = (contentH > innerH) ? (contentH - innerH) : 0;
 			if (maxScroll <= 0) return;
 
 			if (wheel > 0) { scrollMobY -= step; if (scrollMobY < 0) scrollMobY = 0; }
@@ -48,8 +96,8 @@ public static class ModUITanSat
 		{
 			List<Skill> skills = ModUI.GetPlayerAttackSkills();
 			int totalRows = (skills.Count + 4 + 1) / 2;
-			int contentH = totalRows * 19 + 4;
-			int maxScroll = (contentH > 108) ? (contentH - 108) : 0;
+			int contentH = totalRows * 18 + 4;
+			int maxScroll = (contentH > innerH) ? (contentH - innerH) : 0;
 			if (maxScroll <= 0) return;
 
 			if (wheel > 0) { scrollSkillY -= step; if (scrollSkillY < 0) scrollSkillY = 0; }
@@ -62,21 +110,7 @@ public static class ModUITanSat
 	/// </summary>
 	public static void UpdateDragScroll(int px, int py, int uiX, int uiY, int uiW, int uiH)
 	{
-		int row0Y = uiY + 3;
-		int row0H = 16;
-		int skillRowY = row0Y + row0H + 2;
-		int skillRowH = 16;
-		int row1Y = skillRowY + skillRowH + 2;
-		int row1H = 17;
-		int row2Y = row1Y + row1H + 2;
-		int row2H = 16;
-		int listX = uiX + 4;
-		int listY = row2Y + row2H + 2;
-		int listW = uiW - 8;
-		int footerH = 17;
-		int footerY = uiY + uiH - footerH - 3;
-		int listH = (footerY - 3) - listY;
-		if (listH < 36) listH = 36;
+		ComputeLayout(uiX, uiY, uiW, uiH, out _, out _, out _, out _, out _, out _, out int listX, out int listY, out int listW, out int listH);
 
 		int maxScroll = 0;
 		if (ModUI.tanSatTab == 0)
@@ -145,8 +179,23 @@ public static class ModUITanSat
 	{
 		ModTanSatFilter.EnsureDesignatedSkill();
 
+		ComputeLayout(
+			uiX,
+			uiY,
+			uiW,
+			uiH,
+			out int row0Y,
+			out int modeRowY,
+			out int skillRowY,
+			out int row1Y,
+			out int row2Y,
+			out int footerY,
+			out int listX,
+			out int listY,
+			out int listW,
+			out int listH);
+
 		// Hàng 0: Tàn sát, Tự nhặt & Tiếp cận
-		int row0Y = uiY + 3;
 		int row0H = 16;
 		mFont.tahoma_7_grey.drawString(g, "Tàn sát:", uiX + 5, row0Y + 2, mFont.LEFT);
 		ModUI.PaintNativeButton(uiX + 46, row0Y, 36, row0H, ModTanSat.autoTanSat ? "BẬT" : "TẮT", ModTanSat.autoTanSat, g);
@@ -154,13 +203,26 @@ public static class ModUITanSat
 		mFont.tahoma_7_grey.drawString(g, "Tự nhặt:", uiX + 87, row0Y + 2, mFont.LEFT);
 		ModUI.PaintNativeButton(uiX + 128, row0Y, 36, row0H, ModAutoPick.autoPick ? "BẬT" : "TẮT", ModAutoPick.autoPick, g);
 
-		int tpBtnW = 68;
+		int tpBtnW = 72;
 		int tpBtnX = uiX + uiW - tpBtnW - 4;
+		string tpLabel = !ModTanSat.useTeleport
+			? "Chạy bộ"
+			: (ModTanSat.antiScanMode ? "Lướt BFS" : "Dịch chuyển");
 		mFont.tahoma_7_grey.drawString(g, "Tiếp cận:", tpBtnX - 44, row0Y + 2, mFont.LEFT);
-		ModUI.PaintNativeButton(tpBtnX, row0Y, tpBtnW, row0H, ModTanSat.useTeleport ? "Dịch chuyển" : "Chạy bộ", ModTanSat.useTeleport, g);
+		ModUI.PaintNativeButton(tpBtnX, row0Y, tpBtnW, row0H, tpLabel, ModTanSat.useTeleport, g);
 
-		// Hàng 1 (Luôn hiển thị): Thanh chỉ định nhanh Skill sử dụng khi Tàn Sát
-		int skillRowY = row0Y + row0H + 2;
+		// Hàng Chế độ úp: Chuyển đổi giữa Map Thường và Chống Quét (dành cho các map dễ bị quét đưa về nhà)
+		int modeRowH = 16;
+		mFont.tahoma_7_grey.drawString(g, "Chế độ úp:", uiX + 5, modeRowY + 2, mFont.LEFT);
+		int modeStartX = uiX + 62;
+		int modeAreaW = uiW - 66;
+		int normalBtnW = (modeAreaW - 4) * 42 / 100;
+		int antiBtnX = modeStartX + normalBtnW + 4;
+		int antiBtnW = (modeAreaW - 4) - normalBtnW;
+		ModUI.PaintNativeButton(modeStartX, modeRowY, normalBtnW, modeRowH, "Map Thường", !ModTanSat.antiScanMode, g);
+		ModUI.PaintNativeButton(antiBtnX, modeRowY, antiBtnW, modeRowH, "Chống Quét Về Nhà", ModTanSat.antiScanMode, g);
+
+		// Hàng Chiêu TS (Luôn hiển thị): Thanh chỉ định nhanh Skill sử dụng khi Tàn Sát
 		int skillRowH = 16;
 		mFont.tahoma_7_grey.drawString(g, "Chiêu TS:", uiX + 5, skillRowY + 2, mFont.LEFT);
 
@@ -190,29 +252,19 @@ public static class ModUITanSat
 			}
 		}
 
-		// Hàng 2: 2 Sub-Tabs (1. Chọn Quái / 2. Chọn Kỹ Năng)
-		int row1Y = skillRowY + skillRowH + 2;
+		// Hàng Sub-Tabs (1. Chọn Quái / 2. Chọn Kỹ Năng)
 		int row1H = 17;
 		int subTabW = (uiW - 12) / 2;
 		ModUI.PaintNativeButton(uiX + 4, row1Y, subTabW, row1H, "1. Chọn Quái", ModUI.tanSatTab == 0, g);
 		ModUI.PaintNativeButton(uiX + 8 + subTabW, row1Y, subTabW, row1H, "2. Chọn Kỹ Năng", ModUI.tanSatTab == 1, g);
 
-		// Hàng 3: Tiêu đề danh sách & Chế độ
-		int row2Y = row1Y + row1H + 2;
+		// Hàng Tiêu đề danh sách & Chế độ
 		int row2H = 16;
 		int allBtnW = 74;
 		int allBtnX = uiX + uiW - allBtnW - 4;
 
-		// Hàng 5 (Đáy): Thiết lập Time Attack
+		// Hàng Đáy: Thiết lập Time Attack
 		int footerH = 17;
-		int footerY = uiY + uiH - footerH - 3;
-
-		// Hàng 4 (Giữa): Khung danh sách Quái / Skill co dãn động
-		int listX = uiX + 4;
-		int listY = row2Y + row2H + 2;
-		int listW = uiW - 8;
-		int listH = (footerY - 3) - listY;
-		if (listH < 36) listH = 36;
 		int colW = (listW - 10) / 2;
 
 		if (ModUI.tanSatTab == 0)
@@ -394,16 +446,28 @@ public static class ModUITanSat
 			return true;
 		}
 
-		int row0Y = uiY + 3;
+		ComputeLayout(
+			uiX,
+			uiY,
+			uiW,
+			uiH,
+			out int row0Y,
+			out int modeRowY,
+			out int skillRowY,
+			out int row1Y,
+			out int row2Y,
+			out int footerY,
+			out int listX,
+			out int listY,
+			out int listW,
+			out int listH);
+
 		int row0H = 16;
-		int skillRowY = row0Y + row0H + 2;
+		int modeRowH = 16;
 		int skillRowH = 16;
-		int row1Y = skillRowY + skillRowH + 2;
 		int row1H = 17;
-		int row2Y = row1Y + row1H + 2;
 		int row2H = 16;
 		int footerH = 17;
-		int footerY = uiY + uiH - footerH - 3;
 
 		// 1. Bật/Tắt Tàn sát
 		if (px >= uiX + 46 && px <= uiX + 82 && py >= row0Y - 1 && py <= row0Y + row0H + 1)
@@ -424,7 +488,7 @@ public static class ModUITanSat
 		}
 
 		// 2. Nút Tiếp cận
-		int tpBtnW = 68;
+		int tpBtnW = 72;
 		int tpBtnX = uiX + uiW - tpBtnW - 4;
 		if (px >= tpBtnX && px <= tpBtnX + tpBtnW && py >= row0Y - 1 && py <= row0Y + row0H + 1)
 		{
@@ -432,6 +496,33 @@ public static class ModUITanSat
 			ModConfig.SaveConfig();
 			SoundMn.gI().buttonClick();
 			return true;
+		}
+
+		// 2a. Hàng Chế độ úp: Map Thường vs Chống Quét Về Nhà
+		if (py >= modeRowY - 1 && py <= modeRowY + modeRowH + 1)
+		{
+			int modeStartX = uiX + 62;
+			int modeAreaW = uiW - 66;
+			int normalBtnW = (modeAreaW - 4) * 42 / 100;
+			int antiBtnX = modeStartX + normalBtnW + 4;
+			int antiBtnW = (modeAreaW - 4) - normalBtnW;
+
+			if (px >= modeStartX && px <= modeStartX + normalBtnW)
+			{
+				ModTanSat.SetAntiScanMode(false);
+				ModConfig.SaveConfig();
+				GameScr.info1?.addInfo("Chế độ Tàn Sát: Map Thường (Dịch chuyển nhanh)", 0);
+				SoundMn.gI().buttonClick();
+				return true;
+			}
+			if (px >= antiBtnX && px <= antiBtnX + antiBtnW)
+			{
+				ModTanSat.SetAntiScanMode(true);
+				ModConfig.SaveConfig();
+				GameScr.info1?.addInfo("Chế độ Tàn Sát: Chống Quét Về Nhà (Úp map dễ bị quét)", 0);
+				SoundMn.gI().buttonClick();
+				return true;
+			}
 		}
 
 		// 2b. Thanh chỉ định nhanh Skill Tàn Sát (Hàng 1)
@@ -535,11 +626,6 @@ public static class ModUITanSat
 			}
 		}
 
-		int listX = uiX + 4;
-		int listY = row2Y + row2H + 2;
-		int listW = uiW - 8;
-		int listH = (footerY - 3) - listY;
-		if (listH < 36) listH = 36;
 		int colW = (listW - 10) / 2;
 
 		// 5. Checklist quái / skill trong khung cuộn

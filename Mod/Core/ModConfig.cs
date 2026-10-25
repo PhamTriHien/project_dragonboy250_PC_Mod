@@ -32,6 +32,7 @@ public static class ModConfig
 			// Tàn Sát: Luôn lưu false để khi thoát game/khởi động lại Tàn Sát luôn TẮT
 			sb.AppendLine("autoTanSat=False");
 			sb.AppendLine("useTeleport=" + ModTanSat.useTeleport);
+			sb.AppendLine("tanSatAntiScanMode=" + ModTanSat.antiScanMode);
 			sb.AppendLine("avoidSuperMob=" + ModTanSat.avoidSuperMob);
 			sb.AppendLine("autoCheckStamina=" + ModTanSat.autoCheckStamina);
 			sb.AppendLine("autoChangeZone=" + ModTanSat.autoChangeZone);
@@ -261,6 +262,9 @@ public static class ModConfig
 						break;
 					case "useTeleport":
 						bool.TryParse(val, out ModTanSat.useTeleport);
+						break;
+					case "tanSatAntiScanMode":
+						bool.TryParse(val, out ModTanSat.antiScanMode);
 						break;
 					case "avoidSuperMob":
 						bool.TryParse(val, out ModTanSat.avoidSuperMob);

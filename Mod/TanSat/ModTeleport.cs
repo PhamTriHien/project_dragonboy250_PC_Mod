@@ -47,9 +47,14 @@ public static class ModTeleport
 		return TileMap.mapID >= 105 && TileMap.mapID <= 110;
 	}
 
+	public static bool IsAntiScanModeActive()
+	{
+		return ModTanSat.antiScanMode;
+	}
+
 	public static bool IsColdPlanetAntiCheckActive()
 	{
-		return IsColdPlanetMap() && !ItemTime.isExistItem(4387);
+		return IsAntiScanModeActive();
 	}
 
 	public static bool IsColdStepTimedOut()
@@ -67,7 +72,7 @@ public static class ModTeleport
 	public static void NotifyServerResetPointReceived()
 	{
 		totalSessionResetPoints++;
-		if (IsColdPlanetMap())
+		if (IsColdPlanetMap() || IsAntiScanModeActive())
 		{
 			coldPlanetResetPoints++;
 		}
@@ -139,13 +144,14 @@ public static class ModTeleport
 		outY = fromY + stepY;
 	}
 
-	public static bool IsColdPositionBlocked(int px, int py)
+	public static bool IsColdPositionBlocked(int px, int py, bool allowEnterWaypoint = false)
 	{
-		if (px <= 24 || px >= TileMap.pxw - 24 || py <= 24 || py >= TileMap.pxh - 24)
+		int margin = allowEnterWaypoint ? 12 : 24;
+		if (px <= margin || (TileMap.pxw > 0 && px >= TileMap.pxw - margin) || py <= margin || (TileMap.pxh > 0 && py >= TileMap.pxh - margin))
 		{
 			return true;
 		}
-		if (IsPointUndergroundOrBlocked(px, py))
+		if (IsPointUndergroundOrBlocked(px, py, allowEnterWaypoint))
 		{
 			return true;
 		}
@@ -680,7 +686,7 @@ public static class ModTeleport
 		return IsSameColdGroundBase(fromX, fromY, toX, toY);
 	}
 
-	private static bool TryTraceSameColdGroundBase(int fromX, int fromY, int toX, int toY, int maxWalkStepX, out int nextWalkX, out int nextWalkY)
+	private static bool TryTraceSameColdGroundBase(int fromX, int fromY, int toX, int toY, int maxWalkStepX, out int nextWalkX, out int nextWalkY, bool allowEnterWaypoint = false)
 	{
 		nextWalkX = fromX;
 		nextWalkY = fromY;
@@ -715,7 +721,7 @@ public static class ModTeleport
 			endGy = gy;
 		}
 
-		if (startGy == endGy && fromY == startGy && toY == endGy && IsFlatGroundContinuous(fromX, toX, startGy))
+		if (startGy == endGy && fromY == startGy && toY == endGy && IsFlatGroundContinuous(fromX, toX, startGy, allowEnterWaypoint))
 		{
 			int flatDx = Res.abs(toX - fromX);
 			nextWalkX = (flatDx <= maxWalkStepX) ? toX : (fromX + ((toX > fromX) ? maxWalkStepX : (-maxWalkStepX)));
@@ -723,7 +729,7 @@ public static class ModTeleport
 			return true;
 		}
 
-		bool startInWp = ModTanSatTargeting.IsInsideWaypoint(fromX, startGy);
+		bool startInWp = allowEnterWaypoint || ModTanSatTargeting.IsInsideWaypoint(fromX, startGy);
 		int totalDx = Res.abs(toX - fromX);
 		int steps = System.Math.Max(1, (totalDx + 15) / 16);
 		int curY = startGy;
@@ -780,13 +786,13 @@ public static class ModTeleport
 		return true;
 	}
 
-	private static bool IsFlatGroundContinuous(int fromX, int toX, int y)
+	private static bool IsFlatGroundContinuous(int fromX, int toX, int y, bool allowEnterWaypoint = false)
 	{
 		if (fromX == toX)
 		{
-			return TileMap.tileTypeAt(toX, y, TileMap.T_TOP) && !IsPointUndergroundOrBlocked(toX, y);
+			return TileMap.tileTypeAt(toX, y, TileMap.T_TOP) && !IsPointUndergroundOrBlocked(toX, y, allowEnterWaypoint);
 		}
-		bool startInWaypoint = ModTanSatTargeting.IsInsideWaypoint(fromX, y);
+		bool startInWaypoint = allowEnterWaypoint || ModTanSatTargeting.IsInsideWaypoint(fromX, y);
 		int dist = Res.abs(toX - fromX);
 		int steps = System.Math.Max(1, (dist + 15) / 16);
 		for (int s = 1; s <= steps; s++)
@@ -814,9 +820,9 @@ public static class ModTeleport
 		return true;
 	}
 
-	private static bool IsColdAirSegmentClear(int fromX, int fromY, int toX, int toY, bool strictAir)
+	private static bool IsColdAirSegmentClear(int fromX, int fromY, int toX, int toY, bool strictAir, bool allowEnterWaypoint = false)
 	{
-		bool startInWaypoint = ModTanSatTargeting.IsInsideWaypoint(fromX, fromY);
+		bool startInWaypoint = allowEnterWaypoint || ModTanSatTargeting.IsInsideWaypoint(fromX, fromY);
 		if (!startInWaypoint && ModTanSatTargeting.IsInsideWaypoint(toX, toY))
 		{
 			return false;
@@ -846,13 +852,13 @@ public static class ModTeleport
 		return true;
 	}
 
-	private static bool IsColdLandingSegmentClear(int fromX, int fromY, int toX, int toY)
+	private static bool IsColdLandingSegmentClear(int fromX, int fromY, int toX, int toY, bool allowEnterWaypoint = false)
 	{
-		if (IsPointUndergroundOrBlocked(toX, toY))
+		if (IsPointUndergroundOrBlocked(toX, toY, allowEnterWaypoint))
 		{
 			return false;
 		}
-		bool startInWaypoint = ModTanSatTargeting.IsInsideWaypoint(fromX, fromY);
+		bool startInWaypoint = allowEnterWaypoint || ModTanSatTargeting.IsInsideWaypoint(fromX, fromY);
 		int dist = System.Math.Max(Res.abs(toX - fromX), Res.abs(toY - fromY));
 		int steps = System.Math.Max(2, (dist + 7) / 8);
 		for (int s = 1; s < steps; s++)
@@ -943,7 +949,7 @@ public static class ModTeleport
 		return false;
 	}
 
-	private static bool MoveColdAntiCheckTo(Char me, int targetX, int targetY, bool isTargetOnGround, bool allowLongTeleport, long now)
+	private static bool MoveColdAntiCheckTo(Char me, int targetX, int targetY, bool isTargetOnGround, bool allowLongTeleport, long now, bool allowEnterWaypoint = false)
 	{
 		if (Res.abs(targetX - coldTrackedTargetX) > 36 || Res.abs(targetY - coldTrackedTargetY) > 36 || coldTrackedStartTime <= 0)
 		{
@@ -954,7 +960,7 @@ public static class ModTeleport
 
 		int dx = Res.abs(me.cx - targetX);
 		int dy = Res.abs(me.cy - targetY);
-		bool mustLandExact = isTargetOnGround && !IsPointUndergroundOrBlocked(targetX, targetY);
+		bool mustLandExact = isTargetOnGround && !IsPointUndergroundOrBlocked(targetX, targetY, allowEnterWaypoint);
 		int arriveTolY = mustLandExact ? 2 : 16;
 
 		bool conservativeSpeed = (ModTanSat.lastResetPenaltyTime > 0 && now - ModTanSat.lastResetPenaltyTime < 6000) || (me.cspeed > 0 && me.cspeed < 4);
@@ -963,7 +969,7 @@ public static class ModTeleport
 		int maxClampStep = conservativeSpeed ? 48 : 84;
 		int maxWalk = conservativeSpeed ? 48 : ColdMaxWalkStepX;
 
-		if (isTargetOnGround && TryTraceSameColdGroundBase(me.cx, me.cy, targetX, targetY, maxWalk, out int walkX, out int walkY))
+		if (isTargetOnGround && TryTraceSameColdGroundBase(me.cx, me.cy, targetX, targetY, maxWalk, out int walkX, out int walkY, allowEnterWaypoint))
 		{
 			SendSingleCharMove(walkX, walkY);
 			lastStepTime = now;
@@ -981,8 +987,8 @@ public static class ModTeleport
 		int startAirY = onTopSurface ? System.Math.Max(24, me.cy - 4) : me.cy;
 		int landingStartY = (onTopSurface && targetY <= me.cy) ? startAirY : me.cy;
 		bool canStepDirect = mustLandExact
-			? IsColdLandingSegmentClear(me.cx, landingStartY, targetX, targetY)
-			: (!IsColdPositionBlocked(targetX, targetY) && IsColdAirSegmentClear(me.cx, startAirY, targetX, targetY, strictAir: false));
+			? IsColdLandingSegmentClear(me.cx, landingStartY, targetX, targetY, allowEnterWaypoint)
+			: (!IsColdPositionBlocked(targetX, targetY, allowEnterWaypoint) && IsColdAirSegmentClear(me.cx, startAirY, targetX, targetY, strictAir: false, allowEnterWaypoint: allowEnterWaypoint));
 		if (canStepDirect && dx <= maxFlyAxis && dy <= maxFlyAxis && (dx + dy) <= maxFlyManhattan)
 		{
 			SendSingleCharMove(targetX, targetY);
@@ -996,7 +1002,7 @@ public static class ModTeleport
 		int aimX = targetX;
 		int aimY = mustLandExact ? System.Math.Max(24, targetY - 12) : targetY;
 		bool strictDirectAir = mustLandExact;
-		if (!IsColdPositionBlocked(aimX, aimY) && IsColdAirSegmentClear(me.cx, startAirY, aimX, aimY, strictAir: strictDirectAir))
+		if (!IsColdPositionBlocked(aimX, aimY, allowEnterWaypoint) && IsColdAirSegmentClear(me.cx, startAirY, aimX, aimY, strictAir: strictDirectAir, allowEnterWaypoint: allowEnterWaypoint))
 		{
 			ComputeProportionalColdStep(me.cx, me.cy, aimX, aimY, maxFlyAxis, maxFlyManhattan, out int vecX, out int vecY);
 			if (onTopSurface && aimY < me.cy && vecY > me.cy - 4)
@@ -1004,8 +1010,8 @@ public static class ModTeleport
 				vecY = System.Math.Max(24, me.cy - 4);
 			}
 			if ((vecX != me.cx || vecY != me.cy) &&
-			    !IsColdPositionBlocked(vecX, vecY) &&
-			    IsColdAirSegmentClear(me.cx, startAirY, vecX, vecY, strictAir: strictDirectAir))
+			    !IsColdPositionBlocked(vecX, vecY, allowEnterWaypoint) &&
+			    IsColdAirSegmentClear(me.cx, startAirY, vecX, vecY, strictAir: strictDirectAir, allowEnterWaypoint: allowEnterWaypoint))
 			{
 				SendSingleCharMove(vecX, vecY);
 				lastStepTime = now;
@@ -1028,7 +1034,7 @@ public static class ModTeleport
 			for (int i = pathLen - 1; i >= 0; i--)
 			{
 				int wayX, wayY;
-				if (i == pathLen - 1 && !IsColdPositionBlocked(aimX, aimY))
+				if (i == pathLen - 1 && !IsColdPositionBlocked(aimX, aimY, allowEnterWaypoint))
 				{
 					wayX = aimX;
 					wayY = aimY;
@@ -1043,7 +1049,7 @@ public static class ModTeleport
 				    ((targetX < me.cx && wayX > me.cx) || (targetX > me.cx && wayX < me.cx)) &&
 				    Res.abs(wayX - me.cx) <= 16 &&
 				    Res.abs(wayY - me.cy) > 3 &&
-				    IsColdAirSegmentClear(me.cx, startAirY, me.cx, wayY, strictAirUsed))
+				    IsColdAirSegmentClear(me.cx, startAirY, me.cx, wayY, strictAirUsed, allowEnterWaypoint))
 				{
 					wayX = me.cx;
 				}
@@ -1069,7 +1075,7 @@ public static class ModTeleport
 					}
 					continue;
 				}
-				if (!IsColdAirSegmentClear(me.cx, startAirY, wayX, wayY, strictAirUsed))
+				if (!IsColdAirSegmentClear(me.cx, startAirY, wayX, wayY, strictAirUsed, allowEnterWaypoint))
 				{
 					continue;
 				}
@@ -1080,8 +1086,8 @@ public static class ModTeleport
 					candY = System.Math.Max(24, me.cy - 4);
 				}
 				if ((candX == me.cx && candY == me.cy) ||
-				    IsColdPositionBlocked(candX, candY) ||
-				    !IsColdAirSegmentClear(me.cx, startAirY, candX, candY, strictAirUsed))
+				    IsColdPositionBlocked(candX, candY, allowEnterWaypoint) ||
+				    !IsColdAirSegmentClear(me.cx, startAirY, candX, candY, strictAirUsed, allowEnterWaypoint))
 				{
 					continue;
 				}
@@ -1141,9 +1147,22 @@ public static class ModTeleport
 		return fbDone;
 	}
 
-	private static bool IsPointUndergroundOrBlocked(int px, int py)
+	private static bool IsPointUndergroundOrBlocked(int px, int py, bool allowEnterWaypoint = false)
 	{
-		if (ModTanSatTargeting.IsTileBlocked(px, py))
+		if (allowEnterWaypoint)
+		{
+			if (px < 12 || (TileMap.pxw > 0 && px > TileMap.pxw - 12) || py < 12 || (TileMap.pxh > 0 && py > TileMap.pxh - 12))
+			{
+				return true;
+			}
+			int tWaist = TileMap.tileTypeAtPixel(px, System.Math.Max(0, py - 12));
+			int tHead = TileMap.tileTypeAtPixel(px, System.Math.Max(0, py - 22));
+			if ((tWaist & ColdSolidMask) != 0 || (tHead & ColdSolidMask) != 0)
+			{
+				return true;
+			}
+		}
+		else if (ModTanSatTargeting.IsTileBlocked(px, py))
 		{
 			return true;
 		}
@@ -1250,7 +1269,7 @@ public static class ModTeleport
 	/// - Khi mục tiêu là quái bay giữa không trung (!TileMap.tileTypeAt(targetX, targetY, 2)):
 	///   Dịch chuyển tức thời tới mặt đất gần nhất bằng TeleportTo rồi bước lên không trung bằng SendSingleCharMove.
 	/// </summary>
-	public static bool MoveSteppedTo(int targetX, int targetY, bool isTargetFlying = false, bool allowColdLongTeleport = false)
+	public static bool MoveSteppedTo(int targetX, int targetY, bool isTargetFlying = false, bool allowColdLongTeleport = false, bool allowEnterWaypoint = false)
 	{
 		try
 		{
@@ -1267,7 +1286,7 @@ public static class ModTeleport
 
 			bool coldAntiCheck = IsColdPlanetAntiCheckActive();
 			bool isTargetOnGround = TileMap.tileTypeAt(targetX, targetY, 2) && !isTargetFlying;
-			int arriveTolY = (coldAntiCheck && isTargetOnGround && !IsPointUndergroundOrBlocked(targetX, targetY)) ? 2 : 16;
+			int arriveTolY = (coldAntiCheck && isTargetOnGround && !IsPointUndergroundOrBlocked(targetX, targetY, allowEnterWaypoint)) ? 2 : 16;
 
 			if (dx <= 12 && dy <= arriveTolY)
 			{
@@ -1301,7 +1320,7 @@ public static class ModTeleport
 			me.cdir = (targetX >= me.cx) ? 1 : (-1);
 			if (coldAntiCheck)
 			{
-				return MoveColdAntiCheckTo(me, targetX, targetY, isTargetOnGround, allowColdLongTeleport, now);
+				return MoveColdAntiCheckTo(me, targetX, targetY, isTargetOnGround, allowColdLongTeleport, now, allowEnterWaypoint);
 			}
 
 			// 1. Nhích ngắn theo quái đi bộ ngay sát bên (dx <= 48, dy <= 24): Đi 1 gói đơn trong ngưỡng tốc độ hợp lệ, không kích hoạt RESET_POINT

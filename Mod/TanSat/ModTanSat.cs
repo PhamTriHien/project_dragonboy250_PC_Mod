@@ -38,6 +38,7 @@ public static class ModTanSat
 	}
 
 	public static bool useTeleport = true;
+	public static bool antiScanMode = false;
 	public static bool avoidSuperMob = false;
 	public static bool autoCheckStamina = true;
 	public static bool autoChangeZone = false;
@@ -49,6 +50,20 @@ public static class ModTanSat
 	public static bool showGoldTrain = false;
 	public static bool trainPets = false;
 	public static bool autoChangeFocus = false;
+
+	public static void SetAntiScanMode(bool enabled)
+	{
+		antiScanMode = enabled;
+		if (enabled && !useTeleport)
+		{
+			useTeleport = true;
+		}
+		lastTeleportTargetMobId = -1;
+		currentTargetUnchangedAttackCount = 0;
+		lastResyncAttackCount = 0;
+		ModTeleport.ClearEchoes();
+		ModTeleport.ResetColdStepTracking();
+	}
 
 	public static long goldTrainTotal = 0;
 	public static long goldTrainStartTime = 0;

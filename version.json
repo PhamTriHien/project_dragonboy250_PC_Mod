@@ -1,9 +1,9 @@
 {
-  "version": "2.5.61",
+  "version": "2.5.62",
   "buildDate": "2026-10-25",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.61/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.61/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.61/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.61/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.61: Đồng bộ kết xuất Đồ Hoạ Java cho toàn bộ quái vật (Mob), Boss (NewBoss, BigBoss, BigBoss2, BachTuoc, Mabu), hiệu ứng kỹ năng (EffectData) và sprite tải động từ máy chủ bằng lượng tử hoá lưới điểm ảnh J2ME 1x chuẩn alpha nhị phân (0/255) nhân 2x Nearest-Neighbor, cập nhật tức thì 0ms khi chuyển đổi Đồ Hoạ Java <-> Đồ Hoạ HD trên cả 4 nền tảng."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.62/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.62/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.62/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.62/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.62: Chuyển logic Tàn Sát Cooler thành chế độ Chống Quét Về Nhà trực tiếp trên giao diện Menu Mod -> Tàn Sát (Chế độ úp: Map Thường <-> Chống Quét Về Nhà), cho phép bật lướt Vector Air Dash + String-Pulling BFS 0 gói Packet 46, tự nhặt không dịch chuyển và tự quay lại map úp kèm hạ nhiệt an toàn trên bất kỳ bản đồ nào dễ bị máy chủ quét đẩy về nhà."
 }
