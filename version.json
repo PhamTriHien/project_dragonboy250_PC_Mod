@@ -1,9 +1,9 @@
 {
-  "version": "2.5.58",
+  "version": "2.5.59",
   "buildDate": "2026-10-25",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.58/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.58/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.58/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.58/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.58: Khôi phục chuẩn logic hiển thị Player khác (vCharInMap) theo bản gốc 2.5.0 (sửa kẹt cưỡi thú dưới đất & ẩn tên chống rối khi đông người); sửa triệt để lỗi lệch vị trí & trượt cmyLim âm bảng Đổi Khu Vực (Panel TYPE_ZONE); tối ưu kích thước Font chữ mặc định game về Chuẩn 60% sắc nét 1:1 trên PC, Web và Android."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.59/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.59/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.59/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.59/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.59: Tắt hoàn toàn tương tác click/chạm vào dòng thông báo Boss trên HUD bên ngoài màn hình (chỉ hiển thị thông tin để xem, không tự động bay map gây nhầm thao tác); giữ nguyên và tối ưu thao tác nhấn trực tiếp vào dòng tên thông báo Boss hoặc nút Đến bên trong UI Menu Boss để di chuyển đến map Boss."
 }

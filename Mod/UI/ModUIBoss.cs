@@ -210,13 +210,14 @@ public static class ModUIBoss
 			}
 		}
 
-		// 6. Click vào nút "Đến" ở từng dòng Boss
+		// 6. Click vào dòng thông báo Boss hoặc nút "Đến" trong UI Menu Boss
 		int listX = uiX + 4;
 		int listY = uiY + 75;
 		int listW = uiW - 8;
 		int listH = uiH - 79;
+		if (listH < 40) listH = 40;
 
-		if (px >= listX + listW - 34 && px <= listX + listW && py >= listY && py <= listY + listH)
+		if (px >= listX + 2 && px <= listX + listW - 2 && py >= listY + 2 && py <= listY + listH - 2)
 		{
 			lock (ModBossNotice.listBossNotices)
 			{
@@ -224,7 +225,8 @@ public static class ModUIBoss
 				for (int i = 0; i < displayCount; i++)
 				{
 					int rowY = listY + 3 + i * 16;
-					if (py >= rowY && py <= rowY + 16)
+					if (rowY + 14 > listY + listH - 12) break;
+					if (py >= rowY && py <= rowY + 15)
 					{
 						if (i < ModBossNotice.listBossNotices.Count)
 						{
@@ -236,10 +238,13 @@ public static class ModUIBoss
 								{
 									ModNextMap.StartNextMap(targetMapId);
 									ModUI.uiCustomOpen = false;
-									GameScr.info1.addInfo("Đang di chuyển đến: " + entry.mapName, 0);
+									GameScr.info1.addInfo("Đang di chuyển đến: " + entry.mapName + " (" + entry.bossName + ")", 0);
 									SoundMn.gI().buttonClick();
 									return true;
 								}
+								GameScr.info1.addInfo("Không xác định được map: " + entry.mapName, 0);
+								SoundMn.gI().buttonClick();
+								return true;
 							}
 						}
 						break;

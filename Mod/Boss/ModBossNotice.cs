@@ -717,12 +717,10 @@ public static class ModBossNotice
 						string bossPart = entry.bossName ?? string.Empty;
 						string mapPart = " - " + (entry.mapName ?? string.Empty) + " - ";
 						string timePart = GetTimeAgoString(entry.timestamp);
-						string goPart = entry.isDefeated ? string.Empty : " [Đến]";
 
 						mFont bossF = entry.isDefeated ? mFont.tahoma_7_grey : mFont.tahoma_7_red;
 						mFont mapF = entry.isDefeated ? mFont.tahoma_7_grey : (mFont.tahoma_7_blue ?? mFont.tahoma_7b_blue ?? mFont.tahoma_7_white);
 						mFont timeF = entry.isDefeated ? mFont.tahoma_7_grey : mFont.tahoma_7_green2;
-						mFont goF = mFont.tahoma_7b_yellow ?? mFont.tahoma_7_yellow ?? timeF;
 						if (bossF == null || mapF == null || timeF == null)
 						{
 							break;
@@ -731,8 +729,7 @@ public static class ModBossNotice
 						int bossW = bossF.getWidth(bossPart);
 						int mapW = mapF.getWidth(mapPart);
 						int timeW = timeF.getWidth(timePart);
-						int goW = (!entry.isDefeated && goF != null) ? goF.getWidth(goPart) : 0;
-						int rowW = bossW + mapW + timeW + goW;
+						int rowW = bossW + mapW + timeW;
 
 						// Thụt lùi sát mép phải màn hình (cách mép 2px) có tính toán Safe Area
 						int lineX = GameCanvas.w - rowW - 2 - SafeArea.Right;
@@ -744,10 +741,6 @@ public static class ModBossNotice
 						bossF.drawString(g, bossPart, lineX, drawY, mFont.LEFT);
 						mapF.drawString(g, mapPart, lineX + bossW, drawY, mFont.LEFT);
 						timeF.drawString(g, timePart, lineX + bossW + mapW, drawY, mFont.LEFT);
-						if (!entry.isDefeated && goF != null)
-						{
-							goF.drawString(g, goPart, lineX + bossW + mapW + timeW, drawY, mFont.LEFT);
-						}
 
 						drawY += lineH;
 					}
@@ -757,80 +750,6 @@ public static class ModBossNotice
 			{
 			}
 		}
-	}
-
-	/// <summary>
-	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của CheckHUDClick (Click trực tiếp vào dòng Boss đang sống trên HUD để Xmap).
-	/// </summary>
-	public static bool CheckHUDClick(int px, int py)
-	{
-		if (!isShowBossNotice || (!GameCanvas.isPointerJustRelease && !GameCanvas.isPointerClick))
-		{
-			return false;
-		}
-		if ((GameCanvas.panel != null && GameCanvas.panel.isShow) ||
-		    (GameCanvas.panel2 != null && GameCanvas.panel2.isShow) ||
-		    (GameCanvas.menu != null && GameCanvas.menu.showMenu) ||
-		    GameCanvas.currentDialog != null ||
-		    ModUI.uiCustomOpen)
-		{
-			return false;
-		}
-
-		lock (listBossNotices)
-		{
-			if (listBossNotices.Count == 0)
-			{
-				return false;
-			}
-
-			int startY = GetHudStartY();
-			int lineH = 11;
-			int drawY = startY;
-
-			for (int j = 0; j < listBossNotices.Count; j++)
-			{
-				BossNoticeEntry entry = listBossNotices[j];
-				if (entry != null)
-				{
-					if (!entry.isDefeated && py >= drawY - 1 && py <= drawY + lineH)
-					{
-						string bossPart = entry.bossName ?? string.Empty;
-						string mapPart = " - " + (entry.mapName ?? string.Empty) + " - ";
-						string timePart = GetTimeAgoString(entry.timestamp);
-						string goPart = " [Đến]";
-
-						mFont bossF = mFont.tahoma_7_red;
-						mFont mapF = mFont.tahoma_7_blue ?? mFont.tahoma_7b_blue ?? mFont.tahoma_7_white;
-						mFont timeF = mFont.tahoma_7_green2;
-						mFont goF = mFont.tahoma_7b_yellow ?? mFont.tahoma_7_yellow ?? timeF;
-
-						int rowW = 140;
-						if (bossF != null && mapF != null && timeF != null && goF != null)
-						{
-							rowW = bossF.getWidth(bossPart) + mapF.getWidth(mapPart) + timeF.getWidth(timePart) + goF.getWidth(goPart);
-						}
-						int lineX = GameCanvas.w - rowW - 2 - SafeArea.Right;
-						if (lineX < 2) lineX = 2;
-
-						if (px >= lineX && px <= GameCanvas.w - SafeArea.Right)
-						{
-							int targetMapId = ModNextMapData.FindMapIdByName(entry.mapName);
-							if (targetMapId >= 0)
-							{
-								GameCanvas.clearAllPointerEvent();
-								ModNextMap.StartNextMap(targetMapId);
-								GameScr.info1.addInfo("Đang bay đến: " + entry.mapName + " (" + entry.bossName + ")", 0);
-								SoundMn.gI().buttonClick();
-								return true;
-							}
-						}
-					}
-					drawY += lineH;
-				}
-			}
-		}
-		return false;
 	}
 
 	/// <summary>
