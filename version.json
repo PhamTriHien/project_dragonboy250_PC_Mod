@@ -1,9 +1,9 @@
 {
-  "version": "2.5.51",
+  "version": "2.5.52",
   "buildDate": "2026-10-25",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.51/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.51/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.51/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.51/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.51: Sửa triệt để lỗi dội ngược map và văng kết nối ra màn hình chọn Server khi mạng/server lag dài (11s+) lúc chạy Next Map: (1) Hàng đợi FIFO kiểm soát gói REQUEST_MAPTEMPLATE (case 10) loại bỏ gói template trễ hạn, chống ghi đè TileMap và chống NullReferenceException trên messWait; (2) Giữ khóa isLoadingMap cho đến khi nạp xong template bản đồ, không xóa nhầm cạnh đồ thị khi vGo chưa tải; (3) Nhận diện kết nối treo qua thời điểm gói tin Server cuối để chặn dồn hàng loạt requestChangeMap gây dội ngược cổng."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.52/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.52/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.52/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.52/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.52: Chuẩn hóa toàn bộ pipeline nạp và render TileMap sát 100% mã nguồn gốc DragonBoy 250: (1) Sửa thứ tự nạp getTile() ưu tiên tile lẻ /t/{tileID}$1.png trước spritesheet, chống nạp nhầm file mã hóa cRBC và khóa cache theo zoomLevel; (2) Khôi phục loadImageRMS đọc cache RMS trên PC Unity & chia sẻ kho tile RMS cho Tab 1, sửa case -74 chỉ lưu RMS_ResVersion sau khi tải xong tài nguyên; (3) Chuẩn hóa paintTile (T_DOWN1PIXEL), chế độ Siêu Giảm Dung Lượng giữ nguyên đầy đủ base map (thác nước, viền ngoài, ẩn gạch va chạm tileID=13), tự động reload tile khi đổi zoomLevel và ép TextureWrap.Clamp triệt tiêu đường kẻ nối ô gạch."
 }

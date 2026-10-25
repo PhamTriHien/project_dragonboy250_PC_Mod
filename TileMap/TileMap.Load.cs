@@ -4,6 +4,10 @@ public partial class TileMap
 {
 	public static Image imgLight = GameCanvas.loadImage("/bg/light.png");
 
+	public static int lastZoomLevel = -1;
+
+	private static int lastWaterZoomLevel = -1;
+
 	public static void loadBg()
 		{
 			bong = GameCanvas.loadImage("/mainImage/myTexture2dbong.png");
@@ -19,6 +23,15 @@ public partial class TileMap
 
 	public static void loadTileImage()
 		{
+			if (lastWaterZoomLevel != mGraphics.zoomLevel)
+			{
+				imgWaterfall = null;
+				imgTopWaterfall = null;
+				imgWaterflow = null;
+				imgWaterlowN = null;
+				imgWaterlowN2 = null;
+				lastWaterZoomLevel = mGraphics.zoomLevel;
+			}
 			if (imgWaterfall == null)
 			{
 				imgWaterfall = GameCanvas.loadImageRMS("/tWater/wtf.png");
@@ -82,10 +95,11 @@ public partial class TileMap
 
 	public static void loadMainTile()
 		{
-			if (lastTileID != tileID)
+			if (lastTileID != tileID || lastZoomLevel != mGraphics.zoomLevel || imgTile == null)
 			{
 				getTile();
 				lastTileID = tileID;
+				lastZoomLevel = mGraphics.zoomLevel;
 			}
 		}
 

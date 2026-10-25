@@ -344,9 +344,30 @@ public partial class TileMap
 
 	public static System.Collections.Generic.Dictionary<int, Image[]> tileDataCache = new System.Collections.Generic.Dictionary<int, Image[]>();
 
+	private static bool HasValidTileImage(Image[] tiles)
+		{
+			if (tiles == null || tiles.Length == 0)
+			{
+				return false;
+			}
+			for (int i = 0; i < tiles.Length; i++)
+			{
+				if (tiles[i] != null && tiles[i].texture != null && tiles[i].w > 0 && tiles[i].h > 0)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
 	public static void getTile()
 		{
-			if (tileDataCache.TryGetValue(tileID, out Image[] cachedTiles) && cachedTiles != null)
+			if (tileID <= 0)
+			{
+				return;
+			}
+			int cacheKey = (mGraphics.zoomLevel << 16) | (tileID & 0xFFFF);
+			if (tileDataCache.TryGetValue(cacheKey, out Image[] cachedTiles) && HasValidTileImage(cachedTiles))
 			{
 				imgTile = cachedTiles;
 				return;
@@ -355,17 +376,24 @@ public partial class TileMap
 			{
 				if (mGraphics.zoomLevel == 1)
 				{
-					imgTile = new Image[1];
-					imgTile[0] = GameCanvas.loadImage("/t/" + tileID + ".png");
-					if (imgTile[0] != null) tileDataCache[tileID] = imgTile;
-					return;
+					Image sheetImg = GameCanvas.loadImage("/t/" + tileID + ".png");
+					if (sheetImg != null && sheetImg.texture != null && sheetImg.getHeight() >= size)
+					{
+						imgTile = new Image[1] { sheetImg };
+						tileDataCache[cacheKey] = imgTile;
+						return;
+					}
 				}
-				imgTile = new Image[100];
-				for (int i = 0; i < imgTile.Length; i++)
+				Image[] clientTiles = new Image[100];
+				for (int i = 0; i < clientTiles.Length; i++)
 				{
-					imgTile[i] = GameCanvas.loadImage("/t/" + tileID + "/" + (i + 1) + ".png");
+					clientTiles[i] = GameCanvas.loadImage("/t/" + tileID + "/" + (i + 1) + ".png");
 				}
-				tileDataCache[tileID] = imgTile;
+				imgTile = clientTiles;
+				if (HasValidTileImage(imgTile))
+				{
+					tileDataCache[cacheKey] = imgTile;
+				}
 				return;
 			}
 			if (mGraphics.zoomLevel == 1)
@@ -383,48 +411,59 @@ public partial class TileMap
 					mSystem.gcc();
 				}
 				imgTile = new Image[100];
-				string empty = string.Empty;
 				for (int k = 0; k < imgTile.Length; k++)
 				{
-					empty = ((k >= 9) ? ("/t/" + tileID + "/t_" + (k + 1)) : ("/t/" + tileID + "/t_0" + (k + 1)));
-					imgTile[k] = GameCanvas.loadImage(empty);
+					string empty = ((k >= 9) ? ("/t/" + tileID + "/t_" + (k + 1)) : ("/t/" + tileID + "/t_0" + (k + 1)));
+					Image tImg = GameCanvas.loadImage(empty);
+					if (tImg == null)
+					{
+						tImg = GameCanvas.loadImage("/t/" + tileID + "/" + (k + 1) + ".png");
+					}
+					imgTile[k] = tImg;
 				}
-				tileDataCache[tileID] = imgTile;
+				if (HasValidTileImage(imgTile))
+				{
+					tileDataCache[cacheKey] = imgTile;
+				}
 				return;
 			}
-			Image image = GameCanvas.loadImageRMS("/t/" + tileID + ".png");
-			if (image != null && image.texture != null)
-			{
-				Rms.DeleteStorage("$");
-				imgTile = new Image[1];
-				imgTile[0] = image;
-				tileDataCache[tileID] = imgTile;
-				return;
-			}
-			image = GameCanvas.loadImageRMS("/t/" + tileID + "$1.png");
+			Image image = GameCanvas.loadImageRMS("/t/" + tileID + "$1.png");
 			if (image != null && image.texture != null)
 			{
 				Rms.DeleteStorage("x" + mGraphics.zoomLevel + "t" + tileID);
 				imgTile = new Image[100];
-				for (int l = 0; l < imgTile.Length; l++)
+				imgTile[0] = image;
+				for (int l = 1; l < imgTile.Length; l++)
 				{
 					imgTile[l] = GameCanvas.loadImageRMS("/t/" + tileID + "$" + (l + 1) + ".png");
 				}
-				tileDataCache[tileID] = imgTile;
+				tileDataCache[cacheKey] = imgTile;
 				return;
 			}
-			imgTile = new Image[100];
-			for (int m = 0; m < 100; m++)
+			image = GameCanvas.loadImageRMS("/t/" + tileID + ".png");
+			if (image != null && image.texture != null && image.getHeight() >= size)
 			{
-				string p = ((m >= 9) ? ("/t/" + tileID + "/t_" + (m + 1)) : ("/t/" + tileID + "/t_0" + (m + 1)));
-				Image tileImg = GameCanvas.loadImage(p);
+				Rms.DeleteStorage("$");
+				imgTile = new Image[1] { image };
+				tileDataCache[cacheKey] = imgTile;
+				return;
+			}
+			Image[] fallbackTiles = new Image[100];
+			for (int m = 0; m < fallbackTiles.Length; m++)
+			{
+				Image tileImg = GameCanvas.loadImage("/t/" + tileID + "/" + (m + 1) + ".png");
 				if (tileImg == null)
 				{
-					tileImg = GameCanvas.loadImage("/t/" + tileID + "/" + (m + 1) + ".png");
+					string p = ((m >= 9) ? ("/t/" + tileID + "/t_" + (m + 1)) : ("/t/" + tileID + "/t_0" + (m + 1)));
+					tileImg = GameCanvas.loadImage(p);
 				}
-				imgTile[m] = tileImg;
+				fallbackTiles[m] = tileImg;
 			}
-			tileDataCache[tileID] = imgTile;
+			imgTile = fallbackTiles;
+			if (HasValidTileImage(imgTile))
+			{
+				tileDataCache[cacheKey] = imgTile;
+			}
 		}
 
 	public static bool isWaterEff()

@@ -13,20 +13,23 @@ public partial class GameCanvas : IActionListener
 			{
 				result = Image.createImage(path);
 			}
-			catch (Exception ex)
+			catch (Exception)
+			{
+			}
+			if (result == null)
 			{
 				try
 				{
 					string[] array = Res.split(path, "/", 0);
 					string filename = "x" + mGraphics.zoomLevel + array[array.Length - 1];
 					sbyte[] array2 = Rms.loadRMS(filename);
-					if (array2 != null)
+					if (array2 != null && array2.Length > 0)
 					{
 						result = Image.createImage(array2, 0, array2.Length);
 						array2 = null;
 					}
 				}
-				catch (Exception)
+				catch (Exception ex)
 				{
 					Cout.LogError("Loi ham khong tim thay a: " + ex.ToString());
 				}

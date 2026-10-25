@@ -8,17 +8,14 @@ public partial class TileMap
 			{
 				if (imgTile.Length == 1)
 				{
-					if (imgTile[0] != null)
+					if (imgTile[0] != null && frame >= 0)
 					{
 						g.drawRegion(imgTile[0], 0, frame * size, size, size, 0, indexX * size, indexY * size, 0);
 					}
 				}
-				else
+				else if (frame >= 0 && frame < imgTile.Length && imgTile[frame] != null)
 				{
-					if (frame >= 0 && frame < imgTile.Length && imgTile[frame] != null)
-					{
-						g.drawImage(imgTile[frame], indexX * size, indexY * size, 0);
-					}
+					g.drawImage(imgTile[frame], indexX * size, indexY * size, 0);
 				}
 			}
 		}
@@ -29,33 +26,31 @@ public partial class TileMap
 			{
 				if (imgTile.Length == 1)
 				{
-					if (imgTile[0] != null)
+					if (imgTile[0] != null && frame >= 0)
 					{
-						g.drawRegion(imgTile[0], 0, frame * size, w, h, 0, x, y, 0);
+						g.drawRegion(imgTile[0], 0, frame * w, w, w, 0, x, y, 0);
 					}
 				}
-				else
+				else if (frame >= 0 && frame < imgTile.Length && imgTile[frame] != null)
 				{
-					if (frame >= 0 && frame < imgTile.Length && imgTile[frame] != null)
-					{
-						if (w == size && h == size)
-						{
-							g.drawImage(imgTile[frame], x, y, 0);
-						}
-						else
-						{
-							g.drawRegion(imgTile[frame], 0, 0, w, h, 0, x, y, 0);
-						}
-					}
+					g.drawImage(imgTile[frame], x, y, 0);
 				}
 			}
 		}
 
 	public static void paintTilemapLOW(mGraphics g)
 		{
-			for (int i = GameScr.gssx; i < GameScr.gssxe; i++)
+			if (Char.isLoadingMap || maps == null)
 			{
-				for (int j = GameScr.gssy; j < GameScr.gssye; j++)
+				return;
+			}
+			int startX = System.Math.Max(0, GameScr.gssx);
+			int endX = System.Math.Min(tmw, GameScr.gssxe);
+			int startY = System.Math.Max(0, GameScr.gssy);
+			int endY = System.Math.Min(tmh, GameScr.gssye);
+			for (int i = startX; i < endX; i++)
+			{
+				for (int j = startY; j < endY; j++)
 				{
 					int num = maps[j * tmw + i] - 1;
 					if (num != -1)
@@ -64,33 +59,46 @@ public partial class TileMap
 					}
 					if ((tileTypeAt(i, j) & 0x20) == 32)
 					{
-						g.drawRegion(imgWaterfall, 0, 24 * (GameCanvas.gameTick % 4), 24, 24, 0, i * size, j * size, 0);
+						if (imgWaterfall != null)
+						{
+							g.drawRegion(imgWaterfall, 0, 24 * (GameCanvas.gameTick % 4), 24, 24, 0, i * size, j * size, 0);
+						}
 					}
 					else if ((tileTypeAt(i, j) & 0x40) == 64)
 					{
-						if ((tileTypeAt(i, j - 1) & 0x20) == 32)
+						int prevRow = (j > 0) ? (j - 1) : 0;
+						if ((tileTypeAt(i, prevRow) & 0x20) == 32)
 						{
-							g.drawRegion(imgWaterfall, 0, 24 * (GameCanvas.gameTick % 4), 24, 24, 0, i * size, j * size, 0);
+							if (imgWaterfall != null)
+							{
+								g.drawRegion(imgWaterfall, 0, 24 * (GameCanvas.gameTick % 4), 24, 24, 0, i * size, j * size, 0);
+							}
 						}
-						else if ((tileTypeAt(i, j - 1) & 0x1000) == 4096)
+						else if ((tileTypeAt(i, prevRow) & 0x1000) == 4096)
 						{
 							paintTile(g, 21, i, j);
 						}
-						Image image = null;
-						image = ((tileID == 5) ? imgWaterlowN : ((tileID != 8) ? imgWaterflow : imgWaterlowN2));
-						g.drawRegion(image, 0, (GameCanvas.gameTick % 8 >> 2) * 24, 24, 24, 0, i * size, j * size, 0);
+						Image image = ((tileID == 5) ? imgWaterlowN : ((tileID != 8) ? imgWaterflow : imgWaterlowN2));
+						if (image != null)
+						{
+							g.drawRegion(image, 0, (GameCanvas.gameTick % 8 >> 2) * 24, 24, 24, 0, i * size, j * size, 0);
+						}
 					}
 					if ((tileTypeAt(i, j) & 0x800) == 2048)
 					{
-						if ((tileTypeAt(i, j - 1) & 0x20) == 32)
+						int prevRow = (j > 0) ? (j - 1) : 0;
+						if ((tileTypeAt(i, prevRow) & 0x20) == 32)
 						{
-							g.drawRegion(imgWaterfall, 0, 24 * (GameCanvas.gameTick % 4), 24, 24, 0, i * size, j * size, 0);
+							if (imgWaterfall != null)
+							{
+								g.drawRegion(imgWaterfall, 0, 24 * (GameCanvas.gameTick % 4), 24, 24, 0, i * size, j * size, 0);
+							}
 						}
-						else if ((tileTypeAt(i, j - 1) & 0x1000) == 4096)
+						else if ((tileTypeAt(i, prevRow) & 0x1000) == 4096)
 						{
 							paintTile(g, 21, i, j);
 						}
-						paintTile(g, maps[j * tmw + i] - 1, i, j);
+						paintTile(g, num, i, j);
 					}
 				}
 			}
@@ -103,32 +111,68 @@ public partial class TileMap
 			{
 				return;
 			}
-			try
+			int startX = System.Math.Max(0, GameScr.gssx);
+			int endX = System.Math.Min(tmw, GameScr.gssxe);
+			int startY = System.Math.Max(0, GameScr.gssy);
+			int endY = System.Math.Min(tmh, GameScr.gssye);
+			for (int j = startX; j < endX; j++)
 			{
-				for (int j = GameScr.gssx; j < GameScr.gssxe; j++)
+				for (int k = startY; k < endY; k++)
 				{
-					for (int k = GameScr.gssy; k < GameScr.gssye; k++)
+					if (j == 0 || j == tmw - 1)
 					{
-						if (j <= 0 || j >= tmw - 1 || k < 0 || k >= tmh)
+						continue;
+					}
+					int num = maps[k * tmw + j] - 1;
+					int type = tileTypeAt(j, k);
+					if ((type & 0x100) == 256)
+					{
+						continue;
+					}
+					if ((type & 0x20) == 32)
+					{
+						if (imgWaterfall != null)
+						{
+							g.drawRegion(imgWaterfall, 0, 24 * (GameCanvas.gameTick % 8 >> 1), 24, 24, 0, j * size, k * size, 0);
+						}
+					}
+					else if ((type & 0x80) == 128)
+					{
+						if (imgTopWaterfall != null)
+						{
+							g.drawRegion(imgTopWaterfall, 0, 24 * (GameCanvas.gameTick % 8 >> 1), 24, 24, 0, j * size, k * size, 0);
+						}
+					}
+					else
+					{
+						if (tileID == 13 && num != -1)
 						{
 							continue;
 						}
-						int idx = k * tmw + j;
-						if (idx >= 0 && idx < maps.Length)
+						if ((type & 0x10) == 16)
 						{
-							int num = maps[idx] - 1;
+							bx = j * size - GameScr.cmx;
+							dbx = bx - GameScr.gW2;
+							dfx = (size - 2) * dbx / size;
+							fx = dfx + GameScr.gW2;
+							paintTile(g, num, fx + GameScr.cmx, k * size, 24, 24);
+						}
+						else if ((type & 0x200) == 512)
+						{
 							if (num != -1)
 							{
-								paintTile(g, num, j, k);
+								paintTile(g, num, j * size, k * size, 24, 1);
+								paintTile(g, num, j * size, k * size + 1, 24, 24);
 							}
+						}
+						else if (num != -1)
+						{
+							paintTile(g, num, j, k);
 						}
 					}
 				}
-				paintBorderTiles(g);
 			}
-			catch
-			{
-			}
+			paintBorderTiles(g);
 		}
 
 	public static void paintTilemap(mGraphics g)
@@ -147,9 +191,13 @@ public partial class TileMap
 			{
 				((ItemMap)GameScr.vItemMap.elementAt(i)).paintAuraItemEff(g);
 			}
-			for (int j = GameScr.gssx; j < GameScr.gssxe; j++)
+			int startX = System.Math.Max(0, GameScr.gssx);
+			int endX = System.Math.Min(tmw, GameScr.gssxe);
+			int startY = System.Math.Max(0, GameScr.gssy);
+			int endY = System.Math.Min(tmh, GameScr.gssye);
+			for (int j = startX; j < endX; j++)
 			{
-				for (int k = GameScr.gssy; k < GameScr.gssye; k++)
+				for (int k = startY; k < endY; k++)
 				{
 					if (j == 0 || j == tmw - 1)
 					{
@@ -162,17 +210,28 @@ public partial class TileMap
 					}
 					if ((tileTypeAt(j, k) & 0x20) == 32)
 					{
-						g.drawRegion(imgWaterfall, 0, 24 * (GameCanvas.gameTick % 8 >> 1), 24, 24, 0, j * size, k * size, 0);
+						if (imgWaterfall != null)
+						{
+							g.drawRegion(imgWaterfall, 0, 24 * (GameCanvas.gameTick % 8 >> 1), 24, 24, 0, j * size, k * size, 0);
+						}
 					}
 					else if ((tileTypeAt(j, k) & 0x80) == 128)
 					{
-						g.drawRegion(imgTopWaterfall, 0, 24 * (GameCanvas.gameTick % 8 >> 1), 24, 24, 0, j * size, k * size, 0);
+						if (imgTopWaterfall != null)
+						{
+							g.drawRegion(imgTopWaterfall, 0, 24 * (GameCanvas.gameTick % 8 >> 1), 24, 24, 0, j * size, k * size, 0);
+						}
 					}
 					else
 					{
 						if (tileID == 13 && num != -1)
 						{
 							continue;
+						}
+						if (tileID == 2 && (tileTypeAt(j, k) & 0x200) == 512 && num != -1)
+						{
+							paintTile(g, num, j * size, k * size, 24, 1);
+							paintTile(g, num, j * size, k * size + 1, 24, 24);
 						}
 						if (tileID == 3)
 						{
@@ -205,22 +264,27 @@ public partial class TileMap
 
 	public static void paintOutTilemap(mGraphics g)
 		{
-			if (GameCanvas.lowGraphic || ModMenu.graphicsQuality == 3)
+			if (GameCanvas.lowGraphic || ModMenu.graphicsQuality == 3 || maps == null)
 			{
 				return;
 			}
-			int num = 0;
-			for (int i = GameScr.gssx; i < GameScr.gssxe; i++)
+			int startX = System.Math.Max(0, GameScr.gssx);
+			int endX = System.Math.Min(tmw, GameScr.gssxe);
+			int startY = System.Math.Max(0, GameScr.gssy);
+			int endY = System.Math.Min(tmh, GameScr.gssye);
+			for (int i = startX; i < endX; i++)
 			{
-				for (int j = GameScr.gssy; j < GameScr.gssye; j++)
+				for (int j = startY; j < endY; j++)
 				{
-					num++;
 					if ((tileTypeAt(i, j) & 0x40) != 64)
 					{
 						continue;
 					}
-					Image image = null;
-					image = ((tileID == 5) ? imgWaterlowN : ((tileID != 8) ? imgWaterflow : imgWaterlowN2));
+					Image image = ((tileID == 5) ? imgWaterlowN : ((tileID != 8) ? imgWaterflow : imgWaterlowN2));
+					if (image == null)
+					{
+						continue;
+					}
 					if (!isWaterEff())
 					{
 						g.drawRegion(image, 0, 0, 24, 24, 0, i * size, j * size - 1, 0);
@@ -257,18 +321,16 @@ public partial class TileMap
 
 	private static void paintBorderTiles(mGraphics g)
 	{
-		if (maps == null || tmw <= 2)
+		if (maps == null || tmw <= 1)
 		{
 			return;
 		}
+		int startY = System.Math.Max(0, GameScr.gssy);
+		int endY = System.Math.Min(tmh, GameScr.gssye);
 		if (GameScr.cmx < 24)
 		{
-			for (int l = GameScr.gssy; l < GameScr.gssye; l++)
+			for (int l = startY; l < endY; l++)
 			{
-				if (l < 0 || l >= tmh)
-				{
-					continue;
-				}
 				int num2 = maps[l * tmw + 1] - 1;
 				if (num2 != -1)
 				{
@@ -281,16 +343,15 @@ public partial class TileMap
 			return;
 		}
 		int num3 = tmw - 2;
-		for (int m = GameScr.gssy; m < GameScr.gssye; m++)
+		if (num3 >= 0)
 		{
-			if (m < 0 || m >= tmh)
+			for (int m = startY; m < endY; m++)
 			{
-				continue;
-			}
-			int num4 = maps[m * tmw + num3] - 1;
-			if (num4 != -1)
-			{
-				paintTile(g, num4, num3 + 1, m);
+				int num4 = maps[m * tmw + num3] - 1;
+				if (num4 != -1)
+				{
+					paintTile(g, num4, num3 + 1, m);
+				}
 			}
 		}
 	}

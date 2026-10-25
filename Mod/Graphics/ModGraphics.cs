@@ -122,6 +122,16 @@ public static class ModGraphics
 				{
 					GameMidlet.gameCanvas.initGameCanvas();
 				}
+				if (TileMap.tileID > 0)
+				{
+					TileMap.loadTileImage();
+					TileMap.loadMainTile();
+				}
+				if (GameScr.instance != null && GameCanvas.currentScreen == GameScr.instance && TileMap.tmw > 0 && TileMap.tmh > 0)
+				{
+					GameScr.loadCamera(true, -1, -1);
+				}
+				GameCanvas.getYBackground(GameCanvas.typeBg);
 				if (GameScr.gamePad != null)
 				{
 					GameScr.gamePad.updateZone();

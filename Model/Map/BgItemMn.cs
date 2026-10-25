@@ -123,7 +123,7 @@ public class BgItemMn
 		byte[] byteArray = getByteArray(image);
 		if (byteArray != null && byteArray.Length > 0)
 		{
-			Rms.saveRMS("x" + mGraphics.zoomLevel + "blend" + idImage + "layer" + layer, ArrayCast.cast(byteArray));
+			Rms.saveRMS("x" + mGraphics.zoomLevel + "blend" + idImage + "layer" + layer + "_t" + TileMap.tileID, ArrayCast.cast(byteArray));
 		}
 		return image;
 	}
