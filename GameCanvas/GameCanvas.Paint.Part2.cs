@@ -15,8 +15,8 @@ public partial class GameCanvas : IActionListener
 			{
 				return;
 			}
-			int gW = GameScr.gW;
-			int gH = GameScr.gH;
+			int gW = (GameScr.gW > w) ? GameScr.gW : w;
+			int gH = (GameScr.gH > h) ? GameScr.gH : h;
 			g.translate(-g.getTranslateX(), -g.getTranslateY());
 			if (ModBackground.isCustomBGActive && ModBackground.currentBGImage != null)
 			{
@@ -231,7 +231,7 @@ public partial class GameCanvas : IActionListener
 					}
 					else
 					{
-						fillRect(g, colorBotton[3], 0, yb[3] + bgH[3], GameScr.gW, yb[2] + bgH[2], 6);
+						fillRect(g, colorBotton[3], 0, yb[3] + bgH[3], gW, yb[2] + bgH[2], 6);
 						paintBackgroundtLayer(g, 4, 6, colorTop[3], colorBotton[3]);
 						drawSun1(g);
 						paintBackgroundtLayer(g, 3, 4, -1, colorBotton[2]);

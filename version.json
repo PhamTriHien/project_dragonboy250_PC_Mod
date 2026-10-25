@@ -1,9 +1,9 @@
 {
-  "version": "2.5.55",
+  "version": "2.5.56",
   "buildDate": "2026-10-25",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.55/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.55/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.55/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.55/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.55: Triệt tiêu hoàn toàn lỗi nhảy giật lên xuống không đánh được quái bay lơ lửng (Quái da xanh / quái bay type 4-5): Nhận diện trạng thái đang bay lên giữa không trung để không tái kích hoạt TeleportTo kéo ngược về mặt đất, tự tìm điểm tựa mặt đất không vướng trần đá và vọt thẳng lên tâm quái bay mượt mà 0ms."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.56/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.56/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.56/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.56/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.56: Đồng bộ toàn diện Viewport & Screen trên nền tảng Web Online (Render.com): Khắc phục triệt để lỗi cắt hụt dải đen ~15% mép phải màn hình & lệch cụm nút HUD phải ([R], GIM, Porata, Menu <) do Screen.SetResolution ghi đè kích thước khung vẽ động; đồng bộ tức thời 0-frame khi co giãn cửa sổ / thanh bên trình duyệt (ResizeObserver) và tối ưu healthcheck + cache-busting trên Render.com."
 }
