@@ -421,7 +421,7 @@ public partial class Char : IMapObject
 				}
 				if ((paintName || flag2 || flag3) && !flag)
 				{
-					if (mSystem.clientType == 1)
+					if (mSystem.clientType == 1 || ModGraphics.IsJavaGraphics)
 					{
 						mFont2.drawString(g, cName, cx, cy - num, mFont.CENTER, mFont.tahoma_7_greySmall);
 					}

@@ -49,31 +49,23 @@ public static class ModUIGraphics
 			mFont.tahoma_7_green2.drawString(g, "* Super Low: Xóa cây cỏ trang trí, chỉ giữ base map.", uiX + 6, descY, mFont.LEFT);
 		}
 
-		// 4. Độ Sâu Màu Render (Bit-Depth: 16-bit, 32-bit, 64-bit, 128-bit)
-		mFont.tahoma_7_grey.drawString(g, "Độ sâu màu Render (Bit-Depth):", uiX + 6, uiY + 116, mFont.LEFT);
-		for (int b = 0; b < 4; b++)
+		// 4. 2 Chế Độ Đồ Hoạ (0: Đồ Hoạ Java, 1: Đồ Hoạ HD)
+		mFont.tahoma_7_grey.drawString(g, "Chế Độ Đồ Hoạ (F10):", uiX + 6, uiY + 116, mFont.LEFT);
+		int mBtnW = (uiW - 15) / 2;
+		for (int m = 0; m < 2; m++)
 		{
-			int bx = uiX + 5 + b * (rBtnW + 3);
-			ModUI.PaintNativeButton(bx, uiY + 131, rBtnW, 16, ModGraphics.bitDepthNames[b], ModGraphics.renderBitDepth == b, g);
+			int mx = uiX + 5 + m * (mBtnW + 5);
+			ModUI.PaintNativeButton(mx, uiY + 131, mBtnW, 16, ModGraphics.renderModeNames[m], ModGraphics.renderMode == m, g);
 		}
 
-		// Mô tả chi tiết Bit-Depth
 		int bdDescY = uiY + 151;
-		if (ModGraphics.renderBitDepth == 0)
+		if (ModGraphics.renderMode == 0)
 		{
-			mFont.tahoma_7_grey.drawString(g, "* 16-bit: Siêu nhẹ, tiết kiệm RAM/GPU, retro RGB565.", uiX + 6, bdDescY, mFont.LEFT);
+			mFont.tahoma_7_green2.drawString(g, "* Đồ Hoạ Java: Tài nguyên x1 & font bitmap từ src Java gốc.", uiX + 6, bdDescY, mFont.LEFT);
 		}
-		else if (ModGraphics.renderBitDepth == 1)
+		else
 		{
-			mFont.tahoma_7_green2.drawString(g, "* 32-bit: Chuẩn sắc nét HD (RGBA8888) - Mặc định.", uiX + 6, bdDescY, mFont.LEFT);
-		}
-		else if (ModGraphics.renderBitDepth == 2)
-		{
-			mFont.tahoma_7_grey.drawString(g, "* 64-bit: Dải màu rộng HDR (RGBA16F), chống banding.", uiX + 6, bdDescY, mFont.LEFT);
-		}
-		else if (ModGraphics.renderBitDepth == 3)
-		{
-			mFont.tahoma_7_grey.drawString(g, "* 128-bit: Độ chính xác cực đại (RGBA32F Ultra HDR).", uiX + 6, bdDescY, mFont.LEFT);
+			mFont.tahoma_7_green2.drawString(g, "* Đồ Hoạ HD: Tài nguyên x2 sắc nét, lọc mượt & font hệ thống.", uiX + 6, bdDescY, mFont.LEFT);
 		}
 
 		// 5. Phần FPS
@@ -105,7 +97,7 @@ public static class ModUIGraphics
 		ModUI.PaintNativeButton(uiX + 220, uiY + 249, 38, 16, (GameScr.isAnalog == 1) ? "BẬT" : "TẮT", GameScr.isAnalog == 1, g);
 
 		// 7. Phong Cảnh Nền Game (Git)
-		string bgBtnText = "🌌 HÌNH NỀN PHONG CẢNH (GIT)" + (ModBackground.isCustomBGActive ? " [ĐANG BẬT]" : "");
+		string bgBtnText = "HÌNH NỀN PHONG CẢNH (GIT)" + (ModBackground.isCustomBGActive ? " [ĐANG BẬT]" : "");
 		ModUI.PaintNativeButton(uiX + 6, uiY + 273, uiW - 12, 18, bgBtnText, ModBackground.isCustomBGActive, g);
 	}
 
@@ -144,14 +136,15 @@ public static class ModUIGraphics
 			}
 		}
 
-		// 4. Chọn Độ Sâu Màu Render (Bit-Depth)
-		for (int b = 0; b < 4; b++)
+		// 4. Chọn Chế Độ Đồ Hoạ (0: Đồ Hoạ Java, 1: Đồ Hoạ HD)
+		int mBtnW = (uiW - 15) / 2;
+		for (int m = 0; m < 2; m++)
 		{
-			int bx = uiX + 5 + b * (rBtnW + 3);
-			if (px >= bx && px <= bx + rBtnW && py >= uiY + 130 && py <= uiY + 148)
+			int mx = uiX + 5 + m * (mBtnW + 5);
+			if (px >= mx && px <= mx + mBtnW && py >= uiY + 130 && py <= uiY + 148)
 			{
-				ModGraphics.SetBitDepth(b);
-				GameScr.info1.addInfo("Độ sâu màu: " + ModGraphics.bitDepthNames[b], 0);
+				ModGraphics.SetRenderMode(m);
+				GameScr.info1.addInfo("Chế độ đồ hoạ: " + ModGraphics.renderModeNames[m], 0);
 				SoundMn.gI().buttonClick();
 				return true;
 			}

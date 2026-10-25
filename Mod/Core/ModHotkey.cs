@@ -13,6 +13,19 @@ public static class ModHotkey
 				ModGraphics.ToggleFullscreen();
 			}
 
+			// Phím F10: Chuyển đổi chế độ Đồ Hoạ (0: Đồ Hoạ Java / 1: Đồ Hoạ HD) ở mọi màn hình
+			if (Input.GetKeyDown(KeyCode.F10))
+			{
+				ModGraphics.SetRenderMode((ModGraphics.renderMode == 0) ? 1 : 0);
+				string modeStr = (ModGraphics.renderMode == 0)
+					? "Chế độ đồ hoạ: Đồ Hoạ Java (Src Java Gốc)"
+					: "Chế độ đồ hoạ: Đồ Hoạ HD";
+				if (GameScr.info1 != null && ModMenu.IsInGame())
+				{
+					GameScr.info1.addInfo(modeStr, 0);
+				}
+			}
+
 			if (!ModMenu.IsInGame())
 			{
 				return;

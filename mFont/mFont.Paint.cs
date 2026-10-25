@@ -43,49 +43,68 @@ public partial class mFont
 			_drawString(g, st, x, y - yAdd, align);
 		}
 
+	private bool CanUseJavaBitmapFont()
+		{
+			return (mGraphics.zoomLevel == 1 || ModGraphics.IsJavaGraphics)
+				&& fImages != null
+				&& fImages.Length > 0
+				&& !string.IsNullOrEmpty(strFont)
+				&& EnsureJavaImageLoaded() != null;
+		}
+
+	private int DrawJavaGlyph(mGraphics g, char ch, int drawX, int drawY)
+		{
+			int idx = ResolveJavaGlyphIndex(ch);
+			int gx = fImages[idx][0];
+			int gy = fImages[idx][1];
+			int gw = fImages[idx][2];
+			int gh = fImages[idx][3];
+			Image sheet = EnsureJavaImageLoaded();
+			if (sheet != null && sheet.texture != null)
+			{
+				int sheetH = sheet.getHeight();
+				int sheetW = sheet.getWidth();
+				if (sheetH > 0 && gy + gh > sheetH)
+				{
+					gy -= sheetH;
+					gx = sheetW / 2;
+				}
+				g.drawRegion(sheet, gx, gy, gw, gh, 0, drawX, drawY, 20);
+			}
+			return gw + space;
+		}
+
 	public void drawString(mGraphics g, string st, int x, int y, int align)
 		{
-			if (mGraphics.zoomLevel == 1)
+			if (string.IsNullOrEmpty(st))
+			{
+				return;
+			}
+			if (CanUseJavaBitmapFont())
 			{
 				int length = st.Length;
 				int num = align switch
 				{
-					0 => x, 
-					1 => x - getWidth(st), 
-					_ => x - (getWidth(st) >> 1), 
+					0 => x,
+					1 => x - getWidth(st),
+					_ => x - (getWidth(st) >> 1),
 				};
 				for (int i = 0; i < length; i++)
 				{
-					int num2 = strFont.IndexOf(st[i] + string.Empty);
-					if (num2 == -1)
+					if (char.IsLowSurrogate(st[i]))
 					{
-						num2 = 0;
+						continue;
 					}
-					if (num2 > -1)
-					{
-						int x2 = fImages[num2][0];
-						int num3 = fImages[num2][1];
-						int w = fImages[num2][2];
-						int num4 = fImages[num2][3];
-						if (num3 + num4 > imgFont.texture.height)
-						{
-							num3 -= imgFont.texture.height;
-							x2 = imgFont.texture.width / 2;
-						}
-						g.drawRegion(imgFont, x2, num3, w, num4, 0, num, y, 20);
-					}
-					num += fImages[num2][2] + space;
+					num += DrawJavaGlyph(g, st[i], num, y);
 				}
+				return;
 			}
-			else
-			{
-				setTypePaint(g, st, x, y, align, 0);
-			}
+			setTypePaint(g, st, x, y, align, 0);
 		}
 
 	public void drawStringBorder(mGraphics g, string st, int x, int y, int align)
 		{
-			if (mGraphics.zoomLevel == 1)
+			if (CanUseJavaBitmapFont())
 			{
 				drawString(g, st, x, y, align);
 			}
@@ -97,7 +116,7 @@ public partial class mFont
 
 	public void drawStringBorder(mGraphics g, string st, int x, int y, int align, mFont font2)
 		{
-			if (mGraphics.zoomLevel == 1)
+			if (CanUseJavaBitmapFont())
 			{
 				drawString(g, st, x, y, align, font2);
 			}
@@ -109,61 +128,59 @@ public partial class mFont
 
 	public void drawStringBd(mGraphics g, string st, int x, int y, int align, mFont font)
 		{
-			setTypePaint(g, st, x - 1, y - 1, align, 0);
-			setTypePaint(g, st, x - 1, y + 1, align, 0);
-			setTypePaint(g, st, x + 1, y - 1, align, 0);
-			setTypePaint(g, st, x + 1, y + 1, align, 0);
-			setTypePaint(g, st, x, y - 1, align, 0);
-			setTypePaint(g, st, x, y + 1, align, 0);
-			setTypePaint(g, st, x + 1, y, align, 0);
-			setTypePaint(g, st, x - 1, y, align, 0);
+			sbyte b = (font != null) ? font.id : (sbyte)0;
+			setTypePaint(g, st, x - 1, y - 1, align, b);
+			setTypePaint(g, st, x - 1, y + 1, align, b);
+			setTypePaint(g, st, x + 1, y - 1, align, b);
+			setTypePaint(g, st, x + 1, y + 1, align, b);
+			setTypePaint(g, st, x, y - 1, align, b);
+			setTypePaint(g, st, x, y + 1, align, b);
+			setTypePaint(g, st, x + 1, y, align, b);
+			setTypePaint(g, st, x - 1, y, align, b);
 			setTypePaint(g, st, x, y, align, 0);
 		}
 
 	public void drawString(mGraphics g, string st, int x, int y, int align, mFont font)
 		{
-			if (mGraphics.zoomLevel == 1)
+			if (string.IsNullOrEmpty(st))
 			{
+				return;
+			}
+			if (CanUseJavaBitmapFont())
+			{
+				mFont shadow = font;
+				if (shadow == bigNumber_black && strFont != null && strFont.Length <= 16 && number_gray != null)
+				{
+					shadow = number_gray;
+				}
+				bool useShadow = !GameCanvas.lowGraphic && shadow != null && shadow.CanUseJavaBitmapFont();
 				int length = st.Length;
 				int num = align switch
 				{
-					0 => x, 
-					1 => x - getWidth(st), 
-					_ => x - (getWidth(st) >> 1), 
+					0 => x,
+					1 => x - getWidth(st),
+					_ => x - (getWidth(st) >> 1),
 				};
 				for (int i = 0; i < length; i++)
 				{
-					int num2 = strFont.IndexOf(st[i]);
-					if (num2 == -1)
+					if (char.IsLowSurrogate(st[i]))
 					{
-						num2 = 0;
+						continue;
 					}
-					if (num2 > -1)
+					if (useShadow)
 					{
-						int x2 = fImages[num2][0];
-						int num3 = fImages[num2][1];
-						int w = fImages[num2][2];
-						int num4 = fImages[num2][3];
-						if (num3 + num4 > imgFont.texture.height)
-						{
-							num3 -= imgFont.texture.height;
-							x2 = imgFont.texture.width / 2;
-						}
-						if (!GameCanvas.lowGraphic && font != null)
-						{
-							g.drawRegion(font.imgFont, x2, num3, w, num4, 0, num + 1, y, 20);
-							g.drawRegion(font.imgFont, x2, num3, w, num4, 0, num, y + 1, 20);
-						}
-						g.drawRegion(imgFont, x2, num3, w, num4, 0, num, y, 20);
+						shadow.DrawJavaGlyph(g, st[i], num + 1, y);
+						shadow.DrawJavaGlyph(g, st[i], num, y + 1);
 					}
-					num += fImages[num2][2] + space;
+					num += DrawJavaGlyph(g, st[i], num, y);
 				}
+				return;
 			}
-			else
+			if (font != null)
 			{
 				setTypePaint(g, st, x, y + 1, align, font.id);
-				setTypePaint(g, st, x, y, align, 0);
 			}
+			setTypePaint(g, st, x, y, align, 0);
 		}
 
 	private static readonly GUIStyle s_StyleLeft = new GUIStyle { alignment = TextAnchor.UpperLeft };

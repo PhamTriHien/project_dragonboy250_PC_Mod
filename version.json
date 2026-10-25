@@ -1,9 +1,9 @@
 {
-  "version": "2.5.59",
+  "version": "2.5.60",
   "buildDate": "2026-10-25",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.59/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.59/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.59/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.59/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.59: Tắt hoàn toàn tương tác click/chạm vào dòng thông báo Boss trên HUD bên ngoài màn hình (chỉ hiển thị thông tin để xem, không tự động bay map gây nhầm thao tác); giữ nguyên và tối ưu thao tác nhấn trực tiếp vào dòng tên thông báo Boss hoặc nút Đến bên trong UI Menu Boss để di chuyển đến map Boss."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.60/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.60/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.60/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.60/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.60: Chuyển chế độ đồ hoạ Pixel sang Đồ Hoạ Java chuẩn 100% logic src Java gốc (J2ME DragonBoy): loại bỏ hoàn toàn post-shader làm mờ/vỡ khối giả lập, nạp trực tiếp kho tài nguyên /x1/ gốc nhân 2x Nearest-Neighbor sắc nét, kết xuất font bitmap mFont gốc từng ký tự kèm đổ bóng 1px, nạp tile lẻ t_01..t_99, SmallImage/Big0..4, BgItem không blend và đồng bộ làm mới tài nguyên tức thì khi nhấn F10 hoặc chọn trong menu Đồ Hoạ trên cả 4 nền tảng."
 }

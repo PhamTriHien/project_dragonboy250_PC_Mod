@@ -53,7 +53,7 @@ public partial class GameCanvas : IActionListener
 					return;
 				}
 
-				string cacheKey = typeBG + "_" + TileMap.bgType;
+				string cacheKey = typeBG + "_" + TileMap.bgType + (ModGraphics.IsJavaGraphics ? "_j" : "_h");
 				if (bgDataCache.TryGetValue(cacheKey, out BgData cached) && cached != null)
 				{
 					TileMap.lastBgID = (sbyte)typeBG;

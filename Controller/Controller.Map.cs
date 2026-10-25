@@ -158,7 +158,7 @@ public partial class Controller : IMessageHandler
 				{
 					GameScr.gI().callRongThan(GameScr.gI().xR, GameScr.gI().yR);
 				}
-				if (mGraphics.zoomLevel > 1)
+				if (mGraphics.zoomLevel > 1 && !ModGraphics.IsJavaGraphics)
 				{
 					GameScr.gI().doiMauTroi();
 				}
@@ -356,7 +356,7 @@ public partial class Controller : IMessageHandler
 				}
 				Res.err("sl item on map " + empty + "\n");
 				TileMap.vCurrItem.removeAllElements();
-				if (mGraphics.zoomLevel == 1)
+				if (mGraphics.zoomLevel == 1 || ModGraphics.IsJavaGraphics)
 				{
 					BgItem.clearHashTable();
 				}
@@ -389,61 +389,12 @@ public partial class Controller : IMessageHandler
 									bgItem.trans = 0;
 								}
 							}
-							Image image = null;
 							if (!BgItem.imgNew.containsKey(bgItem.idImage + string.Empty))
 							{
-								if (mGraphics.zoomLevel == 1)
+								Image loadedBg = BgItem.LoadMapBgItemImage(bgItem.idImage);
+								if (loadedBg != null)
 								{
-									image = GameCanvas.loadImage("/mapBackGround/" + bgItem.idImage + ".png");
-									if (image == null)
-									{
-										image = Image.createRGBImage(new int[1], 1, 1, bl: true);
-										Service.gI().getBgTemplate(bgItem.idImage);
-									}
-									BgItem.imgNew.put(bgItem.idImage + string.Empty, image);
-								}
-								else
-								{
-									bool flag2 = false;
-									sbyte[] array = Rms.loadRMS(mGraphics.zoomLevel + "bgItem" + bgItem.idImage);
-									if (array != null)
-									{
-										if (BgItem.newSmallVersion != null)
-										{
-											Res.outz("Small  last= " + array.Length % 127 + "new Version= " + BgItem.newSmallVersion[bgItem.idImage]);
-											if (array.Length % 127 != BgItem.newSmallVersion[bgItem.idImage])
-											{
-												flag2 = true;
-											}
-										}
-										if (!flag2)
-										{
-											image = Image.createImage(array, 0, array.Length);
-											if (image != null)
-											{
-												image.isZoomScaled = true;
-												BgItem.imgNew.put(bgItem.idImage + string.Empty, image);
-											}
-											else
-											{
-												flag2 = true;
-											}
-										}
-									}
-									else
-									{
-										flag2 = true;
-									}
-									if (flag2)
-									{
-										image = GameCanvas.loadImage("/mapBackGround/" + bgItem.idImage + ".png");
-										if (image == null)
-										{
-											image = Image.createRGBImage(new int[1], 1, 1, bl: true);
-											Service.gI().getBgTemplate(bgItem.idImage);
-										}
-										BgItem.imgNew.put(bgItem.idImage + string.Empty, image);
-									}
+									BgItem.imgNew.put(bgItem.idImage + string.Empty, loadedBg);
 								}
 								BgItem.vKeysLast.addElement(bgItem.idImage + string.Empty);
 							}

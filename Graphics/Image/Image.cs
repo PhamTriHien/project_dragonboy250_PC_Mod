@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
 
 public class Image
 {
+	private static readonly Dictionary<string, Texture2D> s_JavaScaledTextures = new Dictionary<string, Texture2D>();
 	private const int INTERVAL = 5;
 
 	private const int MAXTIME = 500;
@@ -213,10 +215,35 @@ public class Image
 
 	private static Image __createImage(string filename)
 	{
-		Texture2D texture2D = Resources.Load(filename) as Texture2D;
+		if (string.IsNullOrEmpty(filename))
+		{
+			return null;
+		}
+		string cleanName = filename.EndsWith(".png", StringComparison.OrdinalIgnoreCase)
+			? filename.Substring(0, filename.Length - 4)
+			: filename;
+		if (cleanName.StartsWith("/"))
+		{
+			cleanName = cleanName.Substring(1);
+		}
+		Texture2D texture2D = Resources.Load(cleanName) as Texture2D;
 		if (texture2D == null)
 		{
 			return null;
+		}
+		bool isX1Asset = cleanName.StartsWith("x1/", StringComparison.OrdinalIgnoreCase) ||
+			cleanName.IndexOf("/x1/", StringComparison.OrdinalIgnoreCase) >= 0;
+		if (isX1Asset && mGraphics.zoomLevel == 2)
+		{
+			if (!s_JavaScaledTextures.TryGetValue(cleanName, out Texture2D scaledTex) || scaledTex == null)
+			{
+				scaledTex = ScaleTextureNearestNeighbor(texture2D, texture2D.width * 2, texture2D.height * 2);
+				s_JavaScaledTextures[cleanName] = scaledTex;
+			}
+			if (scaledTex != null)
+			{
+				texture2D = scaledTex;
+			}
 		}
 		Image image = new Image();
 		image.texture = texture2D;
@@ -224,6 +251,33 @@ public class Image
 		image.h = image.texture.height;
 		setTextureQuality(image);
 		return image;
+	}
+
+	private static Texture2D ScaleTextureNearestNeighbor(Texture2D src, int targetW, int targetH)
+	{
+		if (src == null || targetW <= 0 || targetH <= 0)
+		{
+			return src;
+		}
+		setTextureQuality(src);
+		RenderTexture prevActive = RenderTexture.active;
+		RenderTexture rt = RenderTexture.GetTemporary(targetW, targetH, 0, RenderTextureFormat.ARGB32);
+		rt.filterMode = FilterMode.Point;
+		Texture2D dst = new Texture2D(targetW, targetH, TextureFormat.RGBA32, false);
+		setTextureQuality(dst);
+		try
+		{
+			Graphics.Blit(src, rt);
+			RenderTexture.active = rt;
+			dst.ReadPixels(new Rect(0f, 0f, targetW, targetH), 0, 0, false);
+			dst.Apply(false, false);
+		}
+		finally
+		{
+			RenderTexture.active = prevActive;
+			RenderTexture.ReleaseTemporary(rt);
+		}
+		return dst;
 	}
 
 	private static Image __createImage(byte[] imageData)

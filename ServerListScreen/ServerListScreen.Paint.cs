@@ -101,7 +101,7 @@ public partial class ServerListScreen : mScreen, IActionListener
 						}
 					}
 					g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
-					if (mGraphics.zoomLevel == 1)
+					if ((mGraphics.zoomLevel == 1 || ModGraphics.IsJavaGraphics) && GameScr.imgRoomStat != null && 2 + nCmdPlay < cmd.Length && cmd[2 + nCmdPlay] != null)
 					{
 						if (testConnect == -1)
 						{

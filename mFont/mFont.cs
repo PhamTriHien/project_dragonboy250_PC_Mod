@@ -158,6 +158,21 @@ public partial class mFont
 
 	private string pathImage;
 
+	private string pathData;
+
+	private int javaHeight;
+
+	private const string JavaDataTahoma7Base64 = "AOAAAAAAAAMAAQAAAAEABQALAAAADAAEAAsAAAAXAAUACwAAACIABQALAAAALQAGAAsAAAA4AAUACwAAAEMABQALAAAATgAFAAsAAABZAAUACwAAAGQABQALAAAAbwAGAAsAAAB6AAMACwAAAIUABgALAAAAkAAHAAsAAACbAAIACwAAAKYABgALAAAAsQAFAAsAAAC8AAIACwAAAMcAAwALAAAA0gAGAAsAAADdAAYACwAAAOgABAALAAAA8wADAAsAAAD+AAMACwAAAQkABAALAAABFAAEAAsAAAEfAAIACwAAASoACAALAAABNQAIAAsAAAFAAAYACwAAAUsACgALAAABVgAGAAsAAAFhAAcACwAAAWwABgALAAABdwAEAAsAAAGCAAQACwAAAY0AAgALAAABmAAFAAsAAAGjAAUACwAAAa4ABQALAAABuQAFAAsAAAHEAAUACwAAAc8ABQALAAAB2gAFAAsAAAHlAAYACwAAAfAABQALAAAB+wAHAAsAAAIGAAUACwAAAhEABQALAAACHAAFAAsAAAInAAUACwAAAjIABQALAAACPQAFAAsAAAJIAAUACwAAAlMABQALAAACXgAFAAsAAAJpAAQACwAAAnQABQALAAACfwAGAAsAAAKKAAUACwAAApUABQALAAACoAAFAAsAAAKrAAUACwAAArYABQALAAACwQAFAAsAAALMAAUACwAAAtcABgALAAAC4gAFAAsAAALtAAYACwAAAvgABQALAAADAwAFAAsAAAMOAAQACwAAAxkABQALAAADJAAFAAsAAAMvAAIACwAAAzoAAwALAAADRQADAAsAAANQAAMACwAAA1sABQALAAADZgACAAsAAANxAAMACwAAA3wABQALAAADhwACAAsAAAOSAAgACwAAA50ABQALAAADqAAFAAsAAAOzAAUACwAAA74ABQALAAADyQAFAAsAAAPUAAUACwAAA98ABQALAAAD6gAFAAsAAAP1AAUACwAABAAABQALAAAECwAGAAsAAAQWAAUACwAABCEABQALAAAELAAGAAsAAAQ3AAYACwAABEIABgALAAAETQAGAAsAAARYAAYACwAABGMABgALAAAEbgAFAAsAAAR5AAUACwAABIQABAALAAAEjwAEAAsAAASaAAMACwAABKUABQALAAAEsAAFAAsAAAS7AAUACwAABMYABQALAAAE0QAFAAsAAATcAAUACwAABOcABgALAAAE8gAGAAsAAAT9AAYACwAABQgABgALAAAFEwAGAAsAAAUeAAYACwAABSkABgALAAAFNAAEAAsAAAU/AAYACwAABUoABgALAAAFVQAGAAsAAAVgAAYACwAABWsABgALAAAFdgAGAAsAAAWBAAQACwAABYwACAALAAAFlwAHAAsAAAWiAAcACwAABa0ABwALAAAFuAAHAAsAAAXDAAcACwAABc4ABwALAAAF2QAHAAsAAAXkAAcACwAABe8ABwALAAAF+gAHAAsAAAYFAAcACwAABhAABwALAAAGGwAHAAsAAAYmAAcACwAABjEABwALAAAGPAAHAAsAAAZHAAcACwAABlIABwALAAAGXQAGAAsAAAZoAAcACwAABnMABwALAAAGfgAHAAsAAAaJAAYACwAABpQABgALAAAGnwAGAAsAAAaqAAYACwAABrUABgALAAAGwAAGAAsAAAbLAAYACwAABtYABgALAAAG4QAGAAsAAAbsAAcACwAABvcABgALAAAHAgAGAAsAAAcNAAYACwAABxgABwALAAAHIwAHAAsAAAcuAAQACwAABzkABAALAAAHRAAEAAsAAAdPAAQACwAAB1oABAALAAAHZQAEAAsAAAdwAAQACwAAB3sABgALAAAHhgAFAAsAAAeRAAgACwAAB5wABwALAAAHpwAIAAsAAAeyAAgACwAAB70ACAALAAAHyAAIAAsAAAfTAAgACwAAB94ACAALAAAH6QAIAAsAAAf0AAgACwAAB/8ACAALAAAICgAIAAsAAAgVAAgACwAACCAACAALAAAIKwAJAAsAAAg2AAkACwAACEEACQALAAAITAAJAAsAAAhXAAkACwAACGIACQALAAAIbQAGAAsAAAh4AAgACwAACIMABgALAAAIjgAGAAsAAAiZAAYACwAACKQABwALAAAIrwAHAAsAAAi6AAcACwAACMUABwALAAAI0AAHAAsAAAjbAAcACwAACOYACAALAAAI8QAIAAsAAAj8AAgACwAACQcACAALAAAJEgAIAAsAAAkdAAgACwAACSgABwALAAAJMwAFAAsAAAk+AAYACwAACUkABgALAAAJVAAGAAsAAAlfAAYACwAACWoABgALAAAJdQAGAAsAAAmAAAUACwAACYsACAAL";
+
+	private const string JavaDataTahoma7bBase64 = "AOAAAAAAAAMAAQAAAAEABwALAAAADAAFAAsAAAAXAAcACwAAACIABwALAAAALQAHAAsAAAA4AAcACwAAAEMABwALAAAATgAHAAsAAABZAAcACwAAAGQABwALAAAAbwAGAAsAAAB6AAQACwAAAIUABgALAAAAkAAGAAsAAACbAAIACwAAAKYABwALAAAAsQAGAAsAAAC8AAMACwAAAMcAAgALAAAA0gAHAAsAAADdAAcACwAAAOgABQALAAAA8wAFAAsAAAD+AAUACwAAAQkABwALAAABFAAHAAsAAAEfAAMACwAAASoACgALAAABNQAHAAsAAAFAAAcACwAAAUsADAALAAABVgAHAAsAAAFhAAgACwAAAWwABgALAAABdwAFAAsAAAGCAAUACwAAAY0AAwALAAABmAAGAAsAAAGjAAYACwAAAa4ABgALAAABuQAGAAsAAAHEAAYACwAAAc8ABgALAAAB2gAGAAsAAAHlAAcACwAAAfAABgALAAAB+wAIAAsAAAIGAAYACwAAAhEABgALAAACHAAGAAsAAAInAAYACwAAAjIABgALAAACPQAGAAsAAAJIAAYACwAAAlMABgALAAACXgAGAAsAAAJpAAUACwAAAnQABgALAAACfwAHAAsAAAKKAAYACwAAApUABgALAAACoAAGAAsAAAKrAAYACwAAArYABgALAAACwQAGAAsAAALMAAYACwAAAtcABwALAAAC4gAGAAsAAALtAAcACwAAAvgABgALAAADAwAGAAsAAAMOAAUACwAAAxkABgALAAADJAAGAAsAAAMvAAMACwAAAzoAAwALAAADRQADAAsAAANQAAMACwAAA1sABQALAAADZgADAAsAAANxAAQACwAAA3wABgALAAADhwADAAsAAAOSAAkACwAAA50ABgALAAADqAAGAAsAAAOzAAYACwAAA74ABgALAAADyQAGAAsAAAPUAAYACwAAA98ABgALAAAD6gAGAAsAAAP1AAYACwAABAAABgALAAAECwAHAAsAAAQWAAYACwAABCEABgALAAAELAAHAAsAAAQ3AAcACwAABEIABwALAAAETQAHAAsAAARYAAcACwAABGMABwALAAAEbgAGAAsAAAR5AAYACwAABIQABQALAAAEjwAFAAsAAASaAAQACwAABKUABgALAAAEsAAGAAsAAAS7AAYACwAABMYABgALAAAE0QAGAAsAAATcAAYACwAABOcACAALAAAE8gAIAAsAAAT9AAgACwAABQgACAALAAAFEwAIAAsAAAUeAAgACwAABSkABgALAAAFNAAGAAsAAAU/AAYACwAABUoABgALAAAFVQAGAAsAAAVgAAYACwAABWsABgALAAAFdgAHAAsAAAWBAAUACwAABYwACAALAAAFlwAIAAsAAAWiAAgACwAABa0ACAALAAAFuAAIAAsAAAXDAAgACwAABc4ACAALAAAF2QAIAAsAAAXkAAgACwAABe8ACAALAAAF+gAIAAsAAAYFAAgACwAABhAACAALAAAGGwAIAAsAAAYmAAgACwAABjEACAALAAAGPAAJAAsAAAZHAAgACwAABlIACAALAAAGXQAHAAsAAAZoAAcACwAABnMABwALAAAGfgAHAAsAAAaJAAYACwAABpQABgALAAAGnwAGAAsAAAaqAAYACwAABrUABgALAAAGwAAGAAsAAAbLAAYACwAABtYABgALAAAG4QAGAAsAAAbsAAgACwAABvcABgALAAAHAgAGAAsAAAcNAAYACwAABxgABwALAAAHIwAIAAsAAAcuAAUACwAABzkABQALAAAHRAAFAAsAAAdPAAUACwAAB1oABQALAAAHZQAFAAsAAAdwAAUACwAAB3sABwALAAAHhgAGAAsAAAeRAAkACwAAB5wABwALAAAHpwAIAAsAAAeyAAgACwAAB70ACAALAAAHyAAIAAsAAAfTAAgACwAAB94ACAALAAAH6QAIAAsAAAf0AAgACwAAB/8ACAALAAAICgAJAAsAAAgVAAgACwAACCAACAALAAAIKwAKAAsAAAg2AAoACwAACEEACgALAAAITAAKAAsAAAhXAAoACwAACGIACgALAAAIbQAHAAsAAAh4AAgACwAACIMABwALAAAIjgAGAAsAAAiZAAcACwAACKQABwALAAAIrwAHAAsAAAi6AAcACwAACMUABwALAAAI0AAHAAsAAAjbAAcACwAACOYACQALAAAI8QAJAAsAAAj8AAkACwAACQcACQALAAAJEgAJAAsAAAkdAAkACwAACSgABwALAAAJMwAHAAsAAAk+AAcACwAACUkABwALAAAJVAAHAAsAAAlfAAcACwAACWoABwALAAAJdQAHAAsAAAmAAAYACwAACYsACQAL";
+
+	private const string JavaDataTahoma8bBase64 = "AOAAAAAAAAMAAQAAAAEACAAOAAAADwAGAA4AAAAdAAgADgAAACsACAAOAAAAOQAIAA4AAABHAAgADgAAAFUACAAOAAAAYwAIAA4AAABxAAgADgAAAH8ACAAOAAAAjQAJAA4AAACbAAYADgAAAKkACAAOAAAAtwAJAA4AAADFAAQADgAAANMACQAOAAAA4QAHAA4AAADvAAQADgAAAP0ABAAOAAABCwAJAA4AAAEZAAkADgAAAScABwAOAAABNQAGAA4AAAFDAAYADgAAAVEACAAOAAABXwAIAA4AAAFtAAQADgAAAXsACwAOAAABiQAKAA4AAAGXAAgADgAAAaUADgAOAAABswAJAA4AAAHBAAoADgAAAc8ACAAOAAAB3QAGAA4AAAHrAAYADgAAAfkABAAOAAACBwAIAA4AAAIVAAgADgAAAiMACAAOAAACMQAIAA4AAAI/AAgADgAAAk0ACAAOAAACWwAIAA4AAAJpAAkADgAAAncACAAOAAAChQAKAA4AAAKTAAgADgAAAqEACAAOAAACrwAIAA4AAAK9AAgADgAAAssACAAOAAAC2QAIAA4AAALnAAgADgAAAvUACAAOAAADAwAIAA4AAAMRAAcADgAAAx8ACAAOAAADLQAJAA4AAAM7AAgADgAAA0kACAAOAAADVwAIAA4AAANlAAgADgAAA3MACAAOAAADgQAIAA4AAAOPAAgADgAAA50ACQAOAAADqwAIAA4AAAO5AAkADgAAA8cACAAOAAAD1QAIAA4AAAPjAAYADgAAA/EACAAOAAAD/wAIAA4AAAQNAAQADgAABBsABQAOAAAEKQAFAA4AAAQ3AAQADgAABEUABgAOAAAEUwAEAA4AAARhAAUADgAABG8ACAAOAAAEfQAEAA4AAASLAAwADgAABJkACAAOAAAEpwAIAA4AAAS1AAgADgAABMMACAAOAAAE0QAIAA4AAATfAAgADgAABO0ACAAOAAAE+wAIAA4AAAUJAAgADgAABRcACAAOAAAFJQAJAA4AAAUzAAgADgAABUEACAAOAAAFTwAJAA4AAAVdAAkADgAABWsACQAOAAAFeQAJAA4AAAWHAAkADgAABZUACQAOAAAFowAIAA4AAAWxAAgADgAABb8ABgAOAAAFzQAHAA4AAAXbAAYADgAABekACAAOAAAF9wAIAA4AAAYFAAgADgAABhMACAAOAAAGIQAIAA4AAAYvAAgADgAABj0ACgAOAAAGSwAKAA4AAAZZAAoADgAABmcACgAOAAAGdQAKAA4AAAaDAAoADgAABpEACAAOAAAGnwAIAA4AAAatAAgADgAABrsACAAOAAAGyQAIAA4AAAbXAAgADgAABuUACAAOAAAG8wAIAA4AAAcBAAcADgAABw8ACgAOAAAHHQAJAA4AAAcrAAkADgAABzkACQAOAAAHRwAJAA4AAAdVAAkADgAAB2MACQAOAAAHcQAJAA4AAAd/AAkADgAAB40ACQAOAAAHmwAJAA4AAAepAAkADgAAB7cACQAOAAAHxQAJAA4AAAfTAAkADgAAB+EACQAOAAAH7wALAA4AAAf9AAkADgAACAsACQAOAAAIGQAIAA4AAAgnAAgADgAACDUACQAOAAAIQwAKAA4AAAhRAAcADgAACF8ABwAOAAAIbQAHAA4AAAh7AAcADgAACIkABwAOAAAIlwAHAA4AAAilAAcADgAACLMACAAOAAAIwQAIAA4AAAjPAAoADgAACN0ABwAOAAAI6wAHAA4AAAj5AAcADgAACQcACQAOAAAJFQAJAA4AAAkjAAYADgAACTEABgAOAAAJPwAGAA4AAAlNAAYADgAACVsABwAOAAAJaQAGAA4AAAl3AAcADgAACYUACAAOAAAJkwAHAA4AAAmhAAsADgAACa8ACAAOAAAJvQAJAA4AAAnLAAkADgAACdkACQAOAAAJ5wAJAA4AAAn1AAkADgAACgMACQAOAAAKEQAJAA4AAAofAAkADgAACi0ACQAOAAAKOwALAA4AAApJAAkADgAAClcACQAOAAAKZQALAA4AAApzAAsADgAACoEACwAOAAAKjwALAA4AAAqdAAsADgAACqsACwAOAAAKuQAIAA4AAArHAAkADgAACtUACQAOAAAK4wAIAA4AAArxAAgADgAACv8ACQAOAAALDQAJAA4AAAsbAAkADgAACykACQAOAAALNwAJAA4AAAtFAAkADgAAC1MACwAOAAALYQALAA4AAAtvAAsADgAAC30ACwAOAAALiwALAA4AAAuZAAsADgAAC6cACAAOAAALtQAIAA4AAAvDAAgADgAAC9EACAAOAAAL3wAIAA4AAAvtAAgADgAAC/sACAAOAAAMCQAIAA4AAAwXAAgADgAADCUADAAO";
+
+	private const string JavaDataNumberBase64 = "AA0AAAAAAAEAAQAAAAEABQAIAAAACQADAAgAAAARAAUACAAAABkABQAIAAAAIQAFAAgAAAApAAUACAAAADEABQAIAAAAOQAFAAgAAABBAAUACAAAAEkABQAIAAAAUQAFAAgAAABZAAUACA==";
+
+	private static readonly System.Collections.Generic.Dictionary<string, int[][]> s_CachedGlyphTables = new System.Collections.Generic.Dictionary<string, int[][]>(8);
+	private static readonly System.Collections.Generic.Dictionary<string, int> s_CachedGlyphHeights = new System.Collections.Generic.Dictionary<string, int>(8);
+
 	public static sbyte cl__white;
 
 	public static sbyte cl__yellow;
@@ -179,33 +194,12 @@ public partial class mFont
 				this.strFont = strFont;
 				this.space = space;
 				this.pathImage = pathImage;
-				DataInputStream dataInputStream = null;
+				this.pathData = pathData;
+				LoadJavaGlyphMetrics(pathData);
 				reloadImage();
-				try
+				if (javaHeight > 0)
 				{
-					dataInputStream = MyStream.readFile(pathData);
-					fImages = new int[dataInputStream.readShort()][];
-					for (int i = 0; i < fImages.Length; i++)
-					{
-						fImages[i] = new int[4];
-						fImages[i][0] = dataInputStream.readShort();
-						fImages[i][1] = dataInputStream.readShort();
-						fImages[i][2] = dataInputStream.readShort();
-						fImages[i][3] = dataInputStream.readShort();
-						setHeight(fImages[i][3]);
-					}
-					dataInputStream.close();
-				}
-				catch (Exception)
-				{
-					try
-					{
-						dataInputStream.close();
-					}
-					catch (Exception ex)
-					{
-						ex.StackTrace.ToString();
-					}
+					setHeight(javaHeight);
 				}
 			}
 			catch (Exception ex3)
@@ -245,8 +239,318 @@ public partial class mFont
 				color2 = bigColor(id);
 			}
 			wO = getWidthExactOf("o");
+			InitJavaBitmapDataById(id);
 			s_AllInstances.Add(this);
 		}
+
+	private void InitJavaBitmapDataById(sbyte fontId)
+	{
+		const string numberChars = " 0123456789+-";
+		space = 0;
+		switch (fontId)
+		{
+		case 1:
+			strFont = str;
+			pathImage = "/myfont/tahoma_7b_red.png";
+			pathData = "/myfont/tahoma_7b";
+			break;
+		case 2:
+			strFont = str;
+			pathImage = "/myfont/tahoma_7b_blue.png";
+			pathData = "/myfont/tahoma_7b";
+			break;
+		case 3:
+		case 28:
+			strFont = str;
+			pathImage = "/myfont/tahoma_7b_white.png";
+			pathData = "/myfont/tahoma_7b";
+			break;
+		case 4:
+			strFont = str;
+			pathImage = "/myfont/tahoma_7b_yellow.png";
+			pathData = "/myfont/tahoma_7b";
+			break;
+		case 5:
+			strFont = str;
+			pathImage = "/myfont/tahoma_7b_brown.png";
+			pathData = "/myfont/tahoma_7b";
+			break;
+		case 6:
+			strFont = str;
+			pathImage = "/myfont/tahoma_7b_green2.png";
+			pathData = "/myfont/tahoma_7b";
+			break;
+		case 7:
+			strFont = str;
+			pathImage = "/myfont/tahoma_7b_green.png";
+			pathData = "/myfont/tahoma_7b";
+			break;
+		case 8:
+			strFont = str;
+			pathImage = "/myfont/tahoma_7b_focus.png";
+			pathData = "/myfont/tahoma_7b";
+			break;
+		case 9:
+			strFont = str;
+			pathImage = "/myfont/tahoma_7b_unfocus.png";
+			pathData = "/myfont/tahoma_7b";
+			break;
+		case 11:
+		case 29:
+			strFont = str;
+			pathImage = "/myfont/tahoma_7_blue1.png";
+			pathData = "/myfont/tahoma_7";
+			break;
+		case 12:
+			strFont = str;
+			pathImage = "/myfont/tahoma_7_green2.png";
+			pathData = "/myfont/tahoma_7";
+			break;
+		case 13:
+			strFont = str;
+			pathImage = "/myfont/tahoma_7_yellow.png";
+			pathData = "/myfont/tahoma_7";
+			break;
+		case 14:
+		case 31:
+			strFont = str;
+			pathImage = "/myfont/tahoma_7_grey.png";
+			pathData = "/myfont/tahoma_7";
+			break;
+		case 15:
+			strFont = str;
+			pathImage = "/myfont/tahoma_7_red.png";
+			pathData = "/myfont/tahoma_7";
+			break;
+		case 16:
+			strFont = str;
+			pathImage = "/myfont/tahoma_7_blue.png";
+			pathData = "/myfont/tahoma_7";
+			break;
+		case 17:
+			strFont = str;
+			pathImage = "/myfont/tahoma_7_green.png";
+			pathData = "/myfont/tahoma_7";
+			break;
+		case 18:
+			strFont = str;
+			pathImage = "/myfont/tahoma_7_white.png";
+			pathData = "/myfont/tahoma_7";
+			break;
+		case 19:
+			strFont = str;
+			pathImage = "/myfont/tahoma_8b.png";
+			pathData = "/myfont/tahoma_8b";
+			space = -1;
+			break;
+		case 20:
+		case 26:
+			strFont = numberChars;
+			pathImage = "/myfont/number_yellow.png";
+			pathData = "/myfont/number";
+			break;
+		case 21:
+		case 25:
+			strFont = numberChars;
+			pathImage = "/myfont/number_red.png";
+			pathData = "/myfont/number";
+			break;
+		case 22:
+		case 27:
+			strFont = numberChars;
+			pathImage = "/myfont/number_green.png";
+			pathData = "/myfont/number";
+			break;
+		case 23:
+			strFont = numberChars;
+			pathImage = "/myfont/number_gray.png";
+			pathData = "/myfont/number";
+			break;
+		case 24:
+		case 30:
+			strFont = numberChars;
+			pathImage = "/myfont/number_orange.png";
+			pathData = "/myfont/number";
+			break;
+		default:
+			strFont = str;
+			pathImage = "/myfont/tahoma_7.png";
+			pathData = "/myfont/tahoma_7";
+			break;
+		}
+		LoadJavaGlyphMetrics(pathData);
+		if (ModGraphics.IsJavaGraphics)
+		{
+			EnsureJavaImageLoaded();
+		}
+	}
+
+	private void LoadJavaGlyphMetrics(string dataPath)
+	{
+		if (string.IsNullOrEmpty(dataPath))
+		{
+			return;
+		}
+		if (s_CachedGlyphTables.TryGetValue(dataPath, out int[][] cachedGlyphs) && cachedGlyphs != null)
+		{
+			fImages = cachedGlyphs;
+			javaHeight = s_CachedGlyphHeights.TryGetValue(dataPath, out int ch) ? ch : 11;
+			return;
+		}
+		int[][] parsed = null;
+		int maxH = 0;
+		DataInputStream dis = null;
+		try
+		{
+			dis = MyStream.readFile(dataPath);
+			if (dis != null)
+			{
+				short count = dis.readShort();
+				if (count > 0)
+				{
+					parsed = new int[count][];
+					for (int i = 0; i < count; i++)
+					{
+						parsed[i] = new int[4];
+						parsed[i][0] = dis.readShort();
+						parsed[i][1] = dis.readShort();
+						parsed[i][2] = dis.readShort();
+						parsed[i][3] = dis.readShort();
+						if (parsed[i][3] > maxH)
+						{
+							maxH = parsed[i][3];
+						}
+					}
+				}
+			}
+		}
+		catch (Exception)
+		{
+			parsed = null;
+		}
+		finally
+		{
+			try
+			{
+				dis?.close();
+			}
+			catch (Exception)
+			{
+			}
+		}
+
+		if (parsed == null || parsed.Length == 0)
+		{
+			string b64 = dataPath switch
+			{
+				"/myfont/tahoma_7b" => JavaDataTahoma7bBase64,
+				"/myfont/tahoma_8b" => JavaDataTahoma8bBase64,
+				"/myfont/number" => JavaDataNumberBase64,
+				_ => JavaDataTahoma7Base64
+			};
+			byte[] raw = Convert.FromBase64String(b64);
+			int count = (raw[0] << 8) | raw[1];
+			parsed = new int[count][];
+			maxH = 0;
+			int pos = 2;
+			for (int i = 0; i < count && pos + 7 < raw.Length; i++)
+			{
+				parsed[i] = new int[4];
+				parsed[i][0] = (short)((raw[pos] << 8) | raw[pos + 1]);
+				parsed[i][1] = (short)((raw[pos + 2] << 8) | raw[pos + 3]);
+				parsed[i][2] = (short)((raw[pos + 4] << 8) | raw[pos + 5]);
+				parsed[i][3] = (short)((raw[pos + 6] << 8) | raw[pos + 7]);
+				if (parsed[i][3] > maxH)
+				{
+					maxH = parsed[i][3];
+				}
+				pos += 8;
+			}
+		}
+
+		fImages = parsed;
+		javaHeight = maxH > 0 ? maxH : 11;
+		s_CachedGlyphTables[dataPath] = parsed;
+		s_CachedGlyphHeights[dataPath] = javaHeight;
+	}
+
+	private Image EnsureJavaImageLoaded()
+	{
+		if (imgFont != null && imgFont.texture != null)
+		{
+			return imgFont;
+		}
+		if (string.IsNullOrEmpty(pathImage))
+		{
+			return null;
+		}
+		try
+		{
+			imgFont = Image.createImage(GameCanvas.cutPng(Main.res + "/x1" + pathImage));
+			if (imgFont == null)
+			{
+				imgFont = GameCanvas.loadImage(pathImage);
+			}
+		}
+		catch (Exception)
+		{
+		}
+		return imgFont;
+	}
+
+	private int ResolveJavaGlyphIndex(char c)
+	{
+		if (string.IsNullOrEmpty(strFont) || fImages == null || fImages.Length == 0)
+		{
+			return 0;
+		}
+		int idx = strFont.IndexOf(c);
+		if (idx >= 0 && idx < fImages.Length)
+		{
+			return idx;
+		}
+		char mapped = c switch
+		{
+			'|' => 'I',
+			';' => ':',
+			'"' => '\'',
+			'“' => '\'',
+			'”' => '\'',
+			'‘' => '\'',
+			'’' => '\'',
+			'~' => '-',
+			'–' => '-',
+			'—' => '-',
+			'\\' => '/',
+			_ => '\0'
+		};
+		if (mapped != '\0')
+		{
+			idx = strFont.IndexOf(mapped);
+			if (idx >= 0 && idx < fImages.Length)
+			{
+				return idx;
+			}
+		}
+		return 0;
+	}
+
+	public static void ReloadJavaFontImages()
+	{
+		for (int i = 0; i < s_AllInstances.Count; i++)
+		{
+			mFont f = s_AllInstances[i];
+			if (f != null)
+			{
+				f.imgFont = null;
+				if (ModGraphics.IsJavaGraphics)
+				{
+					f.EnsureJavaImageLoaded();
+				}
+			}
+		}
+		InvalidateFontMetrics();
+	}
 
 	public static void init()
 		{
@@ -383,9 +687,10 @@ public partial class mFont
 
 	public void reloadImage()
 		{
-			if (mGraphics.zoomLevel == 1)
+			if (mGraphics.zoomLevel == 1 || ModGraphics.IsJavaGraphics)
 			{
-				imgFont = GameCanvas.loadImage(pathImage);
+				imgFont = null;
+				EnsureJavaImageLoaded();
 			}
 		}
 

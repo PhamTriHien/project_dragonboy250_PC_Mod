@@ -65,6 +65,16 @@ public class SmallImage
 		mSystem.gcc();
 	}
 
+	public static void ReloadForGraphicsMode()
+	{
+		imgbig = null;
+		if (imgNew != null)
+		{
+			Array.Clear(imgNew, 0, imgNew.Length);
+		}
+		loadBigRMS();
+	}
+
 	public static void loadBigImage()
 	{
 		imgEmpty = Image.createRGBImage(new int[1], 1, 1, bl: true);

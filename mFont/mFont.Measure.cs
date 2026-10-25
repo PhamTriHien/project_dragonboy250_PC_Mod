@@ -185,16 +185,20 @@ public partial class mFont
 
 	public int getWidth(string s)
 		{
-			if (mGraphics.zoomLevel == 1)
+			if (string.IsNullOrEmpty(s))
+			{
+				return 0;
+			}
+			if ((mGraphics.zoomLevel == 1 || ModGraphics.IsJavaGraphics) && fImages != null && fImages.Length > 0 && !string.IsNullOrEmpty(strFont))
 			{
 				int num = 0;
 				for (int i = 0; i < s.Length; i++)
 				{
-					int num2 = strFont.IndexOf(s[i]);
-					if (num2 == -1)
+					if (char.IsLowSurrogate(s[i]))
 					{
-						num2 = 0;
+						continue;
 					}
+					int num2 = ResolveJavaGlyphIndex(s[i]);
 					num += fImages[num2][2] + space;
 				}
 				return num;
@@ -250,6 +254,14 @@ public partial class mFont
 
 	public int getWidthNotExactOf(string s)
 		{
+			if (string.IsNullOrEmpty(s))
+			{
+				return 0;
+			}
+			if ((mGraphics.zoomLevel == 1 || ModGraphics.IsJavaGraphics) && fImages != null && fImages.Length > 0 && !string.IsNullOrEmpty(strFont))
+			{
+				return getWidth(s);
+			}
 			return s.Length * wO / mGraphics.zoomLevel;
 		}
 
@@ -257,7 +269,11 @@ public partial class mFont
 		{
 			if (mGraphics.zoomLevel == 1)
 			{
-				return height;
+				return (height > 0) ? height : javaHeight;
+			}
+			if (ModGraphics.IsJavaGraphics && javaHeight > 0)
+			{
+				return javaHeight;
 			}
 			if (height > 0)
 			{

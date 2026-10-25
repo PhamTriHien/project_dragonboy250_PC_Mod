@@ -366,7 +366,7 @@ public partial class TileMap
 			{
 				return;
 			}
-			int cacheKey = (mGraphics.zoomLevel << 16) | (tileID & 0xFFFF);
+			int cacheKey = ((ModGraphics.IsJavaGraphics ? 0x100 : mGraphics.zoomLevel) << 16) | (tileID & 0xFFFF);
 			if (tileDataCache.TryGetValue(cacheKey, out Image[] cachedTiles) && HasValidTileImage(cachedTiles))
 			{
 				imgTile = cachedTiles;
@@ -396,22 +396,10 @@ public partial class TileMap
 				}
 				return;
 			}
-			if (mGraphics.zoomLevel == 1)
+			if (mGraphics.zoomLevel == 1 || ModGraphics.IsJavaGraphics)
 			{
-				if (imgTile != null)
-				{
-					for (int j = 0; j < imgTile.Length; j++)
-					{
-						if (imgTile[j] != null)
-						{
-							imgTile[j].texture = null;
-							imgTile[j] = null;
-						}
-					}
-					mSystem.gcc();
-				}
-				imgTile = new Image[100];
-				for (int k = 0; k < imgTile.Length; k++)
+				Image[] javaTiles = new Image[100];
+				for (int k = 0; k < javaTiles.Length; k++)
 				{
 					string empty = ((k >= 9) ? ("/t/" + tileID + "/t_" + (k + 1)) : ("/t/" + tileID + "/t_0" + (k + 1)));
 					Image tImg = GameCanvas.loadImage(empty);
@@ -419,8 +407,13 @@ public partial class TileMap
 					{
 						tImg = GameCanvas.loadImage("/t/" + tileID + "/" + (k + 1) + ".png");
 					}
-					imgTile[k] = tImg;
+					if (tImg == null)
+					{
+						tImg = GameCanvas.loadImageRMS("/t/" + tileID + "$" + (k + 1) + ".png");
+					}
+					javaTiles[k] = tImg;
 				}
+				imgTile = javaTiles;
 				if (HasValidTileImage(imgTile))
 				{
 					tileDataCache[cacheKey] = imgTile;

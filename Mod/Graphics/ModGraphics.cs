@@ -7,9 +7,17 @@ public static class ModGraphics
 	public static int graphicsQuality = 0;
 	public static readonly string[] graphicsNames = new string[4] { "Ultra", "Medium", "Low", "Super Low" };
 
-	// Độ sâu màu render (Render Bit-Depth): 0: 16-bit, 1: 32-bit (mặc định), 2: 64-bit, 3: 128-bit
-	public static int renderBitDepth = 1;
-	public static readonly string[] bitDepthNames = new string[4] { "16-bit", "32-bit", "64-bit", "128-bit" };
+	// 2 chế độ đồ hoạ: 0: Đồ Hoạ Java (tài nguyên x1 + font bitmap từ src Java gốc), 1: Đồ Hoạ HD (tài nguyên x2 sắc nét)
+	public static int renderMode = 0;
+	public static bool IsJavaGraphics => renderMode == 0;
+	public static readonly string[] renderModeNames = new string[2] { "Đồ Hoạ Java", "Đồ Hoạ HD" };
+
+	public static int renderBitDepth
+	{
+		get => renderMode;
+		set => renderMode = (value >= 1) ? 1 : 0;
+	}
+	public static string[] bitDepthNames => renderModeNames;
 
 	// 0: 1024x600 (Gốc), 1: 1280x720 (HD 16:9), 2: 1600x900 (HD+), 3: 1920x1080 (Full HD)
 	public static int resolutionIndex = 0;
@@ -172,12 +180,83 @@ public static class ModGraphics
 		ModConfig.SaveConfig();
 	}
 
-	public static void SetBitDepth(int depth)
+	public static void SetRenderMode(int mode, bool refreshAssets = true)
 	{
-		if (depth < 0 || depth >= bitDepthNames.Length) depth = 1;
-		renderBitDepth = depth;
-		ApplyBitDepth();
-		ModConfig.SaveConfig();
+		int normalized = (mode >= 1) ? 1 : 0;
+		bool changed = (renderMode != normalized);
+		renderMode = normalized;
+		ApplyRenderMode();
+		if (refreshAssets)
+		{
+			ModConfig.SaveConfig();
+			if (changed && GameMidlet.gameCanvas != null)
+			{
+				RefreshGraphicsAssets();
+			}
+		}
+	}
+
+	public static void SetBitDepth(int depth) => SetRenderMode(depth);
+
+	public static void RefreshGraphicsAssets()
+	{
+		try
+		{
+			if (GameMidlet.gameCanvas == null)
+			{
+				return;
+			}
+			if (mGraphics.cachedTextures != null)
+			{
+				mGraphics.cachedTextures.Clear();
+			}
+			mSystem.ClearImageCache();
+			mFont.ReloadJavaFontImages();
+			mFont.InvalidateFontMetrics();
+			Paint.loadbg();
+			Paint.imgCheck = GameCanvas.loadImage("/mainImage/myTexture2dcheck.png");
+			for (int i = 0; i < 3; i++)
+			{
+				GameCanvas.imgBorder[i] = GameCanvas.loadImage("/mainImage/myTexture2dbd" + i + ".png");
+			}
+			GameCanvas.borderConnerW = mGraphics.getImageWidth(GameCanvas.imgBorder[0]);
+			GameCanvas.borderConnerH = mGraphics.getImageHeight(GameCanvas.imgBorder[0]);
+			GameCanvas.borderCenterW = mGraphics.getImageWidth(GameCanvas.imgBorder[1]);
+			GameCanvas.borderCenterH = mGraphics.getImageHeight(GameCanvas.imgBorder[1]);
+			GameCanvas.imgShuriken = GameCanvas.loadImage("/mainImage/myTexture2df.png");
+			GameCanvas.imgClear = GameCanvas.loadImage("/mainImage/myTexture2der.png");
+			Command.btn0left = GameCanvas.loadImage("/mainImage/btn0left.png");
+			Command.btn0mid = GameCanvas.loadImage("/mainImage/btn0mid.png");
+			Command.btn0right = GameCanvas.loadImage("/mainImage/btn0right.png");
+			Command.btn1left = GameCanvas.loadImage("/mainImage/btn1left.png");
+			Command.btn1mid = GameCanvas.loadImage("/mainImage/btn1mid.png");
+			Command.btn1right = GameCanvas.loadImage("/mainImage/btn1right.png");
+			if (GameCanvas.instance != null)
+			{
+				GameCanvas.instance.loadDust();
+				GameCanvas.instance.loadWaterSplash();
+			}
+			GameScr.ReloadHudImages();
+			SmallImage.ReloadForGraphicsMode();
+			TileMap.loadBg();
+			if (TileMap.tileID > 0)
+			{
+				TileMap.loadTileImage();
+				TileMap.loadMainTile();
+			}
+			BgItem.ReloadCurrMapItems();
+			BackgroudEffect.initCloud();
+			if (GameCanvas.typeBg >= 0)
+			{
+				int curBg = GameCanvas.typeBg;
+				TileMap.lastBgID = -1;
+				GameCanvas.loadBG(curBg);
+			}
+			mScreen.ITEM_HEIGHT = mFont.tahoma_8b.getHeight() + 8;
+		}
+		catch
+		{
+		}
 	}
 
 	public static float GetFontSizeScale()
@@ -197,7 +276,7 @@ public static class ModGraphics
 		ModConfig.SaveConfig();
 	}
 
-	public static void ApplyBitDepth()
+	public static void ApplyRenderMode()
 	{
 		try
 		{
@@ -205,9 +284,11 @@ public static class ModGraphics
 			if (gameViewType != null)
 			{
 				var method = gameViewType.GetMethod("ApplyHardwareBitDepth", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-				method?.Invoke(null, new object[] { renderBitDepth });
+				method?.Invoke(null, new object[] { renderMode });
 			}
 		}
 		catch { }
 	}
+
+	public static void ApplyBitDepth() => ApplyRenderMode();
 }

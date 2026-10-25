@@ -102,7 +102,7 @@ public class BgItem
 	/// </summary>
 	public bool isNotBlend()
 	{
-		if (mGraphics.zoomLevel == 1)
+		if (mGraphics.zoomLevel == 1 || ModGraphics.IsJavaGraphics)
 		{
 			return true;
 		}
@@ -118,6 +118,83 @@ public class BgItem
 			}
 		}
 		return false;
+	}
+
+	public static Image LoadMapBgItemImage(short idImage)
+	{
+		Image image = null;
+		if (mGraphics.zoomLevel == 1 || ModGraphics.IsJavaGraphics)
+		{
+			image = GameCanvas.loadImage("/mapBackGround/" + idImage + ".png");
+			if (image != null)
+			{
+				return image;
+			}
+		}
+		bool needRequest = false;
+		sbyte[] array = Rms.loadRMS(mGraphics.zoomLevel + "bgItem" + idImage);
+		if (array != null)
+		{
+			if (newSmallVersion != null && idImage >= 0 && idImage < newSmallVersion.Length && array.Length % 127 != newSmallVersion[idImage])
+			{
+				needRequest = true;
+			}
+			if (!needRequest)
+			{
+				image = Image.createImage(array, 0, array.Length);
+				if (image != null)
+				{
+					image.isZoomScaled = true;
+					return image;
+				}
+				needRequest = true;
+			}
+		}
+		else
+		{
+			needRequest = true;
+		}
+		image = GameCanvas.loadImage("/mapBackGround/" + idImage + ".png");
+		if (image == null)
+		{
+			image = Image.createRGBImage(new int[1], 1, 1, bl: true);
+			if (needRequest)
+			{
+				Service.gI().getBgTemplate(idImage);
+			}
+		}
+		return image;
+	}
+
+	public static void ReloadCurrMapItems()
+	{
+		clearHashTable();
+		vKeysLast.removeAllElements();
+		if (TileMap.vCurrItem == null)
+		{
+			return;
+		}
+		for (int i = 0; i < TileMap.vCurrItem.size(); i++)
+		{
+			if (TileMap.vCurrItem.elementAt(i) is BgItem item)
+			{
+				string key = item.idImage + string.Empty;
+				if (!imgNew.containsKey(key))
+				{
+					Image img = LoadMapBgItemImage(item.idImage);
+					if (img != null)
+					{
+						imgNew.put(key, img);
+					}
+					vKeysLast.addElement(key);
+				}
+				if (!isExistKeyNews(key))
+				{
+					vKeysNew.addElement(key);
+				}
+				item.changeColor();
+			}
+		}
 	}
 
 	/// <summary>

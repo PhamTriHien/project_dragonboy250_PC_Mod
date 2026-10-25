@@ -5,7 +5,7 @@ public partial class BackgroudEffect
 {
 	public static void initCloud()
 		{
-			if (mSystem.clientType == 1)
+			if (mSystem.clientType == 1 || ModGraphics.IsJavaGraphics)
 			{
 				imgCloud1 = null;
 				imgFog = null;
@@ -43,7 +43,7 @@ public partial class BackgroudEffect
 
 	public static void updateCloud2()
 		{
-			if (mSystem.clientType == 1 || GameCanvas.lowGraphic || ModMenu.graphicsQuality >= 1 || nCloud <= 0)
+			if (mSystem.clientType == 1 || ModGraphics.IsJavaGraphics || GameCanvas.lowGraphic || ModMenu.graphicsQuality >= 1 || nCloud <= 0)
 			{
 				return;
 			}
@@ -61,7 +61,7 @@ public partial class BackgroudEffect
 
 	public static void updateFog()
 		{
-			if (mSystem.clientType != 1 && !GameCanvas.lowGraphic && isFog)
+			if (mSystem.clientType != 1 && !ModGraphics.IsJavaGraphics && !GameCanvas.lowGraphic && isFog)
 			{
 				xfog--;
 				if (xfog < -fogw)

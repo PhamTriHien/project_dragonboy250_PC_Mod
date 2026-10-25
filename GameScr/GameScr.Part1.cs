@@ -163,6 +163,70 @@ public partial class GameScr : mScreen, IChatable
 			frBarPow21 = GameCanvas.loadImage("/mainImage/myTexture2dlineColor01.png");
 			frBarPow22 = GameCanvas.loadImage("/mainImage/myTexture2dlineColor02.png");
 		}
+	public static void ReloadHudImages()
+		{
+			fra_PVE_Bar_0 = new FrameImage(mSystem.loadImage("/mainImage/i_pve_bar_0.png"), 6, 15);
+			fra_PVE_Bar_1 = new FrameImage(mSystem.loadImage("/mainImage/i_pve_bar_1.png"), 38, 21);
+			imgVS = mSystem.loadImage("/mainImage/i_vs.png");
+			imgBall = mSystem.loadImage("/mainImage/i_charlife.png");
+			imgHP_NEW = mSystem.loadImage("/mainImage/i_hp.png");
+			imgKhung = mSystem.loadImage("/mainImage/i_khung.png");
+			imgLbtn = GameCanvas.loadImage("/mainImage/myTexture2dbtnl.png");
+			imgLbtnFocus = GameCanvas.loadImage("/mainImage/myTexture2dbtnlf.png");
+			imgLbtn2 = GameCanvas.loadImage("/mainImage/myTexture2dbtnl2.png");
+			imgLbtnFocus2 = GameCanvas.loadImage("/mainImage/myTexture2dbtnlf2.png");
+			imgPanel = GameCanvas.loadImage("/mainImage/myTexture2dpanel.png");
+			imgPanel2 = GameCanvas.loadImage("/mainImage/panel2.png");
+			imgHP = GameCanvas.loadImage("/mainImage/myTexture2dHP.png");
+			imgSP = GameCanvas.loadImage("/mainImage/SP.png");
+			imgHPLost = GameCanvas.loadImage("/mainImage/myTexture2dhpLost.png");
+			imgMPLost = GameCanvas.loadImage("/mainImage/myTexture2dmpLost.png");
+			imgMP = GameCanvas.loadImage("/mainImage/myTexture2dMP.png");
+			imgSkill = GameCanvas.loadImage("/mainImage/myTexture2dskill.png");
+			imgSkill2 = GameCanvas.loadImage("/mainImage/myTexture2dskill2.png");
+			imgMenu = GameCanvas.loadImage("/mainImage/myTexture2dmenu.png");
+			if (imgMenu != null && instance != null && instance.cmdMenu != null)
+			{
+				instance.cmdMenu.img = imgMenu;
+				instance.cmdMenu.w = mGraphics.getImageWidth(imgMenu) + 20;
+				instance.cmdMenu.h = mGraphics.getImageHeight(imgMenu) + 12;
+			}
+			imgFocus = GameCanvas.loadImage("/mainImage/myTexture2dfocus.png");
+			imgHP_tm_do = GameCanvas.loadImage("/mainImage/tm-do.png");
+			imgHP_tm_vang = GameCanvas.loadImage("/mainImage/tm-vang.png");
+			imgHP_tm_xam = GameCanvas.loadImage("/mainImage/tm-xam.png");
+			imgHP_tm_xanh = GameCanvas.loadImage("/mainImage/tm-xanh.png");
+			imgChatPC = GameCanvas.loadImage("/pc/chat.png");
+			imgChatsPC2 = GameCanvas.loadImage("/pc/chat2.png");
+			imgArrow = GameCanvas.loadImage("/mainImage/myTexture2darrow.png");
+			imgArrow2 = GameCanvas.loadImage("/mainImage/myTexture2darrow2.png");
+			imgChat = GameCanvas.loadImage("/mainImage/myTexture2dchat.png");
+			imgChat2 = GameCanvas.loadImage("/mainImage/myTexture2dchat2.png");
+			imgFocus2 = GameCanvas.loadImage("/mainImage/myTexture2dfocus2.png");
+			imgHP1 = GameCanvas.loadImage("/mainImage/myTexture2dPea0.png");
+			imgHP2 = GameCanvas.loadImage("/mainImage/myTexture2dPea1.png");
+			imgAnalog1 = GameCanvas.loadImage("/mainImage/myTexture2danalog1.png");
+			imgAnalog2 = GameCanvas.loadImage("/mainImage/myTexture2danalog2.png");
+			imgHP3 = GameCanvas.loadImage("/mainImage/myTexture2dPea2.png");
+			imgHP4 = GameCanvas.loadImage("/mainImage/myTexture2dPea3.png");
+			imgFire0 = GameCanvas.loadImage("/mainImage/myTexture2dfirebtn0.png");
+			imgFire1 = GameCanvas.loadImage("/mainImage/myTexture2dfirebtn1.png");
+			imgNR1 = GameCanvas.loadImage("/mainImage/myTexture2dPea_0.png");
+			imgNR2 = GameCanvas.loadImage("/mainImage/myTexture2dPea_1.png");
+			imgNR3 = GameCanvas.loadImage("/mainImage/myTexture2dPea_2.png");
+			imgNR4 = GameCanvas.loadImage("/mainImage/myTexture2dPea_3.png");
+			imgNut = GameCanvas.loadImage("/mainImage/myTexture2dnut.png");
+			imgNutF = GameCanvas.loadImage("/mainImage/myTexture2dnutF.png");
+			arrow = GameCanvas.loadImage("/mainImage/myTexture2darrow3.png");
+			imgTrans = GameCanvas.loadImage("/bg/trans.png");
+			imgRoomStat = GameCanvas.loadImage("/mainImage/myTexture2dstat.png");
+			frBarPow0 = GameCanvas.loadImage("/mainImage/myTexture2dlineColor20.png");
+			frBarPow1 = GameCanvas.loadImage("/mainImage/myTexture2dlineColor21.png");
+			frBarPow2 = GameCanvas.loadImage("/mainImage/myTexture2dlineColor22.png");
+			frBarPow20 = GameCanvas.loadImage("/mainImage/myTexture2dlineColor00.png");
+			frBarPow21 = GameCanvas.loadImage("/mainImage/myTexture2dlineColor01.png");
+			frBarPow22 = GameCanvas.loadImage("/mainImage/myTexture2dlineColor02.png");
+		}
 	public void initSelectChar()
 		{
 			readPart();

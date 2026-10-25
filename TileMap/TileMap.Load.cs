@@ -6,14 +6,22 @@ public partial class TileMap
 
 	public static int lastZoomLevel = -1;
 
+	private static int lastRenderMode = -1;
+
 	private static int lastWaterZoomLevel = -1;
+
+	private static int lastWaterRenderMode = -1;
 
 	public static void loadBg()
 		{
 			bong = GameCanvas.loadImage("/mainImage/myTexture2dbong.png");
-			if (mGraphics.zoomLevel != 1 && !Main.isIpod && !Main.isIphone4)
+			if (mGraphics.zoomLevel != 1 && !ModGraphics.IsJavaGraphics && !Main.isIpod && !Main.isIphone4)
 			{
 				imgLight = GameCanvas.loadImage("/bg/light.png");
+			}
+			else
+			{
+				imgLight = null;
 			}
 		}
 
@@ -23,7 +31,7 @@ public partial class TileMap
 
 	public static void loadTileImage()
 		{
-			if (lastWaterZoomLevel != mGraphics.zoomLevel)
+			if (lastWaterZoomLevel != mGraphics.zoomLevel || lastWaterRenderMode != ModGraphics.renderMode)
 			{
 				imgWaterfall = null;
 				imgTopWaterfall = null;
@@ -31,6 +39,7 @@ public partial class TileMap
 				imgWaterlowN = null;
 				imgWaterlowN2 = null;
 				lastWaterZoomLevel = mGraphics.zoomLevel;
+				lastWaterRenderMode = ModGraphics.renderMode;
 			}
 			if (imgWaterfall == null)
 			{
@@ -95,11 +104,12 @@ public partial class TileMap
 
 	public static void loadMainTile()
 		{
-			if (lastTileID != tileID || lastZoomLevel != mGraphics.zoomLevel || imgTile == null)
+			if (lastTileID != tileID || lastZoomLevel != mGraphics.zoomLevel || lastRenderMode != ModGraphics.renderMode || imgTile == null)
 			{
 				getTile();
 				lastTileID = tileID;
 				lastZoomLevel = mGraphics.zoomLevel;
+				lastRenderMode = ModGraphics.renderMode;
 			}
 		}
 
