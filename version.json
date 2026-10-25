@@ -1,9 +1,9 @@
 {
-  "version": "2.5.64",
+  "version": "2.5.65",
   "buildDate": "2026-10-26",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.64/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.64/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.64/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.64/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.64: Hoàn thiện trọn vẹn 100% hệ thống tính năng Mod so với Mod Java và đồng bộ đầy đủ trên cả 4 nền tảng (PC Native .NET 8, Android APK, Web WASM, PC Unity Assembly-CSharp.dll):\n- Bổ sung Tab Tự Động chuyên sâu: Set đồ nhanh 1 & 2 (tích hợp trong Hành trang & Cửa hàng), Mua SLL, Auto Sử Dụng vật phẩm trong túi, Auto NV Tân Thủ (Task 0 -> 10), Auto Giải Captcha qua API HTTP, Tự sát nhanh, Auto Cộng Chỉ Số đa mục tiêu 5 dòng, Spam Bông Tai 11s, Auto Đệ Tử nâng cao (Sủa đánh mồi, Auto KOK, Đạt SM ngắt, Né Boss thông minh), Lịch Hẹn Giờ 6 khung giờ.\n- Bổ sung Proxy SOCKS5/HTTP CONNECT & Máy chủ tùy chỉnh IP:Port trực tiếp tại màn hình sảnh đăng nhập.\n- Bổ sung Xmap Capsule (193/194), Tàu Tương Lai Siêu Tốc, Đóng băng hồi chiêu từng kỹ năng, Xóa người chơi khác giữ Boss & Đệ, HUD Trạng thái Sư Phụ (TTSP) & % chỉ số trang bị, nút nhanh màn hình có thể bật/tắt, hệ thống phím tắt nhanh PC (bảo toàn WASD di chuyển) và sửa dứt điểm lỗi hiển thị tiếng Việt bảng Cập Nhật."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.65/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.65/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.65/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.65/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.65: Nâng cấp toàn diện kiến trúc Engine lên .NET 10 Native 2.2 (C# 14, Runtime 10.0.14) & Tối ưu đồng bộ độ trễ 0ms trên Render.com:\n- Nâng cấp toàn bộ hệ sinh thái đa nền tảng (SharedCore, PC Native 6-Tab, Android API 36, iOS, Web WASM + Kestrel Server & Docker) lên .NET 10 Native 2.2 kèm liên kết nhị phân WasmBuildNative và nén tĩnh Brotli.\n- Tái cấu trúc đường ống mạng WebSocket 0ms theo sự kiện (Channel<bool> thay thế vòng lặp chờ 5ms) kết hợp gom gói nhị phân (Outbound & Inbound Packet Coalescing) giúp combo Tàn Sát, nhặt đồ và di chuyển mượt tức thì trên Render.com.\n- Tích hợp nén trước Brotli/GZip mức tối đa kèm ETag 304 Not Modified cho gói tài nguyên khởi động (/api/startup-pack), bộ nhớ đệm DNS 5 phút và nhịp Keep-Alive HTTP/WebSocket chống ngủ đông container Render Free Tier.\n- Đồng bộ tức thì đa Tab 1..6 qua BroadcastChannel (0ms) và gom giao dịch ghi IndexedDB theo lô chống giật khung hình."
 }
