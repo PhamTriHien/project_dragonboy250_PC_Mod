@@ -24,15 +24,20 @@ public static class ModTeleport
 	private static readonly List<TeleportEchoEntry> pendingTeleportEchoes = new List<TeleportEchoEntry>(64);
 
 	private const int ColdSolidMask = TileMap.T_CENTER | TileMap.T_LEFT | TileMap.T_RIGHT | TileMap.T_SOLIDGROUND | TileMap.T_BOTTOM | TileMap.T_DIE;
-	private const int ColdStepIntervalMs = 135;
-	private const int ColdMaxWalkStepX = 48;
-	private const int ColdLongTeleportCooldownMs = 12000;
-	private const int ColdMaxLongTeleportsPerSession = 150;
+	private const int ColdStepIntervalMs = 110;
+	private const int ColdMaxWalkStepX = 60;
+	private const int ColdTeleportMaxTokens = 2;
+	private const int ColdTeleportRefillMs = 6000;
+	private const int ColdTeleportBurstGapMs = 1200;
+	private const int ColdMaxSessionResetPoints = 190;
 	private static readonly int[] ColdDirX = new int[4] { 0, -1, 1, 0 };
 	private static readonly int[] ColdDirY = new int[4] { -1, 0, 0, 1 };
+	public static int totalSessionResetPoints = 0;
 	private static int coldTrackedTargetX = -1;
 	private static int coldTrackedTargetY = -1;
 	private static long coldTrackedStartTime = 0;
+	private static int coldTeleportTokens = ColdTeleportMaxTokens;
+	private static long lastColdTokenRefillTime = 0;
 	private static long lastColdLongTeleportTime = 0;
 	private static int coldSessionLongTeleportCount = 0;
 	private static int[] bfsQueue = new int[4096];
@@ -41,6 +46,7 @@ public static class ModTeleport
 	private static int[] bfsPathBuffer = new int[512];
 	private static int cachedCostMapId = -1;
 	private static int cachedCostStartIdx = -1;
+	private static bool cachedCostStrict = true;
 	private static long cachedCostTime = 0;
 
 	public static bool IsColdPlanetMap()
@@ -65,13 +71,49 @@ public static class ModTeleport
 		coldTrackedStartTime = 0;
 	}
 
+	public static void NotifyServerResetPointReceived()
+	{
+		totalSessionResetPoints++;
+	}
+
 	public static void ResetSessionColdCounters()
 	{
+		totalSessionResetPoints = 0;
+		coldTeleportTokens = ColdTeleportMaxTokens;
+		lastColdTokenRefillTime = 0;
 		lastColdLongTeleportTime = 0;
 		coldSessionLongTeleportCount = 0;
 		cachedCostMapId = -1;
 		cachedCostStartIdx = -1;
 		cachedCostTime = 0;
+	}
+
+	private static void RefreshColdTeleportTokens(long now)
+	{
+		if (coldTeleportTokens >= ColdTeleportMaxTokens)
+		{
+			lastColdTokenRefillTime = now;
+			return;
+		}
+		if (lastColdTokenRefillTime <= 0)
+		{
+			lastColdTokenRefillTime = now;
+			return;
+		}
+		long elapsed = now - lastColdTokenRefillTime;
+		if (elapsed >= ColdTeleportRefillMs)
+		{
+			int gained = (int)(elapsed / ColdTeleportRefillMs);
+			coldTeleportTokens = System.Math.Min(ColdTeleportMaxTokens, coldTeleportTokens + gained);
+			if (coldTeleportTokens >= ColdTeleportMaxTokens)
+			{
+				lastColdTokenRefillTime = now;
+			}
+			else
+			{
+				lastColdTokenRefillTime += (long)gained * ColdTeleportRefillMs;
+			}
+		}
 	}
 
 	/// <summary>
@@ -129,7 +171,8 @@ public static class ModTeleport
 			return false;
 		}
 		long now = mSystem.currentTimeMillis();
-		if (now - lastSyncRequestTime > 650)
+		int maxWait = IsColdPlanetAntiCheckActive() ? 420 : 650;
+		if (now - lastSyncRequestTime > maxWait)
 		{
 			return false;
 		}
@@ -420,9 +463,14 @@ public static class ModTeleport
 		{
 			return Res.distance(fromX, fromY, toX, toY) / 24;
 		}
-		if (!ResolveColdAirCell(fromX, fromY, strictAir: false, out int sTx, out int sTy))
+		bool useStrict = true;
+		if (!ResolveColdAirCell(fromX, fromY, strictAir: true, out int sTx, out int sTy))
 		{
-			return Res.distance(fromX, fromY, toX, toY) / 24;
+			useStrict = false;
+			if (!ResolveColdAirCell(fromX, fromY, strictAir: false, out sTx, out sTy))
+			{
+				return Res.distance(fromX, fromY, toX, toY) / 24;
+			}
 		}
 
 		int w = TileMap.tmw;
@@ -431,7 +479,7 @@ public static class ModTeleport
 		int startIdx = sTy * w + sTx;
 		long now = mSystem.currentTimeMillis();
 
-		if (cachedCostMapId != TileMap.mapID || cachedCostStartIdx != startIdx || now - cachedCostTime > 100 || bfsDist.Length < total)
+		if (cachedCostMapId != TileMap.mapID || cachedCostStartIdx != startIdx || cachedCostStrict != useStrict || now - cachedCostTime > 90 || bfsDist.Length < total)
 		{
 			if (bfsDist.Length < total)
 			{
@@ -470,7 +518,7 @@ public static class ModTeleport
 					{
 						continue;
 					}
-					if (!IsColdCellPassable(nx, ny, strictAir: false, startIdx, -1))
+					if (!IsColdCellPassable(nx, ny, strictAir: useStrict, startIdx, -1))
 					{
 						continue;
 					}
@@ -481,10 +529,11 @@ public static class ModTeleport
 
 			cachedCostMapId = TileMap.mapID;
 			cachedCostStartIdx = startIdx;
+			cachedCostStrict = useStrict;
 			cachedCostTime = now;
 		}
 
-		if (ResolveColdAirCell(toX, toY, strictAir: false, out int gTx, out int gTy))
+		if (ResolveColdAirCell(toX, toY, strictAir: useStrict, out int gTx, out int gTy))
 		{
 			int gIdx = gTy * w + gTx;
 			if (gIdx >= 0 && gIdx < total && bfsDist[gIdx] >= 0)
@@ -637,8 +686,9 @@ public static class ModTeleport
 		int arriveTolY = mustLandExact ? 2 : 16;
 
 		bool conservativeSpeed = (ModTanSat.lastResetPenaltyTime > 0 && now - ModTanSat.lastResetPenaltyTime < 8000) || (me.cspeed > 0 && me.cspeed < 6);
-		int maxFlyAxis = conservativeSpeed ? 48 : 60;
-		int maxFlyManhattan = conservativeSpeed ? 64 : 76;
+		int maxFlyAxis = conservativeSpeed ? 48 : 68;
+		int maxFlyManhattan = conservativeSpeed ? 64 : 88;
+		int maxClampStep = conservativeSpeed ? 48 : 60;
 
 		if (dx <= maxFlyAxis && dy <= maxFlyAxis && (dx + dy) <= maxFlyManhattan && IsColdLandingSegmentClear(me.cx, me.cy, targetX, targetY))
 		{
@@ -650,9 +700,10 @@ public static class ModTeleport
 			return true;
 		}
 
-		if (TileMap.tileTypeAt(me.cx, me.cy, TileMap.T_TOP) && me.cy == targetY && dx <= 192 && IsFlatGroundContinuous(me.cx, targetX, targetY))
+		if (TileMap.tileTypeAt(me.cx, me.cy, TileMap.T_TOP) && me.cy == targetY && dx <= 480 && IsFlatGroundContinuous(me.cx, targetX, targetY))
 		{
-			int walkX = (dx <= ColdMaxWalkStepX) ? targetX : (me.cx + ((targetX > me.cx) ? ColdMaxWalkStepX : (-ColdMaxWalkStepX)));
+			int maxWalk = conservativeSpeed ? 48 : ColdMaxWalkStepX;
+			int walkX = (dx <= maxWalk) ? targetX : (me.cx + ((targetX > me.cx) ? maxWalk : (-maxWalk)));
 			SendSingleCharMove(walkX, targetY);
 			lastStepTime = now;
 			isCurrentPosSynced = true;
@@ -666,13 +717,21 @@ public static class ModTeleport
 		}
 
 		bool hasPath = FindColdAirPath(me.cx, me.cy, targetX, targetY, out int pathLen, out bool strictAirUsed) && pathLen > 0;
+		RefreshColdTeleportTokens(now);
 		bool canLongTeleport = allowLongTeleport &&
 		                       mustLandExact &&
-		                       coldSessionLongTeleportCount < ColdMaxLongTeleportsPerSession &&
-		                       (now - lastColdLongTeleportTime >= ColdLongTeleportCooldownMs) &&
+		                       coldTeleportTokens > 0 &&
+		                       (now - lastColdLongTeleportTime >= ColdTeleportBurstGapMs) &&
+		                       totalSessionResetPoints < ColdMaxSessionResetPoints &&
+		                       coldSessionLongTeleportCount < ColdMaxSessionResetPoints &&
 		                       !ModTanSatTargeting.IsInsideWaypoint(targetX, targetY);
-		if (canLongTeleport && ((hasPath && pathLen >= 14) || (!hasPath && (dx > 120 || dy > 96)) || (dx + dy) >= 420))
+		if (canLongTeleport && ((hasPath && pathLen >= 9) || (!hasPath && (dx > 96 || dy > 72)) || (dx + dy) >= 260))
 		{
+			if (coldTeleportTokens == ColdTeleportMaxTokens)
+			{
+				lastColdTokenRefillTime = now;
+			}
+			coldTeleportTokens--;
 			lastColdLongTeleportTime = now;
 			coldSessionLongTeleportCount++;
 			ResetColdStepTracking();
@@ -699,8 +758,8 @@ public static class ModTeleport
 				{
 					if (i == pathLen - 1)
 					{
-						int landX = me.cx + ClampInt(targetX - me.cx, -48, 48);
-						int landY = me.cy + ClampInt(targetY - me.cy, -48, 48);
+						int landX = me.cx + ClampInt(targetX - me.cx, -maxClampStep, maxClampStep);
+						int landY = me.cy + ClampInt(targetY - me.cy, -maxClampStep, maxClampStep);
 						SendSingleCharMove(landX, landY);
 						lastStepTime = now;
 						isCurrentPosSynced = true;
@@ -733,8 +792,8 @@ public static class ModTeleport
 
 			int fallbackIdx = bfsPathBuffer[System.Math.Min(1, pathLen - 1)];
 			GetColdCellPixel(fallbackIdx % w, fallbackIdx / w, out int nextX, out int nextY);
-			int stepX = me.cx + ClampInt(nextX - me.cx, -48, 48);
-			int stepY = me.cy + ClampInt(nextY - me.cy, -48, 48);
+			int stepX = me.cx + ClampInt(nextX - me.cx, -maxClampStep, maxClampStep);
+			int stepY = me.cy + ClampInt(nextY - me.cy, -maxClampStep, maxClampStep);
 			SendSingleCharMove(stepX, stepY);
 			lastStepTime = now;
 			isCurrentPosSynced = true;

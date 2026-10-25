@@ -652,10 +652,10 @@ public static class ModTanSat
 					else
 					{
 						bool coldAntiCheck = ModTeleport.IsColdPlanetAntiCheckActive();
-						int resyncMinElapsed = coldAntiCheck ? 300 : 350;
+						int resyncMinElapsed = coldAntiCheck ? 220 : 350;
 						if (currentFarmTarget.templateId != 0 && currentFarmTarget.hp > 1 && now - lastAttackTime >= resyncMinElapsed && lastResyncAttackCount != currentTargetUnchangedAttackCount)
 						{
-							bool shouldResync = (coldAntiCheck && currentTargetUnchangedAttackCount == 1) ||
+							bool shouldResync = (coldAntiCheck && currentTargetUnchangedAttackCount == 2) ||
 							                    currentTargetUnchangedAttackCount == 3 ||
 							                    currentTargetUnchangedAttackCount == 6;
 							if (shouldResync)
@@ -705,8 +705,11 @@ public static class ModTanSat
 					me.effPaints = null;
 					me.mobFocus = null;
 				}
-				waitUntilTime = System.Math.Max(waitUntilTime, now + 120);
-				return;
+				if (!ModTeleport.IsColdPlanetAntiCheckActive())
+				{
+					waitUntilTime = System.Math.Max(waitUntilTime, now + 120);
+					return;
+				}
 			}
 
 			// 3. Tìm quái mục tiêu mới nếu chưa có (nhường AutoPick nhặt vật phẩm rơi trước khi khóa mục tiêu mới)
@@ -718,26 +721,38 @@ public static class ModTanSat
 				}
 
 				MyVector mobs = GameScr.vMob;
-				if (mobs == null || mobs.size() == 0) return;
-
-				Mob bestMob = SelectBestMob(me, mobs, now, ignoreBlacklist: false);
-				if (bestMob == null && ignoredMobUntil.Count > 0)
+				if (mobs != null && mobs.size() > 0)
 				{
-					bestMob = SelectBestMob(me, mobs, now, ignoreBlacklist: true);
-				}
+					Mob bestMob = SelectBestMob(me, mobs, now, ignoreBlacklist: false);
+					if (bestMob == null && ignoredMobUntil.Count > 0)
+					{
+						bestMob = SelectBestMob(me, mobs, now, ignoreBlacklist: true);
+					}
 
-				if (bestMob != null)
-				{
-					currentFarmTarget = bestMob;
-					targetLockTime = now;
-					targetLastHp = bestMob.hp;
-					currentTargetResetCount = 0;
-					currentTargetUnchangedAttackCount = 0;
-					lastResyncAttackCount = 0;
+					if (bestMob != null)
+					{
+						currentFarmTarget = bestMob;
+						targetLockTime = now;
+						targetLastHp = bestMob.hp;
+						currentTargetResetCount = 0;
+						currentTargetUnchangedAttackCount = 0;
+						lastResyncAttackCount = 0;
+					}
 				}
 			}
 
-			if (currentFarmTarget == null) return;
+			if (currentFarmTarget == null)
+			{
+				if (ModTeleport.IsColdPlanetAntiCheckActive() && !TileMap.tileTypeAt(me.cx, me.cy, 2))
+				{
+					int groundY = ModTanSatTargeting.FindGroundY(me.cx, me.cy, 360);
+					if (groundY != -1)
+					{
+						ModTeleport.MoveSteppedTo(me.cx, groundY);
+					}
+				}
+				return;
+			}
 
 			me.mobFocus = currentFarmTarget;
 			me.charFocus = null;

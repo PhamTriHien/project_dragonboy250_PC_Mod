@@ -124,6 +124,7 @@ public partial class Char : IMapObject
 	/// </summary>
 	public void setResetPoint(int x, int y)
 			{
+				ModTeleport.NotifyServerResetPointReceived();
 				ModTdltLogger.Log("RESET_POINT_RAW", $"Packet 46 received -> resetPos=({x},{y}), curPos=({cx},{cy}), Map='{TileMap.mapName}' (ID:{TileMap.mapID}), HP={cHP}/{cHPFull}");
 				InfoDlg.hide();
 				currentMovePoint = null;

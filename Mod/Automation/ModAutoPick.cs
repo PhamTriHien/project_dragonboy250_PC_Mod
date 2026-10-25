@@ -697,7 +697,7 @@ public static class ModAutoPick
 				else
 				{
 					bool wasAlreadyThere = Res.abs(me.cx - pickX) <= 12 && Res.abs(me.cy - pickY) <= (coldPick ? 2 : 16);
-					if (ModTeleport.MoveSteppedTo(pickX, pickY))
+					if (ModTeleport.MoveSteppedTo(pickX, pickY, isTargetFlying: false, allowColdLongTeleport: true))
 					{
 						if (wasAlreadyThere && (!coldPick ? (currentItemRetryCount >= 2) : (currentItemRetryCount == 3)))
 						{

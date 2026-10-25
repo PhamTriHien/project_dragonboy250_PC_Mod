@@ -1,9 +1,9 @@
 {
-  "version": "2.5.48",
+  "version": "2.5.49",
   "buildDate": "2026-10-25",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.48/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.48/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.48/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.48/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.48: Tối ưu toàn diện tốc độ Tàn Sát tại hành tinh Cooler/Cold (Map 105-110): Chọn mục tiêu theo khoảng cách đường đi thực tế (BFS Flood-Fill) dọn sạch từng tầng trước khi chuyển tầng, kết hợp dịch chuyển tức thời Hybrid (1-2 lần có giãn cách an toàn) khi quái ở quá xa bên kia bản đồ, đáp chuẩn mặt đất (0 hao KI, 0 đấm hụt lơ lửng), đồng bộ lại vị trí ngay nhịp trượt đầu tiên và tự phục hồi định tuyến NextMap."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.49/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.49/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.49/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.49/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.49: Tăng tốc cực đại Tàn Sát bên Cooler/Cold (Map 105-110): Bộ nạp 2 điểm Dịch Chuyển Hybrid tầm xa (hồi 1 điểm mỗi 6s, kích hoạt từ 9 ô BFS / 260px), tăng tốc chạy bộ mặt phẳng lên 60px/110ms (tầm 480px) & bay BFS 68px/110ms, triệt tiêu trễ 120ms khi kết liễu quái, bỏ gói CHAR_MOVE thừa sau mỗi đòn đánh, tự hạ cánh khi dọn sạch map và giám sát trực tiếp tổng Packet 46 toàn phiên dưới ngưỡng an toàn 190."
 }
