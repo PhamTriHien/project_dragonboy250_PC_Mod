@@ -152,6 +152,7 @@ public partial class Service
 			Debug.LogError("Login " + username + " " + pass + " " + version);
 			try
 			{
+				ModTeleport.ResetSessionColdCounters();
 				Message message = messageNotLogin(0);
 				message.writer().writeUTF(username);
 				message.writer().writeUTF(pass);

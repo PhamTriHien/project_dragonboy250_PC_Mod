@@ -31,6 +31,10 @@ public partial class Char : IMapObject
 					i0 = (i1 = (i2 = 0));
 					mobFocus = null;
 					charFocus = null;
+					if (me && !hasSendAttack && dart == null && arr == null)
+					{
+						ModTanSat.OnPendingAttackAborted();
+					}
 					effPaints = null;
 					currentMovePoint = null;
 					arr = null;
@@ -178,6 +182,22 @@ public partial class Char : IMapObject
 					}
 				}
 				indexSkill++;
+				if (me && ModTanSat.autoTanSat && ModTeleport.IsColdPlanetAntiCheckActive() && isPunchKickSkill() && arr == null && dart == null)
+				{
+					if (hasSendAttack && indexSkill >= array.Length)
+					{
+						indexSkill = 0;
+						skillPaint = null;
+						skillPaintRandomPaint = null;
+						eff0 = (eff1 = (eff2 = null));
+						i0 = (i1 = (i2 = 0));
+						return;
+					}
+					if (!hasSendAttack && array.Length > 11 && indexSkill == array.Length / 2)
+					{
+						indexSkill++;
+					}
+				}
 				if (me)
 				{
 					return;

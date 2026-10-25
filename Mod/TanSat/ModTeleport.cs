@@ -24,10 +24,10 @@ public static class ModTeleport
 	private static readonly List<TeleportEchoEntry> pendingTeleportEchoes = new List<TeleportEchoEntry>(64);
 
 	private const int ColdSolidMask = TileMap.T_CENTER | TileMap.T_LEFT | TileMap.T_RIGHT | TileMap.T_SOLIDGROUND | TileMap.T_BOTTOM | TileMap.T_DIE;
-	public const int ColdStepIntervalMs = 92;
-	private const int ColdMaxWalkStepX = 76;
+	public const int ColdStepIntervalMs = 82;
+	private const int ColdMaxWalkStepX = 84;
 	private const int ColdTeleportMaxTokens = 1;
-	private const int ColdTeleportRefillMs = 11000;
+	private const int ColdTeleportRefillMs = 14000;
 	private const int ColdTeleportBurstGapMs = 2500;
 	private const int ColdMaxPlanetResetPoints = 95;
 	private const int ColdMaxSessionResetPoints = 120;
@@ -135,7 +135,7 @@ public static class ModTeleport
 			}
 			if (TileMap.tileTypeAt(me.cx, candY, 2) && !IsPointUndergroundOrBlocked(me.cx, candY))
 			{
-				int stepY = me.cy + ClampInt(candY - me.cy, -72, 72);
+				int stepY = me.cy + ClampInt(candY - me.cy, -84, 84);
 				SendSingleCharMove(me.cx, stepY);
 				lastStepTime = now;
 				isCurrentPosSynced = true;
@@ -631,6 +631,14 @@ public static class ModTeleport
 		return false;
 	}
 
+	public static bool IsColdSameFlatPlatform(int fromX, int fromY, int toX, int toY)
+	{
+		return Res.abs(fromY - toY) <= 12 &&
+		       Res.abs(fromX - toX) <= 640 &&
+		       TileMap.tileTypeAt(fromX, fromY, TileMap.T_TOP) &&
+		       IsFlatGroundContinuous(fromX, toX, fromY);
+	}
+
 	private static bool IsFlatGroundContinuous(int fromX, int toX, int y)
 	{
 		if (fromX == toX)
@@ -744,9 +752,9 @@ public static class ModTeleport
 		int arriveTolY = mustLandExact ? 2 : 16;
 
 		bool conservativeSpeed = (ModTanSat.lastResetPenaltyTime > 0 && now - ModTanSat.lastResetPenaltyTime < 6000) || (me.cspeed > 0 && me.cspeed < 4);
-		int maxFlyAxis = conservativeSpeed ? 48 : 76;
-		int maxFlyManhattan = conservativeSpeed ? 72 : 104;
-		int maxClampStep = conservativeSpeed ? 48 : 72;
+		int maxFlyAxis = conservativeSpeed ? 48 : 84;
+		int maxFlyManhattan = conservativeSpeed ? 72 : 132;
+		int maxClampStep = conservativeSpeed ? 48 : 84;
 
 		if (dx <= maxFlyAxis && dy <= maxFlyAxis && (dx + dy) <= maxFlyManhattan && IsColdLandingSegmentClear(me.cx, me.cy, targetX, targetY))
 		{
@@ -782,7 +790,7 @@ public static class ModTeleport
 		                         coldPlanetResetPoints < ColdMaxPlanetResetPoints &&
 		                         totalSessionResetPoints < ColdMaxSessionResetPoints &&
 		                         coldSessionLongTeleportCount < ColdMaxPlanetResetPoints;
-		bool isLongJump = (hasPath && pathLen >= 13) || (!hasPath && (dx > 120 || dy > 96)) || (dx + dy) >= 400;
+		bool isLongJump = (hasPath && pathLen >= 18) || (!hasPath && (dx > 144 || dy > 108)) || (dx + dy) >= 560;
 		if (hasTeleportBudget && isLongJump)
 		{
 			if (mustLandExact && !ModTanSatTargeting.IsInsideWaypoint(targetX, targetY))
@@ -830,6 +838,13 @@ public static class ModTeleport
 			{
 				int cellIdx = bfsPathBuffer[i];
 				GetColdCellPixel(cellIdx % w, cellIdx / w, out int candX, out int candY);
+				if (i < pathLen - 1 && ((targetX < me.cx && candX > me.cx) || (targetX > me.cx && candX < me.cx)))
+				{
+					if (Res.abs(candY - me.cy) > 3 && IsColdAirSegmentClear(me.cx, me.cy, me.cx, candY, strictAirUsed))
+					{
+						candX = me.cx;
+					}
+				}
 				int sdx = Res.abs(candX - me.cx);
 				int sdy = Res.abs(candY - me.cy);
 				if (sdx > maxFlyAxis || sdy > maxFlyAxis || (sdx + sdy) > maxFlyManhattan)
@@ -858,6 +873,27 @@ public static class ModTeleport
 				if (!IsColdAirSegmentClear(me.cx, me.cy, candX, candY, strictAirUsed))
 				{
 					continue;
+				}
+
+				if (i + 1 < pathLen)
+				{
+					int nextCellIdx = bfsPathBuffer[i + 1];
+					GetColdCellPixel(nextCellIdx % w, nextCellIdx / w, out int furtherX, out int furtherY);
+					if (i + 1 < pathLen - 1 && ((targetX < me.cx && furtherX > me.cx) || (targetX > me.cx && furtherX < me.cx)) && Res.abs(furtherY - me.cy) > 3)
+					{
+						furtherX = me.cx;
+					}
+					int extX = me.cx + ClampInt(furtherX - me.cx, -maxFlyAxis, maxFlyAxis);
+					int extY = me.cy + ClampInt(furtherY - me.cy, -maxFlyAxis, maxFlyAxis);
+					int extDx = Res.abs(extX - me.cx);
+					int extDy = Res.abs(extY - me.cy);
+					if ((extDx + extDy) <= maxFlyManhattan &&
+					    (Res.abs(furtherX - extX) + Res.abs(furtherY - extY)) < (Res.abs(furtherX - candX) + Res.abs(furtherY - candY)) &&
+					    IsColdAirSegmentClear(me.cx, me.cy, extX, extY, strictAirUsed))
+					{
+						candX = extX;
+						candY = extY;
+					}
 				}
 
 				SendSingleCharMove(candX, candY);

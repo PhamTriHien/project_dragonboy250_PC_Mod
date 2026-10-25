@@ -192,7 +192,7 @@ public static class ModTanSatTargeting
 		}
 
 		int[] dirMultipliers = { preferredDir, -preferredDir };
-		int[] distOffsets = isRanged ? new int[] { 36, 24, 16, 0 } : new int[] { 8, 0, 14, 20 };
+		int[] distOffsets = isRanged ? new int[] { 36, 24, 16, 0 } : new int[] { 6, 0, 12, 18 };
 
 		int bestX = mobX;
 		int bestY = mobY;

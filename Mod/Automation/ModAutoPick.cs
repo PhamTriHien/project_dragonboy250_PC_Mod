@@ -643,16 +643,19 @@ public static class ModAutoPick
 					me.cvx = 0;
 					me.cvy = 0;
 				}
+				bool isNewItem = (closest.itemMapID != lastPickedItemMapId);
 				int pickInterval = (coldPick && ModTeleport.isWaitingSettle)
 					? ModTeleport.ColdStepIntervalMs
-					: ((closest.itemMapID == lastPickedItemMapId && currentItemRetryCount >= 1) ? 300 : 180);
+					: (isNewItem ? 45 : ((currentItemRetryCount >= 1) ? 260 : 160));
 				if (now - lastPickTime < pickInterval)
 				{
 					return;
 				}
 
-				int inPlaceTolY = (coldPick && TileMap.tileTypeAt(pickX, pickY, 2)) ? 2 : 8;
-				bool canPickInPlace = dx <= 6 && dy <= inPlaceTolY && (closest.itemMapID != lastPickedItemMapId || currentItemRetryCount < 1);
+				bool posSyncedForInPlace = !coldPick || ModTeleport.isCurrentPosSynced;
+				int inPlaceMaxX = posSyncedForInPlace ? 22 : 6;
+				int inPlaceTolY = posSyncedForInPlace ? (coldPick ? 12 : 16) : 2;
+				bool canPickInPlace = dx <= inPlaceMaxX && dy <= inPlaceTolY && (isNewItem || currentItemRetryCount < 1);
 				if (canPickInPlace)
 				{
 					if (ModTeleport.IsWaitingServerSyncForAttack())

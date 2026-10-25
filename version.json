@@ -1,9 +1,9 @@
 {
-  "version": "2.5.52",
+  "version": "2.5.53",
   "buildDate": "2026-10-25",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.52/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.52/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.52/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.52/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.52: Chuẩn hóa toàn bộ pipeline nạp và render TileMap sát 100% mã nguồn gốc DragonBoy 250: (1) Sửa thứ tự nạp getTile() ưu tiên tile lẻ /t/{tileID}$1.png trước spritesheet, chống nạp nhầm file mã hóa cRBC và khóa cache theo zoomLevel; (2) Khôi phục loadImageRMS đọc cache RMS trên PC Unity & chia sẻ kho tile RMS cho Tab 1, sửa case -74 chỉ lưu RMS_ResVersion sau khi tải xong tài nguyên; (3) Chuẩn hóa paintTile (T_DOWN1PIXEL), chế độ Siêu Giảm Dung Lượng giữ nguyên đầy đủ base map (thác nước, viền ngoài, ẩn gạch va chạm tileID=13), tự động reload tile khi đổi zoomLevel và ép TextureWrap.Clamp triệt tiêu đường kẻ nối ô gạch."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.53/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.53/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.53/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.53/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.53: Tối ưu chuyên sâu tốc độ Tàn Sát Cooler (Map 105-110) giữ vững 100% độ ổn định treo dài hạn (0 phạt RESET_POINT, 0 kick máy chủ): (1) Khôi phục tức thời hồi chiêu của đòn vung dở chưa kịp gửi gói sendPlayerAttack khi quái chết, giúp xuất đòn 0ms ngay khoảnh khắc chạm quái kế tiếp; (2) Mở rộng bước bay/đi bộ chuẩn an toàn 84px ở nhịp 82ms kèm nội suy đường bay liên tục và chống bước lùi lúc cất cánh; (3) Quét dứt điểm quái cùng tầng phẳng theo hướng di chuyển, mở tầm cận chiến khi đang giao chiến tránh nhích bước thừa, nhặt đồ rơi sát chân 0ms tại chỗ và phân bổ ngân sách Hybrid Teleport cho quãng nhảy xa xuyên map."
 }

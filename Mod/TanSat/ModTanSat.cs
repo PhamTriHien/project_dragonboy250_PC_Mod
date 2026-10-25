@@ -25,6 +25,7 @@ public static class ModTanSat
 				resetPenaltyCount = 0;
 				currentTargetResetCount = 0;
 				currentTargetUnchangedAttackCount = 0;
+				pendingAttackPacket = false;
 				ModTeleport.ClearEchoes();
 				ignoredMobUntil.Clear();
 			}
@@ -63,6 +64,9 @@ public static class ModTanSat
 	public static int lastSentSkillTemplateId = -1;
 	public static long lastManualMoveTime = 0;
 	public static long lastAttackTime = 0;
+	public static long lastConfirmedAttackPacketTime = 0;
+	private static long prevConfirmedAttackStartTime = 0;
+	private static bool pendingAttackPacket = false;
 	public static int timeAttack = 300;
 	public static int lockedSkillTemplateId = -1;
 	public static int lastTeleportTargetMobId = -1;
@@ -122,6 +126,50 @@ public static class ModTanSat
 		targetLockTime = now;
 		currentTargetUnchangedAttackCount = 0;
 		lastResyncAttackCount = 0;
+	}
+
+	public static void OnAttackPacketSent()
+	{
+		long now = mSystem.currentTimeMillis();
+		pendingAttackPacket = false;
+		lastConfirmedAttackPacketTime = now;
+		prevConfirmedAttackStartTime = (lastAttackTime > 0) ? lastAttackTime : now;
+		if (autoTanSat)
+		{
+			currentTargetUnchangedAttackCount++;
+		}
+	}
+
+	public static void OnPendingAttackAborted()
+	{
+		if (!pendingAttackPacket)
+		{
+			return;
+		}
+		pendingAttackPacket = false;
+		Char me = Char.myCharz();
+		if (me != null && (me.hasSendAttack || me.dart != null || me.arr != null))
+		{
+			return;
+		}
+		long restoreTime = System.Math.Max(prevConfirmedAttackStartTime, lastConfirmedAttackPacketTime - 180);
+		if (restoreTime < 0)
+		{
+			restoreTime = 0;
+		}
+		if (lastAttackTime > restoreTime)
+		{
+			lastAttackTime = restoreTime;
+		}
+		if (me != null && me.myskill != null && me.myskill.lastTimeUseThisSkill > restoreTime)
+		{
+			me.myskill.lastTimeUseThisSkill = restoreTime;
+		}
+		Skill bestSkill = ModTanSatFilter.GetBestSkillToUse();
+		if (bestSkill != null && bestSkill.lastTimeUseThisSkill > restoreTime)
+		{
+			bestSkill.lastTimeUseThisSkill = restoreTime;
+		}
 	}
 
 	/// <summary>
@@ -220,9 +268,21 @@ public static class ModTanSat
 				? (ModTeleport.GetColdTravelTileCost(me.cx, me.cy, m.x, m.y) * 24 + (euclidDist / 10))
 				: euclidDist;
 
-			if (coldBfs && Res.abs(m.y - me.cy) <= 16 && Res.abs(m.x - me.cx) <= 640)
+			if (coldBfs)
 			{
-				dist -= 20;
+				if (ModTeleport.IsColdSameFlatPlatform(me.cx, me.cy, m.x, m.y))
+				{
+					int absDx = Res.abs(m.x - me.cx);
+					dist -= (absDx <= 420) ? 96 : 60;
+					if ((m.x - me.cx) * me.cdir >= 0)
+					{
+						dist -= 18;
+					}
+				}
+				else if (Res.abs(m.y - me.cy) <= 16 && Res.abs(m.x - me.cx) <= 640)
+				{
+					dist -= 24;
+				}
 			}
 
 			if (ModDropRate.isLastHitLock && m.hp < (m.maxHp / 3) && dist < 150)
@@ -496,6 +556,7 @@ public static class ModTanSat
 			{
 				if (currentFarmTarget != null && (currentFarmTarget.status == 0 || currentFarmTarget.status == 1 || currentFarmTarget.hp <= 0))
 				{
+					OnPendingAttackAborted();
 					currentFarmTarget = null;
 					currentTargetResetCount = 0;
 					currentTargetUnchangedAttackCount = 0;
@@ -526,6 +587,7 @@ public static class ModTanSat
 				resetPenaltyCount = 0;
 				currentTargetResetCount = 0;
 				currentTargetUnchangedAttackCount = 0;
+				pendingAttackPacket = false;
 				changingMapStuckSince = 0;
 				ModTeleport.ClearEchoes();
 				ignoredMobUntil.Clear();
@@ -662,8 +724,9 @@ public static class ModTanSat
 					else
 					{
 						bool coldAntiCheck = ModTeleport.IsColdPlanetAntiCheckActive();
-						int resyncMinElapsed = coldAntiCheck ? 220 : 350;
-						if (currentFarmTarget.templateId != 0 && currentFarmTarget.hp > 1 && now - lastAttackTime >= resyncMinElapsed && lastResyncAttackCount != currentTargetUnchangedAttackCount)
+						int resyncMinElapsed = coldAntiCheck ? 280 : 350;
+						long refAttackTime = (lastConfirmedAttackPacketTime > 0) ? lastConfirmedAttackPacketTime : lastAttackTime;
+						if (currentFarmTarget.templateId != 0 && currentFarmTarget.hp > 1 && currentTargetUnchangedAttackCount > 0 && now - refAttackTime >= resyncMinElapsed && lastResyncAttackCount != currentTargetUnchangedAttackCount)
 						{
 							bool shouldResync = (coldAntiCheck && currentTargetUnchangedAttackCount == 2) ||
 							                    currentTargetUnchangedAttackCount == 3 ||
@@ -699,6 +762,15 @@ public static class ModTanSat
 
 			if (targetDiedOrInvalid)
 			{
+				if (me.skillPaint != null && !me.hasSendAttack && me.dart == null && me.arr == null)
+				{
+					OnPendingAttackAborted();
+				}
+				else if (pendingAttackPacket && me.dart == null && me.arr == null && !me.hasSendAttack)
+				{
+					OnPendingAttackAborted();
+				}
+				pendingAttackPacket = false;
 				currentFarmTarget = null;
 				lastTeleportTargetMobId = -1;
 				currentTargetResetCount = 0;
@@ -777,15 +849,21 @@ public static class ModTanSat
 			int tplId = (skillToUse.template != null) ? skillToUse.template.id : -1;
 			bool isMeleeTemplate = (tplId == 0 || tplId == 2 || tplId == 4 || tplId == 9 || tplId == 17);
 			bool isRanged = !isMeleeTemplate && (skillToUse.dx > 75);
-
-			int maxRangeX = isRanged ? (skillToUse.dx - 8) : 24;
-			int maxRangeY = isRanged ? (skillToUse.dy - 6) : 24;
+			bool isColdAntiCheckNow = ModTeleport.IsColdPlanetAntiCheckActive();
 
 			bool isNewTarget = (lastTeleportTargetMobId != currentFarmTarget.mobId);
-			bool isOutOfRange = (deltaX > maxRangeX || deltaY > maxRangeY);
-			bool canAdoptInPlace = !ModTeleport.IsColdPlanetAntiCheckActive() || TileMap.tileTypeAt(me.cx, me.cy, 2) || !TileMap.tileTypeAt(anchorX, anchorY, 2);
+			int coldEngagedMeleeRangeX = System.Math.Min(System.Math.Max(28, skillToUse.dx - 10), 38);
+			int maxRangeX = isRanged ? (skillToUse.dx - 8) : ((!isNewTarget && isColdAntiCheckNow) ? coldEngagedMeleeRangeX : 24);
+			int maxRangeY = isRanged ? (skillToUse.dy - 6) : 24;
 
-			if (isNewTarget && canAdoptInPlace && lastResyncAttackCount == 0 && !isOutOfRange && !ModTeleport.isWaitingSettle && deltaX <= 16 && deltaY <= 16 && !ModTanSatTargeting.IsInsideWaypoint(me.cx, me.cy))
+			bool isOutOfRange = (deltaX > maxRangeX || deltaY > maxRangeY);
+			if (!isNewTarget && isColdAntiCheckNow && isOutOfRange && !isRanged && me.skillPaint != null && !me.hasSendAttack && deltaX <= skillToUse.dx && deltaY <= skillToUse.dy)
+			{
+				isOutOfRange = false;
+			}
+			bool canAdoptInPlace = !isColdAntiCheckNow || TileMap.tileTypeAt(me.cx, me.cy, 2) || !TileMap.tileTypeAt(anchorX, anchorY, 2);
+
+			if (isNewTarget && canAdoptInPlace && lastResyncAttackCount == 0 && !isOutOfRange && !ModTeleport.isWaitingSettle && deltaX <= (isColdAntiCheckNow ? 20 : 16) && deltaY <= 16 && !ModTanSatTargeting.IsInsideWaypoint(me.cx, me.cy))
 			{
 				lastTeleportTargetMobId = currentFarmTarget.mobId;
 				lastTeleportTime = now;
@@ -913,7 +991,6 @@ public static class ModTanSat
 			// LƯU Ý QUAN TRỌNG: Tuyệt đối KHÔNG gán skillToUse.lastTimeUseThisSkill = now TRƯỚC khi gọi setSkillPaint / doSelectSkill / sendUseChargeSkill,
 			// vì bên trong setSkillPaint() có kiểm tra: if (num - myskill.lastTimeUseThisSkill < myskill.coolDown) return;
 			lastAttackTime = now;
-			currentTargetUnchangedAttackCount++;
 			skillToUse.paintCanNotUseSkill = false;
 			if (me.myskill != null)
 			{
@@ -924,10 +1001,19 @@ public static class ModTanSat
 			{
 				me.currentFireByShortcut = true;
 				me.sendUseChargeSkill();
+				OnAttackPacketSent();
 			}
 			else if (me.isUseSkillSpec())
 			{
 				GameScr.gI().doSelectSkill(skillToUse, isShortcut: true);
+				if (me.skillPaint != null && !me.hasSendAttack && me.dart == null && me.arr == null)
+				{
+					pendingAttackPacket = true;
+				}
+				else
+				{
+					OnAttackPacketSent();
+				}
 			}
 			else if (skillToUse.skillId >= 0 && skillToUse.skillId < GameScr.sks.Length && GameScr.sks[skillToUse.skillId] != null)
 			{
@@ -936,10 +1022,26 @@ public static class ModTanSat
 				me.setSkillPaint(GameScr.sks[skillToUse.skillId], (!isGroundedNow) ? 1 : 0);
 				me.delayFall = 0;
 				me.cvy = 0;
+				if (me.skillPaint != null && !me.hasSendAttack && me.dart == null && me.arr == null)
+				{
+					pendingAttackPacket = true;
+				}
+				else if (me.hasSendAttack || me.dart != null || me.arr != null)
+				{
+					OnAttackPacketSent();
+				}
 			}
 			else
 			{
 				GameScr.gI().doSelectSkill(skillToUse, isShortcut: true);
+				if (me.skillPaint != null && !me.hasSendAttack && me.dart == null && me.arr == null)
+				{
+					pendingAttackPacket = true;
+				}
+				else
+				{
+					OnAttackPacketSent();
+				}
 			}
 			skillToUse.lastTimeUseThisSkill = now;
 			if (me.myskill != null)

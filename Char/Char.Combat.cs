@@ -392,6 +392,7 @@ public partial class Char : IMapObject
 					{
 						Service.gI().sendPlayerAttack(myVector, myVector2, type);
 						hasSendAttack = true;
+						ModTanSat.OnAttackPacketSent();
 					}
 					return;
 				}
