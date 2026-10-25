@@ -441,6 +441,26 @@ public static class ModWaypoint
 			// Pha 1: Dịch chuyển tới tọa độ tiếp cận sát cổng (cột đất hợp lệ) và đợi Server xác nhận
 			if (!hasTeleportedToWp)
 			{
+				if (ModTeleport.IsColdPlanetAntiCheckActive())
+				{
+					int coldApproachY = wpTargetY;
+					if (ModTeleport.IsColdPositionBlocked(approachX, coldApproachY))
+					{
+						int fixedY = ModTanSatTargeting.FindGroundY(approachX, coldApproachY, 96);
+						if (fixedY != -1)
+						{
+							coldApproachY = fixedY;
+						}
+					}
+					if (ModTeleport.MoveSteppedTo(approachX, coldApproachY, isTargetFlying: false, allowColdLongTeleport: false))
+					{
+						hasTeleportedToWp = true;
+						isWpPosConfirmed = true;
+						isWaitingTeleportConfirm = false;
+					}
+					wpInitTime = now;
+					return false;
+				}
 				if (MoveSteppedTo(approachX, wpTargetY))
 				{
 					hasTeleportedToWp = true;

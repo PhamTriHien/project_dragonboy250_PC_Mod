@@ -95,6 +95,16 @@ public static class ModGoBack
 	private static int activeReturnX = -1;
 	private static int activeReturnY = -1;
 	private static long lastColdKickSignalTime = 0;
+	private static int forcedColdHomeReturnCount = 0;
+	private static long lastForcedColdReturnTime = 0;
+	private static long requiredHomeCooldownMs = 1200;
+
+	public static void ResetColdReturnSafety()
+	{
+		forcedColdHomeReturnCount = 0;
+		lastForcedColdReturnTime = 0;
+		requiredHomeCooldownMs = 1200;
+	}
 
 	private static long stateTimer = 0;
 	private static long lastZoneAttemptTime = 0;
@@ -326,12 +336,28 @@ public static class ModGoBack
 						ModConfig.SaveConfig();
 					}
 
+					if (wasOnColdPlanet)
+					{
+						if (lastForcedColdReturnTime > 0 && now - lastForcedColdReturnTime > 1200000)
+						{
+							forcedColdHomeReturnCount = 0;
+						}
+						forcedColdHomeReturnCount++;
+						lastForcedColdReturnTime = now;
+						ModTeleport.coldPlanetResetPoints = 0;
+						requiredHomeCooldownMs = (forcedColdHomeReturnCount >= 2 || ModTeleport.totalSessionResetPoints >= 220) ? 45000 : 3500;
+					}
+					else
+					{
+						requiredHomeCooldownMs = 1200;
+					}
+
 					lastAliveMapId = -1;
 					lastColdKickSignalTime = 0;
 					isForcedHomeReturnActive = true;
 					currentState = GoBackState.DelayAtHome;
 					stateTimer = now;
-					ModTdltLogger.Log("GOBACK_AUTO_RETURN", $"Server forced return to Home (map={TileMap.mapID}) -> Returning to map={activeReturnMapId} [K.{activeReturnZoneId}] ({activeReturnX},{activeReturnY})");
+					ModTdltLogger.Log("GOBACK_AUTO_RETURN", $"Server forced return to Home (map={TileMap.mapID}, coldCount={forcedColdHomeReturnCount}, waitMs={requiredHomeCooldownMs}) -> Returning to map={activeReturnMapId} [K.{activeReturnZoneId}] ({activeReturnX},{activeReturnY})");
 					GameScr.info1.addInfo("Tự quay lại " + ModNextMap.GetMapName(activeReturnMapId) + " [K." + activeReturnZoneId + "]...", 0);
 					return;
 				}
@@ -460,9 +486,14 @@ public static class ModGoBack
 					return;
 				}
 
-				// Nghỉ tối thiểu 1200ms tại nhà và đợi nhân vật rơi chạm sàn nhà (khi SpawnPos ở y=0)
-				if (now - stateTimer < 1200)
+				// Nghỉ tối thiểu tại nhà (hoặc chờ xả điểm phạt nếu bị đẩy về từ Cold nhiều lần) và đợi nhân vật rơi chạm sàn nhà
+				long minHomeWait = isForcedHomeReturnActive ? requiredHomeCooldownMs : 1200;
+				if (now - stateTimer < minHomeWait)
 				{
+					if ((TileMap.mapID == 21 || TileMap.mapID == 22 || TileMap.mapID == 23) && !TileMap.tileTypeAt(me.cx, me.cy, 2) && me.statusMe == 1 && me.cy <= 48)
+					{
+						me.statusMe = 4;
+					}
 					return;
 				}
 				if ((TileMap.mapID == 21 || TileMap.mapID == 22 || TileMap.mapID == 23) && !TileMap.tileTypeAt(me.cx, me.cy, 2) && now - stateTimer < 2500)

@@ -608,7 +608,9 @@ public static class ModNextMap
 			return;
 		}
 
-		int stepIntervalMs = (useSafeMovement || resetPenaltyCount > 0) ? 260 : 180;
+		int stepIntervalMs = ModTeleport.IsColdPlanetAntiCheckActive()
+			? ModTeleport.ColdStepIntervalMs
+			: ((useSafeMovement || resetPenaltyCount > 0) ? 260 : 180);
 		if (now < mapEnterWaitUntil || now - lastStepUpdateTime < stepIntervalMs)
 		{
 			return;

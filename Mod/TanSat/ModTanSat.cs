@@ -281,7 +281,21 @@ public static class ModTanSat
 			}
 			else if (coldBfs)
 			{
-				dist = euclidDist + (ModTeleport.GetColdTravelTileCost(me.cx, me.cy, m.x, m.y) * 6);
+				bool directAboveCurrentBase = isFlyingMob &&
+				                              TileMap.tileTypeAt(me.cx, me.cy, 2) &&
+				                              Res.abs(m.x - me.cx) <= 168 &&
+				                              m.y < me.cy &&
+				                              (me.cy - m.y) <= 220 &&
+				                              ModTeleport.IsColdDirectAirReachable(me.cx, me.cy, m.x, m.y);
+				if (directAboveCurrentBase)
+				{
+					dist = euclidDist - 4000;
+				}
+				else
+				{
+					int tileCost = ModTeleport.GetColdTravelTileCost(me.cx, me.cy, m.x, m.y);
+					dist = (euclidDist / 2) + (tileCost * 20);
+				}
 			}
 			else
 			{

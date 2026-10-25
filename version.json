@@ -1,9 +1,9 @@
 {
-  "version": "2.5.56",
+  "version": "2.5.57",
   "buildDate": "2026-10-25",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.56/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.56/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.56/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.56/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.56: Đồng bộ toàn diện Viewport & Screen trên nền tảng Web Online (Render.com): Khắc phục triệt để lỗi cắt hụt dải đen ~15% mép phải màn hình & lệch cụm nút HUD phải ([R], GIM, Porata, Menu <) do Screen.SetResolution ghi đè kích thước khung vẽ động; đồng bộ tức thời 0-frame khi co giãn cửa sổ / thanh bên trình duyệt (ResizeObserver) và tối ưu healthcheck + cache-busting trên Render.com."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.57/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.57/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.57/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.57/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.57: Tối ưu triệt để Tàn Sát Hành Tinh Cooler (Map 105-110) chống bị Server đẩy về nhà & khóa 30p: Loại bỏ hoàn toàn gói dịch chuyển gây cộng dồn 100 điểm phạt Packet 46 (RESET_POINT); nâng cấp bay trượt Vector chéo thẳng 84px/82ms (~1,180 px/s, 0 Packet 46) kết hợp String-Pulling BFS vượt trần đá, tối ưu thứ tự quét bệ và khóa an toàn GoBack."
 }
