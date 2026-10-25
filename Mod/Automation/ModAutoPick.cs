@@ -644,7 +644,7 @@ public static class ModAutoPick
 					me.cvy = 0;
 				}
 				int pickInterval = (coldPick && ModTeleport.isWaitingSettle)
-					? 135
+					? ModTeleport.ColdStepIntervalMs
 					: ((closest.itemMapID == lastPickedItemMapId && currentItemRetryCount >= 1) ? 300 : 180);
 				if (now - lastPickTime < pickInterval)
 				{

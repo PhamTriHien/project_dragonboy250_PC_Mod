@@ -24,15 +24,17 @@ public static class ModTeleport
 	private static readonly List<TeleportEchoEntry> pendingTeleportEchoes = new List<TeleportEchoEntry>(64);
 
 	private const int ColdSolidMask = TileMap.T_CENTER | TileMap.T_LEFT | TileMap.T_RIGHT | TileMap.T_SOLIDGROUND | TileMap.T_BOTTOM | TileMap.T_DIE;
-	private const int ColdStepIntervalMs = 110;
-	private const int ColdMaxWalkStepX = 60;
-	private const int ColdTeleportMaxTokens = 2;
-	private const int ColdTeleportRefillMs = 6000;
-	private const int ColdTeleportBurstGapMs = 1200;
-	private const int ColdMaxSessionResetPoints = 190;
+	public const int ColdStepIntervalMs = 92;
+	private const int ColdMaxWalkStepX = 76;
+	private const int ColdTeleportMaxTokens = 1;
+	private const int ColdTeleportRefillMs = 11000;
+	private const int ColdTeleportBurstGapMs = 2500;
+	private const int ColdMaxPlanetResetPoints = 95;
+	private const int ColdMaxSessionResetPoints = 120;
 	private static readonly int[] ColdDirX = new int[4] { 0, -1, 1, 0 };
 	private static readonly int[] ColdDirY = new int[4] { -1, 0, 0, 1 };
 	public static int totalSessionResetPoints = 0;
+	public static int coldPlanetResetPoints = 0;
 	private static int coldTrackedTargetX = -1;
 	private static int coldTrackedTargetY = -1;
 	private static long coldTrackedStartTime = 0;
@@ -74,11 +76,16 @@ public static class ModTeleport
 	public static void NotifyServerResetPointReceived()
 	{
 		totalSessionResetPoints++;
+		if (IsColdPlanetMap())
+		{
+			coldPlanetResetPoints++;
+		}
 	}
 
 	public static void ResetSessionColdCounters()
 	{
 		totalSessionResetPoints = 0;
+		coldPlanetResetPoints = 0;
 		coldTeleportTokens = ColdTeleportMaxTokens;
 		lastColdTokenRefillTime = 0;
 		lastColdLongTeleportTime = 0;
@@ -86,6 +93,57 @@ public static class ModTeleport
 		cachedCostMapId = -1;
 		cachedCostStartIdx = -1;
 		cachedCostTime = 0;
+	}
+
+	public static bool IsColdPositionBlocked(int px, int py)
+	{
+		if (px <= 24 || px >= TileMap.pxw - 24 || py <= 24 || py >= TileMap.pxh - 24)
+		{
+			return true;
+		}
+		if (IsPointUndergroundOrBlocked(px, py))
+		{
+			return true;
+		}
+		return (TileMap.tileTypeAtPixel(px, py) & ColdSolidMask) != 0;
+	}
+
+	public static bool TryEscapeColdUnderground(Char me, long now)
+	{
+		if (me == null || !IsColdPlanetAntiCheckActive())
+		{
+			return false;
+		}
+		bool insideSolid = (TileMap.tileTypeAtPixel(me.cx, me.cy) & ColdSolidMask) != 0;
+		bool undergroundTop = TileMap.tileTypeAt(me.cx, me.cy, 2) && (me.cy % 24 != 0 || (me.cy >= 24 && TileMap.tileTypeAt(me.cx, me.cy - 24, 2)));
+		if (!insideSolid && !undergroundTop)
+		{
+			return false;
+		}
+		if (now - lastStepTime < ColdStepIntervalMs)
+		{
+			return true;
+		}
+
+		int alignedY = (me.cy / 24) * 24;
+		for (int dyScan = 0; dyScan <= 120; dyScan += 24)
+		{
+			int candY = alignedY - dyScan;
+			if (candY <= 24)
+			{
+				break;
+			}
+			if (TileMap.tileTypeAt(me.cx, candY, 2) && !IsPointUndergroundOrBlocked(me.cx, candY))
+			{
+				int stepY = me.cy + ClampInt(candY - me.cy, -72, 72);
+				SendSingleCharMove(me.cx, stepY);
+				lastStepTime = now;
+				isCurrentPosSynced = true;
+				isWaitingSettle = (stepY != candY);
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private static void RefreshColdTeleportTokens(long now)
@@ -685,10 +743,10 @@ public static class ModTeleport
 		bool mustLandExact = isTargetOnGround && !IsPointUndergroundOrBlocked(targetX, targetY);
 		int arriveTolY = mustLandExact ? 2 : 16;
 
-		bool conservativeSpeed = (ModTanSat.lastResetPenaltyTime > 0 && now - ModTanSat.lastResetPenaltyTime < 8000) || (me.cspeed > 0 && me.cspeed < 6);
-		int maxFlyAxis = conservativeSpeed ? 48 : 68;
-		int maxFlyManhattan = conservativeSpeed ? 64 : 88;
-		int maxClampStep = conservativeSpeed ? 48 : 60;
+		bool conservativeSpeed = (ModTanSat.lastResetPenaltyTime > 0 && now - ModTanSat.lastResetPenaltyTime < 6000) || (me.cspeed > 0 && me.cspeed < 4);
+		int maxFlyAxis = conservativeSpeed ? 48 : 76;
+		int maxFlyManhattan = conservativeSpeed ? 72 : 104;
+		int maxClampStep = conservativeSpeed ? 48 : 72;
 
 		if (dx <= maxFlyAxis && dy <= maxFlyAxis && (dx + dy) <= maxFlyManhattan && IsColdLandingSegmentClear(me.cx, me.cy, targetX, targetY))
 		{
@@ -700,7 +758,7 @@ public static class ModTeleport
 			return true;
 		}
 
-		if (TileMap.tileTypeAt(me.cx, me.cy, TileMap.T_TOP) && me.cy == targetY && dx <= 480 && IsFlatGroundContinuous(me.cx, targetX, targetY))
+		if (TileMap.tileTypeAt(me.cx, me.cy, TileMap.T_TOP) && me.cy == targetY && dx <= 640 && IsFlatGroundContinuous(me.cx, targetX, targetY))
 		{
 			int maxWalk = conservativeSpeed ? 48 : ColdMaxWalkStepX;
 			int walkX = (dx <= maxWalk) ? targetX : (me.cx + ((targetX > me.cx) ? maxWalk : (-maxWalk)));
@@ -718,27 +776,51 @@ public static class ModTeleport
 
 		bool hasPath = FindColdAirPath(me.cx, me.cy, targetX, targetY, out int pathLen, out bool strictAirUsed) && pathLen > 0;
 		RefreshColdTeleportTokens(now);
-		bool canLongTeleport = allowLongTeleport &&
-		                       mustLandExact &&
-		                       coldTeleportTokens > 0 &&
-		                       (now - lastColdLongTeleportTime >= ColdTeleportBurstGapMs) &&
-		                       totalSessionResetPoints < ColdMaxSessionResetPoints &&
-		                       coldSessionLongTeleportCount < ColdMaxSessionResetPoints &&
-		                       !ModTanSatTargeting.IsInsideWaypoint(targetX, targetY);
-		if (canLongTeleport && ((hasPath && pathLen >= 9) || (!hasPath && (dx > 96 || dy > 72)) || (dx + dy) >= 260))
+		bool hasTeleportBudget = allowLongTeleport &&
+		                         coldTeleportTokens > 0 &&
+		                         (now - lastColdLongTeleportTime >= ColdTeleportBurstGapMs) &&
+		                         coldPlanetResetPoints < ColdMaxPlanetResetPoints &&
+		                         totalSessionResetPoints < ColdMaxSessionResetPoints &&
+		                         coldSessionLongTeleportCount < ColdMaxPlanetResetPoints;
+		bool isLongJump = (hasPath && pathLen >= 13) || (!hasPath && (dx > 120 || dy > 96)) || (dx + dy) >= 400;
+		if (hasTeleportBudget && isLongJump)
 		{
-			if (coldTeleportTokens == ColdTeleportMaxTokens)
+			if (mustLandExact && !ModTanSatTargeting.IsInsideWaypoint(targetX, targetY))
 			{
-				lastColdTokenRefillTime = now;
+				if (coldTeleportTokens == ColdTeleportMaxTokens)
+				{
+					lastColdTokenRefillTime = now;
+				}
+				coldTeleportTokens--;
+				lastColdLongTeleportTime = now;
+				coldSessionLongTeleportCount++;
+				ResetColdStepTracking();
+				TeleportTo(targetX, targetY);
+				lastStepTime = now;
+				isWaitingSettle = false;
+				return true;
 			}
-			coldTeleportTokens--;
-			lastColdLongTeleportTime = now;
-			coldSessionLongTeleportCount++;
-			ResetColdStepTracking();
-			TeleportTo(targetX, targetY);
-			lastStepTime = now;
-			isWaitingSettle = false;
-			return true;
+			if (!mustLandExact && dx > 144)
+			{
+				int groundAnchorY = ModTanSatTargeting.FindGroundY(targetX, targetY, 240);
+				if (groundAnchorY != -1 &&
+				    !IsPointUndergroundOrBlocked(targetX, groundAnchorY) &&
+				    !ModTanSatTargeting.IsInsideWaypoint(targetX, groundAnchorY) &&
+				    (dx > 144 || Res.abs(me.cy - groundAnchorY) > 144))
+				{
+					if (coldTeleportTokens == ColdTeleportMaxTokens)
+					{
+						lastColdTokenRefillTime = now;
+					}
+					coldTeleportTokens--;
+					lastColdLongTeleportTime = now;
+					coldSessionLongTeleportCount++;
+					TeleportTo(targetX, groundAnchorY);
+					lastStepTime = now;
+					isWaitingSettle = true;
+					return false;
+				}
+			}
 		}
 
 		if (hasPath)

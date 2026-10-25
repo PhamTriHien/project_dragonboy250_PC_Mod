@@ -272,10 +272,20 @@ public static class ModGoBack
 		{
 			if (TileMap.mapID != 21 && TileMap.mapID != 22 && TileMap.mapID != 23)
 			{
-				lastAliveMapId = TileMap.mapID;
-				lastAliveZoneId = TileMap.zoneID;
-				lastAliveX = me.cx;
-				lastAliveY = me.cy;
+				bool isColdMap = TileMap.mapID >= 105 && TileMap.mapID <= 110;
+				bool canSaveCoords = !isColdMap || (!me.isTeleport && me.cy > 36 && !ModTeleport.IsColdPositionBlocked(me.cx, me.cy));
+				if (canSaveCoords)
+				{
+					lastAliveMapId = TileMap.mapID;
+					lastAliveZoneId = TileMap.zoneID;
+					lastAliveX = me.cx;
+					lastAliveY = me.cy;
+				}
+				else if (lastAliveMapId != TileMap.mapID)
+				{
+					lastAliveMapId = TileMap.mapID;
+					lastAliveZoneId = TileMap.zoneID;
+				}
 
 				if (isGoBackActive && gobackOnLowMp && me.cMPFull > 0 && (me.cMP * 100L / me.cMPFull) < lowMpPercent)
 				{
@@ -334,7 +344,17 @@ public static class ModGoBack
 		{
 			if (!isGoBackActive && !isForcedHomeReturnActive)
 			{
-				return;
+				bool diedWhileColdTanSat = ModTanSat.autoTanSat &&
+				                           ((TileMap.mapID >= 105 && TileMap.mapID <= 110) || (lastAliveMapId >= 105 && lastAliveMapId <= 110));
+				if (!diedWhileColdTanSat)
+				{
+					return;
+				}
+				activeReturnMapId = (lastAliveMapId >= 105 && lastAliveMapId <= 110) ? lastAliveMapId : TileMap.mapID;
+				activeReturnZoneId = (lastAliveMapId >= 105 && lastAliveMapId <= 110) ? lastAliveZoneId : TileMap.zoneID;
+				activeReturnX = (lastAliveX > 0) ? lastAliveX : me.cx;
+				activeReturnY = (lastAliveY > 36) ? lastAliveY : -1;
+				isForcedHomeReturnActive = true;
 			}
 
 			if (currentState == GoBackState.Idle)
@@ -447,6 +467,10 @@ public static class ModGoBack
 				}
 				if ((TileMap.mapID == 21 || TileMap.mapID == 22 || TileMap.mapID == 23) && !TileMap.tileTypeAt(me.cx, me.cy, 2) && now - stateTimer < 2500)
 				{
+					if (me.statusMe == 1 && me.cy <= 48)
+					{
+						me.statusMe = 4;
+					}
 					return;
 				}
 
@@ -539,8 +563,16 @@ public static class ModGoBack
 
 			case GoBackState.ChangingZone:
 			{
-				if (Char.isLoadingMap || Char.ischangingMap)
+				if (Char.isLoadingMap || Char.ischangingMap || me.isTeleport || me.statusMe == 16)
 				{
+					return;
+				}
+				if (ModTeleport.IsColdPlanetMap() && !TileMap.tileTypeAt(me.cx, me.cy, 2) && now - stateTimer < 3800)
+				{
+					if (me.statusMe == 1 && me.cy <= 48)
+					{
+						me.statusMe = 4;
+					}
 					return;
 				}
 
@@ -573,14 +605,25 @@ public static class ModGoBack
 
 			case GoBackState.TeleportingToSpot:
 			{
-				if (Char.isLoadingMap || Char.ischangingMap)
+				if (Char.isLoadingMap || Char.ischangingMap || me.isTeleport || me.statusMe == 16)
 				{
 					return;
 				}
 
-				if (ModTeleport.IsColdPlanetAntiCheckActive() && (me.cy <= 24 || me.statusMe == 4) && now - stateTimer < 1200)
+				if (ModTeleport.IsColdPlanetAntiCheckActive())
 				{
-					return;
+					if (!TileMap.tileTypeAt(me.cx, me.cy, 2) && now - stateTimer < 3800)
+					{
+						if (me.statusMe == 1 && me.cy <= 48)
+						{
+							me.statusMe = 4;
+						}
+						return;
+					}
+					if (ModTeleport.TryEscapeColdUnderground(me, now))
+					{
+						return;
+					}
 				}
 
 				// Teleport đến toạ độ chính xác đã lưu
@@ -588,7 +631,15 @@ public static class ModGoBack
 				{
 					if (ModTeleport.IsColdPlanetAntiCheckActive())
 					{
-						if (!ModTeleport.MoveSteppedTo(targetX, targetY, isTargetFlying: false, allowColdLongTeleport: true) && now - stateTimer < 6500)
+						if (ModTeleport.IsColdPositionBlocked(targetX, targetY))
+						{
+							int fixedY = ModTanSatTargeting.FindGroundY(targetX, targetY, 120);
+							if (fixedY != -1)
+							{
+								targetY = fixedY;
+							}
+						}
+						if (!ModTeleport.MoveSteppedTo(targetX, targetY, isTargetFlying: false, allowColdLongTeleport: true) && now - stateTimer < 7500)
 						{
 							return;
 						}

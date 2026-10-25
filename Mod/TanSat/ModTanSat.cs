@@ -217,8 +217,13 @@ public static class ModTanSat
 
 			int euclidDist = Res.distance(me.cx, me.cy, m.x, m.y);
 			int dist = coldBfs
-				? (ModTeleport.GetColdTravelTileCost(me.cx, me.cy, m.x, m.y) * 24 + (euclidDist / 8))
+				? (ModTeleport.GetColdTravelTileCost(me.cx, me.cy, m.x, m.y) * 24 + (euclidDist / 10))
 				: euclidDist;
+
+			if (coldBfs && Res.abs(m.y - me.cy) <= 16 && Res.abs(m.x - me.cx) <= 640)
+			{
+				dist -= 20;
+			}
 
 			if (ModDropRate.isLastHitLock && m.hp < (m.maxHp / 3) && dist < 150)
 			{
@@ -566,6 +571,11 @@ public static class ModTanSat
 			{
 				return;
 			}
+			if (ModTeleport.TryEscapeColdUnderground(me, now))
+			{
+				targetLockTime = now;
+				return;
+			}
 
 			CheckAndRestoreStamina(me, now);
 			CheckAutoChangeZone(me, now);
@@ -793,7 +803,8 @@ public static class ModTanSat
 						return;
 					}
 
-					if (!isNewTarget && now - lastTeleportTime < 650)
+					int chaseMinInterval = ModTeleport.IsColdPlanetAntiCheckActive() ? 180 : 650;
+					if (!isNewTarget && now - lastTeleportTime < chaseMinInterval)
 					{
 						// Đã đứng cạnh mục tiêu hiện tại, tránh giật hình liên tục trên cùng 1 quái
 					}

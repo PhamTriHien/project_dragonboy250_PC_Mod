@@ -149,6 +149,20 @@ public partial class Char : IMapObject
 				}
 				if (ModTanSat.autoTanSat || ModAutoPick.isBusy || ModGoBack.isReturning || cy - y == 0)
 				{
+					if (cHP <= 0 || meDead || statusMe == 14 || statusMe == 5)
+					{
+						cx = x;
+						cy = y;
+						myCharz().cxSend = x;
+						myCharz().cySend = y;
+						cvx = 0;
+						cvy = 0;
+						cp1 = (cp2 = (cp3 = 0));
+						ischangingMap = false;
+						ModTeleport.isWaitingServerSync = false;
+						ModTeleport.isWaitingSettle = false;
+						return;
+					}
 					bool isEcho = ModTeleport.TryConsumeTeleportEcho(x, y, cx, cy, out bool isCurrentPos, out bool hasNewerPendingEcho);
 					bool isNearCurrent = (Res.abs(x - cx) <= 32 && Res.abs(y - cy) <= 32);
 					cvx = 0;
