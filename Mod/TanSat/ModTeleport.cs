@@ -24,8 +24,8 @@ public static class ModTeleport
 	private static readonly List<TeleportEchoEntry> pendingTeleportEchoes = new List<TeleportEchoEntry>(64);
 
 	private const int ColdSolidMask = TileMap.T_CENTER | TileMap.T_LEFT | TileMap.T_RIGHT | TileMap.T_SOLIDGROUND | TileMap.T_BOTTOM | TileMap.T_DIE;
-	public const int ColdStepIntervalMs = 82;
-	private const int ColdMaxWalkStepX = 84;
+	public const int ColdStepIntervalMs = 58;
+	private const int ColdMaxWalkStepX = 90;
 	private static int nextColdStepDelayMs = ColdStepIntervalMs;
 	private static readonly int[] ColdDirX = new int[4] { 0, -1, 1, 0 };
 	private static readonly int[] ColdDirY = new int[4] { -1, 0, 0, 1 };
@@ -52,7 +52,13 @@ public static class ModTeleport
 
 	private static void RollNextColdStepDelay(bool arrived)
 	{
-		nextColdStepDelayMs = arrived ? Res.random(76, 86) : Res.random(78, 91);
+		long now = mSystem.currentTimeMillis();
+		if (ModTanSat.lastResetPenaltyTime > 0 && now - ModTanSat.lastResetPenaltyTime < 2800)
+		{
+			nextColdStepDelayMs = Res.random(76, 86);
+			return;
+		}
+		nextColdStepDelayMs = arrived ? Res.random(52, 60) : Res.random(56, 65);
 	}
 
 	public static bool IsColdPlanetMap()
@@ -198,7 +204,7 @@ public static class ModTeleport
 			}
 			if (TileMap.tileTypeAt(me.cx, candY, 2) && !IsPointUndergroundOrBlocked(me.cx, candY))
 			{
-				int stepY = me.cy + ClampInt(candY - me.cy, -84, 84);
+				int stepY = me.cy + ClampInt(candY - me.cy, -90, 90);
 				SendSingleCharMove(me.cx, stepY);
 				lastStepTime = now;
 				isCurrentPosSynced = true;
@@ -789,7 +795,7 @@ public static class ModTeleport
 
 			curY = matchedY;
 			prevSx = sx;
-			if (Res.abs(sx - fromX) <= maxWalkStepX && Res.abs(curY - fromY) <= 84)
+			if (Res.abs(sx - fromX) <= maxWalkStepX && Res.abs(curY - fromY) <= 90 && (Res.abs(sx - fromX) + Res.abs(curY - fromY)) <= 138)
 			{
 				nextWalkX = sx;
 				nextWalkY = curY;
@@ -800,7 +806,7 @@ public static class ModTeleport
 		{
 			return false;
 		}
-		if (totalDx <= maxWalkStepX && Res.abs(endGy - fromY) <= 84)
+		if (totalDx <= maxWalkStepX && Res.abs(endGy - fromY) <= 90 && (totalDx + Res.abs(endGy - fromY)) <= 138)
 		{
 			nextWalkX = toX;
 			nextWalkY = endGy;
@@ -985,17 +991,16 @@ public static class ModTeleport
 		bool mustLandExact = isTargetOnGround && !IsPointUndergroundOrBlocked(targetX, targetY, allowEnterWaypoint);
 		int arriveTolY = mustLandExact ? 2 : 16;
 
-		bool conservativeSpeed = (ModTanSat.lastResetPenaltyTime > 0 && now - ModTanSat.lastResetPenaltyTime < 3200) || (me.cspeed > 0 && me.cspeed < 4);
-		int maxFlyAxisCeiling = conservativeSpeed ? 48 : 84;
-		int maxFlyManhattanCeiling = conservativeSpeed ? 72 : 132;
+		bool conservativeSpeed = ModTanSat.lastResetPenaltyTime > 0 && now - ModTanSat.lastResetPenaltyTime < 2800;
+		int maxFlyAxisCeiling = conservativeSpeed ? 52 : 90;
+		int maxFlyManhattanCeiling = conservativeSpeed ? 80 : 138;
 		bool canFinishInOneAirHop = dx <= maxFlyAxisCeiling && dy <= maxFlyAxisCeiling && (dx + dy) <= maxFlyManhattanCeiling;
-		int maxFlyAxis = conservativeSpeed ? 48 : (canFinishInOneAirHop ? 84 : Res.random(76, 85));
-		int maxFlyManhattan = conservativeSpeed ? 72 : (canFinishInOneAirHop ? 132 : Res.random(120, 133));
-		int maxClampStep = conservativeSpeed ? 48 : 84;
-		int minWalkStride = (me.cspeed >= 6) ? 78 : 74;
+		int maxFlyAxis = conservativeSpeed ? 52 : (canFinishInOneAirHop ? 90 : Res.random(84, 91));
+		int maxFlyManhattan = conservativeSpeed ? 80 : (canFinishInOneAirHop ? 138 : Res.random(130, 139));
+		int maxClampStep = conservativeSpeed ? 52 : 90;
 		int maxWalk = conservativeSpeed
-			? ((dx <= 52) ? 52 : Res.random(44, 51))
-			: ((dx <= ColdMaxWalkStepX) ? ColdMaxWalkStepX : Res.random(minWalkStride, ColdMaxWalkStepX + 1));
+			? ((dx <= 52) ? 52 : Res.random(46, 53))
+			: ((dx <= ColdMaxWalkStepX) ? ColdMaxWalkStepX : Res.random(84, ColdMaxWalkStepX + 1));
 
 		if (isTargetOnGround && TryTraceSameColdGroundBase(me.cx, me.cy, targetX, targetY, maxWalk, out int walkX, out int walkY, allowEnterWaypoint))
 		{
@@ -1088,7 +1093,7 @@ public static class ModTeleport
 
 				if (i < pathLen - 1 &&
 				    ((targetX < me.cx && wayX > me.cx) || (targetX > me.cx && wayX < me.cx)) &&
-				    Res.abs(wayX - me.cx) <= 16 &&
+				    Res.abs(wayX - me.cx) <= 8 &&
 				    Res.abs(wayY - me.cy) > 3 &&
 				    IsColdAirSegmentClear(me.cx, startAirY, me.cx, wayY, strictAirUsed, allowEnterWaypoint))
 				{
@@ -1097,12 +1102,47 @@ public static class ModTeleport
 
 				int sdx = Res.abs(wayX - me.cx);
 				int sdy = Res.abs(wayY - me.cy);
+				bool currentWayClear = (sdx <= 3 && sdy <= 3) || IsColdAirSegmentClear(me.cx, startAirY, wayX, wayY, strictAirUsed, allowEnterWaypoint);
+				if (!currentWayClear)
+				{
+					continue;
+				}
+
+				if (i < pathLen - 1 && sdx < maxFlyAxis && sdy < maxFlyAxis && (sdx + sdy) < maxFlyManhattan)
+				{
+					int nextWayX, nextWayY;
+					if (i + 1 == pathLen - 1 && !IsColdPositionBlocked(aimX, aimY, allowEnterWaypoint))
+					{
+						nextWayX = aimX;
+						nextWayY = aimY;
+					}
+					else
+					{
+						int nextCellIdx = bfsPathBuffer[i + 1];
+						GetColdCellPixel(nextCellIdx % w, nextCellIdx / w, out nextWayX, out nextWayY);
+					}
+					for (int num = 3; num >= 1; num--)
+					{
+						int probeX = wayX + (nextWayX - wayX) * num / 4;
+						int probeY = wayY + (nextWayY - wayY) * num / 4;
+						if ((Res.abs(probeX - me.cx) > 3 || Res.abs(probeY - me.cy) > 3) &&
+						    !IsColdPositionBlocked(probeX, probeY, allowEnterWaypoint) &&
+						    IsColdAirSegmentClear(me.cx, startAirY, probeX, probeY, strictAirUsed, allowEnterWaypoint))
+						{
+							wayX = probeX;
+							wayY = probeY;
+							sdx = Res.abs(wayX - me.cx);
+							sdy = Res.abs(wayY - me.cy);
+							break;
+						}
+					}
+				}
+
 				if (sdx <= 3 && sdy <= 3)
 				{
 					if (i == pathLen - 1)
 					{
-						int landX = me.cx + ClampInt(targetX - me.cx, -maxClampStep, maxClampStep);
-						int landY = me.cy + ClampInt(targetY - me.cy, -maxClampStep, maxClampStep);
+						ComputeProportionalColdStep(me.cx, me.cy, targetX, targetY, maxClampStep, maxFlyManhattanCeiling, out int landX, out int landY);
 						SendSingleCharMove(landX, landY);
 						lastStepTime = now;
 						isCurrentPosSynced = true;
@@ -1115,10 +1155,6 @@ public static class ModTeleport
 						}
 						return landed;
 					}
-					continue;
-				}
-				if (!IsColdAirSegmentClear(me.cx, startAirY, wayX, wayY, strictAirUsed, allowEnterWaypoint))
-				{
 					continue;
 				}
 				if (i == pathLen - 1 && mustLandExact && canFinishInOneAirHop && (strictAirUsed || IsColdLandingSegmentClear(me.cx, landingStartY, targetX, targetY, allowEnterWaypoint)))
@@ -1159,8 +1195,7 @@ public static class ModTeleport
 
 			int fallbackIdx = bfsPathBuffer[System.Math.Min(1, pathLen - 1)];
 			GetColdCellPixel(fallbackIdx % w, fallbackIdx / w, out int nextX, out int nextY);
-			int stepX = me.cx + ClampInt(nextX - me.cx, -maxClampStep, maxClampStep);
-			int stepY = me.cy + ClampInt(nextY - me.cy, -maxClampStep, maxClampStep);
+			ComputeProportionalColdStep(me.cx, me.cy, nextX, nextY, maxClampStep, maxFlyManhattanCeiling, out int stepX, out int stepY);
 			SendSingleCharMove(stepX, stepY);
 			lastStepTime = now;
 			isCurrentPosSynced = true;

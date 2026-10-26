@@ -649,9 +649,12 @@ public static class ModAutoPick
 				int inPlaceTolY = posSyncedForInPlace ? (coldPick ? 28 : 16) : 2;
 				bool groundedPickReady = !coldPick || !ModTeleport.isWaitingSettle || (ModTeleport.isCurrentPosSynced && TileMap.tileTypeAt(me.cx, me.cy, 2));
 				bool canPickInPlace = dx <= inPlaceMaxX && dy <= inPlaceTolY && groundedPickReady && (isNewItem || currentItemRetryCount < 1);
+				int retryInterval = coldPick
+					? ((currentItemRetryCount >= 1) ? 160 : 110)
+					: ((currentItemRetryCount >= 1) ? 260 : 160);
 				int pickInterval = (coldPick && ModTeleport.isWaitingSettle && !canPickInPlace)
 					? ModTeleport.GetColdStepDelayMs()
-					: (isNewItem ? 45 : ((currentItemRetryCount >= 1) ? 260 : 160));
+					: (isNewItem ? 40 : retryInterval);
 				if (now - lastPickTime < pickInterval)
 				{
 					return;
@@ -674,6 +677,14 @@ public static class ModAutoPick
 				if (closest.itemMapID == lastPickedItemMapId)
 				{
 					currentItemRetryCount++;
+					if (coldPick && currentItemRetryCount > 2 && Res.abs(me.cx - pickX) <= 12 && Res.abs(me.cy - pickY) <= 4)
+					{
+						ignoredItemUntil[closest.itemMapID] = now + 2500L;
+						lastPickedItemMapId = -1;
+						currentItemRetryCount = 0;
+						isBusy = false;
+						return;
+					}
 					if (currentItemRetryCount > 4)
 					{
 						ignoredItemUntil[closest.itemMapID] = now + 10000L;

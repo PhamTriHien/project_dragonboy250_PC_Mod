@@ -665,7 +665,7 @@ public static class ModTanSat
 				GameScr.gI().doSelectSkill(s, isShortcut: true);
 				s.lastTimeUseThisSkill = now;
 				lastSentSkillTemplateId = tplId;
-				waitUntilTime = now + 400;
+				waitUntilTime = now + (ModTeleport.IsColdPlanetAntiCheckActive() ? 120 : 400);
 				return true;
 			}
 		}
@@ -938,16 +938,34 @@ public static class ModTanSat
 							if (shouldResync)
 							{
 								lastResyncAttackCount = currentTargetUnchangedAttackCount;
+								int resyncTplId = (skillToUse.template != null) ? skillToUse.template.id : -1;
+								bool resyncIsRanged = !(resyncTplId == 0 || resyncTplId == 2 || resyncTplId == 4 || resyncTplId == 9 || resyncTplId == 17) && (skillToUse.dx > 75);
 								if (!coldAntiCheck && !ModTeleport.isCurrentPosSynced && currentTargetUnchangedAttackCount == 3 && lastTeleportTargetMobId != currentFarmTarget.mobId && TileMap.tileTypeAt(me.cx, me.cy, 2) && !ModTeleport.HasPendingEchoNear(me.cx, me.cy))
 								{
 									ModTeleport.TeleportTo(me.cx, me.cy);
+									lastTeleportTargetMobId = currentFarmTarget.mobId;
+									lastTeleportTime = now;
+								}
+								else if (coldAntiCheck && !resyncIsRanged && (Res.abs(me.cx - currentFarmTarget.x) > 14 || Res.abs(me.cy - currentFarmTarget.y) > 16))
+								{
+									bool resyncMobFlying = (Mob.arrMobTemplate != null &&
+									                        currentFarmTarget.templateId >= 0 &&
+									                        currentFarmTarget.templateId < Mob.arrMobTemplate.Length &&
+									                        Mob.arrMobTemplate[currentFarmTarget.templateId] != null &&
+									                        (Mob.arrMobTemplate[currentFarmTarget.templateId].type == 4 || Mob.arrMobTemplate[currentFarmTarget.templateId].type == 5));
+									GetSafeAttackPosition(currentFarmTarget, isRanged: false, out int resyncX, out int resyncY);
+									if (ModTeleport.MoveSteppedTo(resyncX, resyncY, resyncMobFlying, allowColdLongTeleport: false))
+									{
+										lastTeleportTargetMobId = currentFarmTarget.mobId;
+										lastTeleportTime = now;
+									}
 								}
 								else
 								{
 									ModTeleport.SendSingleCharMove(me.cx, me.cy);
+									lastTeleportTargetMobId = currentFarmTarget.mobId;
+									lastTeleportTime = now;
 								}
-								lastTeleportTargetMobId = currentFarmTarget.mobId;
-								lastTeleportTime = now;
 							}
 						}
 					}
@@ -1062,7 +1080,7 @@ public static class ModTanSat
 
 			bool isNewTarget = (lastTeleportTargetMobId != currentFarmTarget.mobId);
 			bool syncedColdPos = isColdAntiCheckNow && ModTeleport.isCurrentPosSynced;
-			int coldEngagedMeleeRangeX = System.Math.Min(System.Math.Max(28, skillToUse.dx - 10), 38);
+			int coldEngagedMeleeRangeX = System.Math.Min(System.Math.Max(26, skillToUse.dx - 14), 32);
 			int maxRangeX = isRanged ? (skillToUse.dx - 8) : ((syncedColdPos || (!isNewTarget && isColdAntiCheckNow)) ? coldEngagedMeleeRangeX : 24);
 			int maxRangeY = isRanged ? (skillToUse.dy - 6) : 24;
 
@@ -1091,7 +1109,7 @@ public static class ModTanSat
 				}
 				else
 				{
-					adoptMaxX = syncedColdPos ? System.Math.Min(coldEngagedMeleeRangeX, 34) : 20;
+					adoptMaxX = syncedColdPos ? System.Math.Min(coldEngagedMeleeRangeX, 30) : 20;
 					adoptMaxY = syncedColdPos ? 20 : 16;
 				}
 			}
@@ -1119,7 +1137,7 @@ public static class ModTanSat
 						return;
 					}
 
-					int chaseMinInterval = ModTeleport.IsColdPlanetAntiCheckActive() ? 180 : 650;
+					int chaseMinInterval = ModTeleport.IsColdPlanetAntiCheckActive() ? 110 : 650;
 					if (!isNewTarget && now - lastTeleportTime < chaseMinInterval)
 					{
 						// Đã đứng cạnh mục tiêu hiện tại, tránh giật hình liên tục trên cùng 1 quái

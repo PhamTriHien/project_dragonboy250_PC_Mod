@@ -1,9 +1,9 @@
 {
-  "version": "2.5.71",
-  "buildDate": "2026-10-26",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.71/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.71/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.71/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.71/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.71: Tối ưu chuyên sâu chế độ Tàn Sát Chống Quét (Anti-Scan) trên toàn bộ nền tảng:\n- Chuẩn hóa gói charMove đi ngang phẳng 4-byte giống hệt bàn phím thật (không gửi thừa short cy khi đã đồng bộ) và biến thiên tự nhiên biên độ bước (74..84px) & nhịp nghỉ (76..90ms) theo cspeed chống soi mẫu lặp.\n- Nhặt vật phẩm tại chỗ khớp chuẩn pickItem gốc (dx <= 36, dy <= 28) và dừng bước nhặt ngay khi vừa chạm tầm trên nền đất, cắt bỏ bước nhích chân thừa sau mỗi con quái chết.\n- Khai hỏa ngay khi vào tầm hiệu dụng của chiêu chưởng tầm xa (dx - 20) hoặc tầm cận chiến nối tiếp (<= 34px) trên mặt đất, tiết kiệm 1-3 gói di chuyển mỗi mục tiêu.\n- Đáp thẳng xuống mặt đất T_TOP ở nhịp bay cuối thay vì dừng lơ lửng targetY - 12 rồi rơi thêm 1 nhịp 82ms.\n- Gỡ phạt tốc độ ngay sau 2 đòn đánh trúng liên tiếp hậu RESET_POINT và tối ưu BFS đánh dấu thế hệ O(1) nhẹ CPU khi treo 6 Tab."
+  "version": "2.5.72",
+  "buildDate": "2026-10-27",
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.72/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.72/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.72/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.72/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.72: Tăng tốc độ di chuyển Tàn Sát Chống Quét (Anti-Scan Phase 2) thêm 80% - 140% trên toàn bộ nền tảng vẫn giữ 0 RESET_POINT:\n- Gỡ bỏ bóp bước me.cspeed < 4 do hiệu ứng 'Bị lạnh' trên map Cold (105-110), mở trần sải bước an toàn từ 48px lên 84..90px trục đơn & 130..138px Manhattan (dưới ngưỡng cứng 96px/144px của Server).\n- Chuẩn hóa nhịp bước khớp khung hình 60 FPS (52..64ms thay vì 78..90ms bị trễ lượng tử hóa sang 98..108ms), đạt ~15 nhịp/giây (~1.350 - 1.480 px/s).\n- Bổ sung dò cắt góc liên tục (Sub-tile Corner-Rounding 25%/50%/75%) dọc đoạn BFS kế tiếp có kiểm chứng IsColdAirSegmentClear 8px, xóa bỏ các bước đệm ngắn 20..30px ở khúc cua vách đá.\n- Cắt bỏ độ trễ kẹt chờ nhặt đồ 1.133ms khi mạng RTT cao (chuyển mục tiêu ngay sau 2 lần pickItem chuẩn xác tại tâm vật phẩm), giảm nghỉ skill phụ trợ còn 120ms và tự bước áp sát resync khi quái cận chiến đi bộ lệch tầm."
 }
