@@ -26,7 +26,12 @@ public static class ModAutoRevive
 	public static void Update()
 	{
 		if (!isEnabled || !ModMenu.IsInGame() || Char.myCharz() == null) return;
-		if (ModGoBack.isGoBackActive && (ModGoBack.savedMapId >= 0 || ModGoBack.isAutoRecordOnDeath)) return;
+		if (ModGoBack.isReturning || ModGoBack.isForcedHomeReturnActive ||
+		    (ModGoBack.isGoBackActive && (ModGoBack.savedMapId >= 0 || ModGoBack.isAutoRecordOnDeath)) ||
+		    (ModTanSat.autoTanSat && ModTanSat.antiScanMode))
+		{
+			return;
+		}
 		Char me = Char.myCharz();
 		bool isDead = me.cHP <= 0 || me.statusMe == 14 || me.meDead;
 		if (!isDead)

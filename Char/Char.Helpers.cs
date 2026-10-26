@@ -48,7 +48,7 @@ public partial class Char : IMapObject
 	/// </summary>
 	public bool isInWaypoint()
 			{
-				if (isLoadingMap || ModNextMap.isNextMapActive)
+				if (isLoadingMap || ModNextMap.isNextMapActive || ModGoBack.isReturning)
 				{
 					return false;
 				}
@@ -165,7 +165,7 @@ public partial class Char : IMapObject
 				vMovePoints.removeAllElements();
 				myCharz().cxSend = x;
 				myCharz().cySend = y;
-				if (ModNextMap.isNextMapActive)
+				if (ModNextMap.isNextMapActive || (ModGoBack.isReturning && ModGoBack.currentState == ModGoBack.GoBackState.TeleportingToSpot))
 				{
 					int prevCx = cx;
 					int prevCy = cy;

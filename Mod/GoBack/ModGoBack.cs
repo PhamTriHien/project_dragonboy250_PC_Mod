@@ -156,11 +156,113 @@ public static class ModGoBack
 	private static long stateTimer = 0;
 	private static long lastZoneAttemptTime = 0;
 	private static int zoneAttemptCount = 0;
+	private static bool s_HasCheckedSessionEntry = false;
+	private static long s_SessionEnterTime = 0;
+	private static long s_LastAutoPersistTime = 0;
+	private static long s_LastSpotStepTime = 0;
+	private static long s_SpotArrivedTime = 0;
 
-	private static int GetTargetMapId() => (isForcedHomeReturnActive && activeReturnMapId >= 0) ? activeReturnMapId : savedMapId;
-	private static int GetTargetZoneId() => (isForcedHomeReturnActive && activeReturnMapId >= 0) ? activeReturnZoneId : savedZoneId;
-	private static int GetTargetX() => (isForcedHomeReturnActive && activeReturnMapId >= 0) ? activeReturnX : savedX;
-	private static int GetTargetY() => (isForcedHomeReturnActive && activeReturnMapId >= 0) ? activeReturnY : savedY;
+	private static int GetTargetMapId() => (currentState != GoBackState.Idle && activeReturnMapId >= 0) ? activeReturnMapId : savedMapId;
+	private static int GetTargetZoneId() => (currentState != GoBackState.Idle && activeReturnMapId >= 0) ? activeReturnZoneId : savedZoneId;
+	private static int GetTargetX() => (currentState != GoBackState.Idle && activeReturnMapId >= 0) ? activeReturnX : savedX;
+	private static int GetTargetY() => (currentState != GoBackState.Idle && activeReturnMapId >= 0) ? activeReturnY : savedY;
+
+	public static void MarkSessionEntryChecked()
+	{
+		s_HasCheckedSessionEntry = true;
+	}
+
+	public static void OnOutOfGame()
+	{
+		s_HasCheckedSessionEntry = false;
+		s_SessionEnterTime = 0;
+		lastAliveMapId = -1;
+		lastAliveZoneId = -1;
+		lastAliveX = -1;
+		lastAliveY = -1;
+		s_LastSpotStepTime = 0;
+		s_SpotArrivedTime = 0;
+		if (currentState != GoBackState.Idle || isForcedHomeReturnActive)
+		{
+			currentState = GoBackState.Idle;
+			isForcedHomeReturnActive = false;
+			if (ModNextMap.isNextMapActive)
+			{
+				ModNextMap.StopNextMap();
+			}
+		}
+	}
+
+	public static void BeginReturn(int mapId, int zoneId, int x, int y, bool forcedHomeReturn = false)
+	{
+		if (mapId < 0)
+		{
+			return;
+		}
+		long now = mSystem.currentTimeMillis();
+		activeReturnMapId = mapId;
+		activeReturnZoneId = zoneId;
+		activeReturnX = x;
+		activeReturnY = y;
+		isForcedHomeReturnActive = forcedHomeReturn;
+		if (!forcedHomeReturn)
+		{
+			isGoBackActive = true;
+		}
+
+		ModTanSat.currentFarmTarget = null;
+		ModAutoPick.isBusy = false;
+		ModNextMap.resetPenaltyCount = 0;
+		s_LastSpotStepTime = 0;
+		s_SpotArrivedTime = 0;
+
+		Char me = Char.myCharz();
+		bool isDead = me != null && ((me.cHPFull > 0 && me.cHP <= 0) || me.statusMe == 14 || me.statusMe == 5 || me.meDead);
+		if (isDead)
+		{
+			if (ModNextMap.isNextMapActive)
+			{
+				ModNextMap.StopNextMap();
+			}
+			GameCanvas.endDlg();
+			GameCanvas.menu.showMenu = false;
+			InfoDlg.hide();
+			Service.gI().returnTownFromDead();
+			currentState = GoBackState.WaitingRevive;
+			stateTimer = now;
+			return;
+		}
+
+		if ((TileMap.mapID == 21 || TileMap.mapID == 22 || TileMap.mapID == 23) && TileMap.mapID != mapId)
+		{
+			if (ModNextMap.isNextMapActive)
+			{
+				ModNextMap.StopNextMap();
+			}
+			requiredHomeCooldownMs = 1200;
+			currentState = GoBackState.DelayAtHome;
+			stateTimer = now;
+			return;
+		}
+
+		if (TileMap.mapID != mapId)
+		{
+			currentState = GoBackState.NavigatingToMap;
+			stateTimer = now;
+			ModNextMap.StartNextMap(mapId);
+		}
+		else
+		{
+			if (ModNextMap.isNextMapActive)
+			{
+				ModNextMap.StopNextMap();
+			}
+			currentState = GoBackState.ChangingZone;
+			lastZoneAttemptTime = 0;
+			zoneAttemptCount = 0;
+			stateTimer = now;
+		}
+	}
 
 	/// <summary>
 	/// Nhận diện thông báo Server đẩy nhân vật khỏi hành tinh Cold ('Meninggalkan Cold Planet') để tự động quay lại map úp.
@@ -235,6 +337,19 @@ public static class ModGoBack
 				ModNextMap.StopNextMap();
 			}
 		}
+		else
+		{
+			s_HasCheckedSessionEntry = true;
+			Char me = Char.myCharz();
+			if (ModMenu.IsInGame() && me != null && (savedMapId < 0 || isAutoRecordOnDeath) &&
+			    TileMap.mapID >= 0 && TileMap.mapID != 21 && TileMap.mapID != 22 && TileMap.mapID != 23)
+			{
+				savedMapId = TileMap.mapID;
+				savedZoneId = TileMap.zoneID;
+				savedX = me.cx;
+				savedY = me.cy;
+			}
+		}
 		ModConfig.SaveConfig();
 
 		GameScr.info1.addInfo("GoBack: " + (isGoBackActive ? "BẬT" : "TẮT"), 0);
@@ -252,25 +367,8 @@ public static class ModGoBack
 			return;
 		}
 
-		isGoBackActive = true;
-		isForcedHomeReturnActive = false;
-		activeReturnMapId = savedMapId;
-		activeReturnZoneId = savedZoneId;
-		activeReturnX = savedX;
-		activeReturnY = savedY;
-		if (TileMap.mapID == savedMapId)
-		{
-			currentState = GoBackState.ChangingZone;
-			lastZoneAttemptTime = 0;
-			zoneAttemptCount = 0;
-		}
-		else
-		{
-			currentState = GoBackState.NavigatingToMap;
-			stateTimer = mSystem.currentTimeMillis();
-			ModNextMap.StartNextMap(savedMapId);
-		}
-
+		s_HasCheckedSessionEntry = true;
+		BeginReturn(savedMapId, savedZoneId, savedX, savedY, forcedHomeReturn: false);
 		GameScr.info1.addInfo("GoBack: Bắt đầu di chuyển về " + ModNextMap.GetMapName(savedMapId) + "...", 0);
 		SoundMn.gI().buttonClick();
 	}
@@ -310,13 +408,13 @@ public static class ModGoBack
 	/// </summary>
 	public static void Update()
 	{
-		if ((!isGoBackActive && !ModTanSat.autoTanSat && !isForcedHomeReturnActive) || !ModMenu.IsInGame() || ModAutoBuyBua.isBusy)
+		if (!ModMenu.IsInGame() || ModAutoBuyBua.isBusy || ModSetActivator.isBusy)
 		{
 			return;
 		}
 
 		Char me = Char.myCharz();
-		if (me == null)
+		if (me == null || me.cHPFull <= 0)
 		{
 			return;
 		}
@@ -324,8 +422,45 @@ public static class ModGoBack
 		long now = mSystem.currentTimeMillis();
 		bool isDead = (me.cHP <= 0 || me.statusMe == 14 || me.statusMe == 5 || me.meDead);
 
+		if (!s_HasCheckedSessionEntry)
+		{
+			if (Char.isLoadingMap || Char.ischangingMap || me.isTeleport || me.statusMe == 16)
+			{
+				return;
+			}
+			if (s_SessionEnterTime == 0)
+			{
+				s_SessionEnterTime = now;
+				return;
+			}
+			if (now - s_SessionEnterTime < 450)
+			{
+				return;
+			}
+			s_HasCheckedSessionEntry = true;
+
+			if (isGoBackActive && savedMapId >= 0 && currentState == GoBackState.Idle)
+			{
+				bool needMap = TileMap.mapID != savedMapId;
+				bool needZone = !needMap && savedZoneId >= 0 && TileMap.zoneID != savedZoneId;
+				bool needSpot = !needMap && !needZone && savedX > 0 && savedY > 0 &&
+				                (Res.abs(me.cx - savedX) > 48 || Res.abs(me.cy - savedY) > 48);
+				if (isDead || needMap || needZone || needSpot)
+				{
+					BeginReturn(savedMapId, savedZoneId, savedX, savedY, forcedHomeReturn: false);
+					GameScr.info1.addInfo("GoBack: Tự động quay lại " + ModNextMap.GetMapName(savedMapId) + "...", 0);
+					return;
+				}
+			}
+		}
+
+		if (!isGoBackActive && !ModTanSat.autoTanSat && !isForcedHomeReturnActive)
+		{
+			return;
+		}
+
 		// 1. Cập nhật vị trí sống cuối cùng và phát hiện trường hợp bị Server đẩy về nhà (ví dụ hết thời gian lưu trú trên hành tinh Cold)
-		if (!isDead && !Char.isLoadingMap && !Char.ischangingMap && currentState == GoBackState.Idle && !ModNextMap.isNextMapActive && !ModSetActivator.isBusy && !ModAutoBuyBua.isBusy)
+		if (!isDead && !Char.isLoadingMap && !Char.ischangingMap && currentState == GoBackState.Idle && !ModNextMap.isNextMapActive)
 		{
 			if (TileMap.mapID != 21 && TileMap.mapID != 22 && TileMap.mapID != 23)
 			{
@@ -337,6 +472,16 @@ public static class ModGoBack
 					lastAliveZoneId = TileMap.zoneID;
 					lastAliveX = me.cx;
 					lastAliveY = me.cy;
+					if (isGoBackActive && isAutoRecordOnDeath && ModTanSat.autoTanSat &&
+					    (savedMapId != lastAliveMapId || savedZoneId != lastAliveZoneId || now - s_LastAutoPersistTime >= 10000))
+					{
+						savedMapId = lastAliveMapId;
+						savedZoneId = lastAliveZoneId;
+						savedX = lastAliveX;
+						savedY = lastAliveY;
+						s_LastAutoPersistTime = now;
+						ModConfig.SaveConfig();
+					}
 				}
 				else if (lastAliveMapId != TileMap.mapID)
 				{
@@ -354,6 +499,10 @@ public static class ModGoBack
 						savedY = me.cy;
 						ModConfig.SaveConfig();
 					}
+					activeReturnMapId = savedMapId;
+					activeReturnZoneId = savedZoneId;
+					activeReturnX = savedX;
+					activeReturnY = savedY;
 					int homeMap = 21 + me.cgender;
 					currentState = GoBackState.MovingHomeForMp;
 					stateTimer = now;
@@ -432,34 +581,52 @@ public static class ModGoBack
 				isForcedHomeReturnActive = true;
 			}
 
+			ModTanSat.currentFarmTarget = null;
+			ModAutoPick.isBusy = false;
+			if (ModNextMap.isNextMapActive)
+			{
+				ModNextMap.StopNextMap();
+			}
+
 			if (currentState == GoBackState.Idle)
 			{
-				// Lưu tọa độ chết nếu bật tự định vị trí khi chết
-				if (isAutoRecordOnDeath)
+				if (isGoBackActive && isAutoRecordOnDeath)
 				{
-					int targetMap = (lastAliveMapId >= 0) ? lastAliveMapId : TileMap.mapID;
-					// Tránh lưu nhầm map nhà nếu chết ở nhà
-					if (targetMap != 21 && targetMap != 22 && targetMap != 23)
+					if (lastAliveMapId >= 0 && lastAliveMapId != 21 && lastAliveMapId != 22 && lastAliveMapId != 23)
 					{
-						savedMapId = targetMap;
+						savedMapId = lastAliveMapId;
 						savedZoneId = (lastAliveZoneId >= 0) ? lastAliveZoneId : TileMap.zoneID;
 						savedX = (lastAliveX > 0) ? lastAliveX : me.cx;
 						savedY = (lastAliveY > 0) ? lastAliveY : me.cy;
 						ModConfig.SaveConfig();
 					}
+					else if (savedMapId < 0 && TileMap.mapID >= 0 && TileMap.mapID != 21 && TileMap.mapID != 22 && TileMap.mapID != 23)
+					{
+						savedMapId = TileMap.mapID;
+						savedZoneId = TileMap.zoneID;
+						savedX = me.cx;
+						savedY = me.cy;
+						ModConfig.SaveConfig();
+					}
 				}
 
-				if (GetTargetMapId() < 0)
+				if (isGoBackActive && !isForcedHomeReturnActive)
+				{
+					activeReturnMapId = savedMapId;
+					activeReturnZoneId = savedZoneId;
+					activeReturnX = savedX;
+					activeReturnY = savedY;
+				}
+
+				if ((activeReturnMapId < 0 ? savedMapId : activeReturnMapId) < 0)
 				{
 					return;
 				}
 
-				// Đóng các bảng popup/menu chết gốc của game
 				GameCanvas.endDlg();
 				GameCanvas.menu.showMenu = false;
 				InfoDlg.hide();
 
-				// Gửi gói tin Service(-15) về nhà hồi sinh
 				Service.gI().returnTownFromDead();
 				currentState = GoBackState.WaitingRevive;
 				stateTimer = now;
@@ -468,7 +635,6 @@ public static class ModGoBack
 			}
 			else if (currentState != GoBackState.WaitingRevive)
 			{
-				// Chết lại trong lúc đang trên đường quay về: Giữ nguyên đích đến, gửi lại lệnh về nhà
 				GameCanvas.endDlg();
 				GameCanvas.menu.showMenu = false;
 				InfoDlg.hide();
@@ -489,17 +655,16 @@ public static class ModGoBack
 		{
 			case GoBackState.WaitingRevive:
 			{
-				// Kiểm tra nếu nhân vật đã sống lại thành công
 				bool isRevived = (!me.meDead && me.cHP > 0 && me.statusMe != 14 && me.statusMe != 5 && !Char.isLoadingMap && !Char.ischangingMap);
-				if (isRevived)
+				bool isAtHome = (TileMap.mapID == 21 || TileMap.mapID == 22 || TileMap.mapID == 23);
+				if (isRevived && (isAtHome || now - stateTimer >= 2200))
 				{
 					currentState = GoBackState.DelayAtHome;
 					stateTimer = now;
 					return;
 				}
 
-				// Watchdog: Nếu sau 4 giây vẫn chưa hồi sinh, gửi lại lệnh về nhà
-				if (now - stateTimer > 4000)
+				if (isDead && !Char.isLoadingMap && !Char.ischangingMap && now - stateTimer > 4000)
 				{
 					Service.gI().returnTownFromDead();
 					stateTimer = now;
@@ -535,7 +700,6 @@ public static class ModGoBack
 					return;
 				}
 
-				// Nghỉ tối thiểu tại nhà (hoặc chờ xả điểm phạt nếu bị đẩy về từ Cold nhiều lần) và đợi nhân vật rơi chạm sàn nhà
 				long minHomeWait = isForcedHomeReturnActive ? requiredHomeCooldownMs : 1200;
 				if (now - stateTimer < minHomeWait)
 				{
@@ -556,7 +720,6 @@ public static class ModGoBack
 
 				TryPickHomeChicken(me);
 
-				// Đảm bảo hồi phục HP/KI trước khi rời khỏi nhà (chờ tối đa 3000ms nếu đang hồi đậu/thu hoạch cây đậu)
 				bool needRecover = (me.cHPFull > 0 && me.cHP * 100L < me.cHPFull * 20L) ||
 				                   (isGoBackActive && gobackOnLowMp && me.cMPFull > 0 && me.cMP * 100L < me.cMPFull * 50L);
 				if (needRecover && now - stateTimer < 3000)
@@ -584,7 +747,6 @@ public static class ModGoBack
 					return;
 				}
 
-				// Nếu map đích chính là map hiện tại
 				if (TileMap.mapID == targetMapId)
 				{
 					currentState = GoBackState.ChangingZone;
@@ -604,7 +766,6 @@ public static class ModGoBack
 
 			case GoBackState.NavigatingToMap:
 			{
-				// Đã đến map đích thành công
 				if (TileMap.mapID == targetMapId && !Char.isLoadingMap && !Char.ischangingMap)
 				{
 					if (ModNextMap.isNextMapActive)
@@ -618,7 +779,6 @@ public static class ModGoBack
 					return;
 				}
 
-				// Watchdog: Nếu NextMap bị dừng đột ngột trước khi đến nơi
 				if (!ModNextMap.isNextMapActive && TileMap.mapID != targetMapId && !Char.isLoadingMap && !Char.ischangingMap)
 				{
 					if (now - stateTimer > 2000)
@@ -636,24 +796,29 @@ public static class ModGoBack
 				{
 					return;
 				}
-				if ((ModTeleport.IsColdPlanetMap() || ModTeleport.IsColdPlanetAntiCheckActive()) && !TileMap.tileTypeAt(me.cx, me.cy, 2) && now - stateTimer < 3800)
+				if (targetMapId >= 0 && TileMap.mapID != targetMapId)
 				{
-					if (me.statusMe == 1 && me.cy <= 48)
-					{
-						me.statusMe = 4;
-					}
+					currentState = GoBackState.NavigatingToMap;
+					stateTimer = now;
+					ModNextMap.StartNextMap(targetMapId);
 					return;
 				}
 
-				// Đã ở đúng khu vực đích hoặc không có yêu cầu khu
 				if (targetZoneId < 0 || TileMap.zoneID == targetZoneId)
 				{
 					currentState = GoBackState.TeleportingToSpot;
 					stateTimer = now;
+					s_LastSpotStepTime = 0;
+					s_SpotArrivedTime = 0;
+					ModNextMap.resetPenaltyCount = 0;
 					return;
 				}
 
-				// Gửi yêu cầu đổi khu vực
+				if (now - stateTimer < 600)
+				{
+					return;
+				}
+
 				if (now - lastZoneAttemptTime > 2500)
 				{
 					lastZoneAttemptTime = now;
@@ -662,12 +827,14 @@ public static class ModGoBack
 					GameScr.info1.addInfo("GoBack: Đang vào Khu " + targetZoneId + "...", 0);
 				}
 
-				// Watchdog: Nếu quá 3 lần thử (~7.5s) mà không vào được khu (khu đầy), bỏ qua để teleport tại khu hiện tại
 				if (zoneAttemptCount >= 3)
 				{
 					GameScr.info1.addInfo("GoBack: Khu " + targetZoneId + " có thể đã đầy, giữ khu hiện tại!", 0);
 					currentState = GoBackState.TeleportingToSpot;
 					stateTimer = now;
+					s_LastSpotStepTime = 0;
+					s_SpotArrivedTime = 0;
+					ModNextMap.resetPenaltyCount = 0;
 				}
 				break;
 			}
@@ -678,47 +845,68 @@ public static class ModGoBack
 				{
 					return;
 				}
-
-				if (ModTeleport.IsColdPlanetAntiCheckActive())
+				if (targetMapId >= 0 && TileMap.mapID != targetMapId)
 				{
-					if (!TileMap.tileTypeAt(me.cx, me.cy, 2) && now - stateTimer < 3800)
-					{
-						if (me.statusMe == 1 && me.cy <= 48)
-						{
-							me.statusMe = 4;
-						}
-						return;
-					}
-					if (ModTeleport.TryEscapeColdUnderground(me, now))
-					{
-						return;
-					}
+					currentState = GoBackState.NavigatingToMap;
+					stateTimer = now;
+					ModNextMap.StartNextMap(targetMapId);
+					return;
+				}
+				if (now - stateTimer < 350)
+				{
+					return;
 				}
 
-				// Teleport đến toạ độ chính xác đã lưu
 				if (targetX > 0 && targetY > 0)
 				{
-					if (ModTeleport.IsColdPlanetAntiCheckActive())
+					int spotX = targetX;
+					int spotY = targetY;
+					if (TileMap.pxw > 160 && ModTanSatTargeting.IsInsideWaypoint(spotX, spotY))
 					{
-						if (ModTeleport.IsColdPositionBlocked(targetX, targetY))
+						if (spotX < 64) spotX = 64;
+						else if (spotX > TileMap.pxw - 64) spotX = TileMap.pxw - 64;
+					}
+					if (!TileMap.isInAirMap() && !TileMap.tileTypeAt(spotX, spotY, 2))
+					{
+						int fixedY = ModTanSatTargeting.FindGroundY(spotX, spotY, 120);
+						if (fixedY != -1)
 						{
-							int fixedY = ModTanSatTargeting.FindGroundY(targetX, targetY, 120);
-							if (fixedY != -1)
-							{
-								targetY = fixedY;
-							}
+							spotY = fixedY;
 						}
-						if (!ModTeleport.MoveSteppedTo(targetX, targetY, isTargetFlying: false, allowColdLongTeleport: true) && now - stateTimer < 7500)
+					}
+
+					int dx = Res.abs(me.cx - spotX);
+					int dy = Res.abs(me.cy - spotY);
+					if (dx <= 28 && dy <= 36)
+					{
+						if (s_SpotArrivedTime == 0)
+						{
+							s_SpotArrivedTime = now;
+							return;
+						}
+						if (now - s_SpotArrivedTime < 220)
 						{
 							return;
 						}
 					}
-					else
+					else if (now - stateTimer < 8000)
 					{
-						ModTeleport.TeleportTo(targetX, targetY);
+						s_SpotArrivedTime = 0;
+						if (now - s_LastSpotStepTime < 200)
+						{
+							return;
+						}
+						s_LastSpotStepTime = now;
+						ModWaypoint.MoveSteppedTo(spotX, spotY);
+						return;
 					}
 				}
 
+				ModNextMap.resetPenaltyCount = 0;
+				ModWaypoint.ResetWaypointState();
+				ModTeleport.ClearEchoes();
+				ModTeleport.isWaitingServerSync = false;
+				ModTeleport.isCurrentPosSynced = true;
 				SoundMn.gI().buttonClose();
 				GameScr.info1.addInfo("GoBack: Đã về lại vị trí cũ! (Khu " + TileMap.zoneID + ")", 0);
 				currentState = GoBackState.Idle;

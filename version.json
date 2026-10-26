@@ -1,9 +1,9 @@
 {
-  "version": "2.5.68",
+  "version": "2.5.69",
   "buildDate": "2026-10-26",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.68/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.68/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.68/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.68/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.68: Sửa triệt để lỗi đeo Pet Tàn Sát bị đứng im 1 chỗ và lỗi đơ / khựng vặt trên bản Web Render.com:\n- Đeo Pet khi Tàn Sát: Khắc phục triệt để lỗi gói cmd 31 (PetFollow thiếu mảng frame hoặc kích thước 0) gây văng ngoại lệ làm đứt quãng updateSkillPaint khiến nhân vật đứng chôn chân; loại bỏ hoàn toàn Pet/Linh thú (mobMe, MiniPet, Đệ tử) khỏi mục tiêu khóa Tàn Sát, Đổi Khu và Né Broly; chống sát thương lẻ của Pet xóa nhầm bộ đếm đồng bộ vị trí & lọc quái lag.\n- Bản Web Render.com & Đa Nền Tảng: Tích hợp trực tiếp Session_ME.update() & Session_ME2.update() vào Main.FixedUpdate() đảm bảo giải mã gói tin máy chủ tức thời cả khi tab chạy nền / giới hạn FPS / màn hình cảm ứng; rút ngắn chờ đồng bộ dịch chuyển từ 4500ms xuống 900ms và mở khóa ngay khi sát thương / nhặt đồ xác nhận; bọc cô lập ngoại lệ từng thực thể trong GameScr.update(), Char.updateEffect() cùng bộ Watchdog tự gỡ kẹt hoạt ảnh đòn đánh, gồng chiêu và phím di chuyển."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.69/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.69/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.69/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.69/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.69: Sửa triệt để lỗi GoBack khi chết lúc Tàn Sát hoặc thoát / mất mạng vào lại không dùng NextMap mà bị lẫn cơ chế di chuyển Tàn Sát:\n- Tách biệt 100% cơ chế di chuyển NextMap (ModNextMap + ModWaypoint) khỏi ModTeleport của Tàn Sát: Luôn dùng dịch chuyển 2 pha chuẩn Xmap và Capsule (194/193) để qua map nhanh cả khi đang bật Tàn Sát / Chống Quét.\n- Tự động kích hoạt GoBack bằng NextMap ngay khi thoát game vào lại hoặc tự đăng nhập lại (ModAutoLogin): Đợi nạp đủ chỉ số nhân vật (ME_LOAD_POINT) và tiếp đất ổn định, tự quay về đúng Map, Khu và tọa độ đã lưu rồi mới cho Tàn Sát đánh tiếp.\n- Khắc phục triệt để lỗi dội ngược cổng vào khi vừa tới map đích và lỗi hồi sinh sớm trước khi tải xong map nhà."
 }

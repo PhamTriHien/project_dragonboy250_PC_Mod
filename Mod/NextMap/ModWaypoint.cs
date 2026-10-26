@@ -452,32 +452,6 @@ public static class ModWaypoint
 			// Pha 1: Dịch chuyển tới tọa độ tiếp cận sát cổng (cột đất hợp lệ) và đợi Server xác nhận
 			if (!hasTeleportedToWp)
 			{
-				if (ModTeleport.IsColdPlanetAntiCheckActive())
-				{
-					bool isAirOrTower = TileMap.isInAirMap() || TileMap.mapID == 45 || TileMap.mapID == 46 || TileMap.mapID == 47 || TileMap.mapID == 48;
-					int coldApproachY = wpTargetY;
-					if (isAirOrTower)
-					{
-						if (coldApproachY < 16) coldApproachY = 16;
-						if (TileMap.pxh > 32 && coldApproachY > TileMap.pxh - 16) coldApproachY = TileMap.pxh - 16;
-					}
-					else if (ModTeleport.IsColdPositionBlocked(approachX, coldApproachY, allowEnterWaypoint: true))
-					{
-						int fixedY = ModTanSatTargeting.FindGroundY(approachX, coldApproachY, 96);
-						if (fixedY != -1)
-						{
-							coldApproachY = fixedY;
-						}
-					}
-					if (ModTeleport.MoveSteppedTo(approachX, coldApproachY, isTargetFlying: isAirOrTower, allowColdLongTeleport: false, allowEnterWaypoint: true))
-					{
-						hasTeleportedToWp = true;
-						isWpPosConfirmed = true;
-						isWaitingTeleportConfirm = false;
-					}
-					wpInitTime = now;
-					return false;
-				}
 				if (MoveSteppedTo(approachX, wpTargetY))
 				{
 					hasTeleportedToWp = true;
@@ -596,16 +570,6 @@ public static class ModWaypoint
 
 			if (!hasTeleportedToWp)
 			{
-				if (ModTeleport.IsColdPlanetAntiCheckActive())
-				{
-					if (ModTeleport.MoveSteppedTo(targetX, targetY, isTargetFlying: true, allowColdLongTeleport: false, allowEnterWaypoint: true))
-					{
-						hasTeleportedToWp = true;
-						isWpPosConfirmed = true;
-						isWaitingTeleportConfirm = false;
-					}
-					return false;
-				}
 				if (MoveSteppedTo(targetX, targetY))
 				{
 					hasTeleportedToWp = true;
@@ -755,11 +719,6 @@ public static class ModWaypoint
 
 			if (Res.abs(me.cx - npcX) > 24 || Res.abs(me.cy - npcY) > 24)
 			{
-				if (ModTeleport.IsColdPlanetAntiCheckActive())
-				{
-					ModTeleport.MoveSteppedTo(npcX, npcY, isTargetFlying: false, allowColdLongTeleport: false, allowEnterWaypoint: true);
-					return false;
-				}
 				MoveSteppedTo(npcX, npcY);
 				ModTdltLogger.Log("NEXT_MAP_SHIP", $"Teleport to NPC at ({npcX},{npcY}) [rawCy={shipNpc.cy}], map={TileMap.mapID}");
 				return false;

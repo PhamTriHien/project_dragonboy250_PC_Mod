@@ -188,6 +188,18 @@ public static class ModNextMap
 		{
 			me.isLockAttack = false;
 			me.isLockMove = false;
+			if (TileMap.vGo != null)
+			{
+				for (int w = 0; w < TileMap.vGo.size(); w++)
+				{
+					Waypoint wp = (Waypoint)TileMap.vGo.elementAt(w);
+					if (wp != null && !wp.isEnter && me.cx >= wp.minX && me.cx <= wp.maxX && me.cy >= wp.minY && me.cy <= wp.maxY)
+					{
+						Char.entranceWaypoint = wp;
+						break;
+					}
+				}
+			}
 		}
 		ModWaypoint.ResetWaypointState();
 	}
@@ -640,7 +652,7 @@ public static class ModNextMap
 					Npc npc = (Npc)GameScr.vNpc.elementAt(i);
 					if (npc != null && npc.template != null && npc.template.npcTemplateId >= 30 && npc.template.npcTemplateId <= 36)
 					{
-						ModTeleport.TeleportTo(npc.cx, TileMap.tileYofPixel(npc.cy - 3));
+						ModWaypoint.TeleportTo(npc.cx, TileMap.tileYofPixel(npc.cy - 3));
 						Service.gI().openMenu(npc.template.npcTemplateId);
 						return;
 					}
@@ -706,7 +718,7 @@ public static class ModNextMap
 			{
 				int tx = ModWaypoint.GetWaypointTargetX(targetWp);
 				int ty = ModWaypoint.GetWaypointTargetY(targetWp, tx);
-				ModTeleport.TeleportTo(tx, ty);
+				ModWaypoint.TeleportTo(tx, ty);
 				Char.ischangingMap = true;
 				if (targetWp.isOffline || TileMap.isOfflineMap() || TileMap.isTrainingMap())
 				{
@@ -722,7 +734,7 @@ public static class ModNextMap
 			if (dir == 2 && (currMap == 45 || currMap == 46 || currMap == 48))
 			{
 				int tx = System.Math.Max(48, System.Math.Min(TileMap.pxw - 48, me.cx));
-				ModTeleport.TeleportTo(tx, TileMap.pxh - 12);
+				ModWaypoint.TeleportTo(tx, TileMap.pxh - 12);
 				Char.ischangingMap = true;
 				Service.gI().requestChangeMap();
 				return;
@@ -839,9 +851,7 @@ public static class ModNextMap
 			return;
 		}
 
-		int stepIntervalMs = ModTeleport.IsColdPlanetAntiCheckActive()
-			? ModTeleport.ColdStepIntervalMs
-			: ((useSafeMovement || resetPenaltyCount > 0) ? 260 : 180);
+		int stepIntervalMs = (useSafeMovement || resetPenaltyCount > 0) ? 260 : 180;
 		if (now < mapEnterWaitUntil || now - lastStepUpdateTime < stepIntervalMs)
 		{
 			return;
@@ -879,7 +889,7 @@ public static class ModNextMap
 		}
 
 		if (path.Count >= 4 && (useCapsuleVip || useNormalCapsule) && now - s_LastCapsuleUseTime > 6000 &&
-		    !TileMap.isInAirMap() && !(TileMap.mapID >= 85 && TileMap.mapID <= 91) && !ModTeleport.IsColdPlanetAntiCheckActive())
+		    !TileMap.isInAirMap() && !(TileMap.mapID >= 85 && TileMap.mapID <= 91) && !(TileMap.mapID >= 105 && TileMap.mapID <= 110))
 		{
 			int capIdx = useCapsuleVip ? FindBagItemIndex(me, 194, 1) : -1;
 			if (capIdx < 0 && useNormalCapsule)

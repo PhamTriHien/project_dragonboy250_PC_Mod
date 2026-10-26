@@ -363,6 +363,7 @@ public static class ModMenu
 				ModUI.uiCustomOpen = false;
 				modMenuOpen = false;
 				ModTeleport.ResetSessionColdCounters();
+				ModGoBack.OnOutOfGame();
 				return;
 			}
 

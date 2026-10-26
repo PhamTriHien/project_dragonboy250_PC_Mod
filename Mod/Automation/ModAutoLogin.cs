@@ -99,12 +99,18 @@ public static class ModAutoLogin
 				lastFarmX = ModSetActivator.savedFarmX;
 				lastFarmY = ModSetActivator.savedFarmY;
 			}
-			else if (TileMap.mapID >= 0 && Char.myCharz() != null)
+			else if (!Char.isLoadingMap && !Char.ischangingMap &&
+			         !ModGoBack.isReturning && !ModNextMap.isNextMapActive && !ModSetActivator.isBusy && !ModAutoBuyBua.isBusy &&
+			         TileMap.mapID >= 0 && TileMap.mapID != 21 && TileMap.mapID != 22 && TileMap.mapID != 23)
 			{
-				lastFarmMapId = TileMap.mapID;
-				lastFarmZoneId = TileMap.zoneID;
-				lastFarmX = Char.myCharz().cx;
-				lastFarmY = Char.myCharz().cy;
+				Char me = Char.myCharz();
+				if (me != null && me.cHPFull > 0 && me.cHP > 0 && !me.meDead && me.statusMe != 14 && me.statusMe != 5)
+				{
+					lastFarmMapId = TileMap.mapID;
+					lastFarmZoneId = TileMap.zoneID;
+					lastFarmX = me.cx;
+					lastFarmY = me.cy;
+				}
 			}
 		}
 	}
@@ -169,7 +175,7 @@ public static class ModAutoLogin
 		}
 
 		// Khi da vao lai map on dinh
-		if (ModMenu.IsInGame() && !Char.isLoadingMap)
+		if (ModMenu.IsInGame() && !Char.isLoadingMap && !Char.ischangingMap && Char.myCharz() != null && Char.myCharz().cHPFull > 0)
 		{
 			RestoreAutoState();
 			isReconnecting = false;
@@ -288,17 +294,30 @@ public static class ModAutoLogin
 				ModAutoHeal.autoPean = true;
 			}
 
-			// 4. GoBack ve lai bai farm cu
+			// 4. GoBack ve lai bai farm cu (bang NextMap, tam dung Tan Sat cho toi khi toi noi)
 			if (wasGoBackActive)
 			{
 				ModGoBack.isGoBackActive = true;
-				if (lastFarmMapId >= 0 && (TileMap.mapID != lastFarmMapId || (lastFarmZoneId >= 0 && TileMap.zoneID != lastFarmZoneId)))
+			}
+			if ((wasGoBackActive || (wasTanSatActive && !wasSetKHActive)) && lastFarmMapId >= 0)
+			{
+				Char me = Char.myCharz();
+				bool isDead = me != null && ((me.cHPFull > 0 && me.cHP <= 0) || me.statusMe == 14 || me.statusMe == 5 || me.meDead);
+				bool needMap = TileMap.mapID != lastFarmMapId;
+				bool needZone = !needMap && lastFarmZoneId >= 0 && TileMap.zoneID != lastFarmZoneId;
+				bool needSpot = !needMap && !needZone && me != null && lastFarmX > 0 && lastFarmY > 0 &&
+				                (Res.abs(me.cx - lastFarmX) > 48 || Res.abs(me.cy - lastFarmY) > 48);
+				if (wasGoBackActive)
 				{
 					ModGoBack.savedMapId = lastFarmMapId;
 					ModGoBack.savedZoneId = lastFarmZoneId;
 					ModGoBack.savedX = lastFarmX;
 					ModGoBack.savedY = lastFarmY;
-					ModGoBack.StartGoBackNow();
+				}
+				ModGoBack.MarkSessionEntryChecked();
+				if (isDead || needMap || needZone || needSpot)
+				{
+					ModGoBack.BeginReturn(lastFarmMapId, lastFarmZoneId, lastFarmX, lastFarmY, forcedHomeReturn: !wasGoBackActive);
 				}
 			}
 
