@@ -1,9 +1,9 @@
 {
-  "version": "2.5.72",
+  "version": "2.5.73",
   "buildDate": "2026-10-27",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.72/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.72/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.72/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.72/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.72: Tăng tốc độ di chuyển Tàn Sát Chống Quét (Anti-Scan Phase 2) thêm 80% - 140% trên toàn bộ nền tảng vẫn giữ 0 RESET_POINT:\n- Gỡ bỏ bóp bước me.cspeed < 4 do hiệu ứng 'Bị lạnh' trên map Cold (105-110), mở trần sải bước an toàn từ 48px lên 84..90px trục đơn & 130..138px Manhattan (dưới ngưỡng cứng 96px/144px của Server).\n- Chuẩn hóa nhịp bước khớp khung hình 60 FPS (52..64ms thay vì 78..90ms bị trễ lượng tử hóa sang 98..108ms), đạt ~15 nhịp/giây (~1.350 - 1.480 px/s).\n- Bổ sung dò cắt góc liên tục (Sub-tile Corner-Rounding 25%/50%/75%) dọc đoạn BFS kế tiếp có kiểm chứng IsColdAirSegmentClear 8px, xóa bỏ các bước đệm ngắn 20..30px ở khúc cua vách đá.\n- Cắt bỏ độ trễ kẹt chờ nhặt đồ 1.133ms khi mạng RTT cao (chuyển mục tiêu ngay sau 2 lần pickItem chuẩn xác tại tâm vật phẩm), giảm nghỉ skill phụ trợ còn 120ms và tự bước áp sát resync khi quái cận chiến đi bộ lệch tầm."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.73/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.73/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.73/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.73/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.73: Vá triệt để lỗi kẹt dao động 4px dưới gầm trần đá & lỗi quệt góc cửa giếng trên Tàn Sát Chống Quét (Anti-Scan):\n- Đồng bộ khoảng hở trần đá trong GetColdCellPixel (py = ty * 24 + 22 với ColdSolidMask) khớp 100% với ngưỡng IsTileBlocked (py - 22), xóa bỏ hoàn toàn điểm mù tự chặn tâm ô BFS dưới gầm đá (444, 622).\n- Khóa đơn điệu tiến trình (Monotonic Forward Progress) cho bộ dò cắt góc Sub-tile Probe (25%/50%/75%) và bổ sung theo dõi tiến triển vị trí thực tế (coldLastProgressTime 2.2s), triệt tiêu vĩnh viễn vòng lặp giật lùi ping-pong 4px (624 <-> 628) kể cả khi quái mục tiêu đi bộ liên tục.\n- Nâng kiểm tra va chạm đỉnh đầu trong IsColdAirSegmentClear & IsColdLandingSegmentClear lên sy - 20 với đầy đủ ColdSolidMask, ngăn cắt sượt mép dưới vách đá cửa giếng gây RESET_POINT."
 }

@@ -34,6 +34,10 @@ public static class ModTeleport
 	private static int coldTrackedTargetX = -1;
 	private static int coldTrackedTargetY = -1;
 	private static long coldTrackedStartTime = 0;
+	private static int coldProgressAnchorX = -1;
+	private static int coldProgressAnchorY = -1;
+	private static long coldLastProgressTime = 0;
+	private static long coldLastMoveAttemptTime = 0;
 	private static int[] bfsQueue = new int[4096];
 	private static int[] bfsParent = new int[4096];
 	private static int[] bfsVisitStamp = new int[4096];
@@ -78,7 +82,20 @@ public static class ModTeleport
 
 	public static bool IsColdStepTimedOut()
 	{
-		return IsColdPlanetAntiCheckActive() && coldTrackedStartTime > 0 && (mSystem.currentTimeMillis() - coldTrackedStartTime > 6500);
+		if (!IsColdPlanetAntiCheckActive())
+		{
+			return false;
+		}
+		long now = mSystem.currentTimeMillis();
+		if (coldLastMoveAttemptTime <= 0 || now - coldLastMoveAttemptTime > 600)
+		{
+			return false;
+		}
+		if (coldTrackedStartTime > 0 && now - coldTrackedStartTime > 6500)
+		{
+			return true;
+		}
+		return coldLastProgressTime > 0 && now - coldLastProgressTime > 2200;
 	}
 
 	public static void ResetColdStepTracking()
@@ -86,6 +103,10 @@ public static class ModTeleport
 		coldTrackedTargetX = -1;
 		coldTrackedTargetY = -1;
 		coldTrackedStartTime = 0;
+		coldProgressAnchorX = -1;
+		coldProgressAnchorY = -1;
+		coldLastProgressTime = 0;
+		coldLastMoveAttemptTime = 0;
 	}
 
 	public static void NotifyServerResetPointReceived()
@@ -379,8 +400,13 @@ public static class ModTeleport
 	private static void GetColdCellPixel(int tx, int ty, out int px, out int py)
 	{
 		px = tx * 24 + 12;
-		bool hasCeilingAbove = ty > 0 && (TileMap.tileTypeAt(tx, ty - 1) & TileMap.T_BOTTOM) != 0;
-		py = hasCeilingAbove ? (ty * 24 + 20) : (ty * 24 + 12);
+		if ((TileMap.tileTypeAt(tx, ty) & TileMap.T_TOP) != 0)
+		{
+			py = ty * 24;
+			return;
+		}
+		bool hasCeilingAbove = ty > 0 && (TileMap.tileTypeAt(tx, ty - 1) & ColdSolidMask) != 0;
+		py = hasCeilingAbove ? (ty * 24 + 22) : (ty * 24 + 12);
 	}
 
 	private static bool IsColdCellPassable(int tx, int ty, bool strictAir, int startIdx, int goalIdx)
@@ -863,8 +889,8 @@ public static class ModTeleport
 			int sy = fromY + (toY - fromY) * s / steps;
 			int tFoot = TileMap.tileTypeAtPixel(sx, sy);
 			int tWaist = TileMap.tileTypeAtPixel(sx, System.Math.Max(0, sy - 12));
-			int tHead = TileMap.tileTypeAtPixel(sx, System.Math.Max(0, sy - 16));
-			if ((tFoot & ColdSolidMask) != 0 || (tWaist & ColdSolidMask) != 0 || (tHead & TileMap.T_BOTTOM) != 0)
+			int tHead = TileMap.tileTypeAtPixel(sx, System.Math.Max(0, sy - 20));
+			if ((tFoot & ColdSolidMask) != 0 || (tWaist & ColdSolidMask) != 0 || (tHead & ColdSolidMask) != 0)
 			{
 				return false;
 			}
@@ -895,8 +921,8 @@ public static class ModTeleport
 			int sy = fromY + (toY - fromY) * s / steps;
 			int tFoot = TileMap.tileTypeAtPixel(sx, sy);
 			int tWaist = TileMap.tileTypeAtPixel(sx, System.Math.Max(0, sy - 12));
-			int tHead = TileMap.tileTypeAtPixel(sx, System.Math.Max(0, sy - 16));
-			if ((tFoot & ColdSolidMask) != 0 || (tWaist & ColdSolidMask) != 0 || (tHead & TileMap.T_BOTTOM) != 0)
+			int tHead = TileMap.tileTypeAtPixel(sx, System.Math.Max(0, sy - 20));
+			if ((tFoot & ColdSolidMask) != 0 || (tWaist & ColdSolidMask) != 0 || (tHead & ColdSolidMask) != 0)
 			{
 				return false;
 			}
@@ -979,11 +1005,19 @@ public static class ModTeleport
 
 	private static bool MoveColdAntiCheckTo(Char me, int targetX, int targetY, bool isTargetOnGround, bool allowLongTeleport, long now, bool allowEnterWaypoint = false)
 	{
-		if (Res.abs(targetX - coldTrackedTargetX) > 36 || Res.abs(targetY - coldTrackedTargetY) > 36 || coldTrackedStartTime <= 0)
+		bool resumedAfterIdle = coldLastMoveAttemptTime <= 0 || now - coldLastMoveAttemptTime > 600;
+		coldLastMoveAttemptTime = now;
+		if (resumedAfterIdle || Res.abs(targetX - coldTrackedTargetX) > 36 || Res.abs(targetY - coldTrackedTargetY) > 36 || coldTrackedStartTime <= 0)
 		{
 			coldTrackedTargetX = targetX;
 			coldTrackedTargetY = targetY;
 			coldTrackedStartTime = now;
+		}
+		if (resumedAfterIdle || coldProgressAnchorX < 0 || Res.abs(me.cx - coldProgressAnchorX) > 16 || Res.abs(me.cy - coldProgressAnchorY) > 16)
+		{
+			coldProgressAnchorX = me.cx;
+			coldProgressAnchorY = me.cy;
+			coldLastProgressTime = now;
 		}
 
 		int dx = Res.abs(me.cx - targetX);
@@ -1108,7 +1142,7 @@ public static class ModTeleport
 					continue;
 				}
 
-				if (i < pathLen - 1 && sdx < maxFlyAxis && sdy < maxFlyAxis && (sdx + sdy) < maxFlyManhattan)
+				if (i < pathLen - 1)
 				{
 					int nextWayX, nextWayY;
 					if (i + 1 == pathLen - 1 && !IsColdPositionBlocked(aimX, aimY, allowEnterWaypoint))
@@ -1121,20 +1155,36 @@ public static class ModTeleport
 						int nextCellIdx = bfsPathBuffer[i + 1];
 						GetColdCellPixel(nextCellIdx % w, nextCellIdx / w, out nextWayX, out nextWayY);
 					}
-					for (int num = 3; num >= 1; num--)
+					int curDistToNext = Res.abs(nextWayX - me.cx) + Res.abs(nextWayY - me.cy);
+					int origWayDistToNext = Res.abs(nextWayX - wayX) + Res.abs(nextWayY - wayY);
+					bool alreadyPastWay = Res.abs(me.cx - nextWayX) <= Res.abs(wayX - nextWayX) &&
+					                      Res.abs(me.cy - nextWayY) <= Res.abs(wayY - nextWayY) &&
+					                      curDistToNext < origWayDistToNext;
+					bool foundForwardProbe = false;
+					if (sdx < maxFlyAxis && sdy < maxFlyAxis && (sdx + sdy) < maxFlyManhattan)
 					{
-						int probeX = wayX + (nextWayX - wayX) * num / 4;
-						int probeY = wayY + (nextWayY - wayY) * num / 4;
-						if ((Res.abs(probeX - me.cx) > 3 || Res.abs(probeY - me.cy) > 3) &&
-						    !IsColdPositionBlocked(probeX, probeY, allowEnterWaypoint) &&
-						    IsColdAirSegmentClear(me.cx, startAirY, probeX, probeY, strictAirUsed, allowEnterWaypoint))
+						for (int num = 3; num >= 1; num--)
 						{
-							wayX = probeX;
-							wayY = probeY;
-							sdx = Res.abs(wayX - me.cx);
-							sdy = Res.abs(wayY - me.cy);
-							break;
+							int probeX = wayX + (nextWayX - wayX) * num / 4;
+							int probeY = wayY + (nextWayY - wayY) * num / 4;
+							int probeDistToNext = Res.abs(nextWayX - probeX) + Res.abs(nextWayY - probeY);
+							if (probeDistToNext + 3 < curDistToNext &&
+							    (Res.abs(probeX - me.cx) > 3 || Res.abs(probeY - me.cy) > 3) &&
+							    !IsColdPositionBlocked(probeX, probeY, allowEnterWaypoint) &&
+							    IsColdAirSegmentClear(me.cx, startAirY, probeX, probeY, strictAirUsed, allowEnterWaypoint))
+							{
+								wayX = probeX;
+								wayY = probeY;
+								sdx = Res.abs(wayX - me.cx);
+								sdy = Res.abs(wayY - me.cy);
+								foundForwardProbe = true;
+								break;
+							}
 						}
+					}
+					if (!foundForwardProbe && alreadyPastWay)
+					{
+						continue;
 					}
 				}
 
@@ -1196,37 +1246,51 @@ public static class ModTeleport
 			int fallbackIdx = bfsPathBuffer[System.Math.Min(1, pathLen - 1)];
 			GetColdCellPixel(fallbackIdx % w, fallbackIdx / w, out int nextX, out int nextY);
 			ComputeProportionalColdStep(me.cx, me.cy, nextX, nextY, maxClampStep, maxFlyManhattanCeiling, out int stepX, out int stepY);
-			SendSingleCharMove(stepX, stepY);
-			lastStepTime = now;
-			isCurrentPosSynced = true;
-			bool stepDone = Res.abs(stepX - targetX) <= 12 && Res.abs(stepY - targetY) <= arriveTolY;
-			isWaitingSettle = !stepDone;
-			RollNextColdStepDelay(stepDone);
-			if (stepDone)
+			if ((stepX != me.cx || stepY != me.cy) && !IsColdPositionBlocked(stepX, stepY, allowEnterWaypoint))
 			{
-				ResetColdStepTracking();
+				SendSingleCharMove(stepX, stepY);
+				lastStepTime = now;
+				isCurrentPosSynced = true;
+				bool stepDone = Res.abs(stepX - targetX) <= 12 && Res.abs(stepY - targetY) <= arriveTolY;
+				isWaitingSettle = !stepDone;
+				RollNextColdStepDelay(stepDone);
+				if (stepDone)
+				{
+					ResetColdStepTracking();
+				}
+				return stepDone;
 			}
-			return stepDone;
 		}
 
 		int safeApexY = System.Math.Max(48, System.Math.Min(me.cy, targetY) - 48);
 		int fbX = me.cx;
 		int fbY = me.cy;
-		if (dx > 48 && me.cy > safeApexY && (TileMap.tileTypeAtPixel(me.cx, System.Math.Max(24, me.cy - 48)) & ColdSolidMask) == 0)
+		if (dx > 48 && me.cy > safeApexY && !IsColdPositionBlocked(me.cx, System.Math.Max(24, me.cy - 48), allowEnterWaypoint))
 		{
 			fbY = System.Math.Max(safeApexY, me.cy - 48);
 		}
 		else if (dx > 12)
 		{
-			fbX = me.cx + ClampInt(targetX - me.cx, -48, 48);
+			int stepDirX = me.cx + ClampInt(targetX - me.cx, -48, 48);
+			if (!IsColdPositionBlocked(stepDirX, me.cy, allowEnterWaypoint))
+			{
+				fbX = stepDirX;
+			}
 		}
 		else
 		{
-			fbY = me.cy + ClampInt(targetY - me.cy, -48, 48);
+			int stepDirY = me.cy + ClampInt(targetY - me.cy, -48, 48);
+			if (!IsColdPositionBlocked(me.cx, stepDirY, allowEnterWaypoint))
+			{
+				fbY = stepDirY;
+			}
 		}
-		SendSingleCharMove(fbX, fbY);
-		lastStepTime = now;
-		isCurrentPosSynced = true;
+		if (fbX != me.cx || fbY != me.cy)
+		{
+			SendSingleCharMove(fbX, fbY);
+			lastStepTime = now;
+			isCurrentPosSynced = true;
+		}
 		bool fbDone = Res.abs(fbX - targetX) <= 12 && Res.abs(fbY - targetY) <= arriveTolY;
 		isWaitingSettle = !fbDone;
 		RollNextColdStepDelay(fbDone);
@@ -1260,7 +1324,7 @@ public static class ModTeleport
 		{
 			return true;
 		}
-		if (py >= 24 && TileMap.tileTypeAt(px, py - 24, 2))
+		if (py >= 24 && TileMap.tileTypeAt(px, py - 24, 2) && (TileMap.tileTypeAt(px, py, 2) || (TileMap.tileTypeAtPixel(px, py - 24) & ColdSolidMask) == 0))
 		{
 			return true;
 		}
