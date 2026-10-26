@@ -368,15 +368,32 @@ public sealed class ModAutoCaptcha : IActionListener
 	{
 		try
 		{
-			var form = new FormUrlEncodedContent(new KeyValuePair<string, string>[]
+			var pairs = new KeyValuePair<string, string>[]
 			{
 				new KeyValuePair<string, string>("image", b64)
-			});
-			using (var resp = await s_HttpClient.PostAsync(url, form))
+			};
+			string baseUrl = DragonBoy_Web_Host.WebInterop.GetHttpBaseUrl().TrimEnd('/');
+			string relayUrl = baseUrl + "/api/proxy?url=" + Uri.EscapeDataString(url);
+			using (var relayForm = new FormUrlEncodedContent(pairs))
+			using (var resp = await s_HttpClient.PostAsync(relayUrl, relayForm))
 			{
 				if (resp.IsSuccessStatusCode)
 				{
 					s_HttpResponse = await resp.Content.ReadAsStringAsync();
+					return;
+				}
+				int code = (int)resp.StatusCode;
+				if (code != 404 && code != 405)
+				{
+					return;
+				}
+			}
+			using (var directForm = new FormUrlEncodedContent(pairs))
+			using (var directResp = await s_HttpClient.PostAsync(url, directForm))
+			{
+				if (directResp.IsSuccessStatusCode)
+				{
+					s_HttpResponse = await directResp.Content.ReadAsStringAsync();
 				}
 			}
 		}

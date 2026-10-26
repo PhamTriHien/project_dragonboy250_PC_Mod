@@ -1,9 +1,9 @@
 {
-  "version": "2.5.74",
+  "version": "2.5.75",
   "buildDate": "2026-10-27",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.74/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.74/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.74/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.74/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.74: Hoàn thiện độ ổn định thực chiến Tàn Sát Chống Quét (Anti-Scan), Auto Bơm Đậu & Auto Vật Phẩm Thời Gian:\n- Bổ sung kiểm tra khoảng hở ngang thân nhân vật (±5px) trong các giếng hẹp (ModTeleport), chặn dứt điểm các bước cắt góc sát mép vách đá 0px (như x=552 sát vách tx=22) gây RESET_POINT.\n- Chặn spam gói ăn đậu khi hành trang hết sạch đậu thần (GetBeanCount() <= 0) và tự động hạ cánh thẳng đứng + chuyển đánh quái cùng bệ mặt đất (0 MP) để hồi KI tự nhiên khi cạn sạch KI không còn đậu, triệt tiêu hoàn toàn RESET_POINT rơi tự do giữa không trung.\n- Ưu tiên tái sử dụng đúng loại vật phẩm dùng chung ô thời gian đang kích hoạt (như Đồ ăn 663..667) và tự động khóa nhóm chờ cmd -106 khi máy chủ báo 'Hanya bisa menggunakn 1' / 'Chỉ được dùng 1', xóa bỏ hoàn toàn hiện tượng xoay vòng thử 4 món đồ ăn liên tiếp."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.75/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.75/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.75/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.75/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.75: Đồng bộ trọn vẹn 100% hạ tầng Web (Proxy SOCKS5/HTTP, Auto Giải Captcha qua Relay chống CORS & Tối ưu RAM MEMFS đa Tab):\n- Đấu nối xuyên suốt SOCKS5 & HTTP CONNECT Proxy từ Web Client (WebNetworkConfig) qua Kestrel WebSocket-to-TCP Relay (/ws/tcp) có kiểm tra chống SSRF hai chiều, đồng bộ 100% tính năng cài Proxy sảnh chờ với PC/Android.\n- Bổ sung endpoint POST /api/proxy trên Kestrel Server và định tuyến ModAutoCaptcha trên trình duyệt đi qua Relay cùng nguồn (same-origin), xóa bỏ hoàn toàn rào cản chặn CORS và Mixed-Content khi gọi API giải Captcha bên thứ ba.\n- Tắt mặc định ghi tệp chẩn đoán ModTdltLogger trên trình duyệt WebAssembly (loại bỏ cấp phát chuỗi và phình RAM MEMFS khi treo 6 Tab dài hạn) đồng thời giới hạn tự động cắt vòng dung lượng log trên PC/Mobile."
 }
