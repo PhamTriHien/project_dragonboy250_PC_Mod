@@ -731,8 +731,10 @@ public static class ModAutoBuyBua
 		if (!showCharmHud || !ModMenu.IsInGame() || GameCanvas.panel.isShow || ModUI.uiCustomOpen) return;
 		try
 		{
+			g.translate(-g.getTranslateX(), -g.getTranslateY());
+			g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
 			long now = mSystem.currentTimeMillis();
-			int x = 6;
+			int x = 6 + SafeArea.Left;
 			int y = 138;
 			int row = 0;
 			for (int i = 0; i < buaTypeNames.Length; i++)
@@ -750,8 +752,8 @@ public static class ModAutoBuyBua
 					timeTxt = (totalMins >= 60) ? ((totalMins / 60) + "h" + (totalMins % 60) + "p") : (totalMins + "p");
 				}
 				string text = "Bùa " + buaTypeNames[i] + ": " + timeTxt;
-				mFont f = (remainMs > 120000L) ? mFont.tahoma_7_yellow : mFont.tahoma_7_red;
-				f.drawString(g, text, x, y + row * 11, mFont.LEFT, mFont.tahoma_7_grey);
+				mFont f = (remainMs > 120000L) ? mFont.tahoma_7_yellow : mFont.tahoma_7_white;
+				f.drawString(g, text, x, y + row * 11, mFont.LEFT);
 				row++;
 			}
 		}

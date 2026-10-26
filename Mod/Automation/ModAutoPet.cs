@@ -490,7 +490,7 @@ public static class ModAutoPet
 			string line3 = "SM: " + Res.formatNumber2(pet.cPower) + " | SĐ: " + Res.formatNumber2(pet.cDamFull);
 
 			(mFont.tahoma_7b_yellow ?? mFont.tahoma_7_yellow).drawString(g, line1, x, y, mFont.LEFT);
-			mFont.tahoma_7_green2.drawString(g, line2, x, y + 11, mFont.LEFT);
+			(mFont.tahoma_7_yellow ?? mFont.tahoma_7_white).drawString(g, line2, x, y + 11, mFont.LEFT);
 			mFont.tahoma_7_white.drawString(g, line3, x, y + 22, mFont.LEFT);
 		}
 		catch

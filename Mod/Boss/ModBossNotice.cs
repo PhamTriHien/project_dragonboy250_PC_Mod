@@ -723,9 +723,13 @@ public static class ModBossNotice
 						string mapPart = " - " + (entry.mapName ?? string.Empty) + " - ";
 						string timePart = GetTimeAgoString(entry.timestamp);
 
-						mFont bossF = entry.isDefeated ? mFont.tahoma_7_grey : mFont.tahoma_7_red;
-						mFont mapF = entry.isDefeated ? mFont.tahoma_7_grey : (mFont.tahoma_7_blue ?? mFont.tahoma_7b_blue ?? mFont.tahoma_7_white);
-						mFont timeF = entry.isDefeated ? mFont.tahoma_7_grey : mFont.tahoma_7_green2;
+						mFont bossF = entry.isDefeated
+							? (mFont.tahoma_7_white ?? mFont.tahoma_7_yellow)
+							: (mFont.tahoma_7_yellow ?? mFont.tahoma_7_white);
+						mFont mapF = mFont.tahoma_7_white ?? mFont.tahoma_7_yellow;
+						mFont timeF = entry.isDefeated
+							? (mFont.tahoma_7_white ?? mFont.tahoma_7_yellow)
+							: (mFont.tahoma_7_yellow ?? mFont.tahoma_7_white);
 						if (bossF == null || mapF == null || timeF == null)
 						{
 							break;

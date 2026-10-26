@@ -1,9 +1,9 @@
 {
-  "version": "2.5.65",
+  "version": "2.5.66",
   "buildDate": "2026-10-26",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.65/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.65/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.65/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.65/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.65: Nâng cấp toàn diện kiến trúc Engine lên .NET 10 Native 2.2 (C# 14, Runtime 10.0.14) & Tối ưu đồng bộ độ trễ 0ms trên Render.com:\n- Nâng cấp toàn bộ hệ sinh thái đa nền tảng (SharedCore, PC Native 6-Tab, Android API 36, iOS, Web WASM + Kestrel Server & Docker) lên .NET 10 Native 2.2 kèm liên kết nhị phân WasmBuildNative và nén tĩnh Brotli.\n- Tái cấu trúc đường ống mạng WebSocket 0ms theo sự kiện (Channel<bool> thay thế vòng lặp chờ 5ms) kết hợp gom gói nhị phân (Outbound & Inbound Packet Coalescing) giúp combo Tàn Sát, nhặt đồ và di chuyển mượt tức thì trên Render.com.\n- Tích hợp nén trước Brotli/GZip mức tối đa kèm ETag 304 Not Modified cho gói tài nguyên khởi động (/api/startup-pack), bộ nhớ đệm DNS 5 phút và nhịp Keep-Alive HTTP/WebSocket chống ngủ đông container Render Free Tier.\n- Đồng bộ tức thì đa Tab 1..6 qua BroadcastChannel (0ms) và gom giao dịch ghi IndexedDB theo lô chống giật khung hình."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.66/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.66/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.66/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.66/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.66: Chuẩn hóa toàn bộ thông báo HUD trên màn hình sang tông màu sáng sắc nét, gỡ bỏ hoàn toàn đổ bóng chữ:\n- Gỡ bỏ hoàn toàn lớp đổ bóng xám (tahoma_7_grey) gây lệch nét/nhòe chữ trên HUD FPS - Ping, Nhãn Tên Map [K.x], Trạng Thái Mục Tiêu, HUD Sư Phụ (TTSP), Thống Kê 15 Bộ SKH, HUD Bùa và Cụm Nút Nhanh.\n- Chuyển toàn bộ các dòng thông báo HUD từ tông tối (xanh rêu đậm #005325, xanh dương đậm #0080FF, xám #555555) sang bảng màu sáng độ tương phản cao (Vàng sáng #FFFF00, Vàng cam #FFAA00, Trắng sáng #FFFFFF/#EFEFEF) hiển thị rõ nét trên mọi nền bầu trời Trái Đất, Namek, Xayda, Cold ở cả Đồ Hoạ HD lẫn Đồ Hoạ Java."
 }

@@ -7,9 +7,6 @@ public static class ModFps
 	public static bool isAutoFps = true;
 	public static int pingMs = 25;
 
-	private static GUIStyle pingFpsStyle;
-	private static GUIStyle pingFpsStyleShadow;
-
 	public static int GetDeviceMaxRefreshRate()
 	{
 		try
@@ -156,17 +153,10 @@ public static class ModFps
 			}
 
 			string text = curFps + "fps - " + pingMs + "ms";
-			if (mFont.tahoma_7_grey != null)
+			mFont fpsFont = mFont.tahoma_7_yellow ?? mFont.tahoma_7_white;
+			if (fpsFont != null)
 			{
-				mFont.tahoma_7_grey.drawString(g, text, drawX + 1, drawY + 1, mFont.LEFT);
-			}
-			if (mFont.tahoma_7_green != null)
-			{
-				mFont.tahoma_7_green.drawString(g, text, drawX, drawY, mFont.LEFT);
-			}
-			else if (mFont.tahoma_7_white != null)
-			{
-				mFont.tahoma_7_white.drawString(g, text, drawX, drawY, mFont.LEFT);
+				fpsFont.drawString(g, text, drawX, drawY, mFont.LEFT);
 			}
 		}
 		catch

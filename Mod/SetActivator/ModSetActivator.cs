@@ -1425,16 +1425,19 @@ public static class ModSetActivator
 			ScanArrayForSkh(me.arrItemBag, planetCounts, setCounts);
 			ScanArrayForSkh(me.arrItemBox, planetCounts, setCounts);
 
-			int x = 6;
+			g.translate(-g.getTranslateX(), -g.getTranslateY());
+			g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
+
+			int x = 6 + SafeArea.Left;
 			int y = 92;
-			mFont.tahoma_7b_yellow.drawString(g, "-- THỐNG KÊ 15 BỘ SKH [Áo,Quần,Găng,Giày,Rada] --", x, y, mFont.LEFT, mFont.tahoma_7_grey);
+			mFont.tahoma_7b_yellow.drawString(g, "-- THỐNG KÊ 15 BỘ SKH [Áo,Quần,Găng,Giày,Rada] --", x, y, mFont.LEFT);
 			int row = 1;
 			string[] pNames = new string[] { "TĐ", "NM", "XD" };
 			for (int p = 0; p < 3; p++)
 			{
 				string line = pNames[p] + ": [" + planetCounts[p, 0] + "," + planetCounts[p, 1] + "," + planetCounts[p, 2] + "," + planetCounts[p, 3] + "," + planetCounts[p, 4] + "]";
-				mFont font = (me.cgender == p) ? mFont.tahoma_7_green2 : mFont.tahoma_7_white;
-				font.drawString(g, line, x, y + 11 * row, mFont.LEFT, mFont.tahoma_7_grey);
+				mFont font = (me.cgender == p) ? mFont.tahoma_7_yellow : mFont.tahoma_7_white;
+				font.drawString(g, line, x, y + 11 * row, mFont.LEFT);
 				row++;
 			}
 
@@ -1450,8 +1453,8 @@ public static class ModSetActivator
 				if (total <= 0) continue;
 
 				string sLine = "• " + s_SkhSetNames[s] + ": [" + setCounts[s, 0] + "," + setCounts[s, 1] + "," + setCounts[s, 2] + "," + setCounts[s, 3] + "," + setCounts[s, 4] + "] (" + slotsFilled + "/5)";
-				mFont sFont = (slotsFilled >= 5) ? mFont.tahoma_7b_green2 : mFont.tahoma_7_yellow;
-				sFont.drawString(g, sLine, x, y + 11 * row, mFont.LEFT, mFont.tahoma_7_grey);
+				mFont sFont = (slotsFilled >= 5) ? mFont.tahoma_7b_white : mFont.tahoma_7_yellow;
+				sFont.drawString(g, sLine, x, y + 11 * row, mFont.LEFT);
 				row++;
 			}
 		}

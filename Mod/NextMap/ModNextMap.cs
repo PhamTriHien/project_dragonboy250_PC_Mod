@@ -998,28 +998,12 @@ public static class ModNextMap
 				? ("-> " + GetMapName(nextMapTargetId) + " [K." + TileMap.zoneID + "]")
 				: (TileMap.mapName + " [K." + TileMap.zoneID + "]");
 
-			if (mFont.tahoma_7_grey != null)
+			mFont mapTagFont = isNextMapActive
+				? (mFont.tahoma_7b_white ?? mFont.tahoma_7_white ?? mFont.tahoma_7b_yellow)
+				: (mFont.tahoma_7b_yellow ?? mFont.tahoma_7_yellow ?? mFont.tahoma_7_white);
+			if (mapTagFont != null)
 			{
-				mFont.tahoma_7_grey.drawString(g, mapTag, drawX + 1, drawY + 1, mFont.LEFT);
-			}
-
-			if (isNextMapActive)
-			{
-				if (mFont.tahoma_7b_green2 != null)
-				{
-					mFont.tahoma_7b_green2.drawString(g, mapTag, drawX, drawY, mFont.LEFT);
-				}
-			}
-			else
-			{
-				if (mFont.tahoma_7b_yellow != null)
-				{
-					mFont.tahoma_7b_yellow.drawString(g, mapTag, drawX, drawY, mFont.LEFT);
-				}
-				else if (mFont.tahoma_7_white != null)
-				{
-					mFont.tahoma_7_white.drawString(g, mapTag, drawX, drawY, mFont.LEFT);
-				}
+				mapTagFont.drawString(g, mapTag, drawX, drawY, mFont.LEFT);
 			}
 
 			if (isNextMapActive || ModBossNotice.isAutoScanBossZone || ModGoBack.isReturning || ModSetActivator.isBusy || ModAutoBuyBua.isBusy)

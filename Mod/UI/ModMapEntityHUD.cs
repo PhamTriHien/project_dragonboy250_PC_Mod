@@ -286,7 +286,7 @@ public static class ModMapEntityHUD
 				int cy = 38;
 
 				string hpLine = target.cName + " [" + FormatHp(target.cHP) + "/" + FormatHp(target.cHPFull > 0 ? target.cHPFull : target.cHP) + "]";
-				mFont.tahoma_7b_red.drawString(g, hpLine, cx, cy, mFont.CENTER, mFont.tahoma_7_grey);
+				(mFont.tahoma_7b_yellow ?? mFont.tahoma_7_yellow).drawString(g, hpLine, cx, cy, mFont.CENTER);
 				cy += 10;
 
 				string effStr = string.Empty;
@@ -300,7 +300,7 @@ public static class ModMapEntityHUD
 
 				if (!string.IsNullOrEmpty(effStr))
 				{
-					mFont.tahoma_7_yellow.drawString(g, effStr.Trim(), cx, cy, mFont.CENTER, mFont.tahoma_7_grey);
+					(mFont.tahoma_7_white ?? mFont.tahoma_7_yellow).drawString(g, effStr.Trim(), cx, cy, mFont.CENTER);
 				}
 			}
 		}
@@ -510,39 +510,28 @@ public static class ModMapEntityHUD
 					string hpPart = " - " + FormatHp(entry.hp) + "/" + FormatHp(entry.maxHp);
 
 					mFont nameFont;
-					if (entry.isBoss)
+					if (isFocused)
 					{
-						if (entry.canAttack)
-						{
-							// Boss trạng thái có thể tấn công được -> Chữ màu đỏ
-							nameFont = isFocused
-								? (mFont.tahoma_7b_red ?? mFont.tahoma_7_red ?? mFont.tahoma_7_white)
-								: (mFont.tahoma_7_red ?? mFont.tahoma_7b_red ?? mFont.tahoma_7_white);
-						}
-						else
-						{
-							// Boss chưa thể tấn công (đang chờ / cTypePk == 0) -> Chữ màu vàng
-							nameFont = isFocused
-								? (mFont.tahoma_7b_yellow ?? mFont.tahoma_7_yellow ?? mFont.tahoma_7_white)
-								: (mFont.tahoma_7_yellow ?? mFont.tahoma_7_white);
-						}
+						nameFont = mFont.tahoma_7b_yellow ?? mFont.tahoma_7_yellow ?? mFont.tahoma_7_white;
+					}
+					else if (entry.isBoss)
+					{
+						nameFont = entry.canAttack
+							? (mFont.tahoma_7_yellow ?? mFont.tahoma_7_white)
+							: (mFont.tahoma_7b_unfocus ?? mFont.tahoma_7_white);
 					}
 					else if (entry.canAttack)
 					{
-						nameFont = isFocused
-							? (mFont.tahoma_7b_red ?? mFont.tahoma_7_red ?? mFont.tahoma_7_white)
-							: (mFont.tahoma_7_red ?? mFont.tahoma_7_white);
+						nameFont = mFont.tahoma_7_yellow ?? mFont.tahoma_7_white;
 					}
 					else
 					{
-						nameFont = isFocused
-							? (mFont.tahoma_7b_yellow ?? mFont.tahoma_7_yellow ?? mFont.tahoma_7_white)
-							: (mFont.tahoma_7_green2 ?? mFont.tahoma_7_white);
+						nameFont = mFont.tahoma_7_white ?? mFont.tahoma_7_yellow;
 					}
 
 					mFont hpFont = entry.isBoss
-						? (mFont.tahoma_7_yellow ?? mFont.tahoma_7_white)
-						: mFont.tahoma_7_white;
+						? (mFont.tahoma_7_white ?? mFont.tahoma_7_yellow)
+						: (mFont.tahoma_7_yellow ?? mFont.tahoma_7_white);
 
 					if (nameFont == null || hpFont == null)
 					{
@@ -600,7 +589,7 @@ public static class ModMapEntityHUD
 			int y = ModSetActivator.showSkhHud ? 150 : 88;
 			int lineH = 11;
 
-			mFont.tahoma_7b_yellow.drawString(g, "-- SƯ PHỤ --", x, y, mFont.LEFT, mFont.tahoma_7_grey);
+			mFont.tahoma_7b_yellow.drawString(g, "-- SƯ PHỤ --", x, y, mFont.LEFT);
 			y += lineH;
 
 			long hpMax = me.cHPFull > 0 ? me.cHPFull : 1;
@@ -608,55 +597,55 @@ public static class ModMapEntityHUD
 			long hpPct = (me.cHP * 100L) / hpMax;
 			long mpPct = (me.cMP * 100L) / mpMax;
 
-			mFont.tahoma_7_white.drawString(g, "SM: " + FormatHp(me.cPower) + " | TN: " + FormatHp(me.cTiemNang), x, y, mFont.LEFT, mFont.tahoma_7_grey);
+			mFont.tahoma_7_white.drawString(g, "SM: " + FormatHp(me.cPower) + " | TN: " + FormatHp(me.cTiemNang), x, y, mFont.LEFT);
 			y += lineH;
-			mFont.tahoma_7_green2.drawString(g, "HP: " + FormatHp(me.cHP) + "/" + FormatHp(me.cHPFull) + " (" + hpPct + "%)", x, y, mFont.LEFT, mFont.tahoma_7_grey);
+			mFont.tahoma_7_yellow.drawString(g, "HP: " + FormatHp(me.cHP) + "/" + FormatHp(me.cHPFull) + " (" + hpPct + "%)", x, y, mFont.LEFT);
 			y += lineH;
-			mFont.tahoma_7_blue1.drawString(g, "KI: " + FormatHp(me.cMP) + "/" + FormatHp(me.cMPFull) + " (" + mpPct + "%)", x, y, mFont.LEFT, mFont.tahoma_7_grey);
+			mFont.tahoma_7_white.drawString(g, "KI: " + FormatHp(me.cMP) + "/" + FormatHp(me.cMPFull) + " (" + mpPct + "%)", x, y, mFont.LEFT);
 			y += lineH;
-			mFont.tahoma_7_white.drawString(g, "SĐ: " + FormatHp(me.cDamFull) + " | Giáp: " + FormatHp(me.cDefull) + " | Vàng: " + FormatHp(me.xu), x, y, mFont.LEFT, mFont.tahoma_7_grey);
+			mFont.tahoma_7_white.drawString(g, "SĐ: " + FormatHp(me.cDamFull) + " | Giáp: " + FormatHp(me.cDefull) + " | Vàng: " + FormatHp(me.xu), x, y, mFont.LEFT);
 			y += lineH;
 
 			long now = mSystem.currentTimeMillis();
 			if (me.blindEff)
 			{
-				mFont.tahoma_7_yellow.drawString(g, "Bị TDHS" + (me.freezSeconds > 0 ? (": " + me.freezSeconds + "s") : string.Empty), x, y, mFont.LEFT, mFont.tahoma_7_grey);
+				mFont.tahoma_7_yellow.drawString(g, "Bị TDHS" + (me.freezSeconds > 0 ? (": " + me.freezSeconds + "s") : string.Empty), x, y, mFont.LEFT);
 				y += lineH;
 			}
 			if (me.isFreez)
 			{
-				mFont.tahoma_7_yellow.drawString(g, "Bị choáng: " + me.freezSeconds + "s", x, y, mFont.LEFT, mFont.tahoma_7_grey);
+				mFont.tahoma_7_yellow.drawString(g, "Bị choáng: " + me.freezSeconds + "s", x, y, mFont.LEFT);
 				y += lineH;
 			}
 			if (me.sleepEff)
 			{
-				mFont.tahoma_7_yellow.drawString(g, "Bị thôi miên", x, y, mFont.LEFT, mFont.tahoma_7_grey);
+				mFont.tahoma_7_yellow.drawString(g, "Bị thôi miên", x, y, mFont.LEFT);
 				y += lineH;
 			}
 			if (me.holdEffID != 0)
 			{
-				mFont.tahoma_7_yellow.drawString(g, "Bị trói", x, y, mFont.LEFT, mFont.tahoma_7_grey);
+				mFont.tahoma_7_yellow.drawString(g, "Bị trói", x, y, mFont.LEFT);
 				y += lineH;
 			}
 			if (me.stone)
 			{
-				mFont.tahoma_7_yellow.drawString(g, "Hóa đá", x, y, mFont.LEFT, mFont.tahoma_7_grey);
+				mFont.tahoma_7_yellow.drawString(g, "Hóa đá", x, y, mFont.LEFT);
 				y += lineH;
 			}
 			if (me.protectEff)
 			{
-				mFont.tahoma_7_green2.drawString(g, "Khiên năng lượng", x, y, mFont.LEFT, mFont.tahoma_7_grey);
+				mFont.tahoma_7_yellow.drawString(g, "Khiên năng lượng", x, y, mFont.LEFT);
 				y += lineH;
 			}
 			if (me.isMonkey == 1)
 			{
-				mFont.tahoma_7_green2.drawString(g, "Biến khỉ", x, y, mFont.LEFT, mFont.tahoma_7_grey);
+				mFont.tahoma_7_yellow.drawString(g, "Biến khỉ", x, y, mFont.LEFT);
 				y += lineH;
 			}
 			if (selfHuytSaoExpireMs > now)
 			{
 				long remSec = (selfHuytSaoExpireMs - now + 999L) / 1000L;
-				mFont.tahoma_7_green2.drawString(g, "Huýt sáo: " + remSec + "s", x, y, mFont.LEFT, mFont.tahoma_7_grey);
+				mFont.tahoma_7_yellow.drawString(g, "Huýt sáo: " + remSec + "s", x, y, mFont.LEFT);
 			}
 		}
 		catch

@@ -357,16 +357,16 @@ public static class ModArrowButton
 
 				if (isLocked)
 				{
-					if (mFont.tahoma_7b_red != null)
+					if (mFont.tahoma_7b_yellow != null)
 					{
-						mFont.tahoma_7b_red.drawString(g, "KHÓA", lockCenterX, lockY + lockH - 10, mFont.CENTER, mFont.tahoma_7_grey);
+						mFont.tahoma_7b_yellow.drawString(g, "KHÓA", lockCenterX, lockY + lockH - 10, mFont.CENTER);
 					}
 				}
 				else
 				{
 					if (mFont.tahoma_7_yellow != null)
 					{
-						mFont.tahoma_7_yellow.drawString(g, "GIM", lockCenterX, lockY + lockH - 10, mFont.CENTER, mFont.tahoma_7_grey);
+						mFont.tahoma_7_yellow.drawString(g, "GIM", lockCenterX, lockY + lockH - 10, mFont.CENTER);
 					}
 				}
 
@@ -394,7 +394,7 @@ public static class ModArrowButton
 					bool hoverZn = GameCanvas.px >= znX && GameCanvas.px <= znX + znW && GameCanvas.py >= znY && GameCanvas.py <= znY + znH;
 					Image znBg = hoverZn ? GameScr.imgNutF : GameScr.imgNut;
 					if (znBg != null) g.drawImage(znBg, znX + znW / 2, znY + znH / 2, mGraphics.HCENTER | mGraphics.VCENTER);
-					mFont.tahoma_7b_yellow.drawString(g, "K." + TileMap.zoneID, znX + znW / 2, znY + znH / 2 - 5, mFont.CENTER, mFont.tahoma_7_grey);
+					mFont.tahoma_7b_yellow.drawString(g, "K." + TileMap.zoneID, znX + znW / 2, znY + znH / 2 - 5, mFont.CENTER);
 
 					int[] dirs = new int[] { 0, 2, 1 };
 					string[] dirLabels = new string[] { "<", "^", ">" };
@@ -405,7 +405,7 @@ public static class ModArrowButton
 						bool hoverDir = GameCanvas.px >= dx && GameCanvas.px <= dx + dw && GameCanvas.py >= dy && GameCanvas.py <= dy + dh;
 						Image dirBg = hoverDir ? GameScr.imgNutF : GameScr.imgNut;
 						if (dirBg != null) g.drawImage(dirBg, dx + dw / 2, dy + dh / 2, mGraphics.HCENTER | mGraphics.VCENTER);
-						mFont.tahoma_7b_white.drawString(g, dirLabels[d], dx + dw / 2, dy + dh / 2 - 5, mFont.CENTER, mFont.tahoma_7_grey);
+						mFont.tahoma_7b_white.drawString(g, dirLabels[d], dx + dw / 2, dy + dh / 2 - 5, mFont.CENTER);
 					}
 				}
 			}
