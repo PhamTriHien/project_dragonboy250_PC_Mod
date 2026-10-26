@@ -75,50 +75,58 @@ public partial class Controller2
 						short himg = 0;
 						try
 						{
-							b18 = msg.reader().readByte();
-							if (b18 > 0)
+							sbyte parsedFimg = msg.reader().readByte();
+							if (parsedFimg > 0)
 							{
 								sbyte b19 = msg.reader().readByte();
-								array = new int[b19];
-								for (int num18 = 0; num18 < b19; num18++)
+								if (b19 > 0)
 								{
-									array[num18] = msg.reader().readByte();
+									int[] parsedFrames = new int[b19];
+									for (int num18 = 0; num18 < b19; num18++)
+									{
+										parsedFrames[num18] = msg.reader().readByte();
+									}
+									short parsedW = msg.reader().readShort();
+									short parsedH = msg.reader().readShort();
+									if (parsedW > 0 && parsedH > 0)
+									{
+										b18 = parsedFimg;
+										array = parsedFrames;
+										wimg = parsedW;
+										himg = parsedH;
+									}
 								}
-								wimg = msg.reader().readShort();
-								himg = msg.reader().readShort();
 							}
 						}
 						catch (Exception)
 						{
 						}
-						if (num17 == Char.myCharz().charID)
+						Char meChar = Char.myCharz();
+						Char owner = (meChar != null && num17 == meChar.charID) ? meChar : GameScr.findCharInMap(num17);
+						if (owner != null)
 						{
-							Char.myCharz().petFollow = new PetFollow();
-							Char.myCharz().petFollow.smallID = smallID;
+							PetFollow pet = new PetFollow();
+							pet.smallID = smallID;
+							pet.cmx = owner.cx;
+							pet.cmy = owner.cy - 40;
+							pet.cmtoX = owner.cx;
+							pet.cmtoY = owner.cy - 40;
 							if (b18 > 0)
 							{
-								Char.myCharz().petFollow.SetImg(b18, array, wimg, himg);
+								pet.SetImg(b18, array, wimg, himg);
 							}
-							break;
+							owner.petFollow = pet;
 						}
-						Char char3 = GameScr.findCharInMap(num17);
-						char3.petFollow = new PetFollow();
-						char3.petFollow.smallID = smallID;
-						if (b18 > 0)
-						{
-							char3.petFollow.SetImg(b18, array, wimg, himg);
-						}
-					}
-					else if (num17 == Char.myCharz().charID)
-					{
-						Char.myCharz().petFollow.remove();
-						Char.myCharz().petFollow = null;
 					}
 					else
 					{
-						Char char4 = GameScr.findCharInMap(num17);
-						char4.petFollow.remove();
-						char4.petFollow = null;
+						Char meChar = Char.myCharz();
+						Char owner = (meChar != null && num17 == meChar.charID) ? meChar : GameScr.findCharInMap(num17);
+						if (owner != null && owner.petFollow != null)
+						{
+							owner.petFollow.remove();
+							owner.petFollow = null;
+						}
 					}
 					break;
 				}

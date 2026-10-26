@@ -233,7 +233,8 @@ public static class ModTeleport
 			return false;
 		}
 		long now = mSystem.currentTimeMillis();
-		if (now - lastSyncRequestTime > 4500)
+		int maxBlockMs = IsColdPlanetAntiCheckActive() ? 750 : 900;
+		if (now - lastSyncRequestTime > maxBlockMs)
 		{
 			isWaitingServerSync = false;
 			return false;
@@ -242,7 +243,7 @@ public static class ModTeleport
 	}
 
 	/// <summary>
-	/// Kiểm tra xem có đang trong nhịp chờ máy chủ xác nhận tọa độ trước khi tung đòn đánh đầu tiên hay không (tối đa 650ms).
+	/// Kiểm tra xem có đang trong nhịp chờ máy chủ xác nhận tọa độ trước khi tung đòn đánh đầu tiên hay không (tối đa 380ms).
 	/// </summary>
 	public static bool IsWaitingServerSyncForAttack()
 	{
@@ -251,7 +252,7 @@ public static class ModTeleport
 			return false;
 		}
 		long now = mSystem.currentTimeMillis();
-		int maxWait = IsColdPlanetAntiCheckActive() ? 420 : 650;
+		int maxWait = IsColdPlanetAntiCheckActive() ? 320 : 380;
 		if (now - lastSyncRequestTime > maxWait)
 		{
 			return false;
@@ -1244,7 +1245,7 @@ public static class ModTeleport
 			me.cxSend = x - 1;
 			me.cySend = y - 1;
 			Service.gI().charMove();
-			if (!ItemTime.isExistItem(4387))
+			if (!ItemTime.isExistItem(4387) && TileMap.tileTypeAt(x, y, 2))
 			{
 				RegisterTeleportEcho(x, y);
 				me.cx = x;
@@ -1253,6 +1254,10 @@ public static class ModTeleport
 				me.cx = x;
 				me.cy = y;
 				Service.gI().charMove();
+			}
+			else
+			{
+				isWaitingServerSync = false;
 			}
 		}
 		catch

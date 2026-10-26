@@ -753,6 +753,8 @@ public static class ModAutoPick
 	{
 		if (isMe)
 		{
+			ModTeleport.isWaitingServerSync = false;
+			ModTeleport.isCurrentPosSynced = true;
 			ModTdltLogger.Log("ITEM_PICKED_OK", $"itemMapId={itemMapId}, retry={currentItemRetryCount}");
 		}
 		if (lastPickedItemMapId == itemMapId)

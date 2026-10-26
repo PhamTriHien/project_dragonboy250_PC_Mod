@@ -55,7 +55,7 @@ public static class ModUI
 			for (int i = 0; i < GameScr.vMob.size(); i++)
 			{
 				Mob m = (Mob)GameScr.vMob.elementAt(i);
-				if (m != null && !list.Contains(m.templateId))
+				if (m != null && !m.isMobMe && !list.Contains(m.templateId))
 				{
 					list.Add(m.templateId);
 				}

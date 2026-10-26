@@ -409,25 +409,33 @@ public partial class Char : IMapObject
 			{
 				return;
 			}
+			int effIdx2 = skillPaint2.effectHappenOnMob - 1;
+			EffectCharPaint mobEffPaint = (GameScr.efs != null && effIdx2 >= 0 && effIdx2 < GameScr.efs.Length) ? GameScr.efs[effIdx2] : null;
 			if (attMobs != null)
 			{
-				effPaints = new EffectPaint[attMobs.Length];
-				for (int k = 0; k < attMobs.Length; k++)
+				if (mobEffPaint != null)
 				{
-					effPaints[k] = new EffectPaint();
-					effPaints[k].effCharPaint = GameScr.efs[skillPaint2.effectHappenOnMob - 1];
-					effPaints[k].eMob = attMobs[k];
+					effPaints = new EffectPaint[attMobs.Length];
+					for (int k = 0; k < attMobs.Length; k++)
+					{
+						effPaints[k] = new EffectPaint();
+						effPaints[k].effCharPaint = mobEffPaint;
+						effPaints[k].eMob = attMobs[k];
+					}
 				}
 				attMobs = null;
 			}
 			else if (attChars != null)
 			{
-				effPaints = new EffectPaint[attChars.Length];
-				for (int l = 0; l < attChars.Length; l++)
+				if (mobEffPaint != null)
 				{
-					effPaints[l] = new EffectPaint();
-					effPaints[l].effCharPaint = GameScr.efs[skillPaint2.effectHappenOnMob - 1];
-					effPaints[l].eChar = attChars[l];
+					effPaints = new EffectPaint[attChars.Length];
+					for (int l = 0; l < attChars.Length; l++)
+					{
+						effPaints[l] = new EffectPaint();
+						effPaints[l].effCharPaint = mobEffPaint;
+						effPaints[l].eChar = attChars[l];
+					}
 				}
 				attChars = null;
 			}

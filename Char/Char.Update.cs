@@ -34,6 +34,11 @@ public partial class Char : IMapObject
 					{
 						continue;
 					}
+					if (effPaints[i].effCharPaint == null || effPaints[i].effCharPaint.arrEfInfo == null)
+					{
+						effPaints[i] = null;
+						continue;
+					}
 					if (effPaints[i].eMob != null)
 					{
 						if (!effPaints[i].isFly)
@@ -72,7 +77,7 @@ public partial class Char : IMapObject
 			if (indexEff >= 0 && eff != null && GameCanvas.gameTick % 2 == 0)
 			{
 				indexEff++;
-				if (indexEff >= eff.arrEfInfo.Length)
+				if (eff.arrEfInfo == null || indexEff >= eff.arrEfInfo.Length)
 				{
 					indexEff = -1;
 					eff = null;
@@ -81,7 +86,7 @@ public partial class Char : IMapObject
 			if (indexEffTask >= 0 && effTask != null && GameCanvas.gameTick % 2 == 0)
 			{
 				indexEffTask++;
-				if (indexEffTask >= effTask.arrEfInfo.Length)
+				if (effTask.arrEfInfo == null || indexEffTask >= effTask.arrEfInfo.Length)
 				{
 					indexEffTask = -1;
 					effTask = null;

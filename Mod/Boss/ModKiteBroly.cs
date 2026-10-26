@@ -83,9 +83,9 @@ public static class ModKiteBroly
 			for (int i = 0; i < GameScr.vCharInMap.size(); i++)
 			{
 				Char c = (Char)GameScr.vCharInMap.elementAt(i);
-				if (c == null || c.cHP <= 0 || c.statusMe == 14 || c.statusMe == 5) continue;
+				if (c == null || c.cHP <= 0 || c.statusMe == 14 || c.statusMe == 5 || c.isPet || c.isMiniPet || c.isCopy) continue;
 				string cname = c.cName;
-				if (string.IsNullOrEmpty(cname)) continue;
+				if (string.IsNullOrEmpty(cname) || cname.StartsWith("#") || cname.StartsWith("$")) continue;
 				string lower = cname.ToLower();
 				if (lower.Contains("broly") || lower.Contains("super broly"))
 				{
@@ -104,7 +104,7 @@ public static class ModKiteBroly
 			for (int j = 0; j < GameScr.vMob.size(); j++)
 			{
 				Mob m = (Mob)GameScr.vMob.elementAt(j);
-				if (m == null || m.hp <= 0 || m.status == 0 || m.status == 1) continue;
+				if (m == null || m.isMobMe || m.hp <= 0 || m.status == 0 || m.status == 1) continue;
 				string mname = (m.getTemplate() != null) ? m.getTemplate().name : string.Empty;
 				if (string.IsNullOrEmpty(mname)) continue;
 				string lower = mname.ToLower();

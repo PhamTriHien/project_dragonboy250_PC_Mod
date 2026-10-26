@@ -178,7 +178,7 @@ public static class ModTanSatFilter
 			for (int i = 0; i < GameScr.vMob.size(); i++)
 			{
 				Mob m = (Mob)GameScr.vMob.elementAt(i);
-				if (m != null && m.templateId == firstId && m.getTemplate() != null)
+				if (m != null && !m.isMobMe && m.templateId == firstId && m.getTemplate() != null)
 				{
 					return (tickedMobTemplateIds.Count == 1) ? m.getTemplate().name : (m.getTemplate().name + " (+" + (tickedMobTemplateIds.Count - 1) + ")");
 				}
@@ -189,7 +189,7 @@ public static class ModTanSatFilter
 		for (int i = 0; i < GameScr.vMob.size(); i++)
 		{
 			Mob m = (Mob)GameScr.vMob.elementAt(i);
-			if (m != null && m.templateId == selectedMobTemplateId && m.getTemplate() != null)
+			if (m != null && !m.isMobMe && m.templateId == selectedMobTemplateId && m.getTemplate() != null)
 			{
 				return m.getTemplate().name;
 			}
@@ -206,7 +206,7 @@ public static class ModTanSatFilter
 		for (int i = 0; i < GameScr.vMob.size(); i++)
 		{
 			Mob m = (Mob)GameScr.vMob.elementAt(i);
-			if (m != null && !available.Contains(m.templateId))
+			if (m != null && !m.isMobMe && !available.Contains(m.templateId))
 			{
 				available.Add(m.templateId);
 			}

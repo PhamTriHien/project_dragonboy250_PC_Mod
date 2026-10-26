@@ -52,9 +52,22 @@ public class PetFollow
 		if (fimg >= 1)
 		{
 			this.fimg = fimg;
-			frame = frameNew;
-			this.wimg = wimg;
-			this.himg = himg;
+			if (frameNew != null && frameNew.Length > 0)
+			{
+				frame = frameNew;
+			}
+			else
+			{
+				frame = new int[fimg];
+				for (int i = 0; i < fimg; i++)
+				{
+					frame[i] = i;
+				}
+			}
+			this.wimg = (wimg > 0) ? wimg : 32;
+			this.himg = (himg > 0) ? himg : 32;
+			count = 0;
+			f = frame[0];
 		}
 	}
 
@@ -65,8 +78,8 @@ public class PetFollow
 		int num = ((GameCanvas.gameTick % 10 > 5) ? 1 : 0);
 		if (fimg > 0)
 		{
-			w = wimg;
-			h = himg;
+			w = (wimg > 0) ? wimg : 32;
+			h = (himg > 0) ? himg : 32;
 			num = 0;
 		}
 		SmallImage.drawSmallImage(g, smallID, f, cmx, cmy + 3 + num, w, h, (dir != 1) ? 2 : 0, StaticObj.VCENTER_HCENTER);
@@ -75,14 +88,24 @@ public class PetFollow
 	public void update()
 	{
 		moveCamera();
+		if (frame == null || frame.Length == 0)
+		{
+			f = 0;
+			count = 0;
+			return;
+		}
+		if (count < 0 || count >= frame.Length)
+		{
+			count = 0;
+		}
 		if (GameCanvas.gameTick % 3 == 0)
 		{
 			f = frame[count];
 			count++;
-		}
-		if (count >= frame.Length)
-		{
-			count = 0;
+			if (count >= frame.Length)
+			{
+				count = 0;
+			}
 		}
 	}
 

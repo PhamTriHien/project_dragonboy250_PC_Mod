@@ -26,6 +26,8 @@ public static class ModTanSat
 				currentTargetResetCount = 0;
 				currentTargetUnchangedAttackCount = 0;
 				pendingAttackPacket = false;
+				pointMoveStuckSince = 0;
+				chargeStuckSince = 0;
 				ModTeleport.ClearEchoes();
 				ignoredMobUntil.Clear();
 			}
@@ -176,6 +178,10 @@ public static class ModTanSat
 	public static long waitUntilTime = 0;
 	public static long lastStepMoveTime = 0;
 	private static long changingMapStuckSince = 0;
+	private static int lastPointMoveX = -1;
+	private static int lastPointMoveY = -1;
+	private static long pointMoveStuckSince = 0;
+	private static long chargeStuckSince = 0;
 	private static long lastStaminaUseTime = 0;
 	private static long lastAutoZoneChangeTime = 0;
 	private static long ksDetectedSince = 0;
@@ -267,6 +273,17 @@ public static class ModTanSat
 		}
 	}
 
+	private static bool HasHeldMoveKeys()
+	{
+		if (GameCanvas.keyHold == null)
+		{
+			return false;
+		}
+		return GameCanvas.keyHold[21] || GameCanvas.keyHold[22] || GameCanvas.keyHold[23] || GameCanvas.keyHold[24] ||
+		       GameCanvas.keyHold[2] || GameCanvas.keyHold[8] || GameCanvas.keyHold[4] || GameCanvas.keyHold[6] ||
+		       GameCanvas.keyHold[1] || GameCanvas.keyHold[3];
+	}
+
 	/// <summary>
 	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của IsManualMoving.
 	/// </summary>
@@ -275,14 +292,7 @@ public static class ModTanSat
 		Char me = Char.myCharz();
 		if (me == null) return false;
 
-		bool keyMove = false;
-		if (GameCanvas.keyHold != null)
-		{
-			keyMove = GameCanvas.keyHold[21] || GameCanvas.keyHold[22] || GameCanvas.keyHold[23] || GameCanvas.keyHold[24] ||
-			          GameCanvas.keyHold[2] || GameCanvas.keyHold[8] || GameCanvas.keyHold[4] || GameCanvas.keyHold[6] ||
-			          GameCanvas.keyHold[1] || GameCanvas.keyHold[3];
-		}
-
+		bool keyMove = HasHeldMoveKeys();
 		bool pointMove = (me.currentMovePoint != null || (me.vMovePoints != null && me.vMovePoints.size() > 0));
 
 		return keyMove || pointMove;
@@ -347,7 +357,7 @@ public static class ModTanSat
 		for (int i = 0; i < mobs.size(); i++)
 		{
 			Mob m = (Mob)mobs.elementAt(i);
-			if (m == null || m.status == 0 || m.status == 1 || m.hp <= 0) continue;
+			if (m == null || m.isMobMe || m.status == 0 || m.status == 1 || m.hp <= 0) continue;
 			if (avoidSuperMob && (m.levelBoss > 0 || m.isBoss)) continue;
 			if (!GameScr.gI().isMeCanAttackMob(m)) continue;
 			if (!ModTanSatFilter.IsMobAllowed(m.templateId)) continue;
@@ -455,8 +465,12 @@ public static class ModTanSat
 			for (int i = 0; i < GameScr.vCharInMap.size(); i++)
 			{
 				Char c = (Char)GameScr.vCharInMap.elementAt(i);
-				if (c != null && c.charID > 0 && c.charID != me.charID && c.charID != -me.charID && c.cHP > 0)
+				if (c != null && !c.isPet && !c.isMiniPet && !c.isCopy && c.charID > 0 && c.charID != me.charID && c.charID != -me.charID && c.cHP > 0)
 				{
+					if (!string.IsNullOrEmpty(c.cName) && (c.cName.StartsWith("#") || c.cName.StartsWith("$")))
+					{
+						continue;
+					}
 					if (Res.distance(me.cx, me.cy, c.cx, c.cy) <= 180)
 					{
 						hasOtherPlayerNear = true;
@@ -701,6 +715,8 @@ public static class ModTanSat
 				currentTargetUnchangedAttackCount = 0;
 				pendingAttackPacket = false;
 				changingMapStuckSince = 0;
+				pointMoveStuckSince = 0;
+				chargeStuckSince = 0;
 				ModTeleport.ClearEchoes();
 				ignoredMobUntil.Clear();
 				waitUntilTime = now + 250;
@@ -734,12 +750,66 @@ public static class ModTanSat
 				return;
 			}
 
-			if (me.isCharge || me.isFlyAndCharge || me.isStandAndCharge || me.isUseSkillAfterCharge || me.isWaitMonkey || me.isFreez || me.isCreateDark) return;
-
-			if (IsManualMoving())
+			if (me.isCharge || me.isFreez)
 			{
+				chargeStuckSince = 0;
+				return;
+			}
+			if (me.isFlyAndCharge || me.isStandAndCharge || me.isUseSkillAfterCharge || me.isWaitMonkey || me.isCreateDark)
+			{
+				if (chargeStuckSince == 0)
+				{
+					chargeStuckSince = now;
+					return;
+				}
+				if (now - chargeStuckSince <= 10000)
+				{
+					return;
+				}
+				me.stopUseChargeSkill();
+				me.isWaitMonkey = false;
+				chargeStuckSince = 0;
+			}
+			else
+			{
+				chargeStuckSince = 0;
+			}
+
+			if (HasHeldMoveKeys())
+			{
+				pointMoveStuckSince = 0;
 				lastManualMoveTime = now;
 				return;
+			}
+			if (me.currentMovePoint != null || (me.vMovePoints != null && me.vMovePoints.size() > 0))
+			{
+				if (pointMoveStuckSince == 0 || Res.abs(me.cx - lastPointMoveX) >= 8 || Res.abs(me.cy - lastPointMoveY) >= 8)
+				{
+					lastPointMoveX = me.cx;
+					lastPointMoveY = me.cy;
+					pointMoveStuckSince = now;
+					lastManualMoveTime = now;
+					return;
+				}
+				if (now - pointMoveStuckSince <= 1000)
+				{
+					lastManualMoveTime = now;
+					return;
+				}
+				me.currentMovePoint = null;
+				if (me.vMovePoints != null)
+				{
+					me.vMovePoints.removeAllElements();
+				}
+				if (GameScr.instance != null)
+				{
+					GameScr.instance.clickMoving = false;
+				}
+				pointMoveStuckSince = 0;
+			}
+			else
+			{
+				pointMoveStuckSince = 0;
 			}
 			if (now - lastManualMoveTime < 350 || now < waitUntilTime)
 			{
@@ -781,11 +851,12 @@ public static class ModTanSat
 			bool targetDiedOrInvalid = false;
 			if (currentFarmTarget != null)
 			{
-				if (currentFarmTarget.status == 0 || currentFarmTarget.status == 1 || currentFarmTarget.hp <= 0 || (avoidSuperMob && (currentFarmTarget.levelBoss > 0 || currentFarmTarget.isBoss)) || !ModTanSatFilter.IsMobAllowed(currentFarmTarget.templateId) || !GameScr.gI().isMeCanAttackMob(currentFarmTarget))
+				bool isTrainingDummy = (currentFarmTarget.templateId == 0 && (TileMap.isTrainingMap() || currentFarmTarget.maxHp >= 100000000L));
+				if (currentFarmTarget.isMobMe || currentFarmTarget.status == 0 || currentFarmTarget.status == 1 || currentFarmTarget.hp <= 0 || (avoidSuperMob && (currentFarmTarget.levelBoss > 0 || currentFarmTarget.isBoss)) || !ModTanSatFilter.IsMobAllowed(currentFarmTarget.templateId) || !GameScr.gI().isMeCanAttackMob(currentFarmTarget))
 				{
 					targetDiedOrInvalid = true;
 				}
-				else if (checkLagMob && currentFarmTarget.templateId != 0 && currentFarmTarget.maxHp > 0 && currentFarmTarget.hp * 100L >= currentFarmTarget.maxHp * 90L && now - targetLockTime >= 15000)
+				else if (checkLagMob && !isTrainingDummy && currentFarmTarget.maxHp > 0 && currentFarmTarget.hp * 100L >= currentFarmTarget.maxHp * 90L && now - targetLockTime >= 15000)
 				{
 					ignoredMobUntil[currentFarmTarget.mobId] = now + 30000L;
 					targetDiedOrInvalid = true;
@@ -804,11 +875,15 @@ public static class ModTanSat
 				{
 					long hpDrop = targetLastHp - currentFarmTarget.hp;
 					targetLastHp = currentFarmTarget.hp;
-					bool isPetChipDamageOnly = !ModTeleport.isCurrentPosSynced && me.havePet && me.cDamFull > 1000 && hpDrop < (me.cDamFull / 4);
-					if (!isPetChipDamageOnly)
+					bool hasCompanion = me.havePet || me.petFollow != null || me.mobMe != null;
+					bool noRecentSelfAttack = lastConfirmedAttackPacketTime <= 0 || (now - lastConfirmedAttackPacketTime > 1600);
+					bool isChipDamage = me.cDamFull > 200 && hpDrop < System.Math.Max(1L, me.cDamFull / 3);
+					bool isExternalOrPetHit = noRecentSelfAttack || (hasCompanion && isChipDamage);
+					if (!isExternalOrPetHit)
 					{
 						if (Res.abs(me.cx - currentFarmTarget.x) <= 72 && Res.abs(me.cy - currentFarmTarget.y) <= 72)
 						{
+							ModTeleport.isWaitingServerSync = false;
 							ModTeleport.isCurrentPosSynced = true;
 						}
 						targetLockTime = now;
@@ -838,7 +913,7 @@ public static class ModTanSat
 						bool coldAntiCheck = ModTeleport.IsColdPlanetAntiCheckActive();
 						int resyncMinElapsed = coldAntiCheck ? 280 : 350;
 						long refAttackTime = (lastConfirmedAttackPacketTime > 0) ? lastConfirmedAttackPacketTime : lastAttackTime;
-						if (currentFarmTarget.templateId != 0 && currentFarmTarget.hp > 1 && currentTargetUnchangedAttackCount > 0 && now - refAttackTime >= resyncMinElapsed && lastResyncAttackCount != currentTargetUnchangedAttackCount)
+						if (!isTrainingDummy && currentFarmTarget.hp > 1 && currentTargetUnchangedAttackCount > 0 && now - refAttackTime >= resyncMinElapsed && lastResyncAttackCount != currentTargetUnchangedAttackCount)
 						{
 							bool shouldResync = (coldAntiCheck && currentTargetUnchangedAttackCount == 2) ||
 							                    currentTargetUnchangedAttackCount == 3 ||
@@ -848,7 +923,7 @@ public static class ModTanSat
 								lastResyncAttackCount = currentTargetUnchangedAttackCount;
 								if (!coldAntiCheck && !ModTeleport.isCurrentPosSynced && currentTargetUnchangedAttackCount == 3 && lastTeleportTargetMobId != currentFarmTarget.mobId && TileMap.tileTypeAt(me.cx, me.cy, 2) && !ModTeleport.HasPendingEchoNear(me.cx, me.cy))
 								{
-									ModWaypoint.TeleportTo(me.cx, me.cy);
+									ModTeleport.TeleportTo(me.cx, me.cy);
 								}
 								else
 								{
@@ -859,12 +934,12 @@ public static class ModTanSat
 							}
 						}
 					}
-					if (checkLagMob && currentFarmTarget.templateId != 0 && currentTargetUnchangedAttackCount >= 8 && now - targetLockTime > 4500)
+					if (checkLagMob && !isTrainingDummy && currentTargetUnchangedAttackCount >= 8 && now - targetLockTime > 4500)
 					{
 						ignoredMobUntil[currentFarmTarget.mobId] = now + 6000L;
 						targetDiedOrInvalid = true;
 					}
-					else if (currentFarmTarget.templateId != 0 && currentTargetUnchangedAttackCount >= 12 && now - targetLockTime > 20000)
+					else if (!isTrainingDummy && currentTargetUnchangedAttackCount >= 12 && now - targetLockTime > 20000)
 					{
 						ignoredMobUntil[currentFarmTarget.mobId] = now + 5000L;
 						targetDiedOrInvalid = true;
@@ -1089,14 +1164,23 @@ public static class ModTanSat
 				return;
 			}
 
-			// 7. Bảo toàn hoạt ảnh đánh trước đó nếu đang thực thi
-			if (me.skillPaint != null || (me.skillInfoPaint() != null && me.indexSkill < me.skillInfoPaint().Length))
+			// 7. Bảo toàn hoạt ảnh đánh trước đó nếu đang thực thi (kèm watchdog chống kẹt vĩnh viễn khi ngoại lệ / mất gói)
+			if (me.skillPaint != null || (me.skillInfoPaint() != null && me.indexSkill < me.skillInfoPaint().Length) || me.dart != null || me.arr != null)
 			{
-				return;
-			}
-			if (me.dart != null || me.arr != null)
-			{
-				return;
+				if (lastAttackTime > 0 && now - lastAttackTime > 2400)
+				{
+					me.skillPaint = null;
+					me.skillPaintRandomPaint = null;
+					me.dart = null;
+					me.arr = null;
+					me.indexSkill = 0;
+					me.effPaints = null;
+					OnPendingAttackAborted();
+				}
+				else
+				{
+					return;
+				}
 			}
 
 			// 8. Thực thi xuất chiêu trực tiếp qua Game Engine chuẩn

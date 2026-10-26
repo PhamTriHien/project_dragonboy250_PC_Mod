@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Assets.src.g;
 /// <summary>
 /// Thành phần phân mảnh (partial) của lớp GameScr: Đảm nhiệm phân hệ chuyên trách Part4 ().
@@ -14,28 +14,41 @@ public partial class GameScr : mScreen, IChatable
 			{
 				return false;
 			}
-			if (Char.myCharz().cTypePk == 5)
-			{
-				return true;
-			}
-			if (Char.myCharz().isAttacPlayerStatus() && !m.isMobMe)
+			Char me = Char.myCharz();
+			if (me == null)
 			{
 				return false;
 			}
-			if (Char.myCharz().mobMe != null && m.Equals(Char.myCharz().mobMe))
+			if (me.mobMe != null && (m == me.mobMe || m.Equals(me.mobMe) || (m.isMobMe && m.mobId == me.charID)))
+			{
+				return false;
+			}
+			if (me.cTypePk == 5)
+			{
+				if (m.isMobMe)
+				{
+					Char ownerPk = findCharInMap(m.mobId);
+					if (ownerPk == null)
+					{
+						return false;
+					}
+				}
+				return true;
+			}
+			if (me.isAttacPlayerStatus() && !m.isMobMe)
 			{
 				return false;
 			}
 			Char @char = findCharInMap(m.mobId);
 			if (@char == null)
 			{
-				return true;
+				return !m.isMobMe;
 			}
 			if (@char.cTypePk == 5)
 			{
 				return true;
 			}
-			if (Char.myCharz().isMeCanAttackOtherPlayer(@char))
+			if (me.isMeCanAttackOtherPlayer(@char))
 			{
 				return true;
 			}

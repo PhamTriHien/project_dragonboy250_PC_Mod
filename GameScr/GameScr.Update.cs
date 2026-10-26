@@ -96,25 +96,67 @@ public partial class GameScr : mScreen, IChatable
 					GameCanvas.debug("E3", 0);
 					for (int i = 0; i < vCharInMap.size(); i++)
 					{
-						((Char)vCharInMap.elementAt(i)).update();
+						try
+						{
+							Char cInMap = (Char)vCharInMap.elementAt(i);
+							if (cInMap != null)
+							{
+								cInMap.update();
+							}
+						}
+						catch (Exception)
+						{
+						}
 					}
 					for (int i = 0; i < Teleport.vTeleport.size(); i++)
 					{
-						((Teleport)Teleport.vTeleport.elementAt(i)).update();
+						try
+						{
+							Teleport tele = (Teleport)Teleport.vTeleport.elementAt(i);
+							if (tele != null)
+							{
+								tele.update();
+							}
+						}
+						catch (Exception)
+						{
+						}
 					}
-					Char.myCharz().update();
-					if (Char.myCharz().statusMe == 1)
+					try
+					{
+						if (Char.myCharz() != null)
+						{
+							Char.myCharz().update();
+						}
+					}
+					catch (Exception)
 					{
 					}
 					if (popUpYesNo != null)
 					{
 						popUpYesNo.update();
 					}
-					EffecMn.update();
+					try
+					{
+						EffecMn.update();
+					}
+					catch (Exception)
+					{
+					}
 					GameCanvas.debug("E5x", 0);
 					for (int i = 0; i < vMob.size(); i++)
 					{
-						((Mob)vMob.elementAt(i)).update();
+						try
+						{
+							Mob mobInMap = (Mob)vMob.elementAt(i);
+							if (mobInMap != null)
+							{
+								mobInMap.update();
+							}
+						}
+						catch (Exception)
+						{
+						}
 					}
 					GameCanvas.debug("E6", 0);
 					for (int i = 0; i < vNpc.size(); i++)
