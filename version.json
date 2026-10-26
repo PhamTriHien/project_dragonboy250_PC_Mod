@@ -1,9 +1,9 @@
 {
-  "version": "2.5.69",
+  "version": "2.5.70",
   "buildDate": "2026-10-26",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.69/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.69/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.69/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.69/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.69: Sửa triệt để lỗi GoBack khi chết lúc Tàn Sát hoặc thoát / mất mạng vào lại không dùng NextMap mà bị lẫn cơ chế di chuyển Tàn Sát:\n- Tách biệt 100% cơ chế di chuyển NextMap (ModNextMap + ModWaypoint) khỏi ModTeleport của Tàn Sát: Luôn dùng dịch chuyển 2 pha chuẩn Xmap và Capsule (194/193) để qua map nhanh cả khi đang bật Tàn Sát / Chống Quét.\n- Tự động kích hoạt GoBack bằng NextMap ngay khi thoát game vào lại hoặc tự đăng nhập lại (ModAutoLogin): Đợi nạp đủ chỉ số nhân vật (ME_LOAD_POINT) và tiếp đất ổn định, tự quay về đúng Map, Khu và tọa độ đã lưu rồi mới cho Tàn Sát đánh tiếp.\n- Khắc phục triệt để lỗi dội ngược cổng vào khi vừa tới map đích và lỗi hồi sinh sớm trước khi tải xong map nhà."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.70/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.70/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.70/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.70/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.70: Sửa triệt để lỗi font chữ game bị mờ / viền xám nhòe trên toàn bộ nền tảng (PC .NET 10 Native, Web Online Render, Android & PC Unity):\n- PC Native: Loại bỏ lớp trung gian RenderTexture2D VirtualTarget gây suy hao kênh Alpha (0.5 -> 0.75) và lọc Bilinear làm mờ chữ ở chế độ Đồ Hoạ HD; vẽ trực tiếp 1:1 lên backbuffer phần cứng kèm khử răng cưa MSAA 4x.\n- Nhúng trực tiếp bộ 3 font gốc NRO (barmeneb.ttf, chelthm.ttf, staccato.ttf) vào trong file thực thi DragonBoy_Net8_Native.exe và chuẩn hóa độ phủ Gamma sRGB cho font atlas, giúp chạy độc lập ngoài Desktop vẫn hiển thị đúng font gốc sắc nét 100%.\n- Web Online (Render.com): Kết xuất văn bản trực tiếp trên lưới pixel vật lý 1:1 của màn hình (nâng trần DPR lên 4.0 cho màn hình Retina/AMOLED), tắt in đậm giả (faux-bold) trên font mảnh chelthm và giữ lọc Nearest-Neighbor cho font số/bitmap.\n- Android & Shared Core: Bật Hinting phần cứng, làm tròn tọa độ pixel nguyên và nâng cỡ chữ chuẩn mặc định lên 75% đồng bộ chiều cao font gốc."
 }

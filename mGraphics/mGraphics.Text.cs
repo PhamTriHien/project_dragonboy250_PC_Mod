@@ -77,7 +77,7 @@ public partial class mGraphics
 				int targetSize = Mathf.Max(7, Mathf.RoundToInt(refSize * scale));
 				int origSize = style.fontSize;
 				style.fontSize = targetSize;
-				Rect adjusted = new Rect(rect.x, rect.y + (refSize - targetSize) / 2, rect.width, rect.height);
+				Rect adjusted = new Rect(Mathf.Round(rect.x), Mathf.Round(rect.y + (refSize - targetSize) * 0.5f), rect.width, rect.height);
 				GUI.Label(adjusted, s, style);
 				style.fontSize = origSize;
 				return;
@@ -93,7 +93,7 @@ public partial class mGraphics
 			}
 			float anchorY = rect.y + (14f * zoomLevel) * 0.5f;
 			Matrix4x4 prevMatrix = GUI.matrix;
-			GUIUtility.ScaleAroundPivot(new Vector2(scale, scale), new Vector2(anchorX, anchorY));
+			GUIUtility.ScaleAroundPivot(new Vector2(scale, scale), new Vector2(Mathf.Round(anchorX), Mathf.Round(anchorY)));
 			GUI.Label(rect, s, style);
 			GUI.matrix = prevMatrix;
 		}

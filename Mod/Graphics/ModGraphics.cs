@@ -57,9 +57,9 @@ public static class ModGraphics
 		return true;
 	}
 
-	public static int fontSizeIndex = 0;
-	public static readonly string[] fontSizeNames = new string[4] { "Chuẩn 60%", "Vừa 75%", "Lớn 90%", "Gốc 100%" };
-	public static readonly float[] fontSizeScales = new float[4] { 0.60f, 0.75f, 0.90f, 1.0f };
+	public static int fontSizeIndex = 1;
+	public static readonly string[] fontSizeNames = new string[4] { "Nhỏ 65%", "Chuẩn 75%", "Lớn 90%", "Gốc 100%" };
+	public static readonly float[] fontSizeScales = new float[4] { 0.65f, 0.75f, 0.90f, 1.0f };
 
 	public static int animSpeedIndex = 0;
 	public static readonly float[] animSpeedValues = new float[8] { 1.0f, 1.25f, 1.5f, 2.0f, 2.5f, 3.0f, 4.0f, 5.0f };
@@ -389,12 +389,12 @@ public static class ModGraphics
 		{
 			return fontSizeScales[fontSizeIndex];
 		}
-		return 0.60f;
+		return 0.75f;
 	}
 
 	public static void SetFontSize(int index)
 	{
-		if (index < 0 || index >= fontSizeNames.Length) index = 0;
+		if (index < 0 || index >= fontSizeNames.Length) index = 1;
 		fontSizeIndex = index;
 		mFont.InvalidateFontMetrics();
 		ModConfig.SaveConfig();
