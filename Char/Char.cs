@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Assets.src.e;
 using Assets.src.g;
 using UnityEngine;
@@ -465,5 +465,46 @@ public partial class Char : IMapObject
 	public short y_hint;
 
 	public short s_danhHieu1;
+
+	private void ClearCachedGraphicsFrames()
+	{
+		fraEff = null;
+		fraEffSub = null;
+		fraHat_behind = null;
+		fraHat_font = null;
+		fraHat_behind_2 = null;
+		fraHat_font_2 = null;
+		fraDanhHieu = null;
+		mainImg = null;
+	}
+
+	public static void ReloadForGraphicsMode()
+	{
+		eyeTraiDat = GameCanvas.loadImage("/mainImage/myTexture2dmat-trai-dat.png");
+		eyeNamek = GameCanvas.loadImage("/mainImage/myTexture2dmat-namek.png");
+		imgMount_TD = GameCanvas.loadImage("/mainImage/myTexture2dthucuoi10.png");
+		imgMount_NM = GameCanvas.loadImage("/mainImage/myTexture2dthucuoi20.png");
+		imgMount_NM_1 = GameCanvas.loadImage("/mainImage/myTexture2dthucuoi21.png");
+		imgMount_XD = GameCanvas.loadImage("/mainImage/myTexture2dthucuoi30.png");
+		imgMount_TD_VIP = GameCanvas.loadImage("/mainImage/myTexture2dthucuoi11.png");
+		imgMount_NM_VIP = GameCanvas.loadImage("/mainImage/myTexture2dthucuoi22.png");
+		imgMount_NM_1_VIP = GameCanvas.loadImage("/mainImage/myTexture2dthucuoi23.png");
+		imgMount_XD_VIP = GameCanvas.loadImage("/mainImage/myTexture2dthucuoi31.png");
+		imgEventMount = GameCanvas.loadImage("/mainImage/myTexture2drong.png");
+		imgEventMountWing = GameCanvas.loadImage("/mainImage/myTexture2dcanhrong.png");
+		fraRedEye = null;
+		myCharz()?.ClearCachedGraphicsFrames();
+		myPetz()?.ClearCachedGraphicsFrames();
+		if (GameScr.vCharInMap != null)
+		{
+			for (int i = 0; i < GameScr.vCharInMap.size(); i++)
+			{
+				if (GameScr.vCharInMap.elementAt(i) is Char c)
+				{
+					c.ClearCachedGraphicsFrames();
+				}
+			}
+		}
+	}
 
 }

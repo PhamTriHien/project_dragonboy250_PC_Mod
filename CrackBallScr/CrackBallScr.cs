@@ -127,6 +127,22 @@ public partial class CrackBallScr : mScreen
 			yP = -hP;
 		}
 
+	public static void ReloadForGraphicsMode()
+		{
+			if (instance == null && fraImgKame == null)
+			{
+				return;
+			}
+			Image img = GameCanvas.loadImage("/e/e_1.png");
+			fraImgKame = new FrameImage(img, 30, 30);
+			Image img2 = GameCanvas.loadImage("/e/e_0.png");
+			fraImgKame_1 = new FrameImage(img2, 68, 65);
+			Image img3 = GameCanvas.loadImage("/e/e_2.png");
+			fraImgKame_2 = new FrameImage(img3, 66, 70);
+			imgReplay = GameCanvas.loadImage("/e/nut2.png");
+			imgX = GameCanvas.loadImage("/e/nut3.png");
+		}
+
 	public static CrackBallScr gI()
 		{
 			if (instance == null)

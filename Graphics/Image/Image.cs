@@ -46,6 +46,8 @@ public class Image
 
 	public bool isZoomScaled;
 
+	public bool isFallbackFromX1;
+
 	public byte[] rawServerPngBytes;
 
 	private static ulong ComputePngHash(byte[] data)
@@ -67,7 +69,20 @@ public class Image
 		}
 		int w = src.width;
 		int h = src.height;
-		Color32[] pixels = src.GetPixels32();
+		Color32[] pixels;
+		try
+		{
+			pixels = src.GetPixels32();
+		}
+		catch
+		{
+			Texture2D readableCopy = ScaleTextureNearestNeighbor(src, w, h);
+			if (readableCopy == null)
+			{
+				return src;
+			}
+			pixels = readableCopy.GetPixels32();
+		}
 		for (int y = 0; y + 1 < h; y += 2)
 		{
 			int row0 = (h - 1 - y) * w;
@@ -370,22 +385,40 @@ public class Image
 		}
 		bool isX1Asset = cleanName.StartsWith("x1/", StringComparison.OrdinalIgnoreCase) ||
 			cleanName.IndexOf("/x1/", StringComparison.OrdinalIgnoreCase) >= 0;
+		bool isFontAsset = cleanName.IndexOf("myfont", StringComparison.OrdinalIgnoreCase) >= 0;
+		bool fallbackFromX1 = false;
 		if (isX1Asset && mGraphics.zoomLevel == 2)
 		{
-			if (!s_JavaScaledTextures.TryGetValue(cleanName, out Texture2D scaledTex) || scaledTex == null)
+			string scaleKey = cleanName + "@x1x2";
+			if (!s_JavaScaledTextures.TryGetValue(scaleKey, out Texture2D scaledTex) || scaledTex == null)
 			{
 				scaledTex = ScaleTextureNearestNeighbor(texture2D, texture2D.width * 2, texture2D.height * 2);
-				s_JavaScaledTextures[cleanName] = scaledTex;
+				s_JavaScaledTextures[scaleKey] = scaledTex;
 			}
 			if (scaledTex != null)
 			{
 				texture2D = scaledTex;
+			}
+			fallbackFromX1 = !ModGraphics.IsJavaGraphics && !isFontAsset;
+		}
+		else if (ModGraphics.IsJavaGraphics && !isFontAsset && mGraphics.zoomLevel == 2)
+		{
+			string quantKey = cleanName + "@java2x2";
+			if (!s_JavaScaledTextures.TryGetValue(quantKey, out Texture2D quantTex) || quantTex == null)
+			{
+				quantTex = QuantizeTextureJava2x2(texture2D);
+				s_JavaScaledTextures[quantKey] = quantTex;
+			}
+			if (quantTex != null)
+			{
+				texture2D = quantTex;
 			}
 		}
 		Image image = new Image();
 		image.texture = texture2D;
 		image.w = image.texture.width;
 		image.h = image.texture.height;
+		image.isFallbackFromX1 = fallbackFromX1;
 		setTextureQuality(image);
 		return image;
 	}

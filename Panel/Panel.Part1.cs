@@ -34,6 +34,23 @@ public partial class Panel : IActionListener, IChatable
 			imgStarCuongHoa = mSystem.loadImage("/mainImage/starCH.png");
 			imgNew = GameCanvas.loadImage("/mainImage/new.png");
 			imgTicket = GameCanvas.loadImage("/mainImage/ticket12.png");
+			ResetPanelInstanceImages(GameCanvas.panel);
+			ResetPanelInstanceImages(GameCanvas.panel2);
+		}
+	private static void ResetPanelInstanceImages(Panel p)
+		{
+			if (p == null)
+			{
+				return;
+			}
+			p.imgo_0 = null;
+			p.imgo_1 = null;
+			p.imgo_2 = null;
+			p.imgo_3 = null;
+			if (p.cmdClose != null)
+			{
+				p.cmdClose.img = imgX;
+			}
 		}
 	public void init()
 		{

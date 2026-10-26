@@ -42,6 +42,11 @@ public static class ModUI
 
 	private static Image imgBtX;
 
+	public static void ReloadForGraphicsMode()
+	{
+		imgBtX = null;
+	}
+
 	public static List<int> GetUniqueMobTemplateIds()
 	{
 		List<int> list = new List<int>();

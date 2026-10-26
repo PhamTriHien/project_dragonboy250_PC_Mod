@@ -167,6 +167,19 @@ public class BgItem
 
 	public static void ReloadCurrMapItems()
 	{
+		System.Collections.Generic.Dictionary<string, byte[]> serverSnapshots = null;
+		if (imgNew != null && imgNew.size() > 0)
+		{
+			serverSnapshots = new System.Collections.Generic.Dictionary<string, byte[]>();
+			System.Collections.IDictionaryEnumerator enumerator = imgNew.GetEnumerator();
+			while (enumerator.MoveNext())
+			{
+				if (enumerator.Key is string k && enumerator.Value is Image oldImg && oldImg.rawServerPngBytes != null && oldImg.rawServerPngBytes.Length > 0)
+				{
+					serverSnapshots[k] = oldImg.rawServerPngBytes;
+				}
+			}
+		}
 		clearHashTable();
 		vKeysLast.removeAllElements();
 		if (TileMap.vCurrItem == null)
@@ -180,7 +193,19 @@ public class BgItem
 				string key = item.idImage + string.Empty;
 				if (!imgNew.containsKey(key))
 				{
-					Image img = LoadMapBgItemImage(item.idImage);
+					Image img = null;
+					if (ModGraphics.IsJavaGraphics)
+					{
+						img = GameCanvas.loadImage("/mapBackGround/" + item.idImage + ".png");
+					}
+					if (img == null && serverSnapshots != null && serverSnapshots.TryGetValue(key, out byte[] rawBytes))
+					{
+						img = (mGraphics.zoomLevel > 1) ? Image.createServerZoomImage(rawBytes) : Image.createImage(rawBytes);
+					}
+					if (img == null)
+					{
+						img = LoadMapBgItemImage(item.idImage);
+					}
 					if (img != null)
 					{
 						imgNew.put(key, img);

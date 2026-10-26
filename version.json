@@ -1,9 +1,9 @@
 {
-  "version": "2.5.66",
+  "version": "2.5.67",
   "buildDate": "2026-10-26",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.66/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.66/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.66/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.66/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.66: Chuẩn hóa toàn bộ thông báo HUD trên màn hình sang tông màu sáng sắc nét, gỡ bỏ hoàn toàn đổ bóng chữ:\n- Gỡ bỏ hoàn toàn lớp đổ bóng xám (tahoma_7_grey) gây lệch nét/nhòe chữ trên HUD FPS - Ping, Nhãn Tên Map [K.x], Trạng Thái Mục Tiêu, HUD Sư Phụ (TTSP), Thống Kê 15 Bộ SKH, HUD Bùa và Cụm Nút Nhanh.\n- Chuyển toàn bộ các dòng thông báo HUD từ tông tối (xanh rêu đậm #005325, xanh dương đậm #0080FF, xám #555555) sang bảng màu sáng độ tương phản cao (Vàng sáng #FFFF00, Vàng cam #FFAA00, Trắng sáng #FFFFFF/#EFEFEF) hiển thị rõ nét trên mọi nền bầu trời Trái Đất, Namek, Xayda, Cold ở cả Đồ Hoạ HD lẫn Đồ Hoạ Java."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.67/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.67/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.67/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.67/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.67: Sửa triệt để NextMap Núi Khỉ Vàng / Fide / Cold, đồng bộ 100% Đồ Họa Java <-> HD và tối ưu Tàn Sát quái bay lơ lửng:\n- NextMap: Xóa cạnh ảo 68 <-> 67 (Thung lũng Nappa <-> Vực chết), bổ sung đầy đủ tên map chuẩn server (NRmap 49..166) cùng bộ chặn hậu tố số 2/3/4, thêm cổng kiểm tra nhiệm vụ & sức mạnh khi tìm đường (Tương lai, Cold, 40B/60B), chống lặp mở menu NPC Cui (map 68 -> 19) và nâng giới hạn leo sườn núi dốc cao từ 144px lên 1536px tại Núi Khỉ Vàng (map 80).\n- Đồ Họa Java <-> HD: Lượng tử hóa pixel 2x2 chuẩn Java cho toàn bộ sprite fallback x2/x3/x4 ở chế độ Java, tự động tải & nâng cấp 10.616 icon SmallImage từ x1 lên HD (2Small + CMD -67) không nháy trắng, bảo toàn ảnh tải từ server (ImgByName, BgItem, Mob, Effect) và làm mới 100% UI/HUD/Nhân vật/Hiệu ứng nền ngay khi chuyển chế độ.\n- Tàn Sát Quái Bay: Bay thẳng 1 nhịp tới quái trên không khi bật Tự Động Luyện Tập (item 4387), bay ngang trên không (air-to-air) giữa các quái bay gần nhau không cần đáp xuống mặt đất, và chia bước chéo tỷ lệ (84px/108px) chống giật lùi RESET_POINT khi leo từ mặt đất."
 }

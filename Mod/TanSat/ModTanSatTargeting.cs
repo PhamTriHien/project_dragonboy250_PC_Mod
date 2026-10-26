@@ -82,7 +82,7 @@ public static class ModTanSatTargeting
 	private static int ClimbToTopSurface(int px, int gy)
 	{
 		int guard = 0;
-		while (gy >= 24 && guard < 6 && TileMap.tileTypeAt(px, gy - 24, 2))
+		while (gy >= 24 && guard < 64 && TileMap.tileTypeAt(px, gy - 24, 2))
 		{
 			gy -= 24;
 			guard++;

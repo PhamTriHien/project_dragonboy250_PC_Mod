@@ -914,7 +914,7 @@ public static class ModTeleport
 					}
 					int gy = TileMap.tileYofPixel(sampleY);
 					int guard = 0;
-					while (gy >= 24 && guard < 6 && TileMap.tileTypeAt(candX, gy - 24, TileMap.T_TOP))
+					while (gy >= 24 && guard < 64 && TileMap.tileTypeAt(candX, gy - 24, TileMap.T_TOP))
 					{
 						gy -= 24;
 						guard++;
@@ -1332,8 +1332,8 @@ public static class ModTeleport
 				return true;
 			}
 
-			// 2. Dịch chuyển sang quái khác hoặc nhảy xa/chuyển tầng tới mặt đất: Dịch chuyển tức thời 1 bước
-			if (isTargetOnGround)
+			// 2. Dịch chuyển sang quái khác hoặc nhảy xa/chuyển tầng tới mặt đất (hoặc bay thẳng 1 bước khi đang có Tự Động Luyện Tập 4387)
+			if (isTargetOnGround || (ItemTime.isExistItem(4387) && !IsColdPositionBlocked(targetX, targetY)))
 			{
 				TeleportTo(targetX, targetY);
 				lastStepTime = now;
@@ -1341,16 +1341,24 @@ public static class ModTeleport
 				return true;
 			}
 
-			// 3. Mục tiêu là quái bay trên không trung: Nếu còn ở xa, dịch chuyển tức thời tới mặt đất gần quái bay trước, sau đó bay lên
-			if (dx > 96 || dy > 84)
+			// 3. Mục tiêu là quái bay trên không trung khi không có TĐLT 4387:
+			//    - Nếu nhân vật đang lơ lửng trên không và đường bay sang quái bay kế tiếp thông thoáng: bay ngang/chéo trực tiếp trên không, không tụt xuống mặt đất.
+			//    - Chỉ khi đứng từ xa ở dưới đất mới đáp xuống nền base dưới chân quái bay trước rồi bay thẳng lên.
+			bool onTopSurface = TileMap.tileTypeAt(me.cx, me.cy, 2);
+			bool canFlyAirToAir = !onTopSurface &&
+			                      dx <= 280 &&
+			                      dy <= 192 &&
+			                      !IsColdPositionBlocked(targetX, targetY) &&
+			                      IsColdAirSegmentClear(me.cx, me.cy, targetX, targetY, strictAir: false);
+			if (!canFlyAirToAir && (dx > 84 || dy > 84 || (dx + dy) > 108))
 			{
 				if (TryFindColdFlyingAnchor(targetX, targetY, me.cx, out int anchorX, out int anchorY))
 				{
-					bool alreadyClimbingAir = !TileMap.tileTypeAt(me.cx, me.cy, 2) &&
+					bool alreadyClimbingAir = !onTopSurface &&
 					                          Res.abs(me.cx - targetX) <= 120 &&
 					                          me.cy <= anchorY + 8 &&
 					                          Res.abs(me.cy - targetY) <= 380;
-					if (!alreadyClimbingAir && (Res.abs(me.cx - anchorX) > 64 || Res.abs(me.cy - anchorY) > 24))
+					if (!alreadyClimbingAir && (Res.abs(me.cx - anchorX) > 48 || Res.abs(me.cy - anchorY) > 24))
 					{
 						TeleportTo(anchorX, anchorY);
 						lastStepTime = now;
@@ -1360,8 +1368,11 @@ public static class ModTeleport
 				}
 			}
 
-			int airX = (dx <= 96) ? targetX : (me.cx + ((targetX > me.cx) ? 96 : (-96)));
-			int airY = (dy <= 84) ? targetY : (me.cy + ((targetY > me.cy) ? 84 : (-84)));
+			ComputeProportionalColdStep(me.cx, me.cy, targetX, targetY, 84, 108, out int airX, out int airY);
+			if (onTopSurface && targetY < me.cy && airY > me.cy - 4)
+			{
+				airY = System.Math.Max(24, me.cy - 4);
+			}
 			SendSingleCharMove(airX, airY);
 			lastStepTime = now;
 

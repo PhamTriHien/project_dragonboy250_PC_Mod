@@ -481,10 +481,6 @@ public class mSystem
 
 	public static void ClearImageCache()
 	{
-		if (ImgByName.hashImagePath != null)
-		{
-			ImgByName.hashImagePath.clear();
-		}
 	}
 
 	public static FrameImage getFraImage(string nameImg)

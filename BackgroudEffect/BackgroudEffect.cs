@@ -145,6 +145,76 @@ public partial class BackgroudEffect
 
 	private int[] tick;
 
+	public static void ReloadForGraphicsMode()
+		{
+			water1 = GameCanvas.loadImage("/mainImage/myTexture2dwater1.png");
+			water2 = GameCanvas.loadImage("/mainImage/myTexture2dwater2.png");
+			imgSnow = null;
+			imgHatMua = null;
+			imgMua1 = null;
+			imgMua2 = null;
+			imgSao = null;
+			imgLacay = null;
+			imgShip = null;
+			imgFire1 = null;
+			imgFire2 = null;
+			imgChamTron1 = null;
+			imgChamTron2 = null;
+			imgCloud1 = null;
+			imgFog = null;
+			initCloud();
+			if (vBgEffect == null)
+			{
+				return;
+			}
+			for (int i = 0; i < vBgEffect.size(); i++)
+			{
+				if (!(vBgEffect.elementAt(i) is BackgroudEffect eff))
+				{
+					continue;
+				}
+				switch (eff.typeEff)
+				{
+				case 9:
+					imgChamTron1 = GameCanvas.loadImageRMS("/bg/cham-tron1.png");
+					imgChamTron2 = GameCanvas.loadImageRMS("/bg/cham-tron2.png");
+					break;
+				case 0:
+				case 12:
+					imgHatMua = GameCanvas.loadImageRMS("/bg/mua.png");
+					imgMua1 = GameCanvas.loadImageRMS("/bg/mua1.png");
+					imgMua2 = GameCanvas.loadImageRMS("/bg/mua2.png");
+					break;
+				case 1:
+					imgLacay = GameCanvas.loadImageRMS("/bg/lacay.png");
+					break;
+				case 2:
+					imgLacay = GameCanvas.loadImageRMS("/bg/lacay2.png");
+					break;
+				case 5:
+					imgLacay = GameCanvas.loadImageRMS("/bg/lacay3.png");
+					break;
+				case 6:
+					imgLacay = GameCanvas.loadImageRMS("/bg/lacay4.png");
+					break;
+				case 7:
+					imgLacay = GameCanvas.loadImageRMS("/bg/lacay5.png");
+					break;
+				case 11:
+					imgLacay = GameCanvas.loadImageRMS("/bg/tuyet.png");
+					break;
+				case 4:
+					imgSao = GameCanvas.loadImageRMS("/bg/sao.png");
+					break;
+				case 8:
+					imgShip = GameCanvas.loadImageRMS("/bg/ship.png");
+					imgFire1 = GameCanvas.loadImageRMS("/bg/fire1.png");
+					imgFire2 = GameCanvas.loadImageRMS("/bg/fire2.png");
+					break;
+				}
+			}
+		}
+
 	public BackgroudEffect(int typeS)
 		{
 			isFog = true;

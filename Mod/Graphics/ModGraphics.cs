@@ -309,10 +309,59 @@ public static class ModGraphics
 				GameCanvas.imgViolet[j] = GameCanvas.loadImage("/effectdata/violet/" + j + ".png");
 			}
 			GameScr.ReloadHudImages();
+			Panel.loadBg();
+			Menu.loadBg();
+			PopUp.goc = null;
+			PopUp.imgPopUp = null;
+			PopUp.imgPopUp2 = null;
+			PopUp.loadBg();
+			Info.gocnhon = GameCanvas.loadImage("/mainImage/myTexture2dgocnhon.png");
+			TField.imgTf = GameCanvas.loadImage("/mainImage/myTexture2dtf.png");
+			ModUI.ReloadForGraphicsMode();
 			SmallImage.ReloadForGraphicsMode();
 			Mob.ReloadForGraphicsMode();
 			Effect.ReloadForGraphicsMode();
 			ImgByName.ReloadForGraphicsMode();
+			Char.ReloadForGraphicsMode();
+			ItemMap.imageFlare = GameCanvas.loadImage("/mainImage/myTexture2dflare.png");
+			ItemMap.imageAuraItem1 = GameCanvas.loadImage("/mainImage/myTexture2ditemaura1.png");
+			ItemMap.imageAuraItem2 = GameCanvas.loadImage("/mainImage/myTexture2ditemaura2.png");
+			ItemMap.imageAuraItem3 = GameCanvas.loadImage("/mainImage/myTexture2ditemaura3.png");
+			MagicTree.pea = GameCanvas.loadImage("/mainImage/myTexture2dhatdau.png");
+			EffectFeet.imgFeet1 = GameCanvas.loadImage("/mainImage/myTexture2dmove-1.png");
+			EffectFeet.imgFeet3 = GameCanvas.loadImage("/mainImage/myTexture2dmove-3.png");
+			if (Teleport.maybay != null)
+			{
+				for (int m = 0; m < 3 && m < Teleport.maybay.Length; m++)
+				{
+					if (Teleport.maybay[m] != null)
+					{
+						Teleport.maybay[m] = GameCanvas.loadImage("/mainImage/myTexture2dmaybay" + (m + 1) + ".png");
+					}
+				}
+				if (Teleport.maybay.Length > 3 && Teleport.maybay[3] != null)
+				{
+					Teleport.maybay[3] = GameCanvas.loadImage("/mainImage/myTexture2dmaybay4a.png");
+				}
+				if (Teleport.maybay.Length > 4 && Teleport.maybay[4] != null)
+				{
+					Teleport.maybay[4] = GameCanvas.loadImage("/mainImage/myTexture2dmaybay4b.png");
+				}
+			}
+			if (Teleport.hole != null)
+			{
+				Teleport.hole = GameCanvas.loadImage("/mainImage/hole.png");
+			}
+			if (TransportScr.ship != null)
+			{
+				TransportScr.ship = GameCanvas.loadImage("/mainImage/myTexture2dfutherShip.png");
+			}
+			if (TransportScr.taungam != null)
+			{
+				TransportScr.taungam = GameCanvas.loadImage("/mainImage/taungam.png");
+			}
+			RadarScr.ReloadForGraphicsMode();
+			CrackBallScr.ReloadForGraphicsMode();
 			TileMap.loadBg();
 			if (TileMap.tileID > 0)
 			{
@@ -320,7 +369,7 @@ public static class ModGraphics
 				TileMap.loadMainTile();
 			}
 			BgItem.ReloadCurrMapItems();
-			BackgroudEffect.initCloud();
+			BackgroudEffect.ReloadForGraphicsMode();
 			if (GameCanvas.typeBg >= 0)
 			{
 				int curBg = GameCanvas.typeBg;

@@ -264,10 +264,10 @@ public class Effect
 				else
 				{
 					int resolvedId = (ed.ID >= 42 && ed.ID <= 46) ? 106 : ed.ID;
-					string dataPath = "/x" + mGraphics.zoomLevel + "/effectdata/" + resolvedId + "/data";
-					if (MyStream.readFile(dataPath) != null)
+					Image effImg = GameCanvas.loadImage("/effectdata/" + resolvedId + "/img.png");
+					if (effImg != null)
 					{
-						ed.img = GameCanvas.loadImage("/effectdata/" + resolvedId + "/img.png");
+						ed.img = effImg;
 					}
 				}
 			}

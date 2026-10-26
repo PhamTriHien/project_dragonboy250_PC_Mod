@@ -42,6 +42,13 @@ public static class ModNextMap
 		ModWaypoint.ResetWaypointState();
 	}
 
+	public static void NotifyNpcMenuConfirmed()
+	{
+		long now = mSystem.currentTimeMillis();
+		lastChangeAttemptTime = now;
+		mapEnterWaitUntil = now + 650;
+	}
+
 	/// <summary>
 	/// Phản hồi khi server gửi gói RESET_POINT xác nhận vị trí dịch chuyển hợp lệ để chuyển ngay sang nhịp tiếp theo.
 	/// </summary>

@@ -13,6 +13,7 @@ public static class ModWaypoint
 	private static long wpInitTime;
 	private static bool hasTeleportedToWp;
 	private static bool isWpPosConfirmed;
+	private static bool isUnconfirmedLongJump;
 	private static bool isWaitingTeleportConfirm;
 	private static int pendingConfirmX;
 	private static int pendingConfirmY;
@@ -28,6 +29,7 @@ public static class ModWaypoint
 		wpInitTime = 0;
 		hasTeleportedToWp = false;
 		isWpPosConfirmed = false;
+		isUnconfirmedLongJump = false;
 		isWaitingTeleportConfirm = false;
 		pendingConfirmX = 0;
 		pendingConfirmY = 0;
@@ -54,6 +56,10 @@ public static class ModWaypoint
 		if (isMatchPendingConfirm || isMatchPrevPos)
 		{
 			isWaitingTeleportConfirm = false;
+			if (isMatchPendingConfirm)
+			{
+				isUnconfirmedLongJump = false;
+			}
 			if (hasTeleportedToWp && isMatchPendingConfirm)
 			{
 				isWpPosConfirmed = true;
@@ -66,6 +72,7 @@ public static class ModWaypoint
 		Char.ischangingMap = false;
 		Char.isLockKey = false;
 		isWaitingTeleportConfirm = false;
+		isUnconfirmedLongJump = false;
 		hasTeleportedToWp = false;
 		isWpPosConfirmed = false;
 		ModNextMap.OnServerResetPoint();
@@ -110,7 +117,7 @@ public static class ModWaypoint
 				{
 					int gy = TileMap.tileYofPixel(y);
 					int guard = 0;
-					while (gy - 24 >= safeMinY && guard < 6 && TileMap.tileTypeAt(checkX, gy - 24, 2))
+					while (gy - 24 >= safeMinY && guard < 64 && TileMap.tileTypeAt(checkX, gy - 24, 2))
 					{
 						gy -= 24;
 						guard++;
@@ -156,6 +163,7 @@ public static class ModWaypoint
 			me.cyStartFall = 0;
 			me.isFlyUp = false;
 
+			int prevCx = me.cx;
 			pendingConfirmX = x;
 			pendingConfirmY = y;
 			lastTeleportTime = mSystem.currentTimeMillis();
@@ -167,7 +175,9 @@ public static class ModWaypoint
 			Service.gI().charMove();
 			if (!ItemTime.isExistItem(4387))
 			{
-				isWaitingTeleportConfirm = TileMap.tileTypeAt(x, y, 2);
+				bool onGround = TileMap.tileTypeAt(x, y, 2);
+				isWaitingTeleportConfirm = onGround;
+				isUnconfirmedLongJump = onGround && Res.abs(prevCx - x) > 96;
 				me.cx = x;
 				me.cy = y + 1;
 				Service.gI().charMove();
@@ -178,6 +188,7 @@ public static class ModWaypoint
 			else
 			{
 				isWaitingTeleportConfirm = false;
+				isUnconfirmedLongJump = false;
 			}
 		}
 		catch
@@ -659,7 +670,15 @@ public static class ModWaypoint
 				return (taskId > 30) ? 0 : ((menuLength > 1) ? 1 : 0);
 			}
 		}
-		if (currentMapId == 68 || currentMapId == 109)
+		if (currentMapId == 68)
+		{
+			if (targetMapId == 19)
+			{
+				return (menuLength >= 2) ? 1 : 0;
+			}
+			return 0;
+		}
+		if (currentMapId == 109)
 		{
 			return 0;
 		}
@@ -710,6 +729,12 @@ public static class ModWaypoint
 					return false;
 				}
 				isWaitingTeleportConfirm = false;
+				if (isUnconfirmedLongJump && !ItemTime.isExistItem(4387))
+				{
+					isUnconfirmedLongJump = false;
+					ModNextMap.OnServerResetPoint();
+					return false;
+				}
 			}
 
 			int npcX = shipNpc.cx;
@@ -717,6 +742,15 @@ public static class ModWaypoint
 			if (!TileMap.tileTypeAt(npcX, npcY, 2) && TileMap.tileTypeAt(npcX, shipNpc.cy - 3, 2))
 			{
 				npcY = shipNpc.cy - 3;
+			}
+			else if (TileMap.tileTypeAt(npcX, npcY, 2))
+			{
+				int guard = 0;
+				while (npcY >= 24 && guard < 64 && TileMap.tileTypeAt(npcX, npcY - 24, 2))
+				{
+					npcY -= 24;
+					guard++;
+				}
 			}
 
 			if (Res.abs(me.cx - npcX) > 24 || Res.abs(me.cy - npcY) > 24)
@@ -737,23 +771,22 @@ public static class ModWaypoint
 			if (isWaitingShipMenu)
 			{
 				long elapsed = now - lastShipOpenMenuTime;
-				if (elapsed >= 750 && elapsed < 2500)
+				if (GameCanvas.menu != null && GameCanvas.menu.showMenu && elapsed >= 650 && elapsed < 2500)
 				{
-					int fallbackIndex = GetFallbackNpcMenuIndex(TileMap.mapID, targetPlanetMapId, 3);
+					int menuLen = (GameCanvas.menu.menuItems != null && GameCanvas.menu.menuItems.size() > 0) ? GameCanvas.menu.menuItems.size() : 3;
+					int fallbackIndex = GetFallbackNpcMenuIndex(TileMap.mapID, targetPlanetMapId, menuLen);
 					isWaitingShipMenu = false;
 					Service.gI().confirmMenu((short)npcTemplateId, (sbyte)fallbackIndex);
 					if (TileMap.mapID == 48 && targetPlanetMapId == 50)
 					{
 						Service.gI().confirmMenu((short)npcTemplateId, 1);
 					}
-					if (GameCanvas.menu != null)
-					{
-						GameCanvas.menu.showMenu = false;
-					}
+					GameCanvas.menu.showMenu = false;
+					ModNextMap.NotifyNpcMenuConfirmed();
 					ModTdltLogger.Log("NEXT_MAP_SHIP", $"Fallback confirm NPC menu npc={npcTemplateId}, index={fallbackIndex} -> targetMap={targetPlanetMapId}");
 					return true;
 				}
-				if (elapsed < 2500)
+				if (elapsed < 1200)
 				{
 					return false;
 				}
@@ -824,17 +857,19 @@ public static class ModWaypoint
 					selectedIndex = i;
 					break;
 				}
-				if (targetPlanet == 109 && (text.Contains("cold") || text.Contains("cooler") || text.Contains("băng") || text.Contains("bang")))
+				if (targetPlanet == 109 && (text.Contains("cold") || text.Contains("cooler") || text.Contains("băng") || text.Contains("bang") || text.Contains("frozen") || text.Contains("es") || text.Contains("salju")))
 				{
 					selectedIndex = i;
 					break;
 				}
-				if (targetPlanet == 19 && (text.Contains("xayda") || text.Contains("vegeta") || text.Contains("quay về") || text.Contains("về") || text.Contains("kembali") || text.Contains("back")))
+				if (targetPlanet == 19 &&
+				    !text.Contains("cold") && !text.Contains("cooler") && !text.Contains("băng") && !text.Contains("bang") && !text.Contains("frozen") && !text.Contains("salju") && !text.Contains("nappa") &&
+				    (text.Contains("xayda") || text.Contains("saiya") || text.Contains("saiyan") || text.Contains("vegeta") || text.Contains("quay về") || text.Contains("trở về") || text.Contains("về") || text.Contains("kembali") || text.Contains("pulang") || text.Contains("back") || text.Contains("return")))
 				{
 					selectedIndex = i;
 					break;
 				}
-				if (targetPlanet == 131 && (text.Contains("yardrat") || text.Contains("đồng ý") || text.Contains("dong y") || text.Contains("setuju") || text.Contains("ok") || text.Contains("yes")))
+				if (targetPlanet == 131 && (text.Contains("yardrat") || text.Contains("yardart") || text.Contains("đồng ý") || text.Contains("dong y") || text.Contains("setuju") || text.Contains("ok") || text.Contains("yes")))
 				{
 					selectedIndex = i;
 					break;
@@ -876,6 +911,20 @@ public static class ModWaypoint
 				selectedIndex = 0;
 			}
 
+			else if (selectedIndex == -1 && TileMap.mapID == 68 && targetPlanet == 19)
+			{
+				for (int i = 0; i < menuItems.Length; i++)
+				{
+					string t = (menuItems[i] ?? string.Empty).ToLower();
+					if (!t.Contains("cold") && !t.Contains("cooler") && !t.Contains("băng") && !t.Contains("bang") && !t.Contains("frozen") && !t.Contains("salju") &&
+					    !t.Contains("từ chối") && !t.Contains("tu choi") && !t.Contains("đóng") && !t.Contains("batal") && !t.Contains("tidak") && !t.Contains("no") && !t.Contains("cancel"))
+					{
+						selectedIndex = i;
+						break;
+					}
+				}
+			}
+
 			if (selectedIndex == -1)
 			{
 				selectedIndex = GetFallbackNpcMenuIndex(TileMap.mapID, targetPlanet, menuItems.Length);
@@ -893,6 +942,10 @@ public static class ModWaypoint
 			{
 				isWaitingShipMenu = true;
 				lastShipOpenMenuTime = mSystem.currentTimeMillis();
+			}
+			else
+			{
+				ModNextMap.NotifyNpcMenuConfirmed();
 			}
 			ModTdltLogger.Log("NEXT_MAP_SHIP", $"OnReceiveShipMenu confirm npc={npcTemplateId}, index={selectedIndex} -> targetPlanet={targetPlanet}");
 

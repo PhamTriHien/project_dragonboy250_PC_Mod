@@ -119,6 +119,39 @@ public partial class RadarScr : mScreen, IActionListener
 
 	private int hClip;
 
+	public static void ReloadForGraphicsMode()
+		{
+			if (instance == null && imgUI == null)
+			{
+				return;
+			}
+			Image img = mSystem.loadImage("/radar/17.png");
+			Image img2 = mSystem.loadImage("/radar/3.png");
+			Image img3 = mSystem.loadImage("/radar/23.png");
+			fraImgFocus = new FrameImage(img, 28, 28);
+			fraImgFocusNone = new FrameImage(img2, 30, 30);
+			fraEff = new FrameImage(img3, 11, 11);
+			imgUI = mSystem.loadImage("/radar/0.png");
+			imgArrow_Left = mSystem.loadImage("/radar/1.png");
+			imgArrow_Right = mSystem.loadImage("/radar/2.png");
+			imgArrow_Down = mSystem.loadImage("/radar/4.png");
+			imgLock = mSystem.loadImage("/radar/5.png");
+			imgUse_0 = mSystem.loadImage("/radar/6.png");
+			imgRank = new Image[7];
+			for (int i = 0; i < 7; i++)
+			{
+				imgRank[i] = mSystem.loadImage("/radar/" + (i + 7) + ".png");
+			}
+			imgUse = mSystem.loadImage("/radar/14.png");
+			imgBack = mSystem.loadImage("/radar/15.png");
+			imgChange = mSystem.loadImage("/radar/16.png");
+			imgUIText = mSystem.loadImage("/radar/18.png");
+			imgBar_1 = mSystem.loadImage("/radar/19.png");
+			imgPro_0 = mSystem.loadImage("/radar/20.png");
+			imgPro_1 = mSystem.loadImage("/radar/21.png");
+			imgBar_0 = mSystem.loadImage("/radar/22.png");
+		}
+
 	public RadarScr()
 		{
 			TYPE_UI = true;

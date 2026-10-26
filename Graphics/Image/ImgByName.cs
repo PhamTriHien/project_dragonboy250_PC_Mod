@@ -114,9 +114,21 @@ public class ImgByName
 		IDictionaryEnumerator enumerator = hashImagePath.GetEnumerator();
 		while (enumerator.MoveNext())
 		{
-			if (enumerator.Value is MainImage mi && mi.img != null && mi.img.rawServerPngBytes != null)
+			if (enumerator.Value is MainImage mi && mi.img != null)
 			{
-				mi.img = Image.refreshServerZoomImage(mi.img);
+				if (mi.img.rawServerPngBytes != null)
+				{
+					mi.img = Image.refreshServerZoomImage(mi.img);
+				}
+				else if (enumerator.Key is string keyName)
+				{
+					MainImage fromRms = getFromRms(keyName);
+					if (fromRms != null && fromRms.img != null)
+					{
+						mi.img = fromRms.img;
+						mi.nFrame = fromRms.nFrame;
+					}
+				}
 			}
 		}
 	}

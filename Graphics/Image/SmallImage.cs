@@ -70,7 +70,42 @@ public class SmallImage
 		imgbig = null;
 		if (imgNew != null)
 		{
-			Array.Clear(imgNew, 0, imgNew.Length);
+			bool isJava = ModGraphics.IsJavaGraphics;
+			for (int i = 0; i < imgNew.Length; i++)
+			{
+				Small s = imgNew[i];
+				if (s == null)
+				{
+					continue;
+				}
+				if (isJava)
+				{
+					Image localJava = GameCanvas.loadImage("/SmallImage/Small" + i + ".png");
+					if (localJava != null)
+					{
+						imgNew[i] = new Small(localJava, i);
+					}
+					else if (s.img != null && s.img.rawServerPngBytes != null)
+					{
+						s.img = Image.refreshServerZoomImage(s.img);
+					}
+					else
+					{
+						imgNew[i] = null;
+					}
+				}
+				else
+				{
+					if (s.img != null && s.img.rawServerPngBytes != null)
+					{
+						s.img = Image.refreshServerZoomImage(s.img);
+					}
+					else
+					{
+						imgNew[i] = null;
+					}
+				}
+			}
 		}
 		loadBigRMS();
 	}
@@ -207,7 +242,7 @@ public class SmallImage
 				return;
 			}
 			Image image2 = GameCanvas.loadImage("/SmallImage/Small" + id + ".png");
-			if (image2 != null)
+			if (image2 != null && (ModGraphics.IsJavaGraphics || !image2.isFallbackFromX1))
 			{
 				setSmall(id, new Small(image2, id));
 				return;
@@ -239,6 +274,16 @@ public class SmallImage
 			else
 			{
 				flag = true;
+			}
+
+			if (image2 != null)
+			{
+				setSmall(id, new Small(image2, id));
+				if (flag)
+				{
+					queueDownload(id);
+				}
+				return;
 			}
 
 			// Fallback ve asset x1 neu chua co x2

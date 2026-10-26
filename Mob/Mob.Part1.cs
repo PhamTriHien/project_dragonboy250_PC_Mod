@@ -128,27 +128,67 @@ public partial class Mob
 				BigBoss.shadowBig = GameCanvas.loadImage("/mainImage/shadowBig.png");
 				if (BigBoss.data != null)
 				{
-					BigBoss.data.img = GameCanvas.loadImage("/effectdata/" + BigBoss.lastDataId + "/img.png");
+					if (BigBoss.data.img != null && BigBoss.data.img.rawServerPngBytes != null)
+					{
+						BigBoss.data.img = Image.refreshServerZoomImage(BigBoss.data.img);
+					}
+					else
+					{
+						Image bossImg = GameCanvas.loadImage("/effectdata/" + BigBoss.lastDataId + "/img.png");
+						if (bossImg != null) BigBoss.data.img = bossImg;
+					}
 				}
 				BigBoss2.shadowBig = GameCanvas.loadImage("/mainImage/shadowBig.png");
 				BigBoss2.imgHP = GameCanvas.loadImage("/mainImage/myTexture2dmobHP.png");
 				if (BigBoss2.data != null)
 				{
-					BigBoss2.data.img = GameCanvas.loadImage("/effectdata/" + 109 + "/img.png");
+					if (BigBoss2.data.img != null && BigBoss2.data.img.rawServerPngBytes != null)
+					{
+						BigBoss2.data.img = Image.refreshServerZoomImage(BigBoss2.data.img);
+					}
+					else
+					{
+						Image boss2Img = GameCanvas.loadImage("/effectdata/" + 109 + "/img.png");
+						if (boss2Img != null) BigBoss2.data.img = boss2Img;
+					}
 				}
 				BachTuoc.shadowBig = GameCanvas.loadImage("/mainImage/shadowBig.png");
 				BachTuoc.imgHP = GameCanvas.loadImage("/mainImage/myTexture2dmobHP.png");
 				if (BachTuoc.data != null)
 				{
-					BachTuoc.data.img = GameCanvas.loadImage("/effectdata/" + 108 + "/img.png");
+					if (BachTuoc.data.img != null && BachTuoc.data.img.rawServerPngBytes != null)
+					{
+						BachTuoc.data.img = Image.refreshServerZoomImage(BachTuoc.data.img);
+					}
+					else
+					{
+						Image btImg = GameCanvas.loadImage("/effectdata/" + 108 + "/img.png");
+						if (btImg != null) BachTuoc.data.img = btImg;
+					}
 				}
 				if (Mabu.data1 != null)
 				{
-					Mabu.data1.img = GameCanvas.loadImage("/effectdata/" + 102 + "/img.png");
+					if (Mabu.data1.img != null && Mabu.data1.img.rawServerPngBytes != null)
+					{
+						Mabu.data1.img = Image.refreshServerZoomImage(Mabu.data1.img);
+					}
+					else
+					{
+						Image mb1 = GameCanvas.loadImage("/effectdata/" + 102 + "/img.png");
+						if (mb1 != null) Mabu.data1.img = mb1;
+					}
 				}
 				if (Mabu.data2 != null)
 				{
-					Mabu.data2.img = GameCanvas.loadImage("/effectdata/" + 103 + "/img.png");
+					if (Mabu.data2.img != null && Mabu.data2.img.rawServerPngBytes != null)
+					{
+						Mabu.data2.img = Image.refreshServerZoomImage(Mabu.data2.img);
+					}
+					else
+					{
+						Image mb2 = GameCanvas.loadImage("/effectdata/" + 103 + "/img.png");
+						if (mb2 != null) Mabu.data2.img = mb2;
+					}
 				}
 				if (MobCapcha.imgMob != null)
 				{
@@ -165,9 +205,13 @@ public partial class Mob
 							{
 								tpl.data.img = Image.refreshServerZoomImage(tpl.data.img);
 							}
-							else if (MyStream.readFile("/Mob/" + i) != null)
+							else
 							{
-								tpl.data.img = GameCanvas.loadImage("/Mob/" + i + "/img.png");
+								Image mobImg = GameCanvas.loadImage("/Mob/" + i + "/img.png");
+								if (mobImg != null)
+								{
+									tpl.data.img = mobImg;
+								}
 							}
 						}
 					}
