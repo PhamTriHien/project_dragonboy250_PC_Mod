@@ -644,18 +644,18 @@ public static class ModAutoPick
 					me.cvy = 0;
 				}
 				bool isNewItem = (closest.itemMapID != lastPickedItemMapId);
-				int pickInterval = (coldPick && ModTeleport.isWaitingSettle)
-					? ModTeleport.ColdStepIntervalMs
+				bool posSyncedForInPlace = !coldPick || ModTeleport.isCurrentPosSynced;
+				int inPlaceMaxX = posSyncedForInPlace ? (coldPick ? 36 : 22) : 6;
+				int inPlaceTolY = posSyncedForInPlace ? (coldPick ? 28 : 16) : 2;
+				bool groundedPickReady = !coldPick || !ModTeleport.isWaitingSettle || (ModTeleport.isCurrentPosSynced && TileMap.tileTypeAt(me.cx, me.cy, 2));
+				bool canPickInPlace = dx <= inPlaceMaxX && dy <= inPlaceTolY && groundedPickReady && (isNewItem || currentItemRetryCount < 1);
+				int pickInterval = (coldPick && ModTeleport.isWaitingSettle && !canPickInPlace)
+					? ModTeleport.GetColdStepDelayMs()
 					: (isNewItem ? 45 : ((currentItemRetryCount >= 1) ? 260 : 160));
 				if (now - lastPickTime < pickInterval)
 				{
 					return;
 				}
-
-				bool posSyncedForInPlace = !coldPick || ModTeleport.isCurrentPosSynced;
-				int inPlaceMaxX = posSyncedForInPlace ? 22 : 6;
-				int inPlaceTolY = posSyncedForInPlace ? (coldPick ? 12 : 16) : 2;
-				bool canPickInPlace = dx <= inPlaceMaxX && dy <= inPlaceTolY && (isNewItem || currentItemRetryCount < 1);
 				if (canPickInPlace)
 				{
 					if (ModTeleport.IsWaitingServerSyncForAttack())
@@ -694,6 +694,7 @@ public static class ModAutoPick
 				if (canPickInPlace)
 				{
 					ModTeleport.isWaitingSettle = false;
+					ModTeleport.ResetColdStepTracking();
 					ModTdltLogger.Log("ITEM_PICK", $"Pick in-place -> itemMapId={closest.itemMapID}, tplId={closest.template?.id ?? -1} ({closest.template?.name}), pos=({pickX},{pickY}), me=({me.cx},{me.cy}), retry={currentItemRetryCount}");
 					Service.gI().pickItem(closest.itemMapID);
 				}

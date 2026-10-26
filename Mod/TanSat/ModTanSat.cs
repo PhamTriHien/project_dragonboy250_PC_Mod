@@ -23,6 +23,8 @@ public static class ModTanSat
 				currentFarmTarget = null;
 				lastTeleportTargetMobId = -1;
 				resetPenaltyCount = 0;
+				lastResetPenaltyTime = 0;
+				consecutiveConfirmedHits = 0;
 				currentTargetResetCount = 0;
 				currentTargetUnchangedAttackCount = 0;
 				pendingAttackPacket = false;
@@ -172,6 +174,7 @@ public static class ModTanSat
 	public static int lastMapId = -1;
 	public static int resetPenaltyCount = 0;
 	public static long lastResetPenaltyTime = 0;
+	private static int consecutiveConfirmedHits = 0;
 	public static int currentTargetResetCount = 0;
 	public static int currentTargetUnchangedAttackCount = 0;
 	private static int lastResyncAttackCount = 0;
@@ -197,6 +200,7 @@ public static class ModTanSat
 		long now = mSystem.currentTimeMillis();
 		resetPenaltyCount++;
 		lastResetPenaltyTime = now;
+		consecutiveConfirmedHits = 0;
 		currentTargetResetCount++;
 		lastTeleportTargetMobId = -1;
 		waitUntilTime = now + 180;
@@ -204,6 +208,7 @@ public static class ModTanSat
 		ModTeleport.lastStepTime = now;
 		ModTeleport.lastStepDistance = 0;
 		ModTeleport.isWaitingSettle = false;
+		ModTeleport.isCurrentPosSynced = false;
 		targetLockTime = now;
 
 		ModTdltLogger.Log("RESET_POINT", $"Server RESET_POINT received -> pos=({Char.myCharz()?.cx},{Char.myCharz()?.cy}), penalty={resetPenaltyCount}, targetReset={currentTargetResetCount}");
@@ -711,6 +716,8 @@ public static class ModTanSat
 				currentFarmTarget = null;
 				lastTeleportTargetMobId = -1;
 				resetPenaltyCount = 0;
+				lastResetPenaltyTime = 0;
+				consecutiveConfirmedHits = 0;
 				currentTargetResetCount = 0;
 				currentTargetUnchangedAttackCount = 0;
 				pendingAttackPacket = false;
@@ -881,7 +888,9 @@ public static class ModTanSat
 					bool isExternalOrPetHit = noRecentSelfAttack || (hasCompanion && isChipDamage);
 					if (!isExternalOrPetHit)
 					{
-						if (Res.abs(me.cx - currentFarmTarget.x) <= 72 && Res.abs(me.cy - currentFarmTarget.y) <= 72)
+						int confirmMaxX = System.Math.Max(72, skillToUse.dx);
+						int confirmMaxY = System.Math.Max(72, skillToUse.dy);
+						if (Res.abs(me.cx - currentFarmTarget.x) <= confirmMaxX && Res.abs(me.cy - currentFarmTarget.y) <= confirmMaxY)
 						{
 							ModTeleport.isWaitingServerSync = false;
 							ModTeleport.isCurrentPosSynced = true;
@@ -890,10 +899,18 @@ public static class ModTanSat
 						currentTargetResetCount = 0;
 						currentTargetUnchangedAttackCount = 0;
 						lastResyncAttackCount = 0;
-						if (resetPenaltyCount > 0 && now - lastResetPenaltyTime > 12000)
+						consecutiveConfirmedHits++;
+						if (consecutiveConfirmedHits >= 2 && lastResetPenaltyTime > 0 && now - lastResetPenaltyTime >= 900)
 						{
-							resetPenaltyCount--;
-							lastResetPenaltyTime = now;
+							lastResetPenaltyTime = 0;
+							if (resetPenaltyCount > 0)
+							{
+								resetPenaltyCount--;
+							}
+						}
+						else if (resetPenaltyCount > 0 && lastResetPenaltyTime == 0)
+						{
+							resetPenaltyCount = 0;
 						}
 					}
 				}
@@ -1037,10 +1054,16 @@ public static class ModTanSat
 			bool isMeleeTemplate = (tplId == 0 || tplId == 2 || tplId == 4 || tplId == 9 || tplId == 17);
 			bool isRanged = !isMeleeTemplate && (skillToUse.dx > 75);
 			bool isColdAntiCheckNow = ModTeleport.IsColdPlanetAntiCheckActive();
+			bool isMobFlying = (Mob.arrMobTemplate != null &&
+			                    currentFarmTarget.templateId >= 0 &&
+			                    currentFarmTarget.templateId < Mob.arrMobTemplate.Length &&
+			                    Mob.arrMobTemplate[currentFarmTarget.templateId] != null &&
+			                    (Mob.arrMobTemplate[currentFarmTarget.templateId].type == 4 || Mob.arrMobTemplate[currentFarmTarget.templateId].type == 5));
 
 			bool isNewTarget = (lastTeleportTargetMobId != currentFarmTarget.mobId);
+			bool syncedColdPos = isColdAntiCheckNow && ModTeleport.isCurrentPosSynced;
 			int coldEngagedMeleeRangeX = System.Math.Min(System.Math.Max(28, skillToUse.dx - 10), 38);
-			int maxRangeX = isRanged ? (skillToUse.dx - 8) : ((!isNewTarget && isColdAntiCheckNow) ? coldEngagedMeleeRangeX : 24);
+			int maxRangeX = isRanged ? (skillToUse.dx - 8) : ((syncedColdPos || (!isNewTarget && isColdAntiCheckNow)) ? coldEngagedMeleeRangeX : 24);
 			int maxRangeY = isRanged ? (skillToUse.dy - 6) : 24;
 
 			bool isOutOfRange = (deltaX > maxRangeX || deltaY > maxRangeY);
@@ -1048,10 +1071,38 @@ public static class ModTanSat
 			{
 				isOutOfRange = false;
 			}
-			bool canAdoptInPlace = !isColdAntiCheckNow || TileMap.tileTypeAt(me.cx, me.cy, 2) || !TileMap.tileTypeAt(anchorX, anchorY, 2);
-
-			if (isNewTarget && canAdoptInPlace && lastResyncAttackCount == 0 && !isOutOfRange && !ModTeleport.isWaitingSettle && deltaX <= (isColdAntiCheckNow ? 20 : 16) && deltaY <= 16 && !ModTanSatTargeting.IsInsideWaypoint(me.cx, me.cy))
+			bool onGroundNow = TileMap.tileTypeAt(me.cx, me.cy, 2);
+			bool canAdoptInPlace = !isColdAntiCheckNow || onGroundNow || !TileMap.tileTypeAt(anchorX, anchorY, 2);
+			int adoptMaxX = 16;
+			int adoptMaxY = 16;
+			bool canStopMidWalkToFire = false;
+			if (isColdAntiCheckNow)
 			{
+				if (isRanged)
+				{
+					adoptMaxX = syncedColdPos ? System.Math.Max(36, skillToUse.dx - 20) : 24;
+					int rangedSafeY = System.Math.Max(20, System.Math.Min(skillToUse.dy - 12, 44));
+					if (isMobFlying && deltaY > deltaX)
+					{
+						rangedSafeY = System.Math.Min(rangedSafeY, 28);
+					}
+					adoptMaxY = syncedColdPos ? rangedSafeY : 16;
+					canStopMidWalkToFire = syncedColdPos && (onGroundNow || isMobFlying);
+				}
+				else
+				{
+					adoptMaxX = syncedColdPos ? System.Math.Min(coldEngagedMeleeRangeX, 34) : 20;
+					adoptMaxY = syncedColdPos ? 20 : 16;
+				}
+			}
+			bool adoptLineClear = !isColdAntiCheckNow || !isRanged || deltaX <= 36 ||
+			                      ModTeleport.IsSameColdGroundBase(me.cx, me.cy, anchorX, anchorY) ||
+			                      ModTeleport.IsColdDirectAirReachable(me.cx, me.cy, anchorX, anchorY);
+
+			if (isNewTarget && canAdoptInPlace && adoptLineClear && lastResyncAttackCount == 0 && !isOutOfRange && (!ModTeleport.isWaitingSettle || canStopMidWalkToFire) && deltaX <= adoptMaxX && deltaY <= adoptMaxY && !ModTanSatTargeting.IsInsideWaypoint(me.cx, me.cy))
+			{
+				ModTeleport.isWaitingSettle = false;
+				ModTeleport.ResetColdStepTracking();
 				lastTeleportTargetMobId = currentFarmTarget.mobId;
 				lastTeleportTime = now;
 				isNewTarget = false;
@@ -1082,12 +1133,6 @@ public static class ModTanSat
 
 						int safeX, safeY;
 						GetSafeAttackPosition(currentFarmTarget, isRanged, out safeX, out safeY);
-
-						bool isMobFlying = (Mob.arrMobTemplate != null &&
-						                    currentFarmTarget.templateId >= 0 &&
-						                    currentFarmTarget.templateId < Mob.arrMobTemplate.Length &&
-						                    Mob.arrMobTemplate[currentFarmTarget.templateId] != null &&
-						                    (Mob.arrMobTemplate[currentFarmTarget.templateId].type == 4 || Mob.arrMobTemplate[currentFarmTarget.templateId].type == 5));
 
 						lastStepMoveTime = now;
 						bool arrived = ModTeleport.MoveSteppedTo(safeX, safeY, isMobFlying, allowColdLongTeleport: isNewTarget);

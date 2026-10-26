@@ -1,9 +1,9 @@
 {
-  "version": "2.5.70",
+  "version": "2.5.71",
   "buildDate": "2026-10-26",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.70/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.70/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.70/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.70/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.70: Sửa triệt để lỗi font chữ game bị mờ / viền xám nhòe trên toàn bộ nền tảng (PC .NET 10 Native, Web Online Render, Android & PC Unity):\n- PC Native: Loại bỏ lớp trung gian RenderTexture2D VirtualTarget gây suy hao kênh Alpha (0.5 -> 0.75) và lọc Bilinear làm mờ chữ ở chế độ Đồ Hoạ HD; vẽ trực tiếp 1:1 lên backbuffer phần cứng kèm khử răng cưa MSAA 4x.\n- Nhúng trực tiếp bộ 3 font gốc NRO (barmeneb.ttf, chelthm.ttf, staccato.ttf) vào trong file thực thi DragonBoy_Net8_Native.exe và chuẩn hóa độ phủ Gamma sRGB cho font atlas, giúp chạy độc lập ngoài Desktop vẫn hiển thị đúng font gốc sắc nét 100%.\n- Web Online (Render.com): Kết xuất văn bản trực tiếp trên lưới pixel vật lý 1:1 của màn hình (nâng trần DPR lên 4.0 cho màn hình Retina/AMOLED), tắt in đậm giả (faux-bold) trên font mảnh chelthm và giữ lọc Nearest-Neighbor cho font số/bitmap.\n- Android & Shared Core: Bật Hinting phần cứng, làm tròn tọa độ pixel nguyên và nâng cỡ chữ chuẩn mặc định lên 75% đồng bộ chiều cao font gốc."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.71/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.71/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.71/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.71/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.71: Tối ưu chuyên sâu chế độ Tàn Sát Chống Quét (Anti-Scan) trên toàn bộ nền tảng:\n- Chuẩn hóa gói charMove đi ngang phẳng 4-byte giống hệt bàn phím thật (không gửi thừa short cy khi đã đồng bộ) và biến thiên tự nhiên biên độ bước (74..84px) & nhịp nghỉ (76..90ms) theo cspeed chống soi mẫu lặp.\n- Nhặt vật phẩm tại chỗ khớp chuẩn pickItem gốc (dx <= 36, dy <= 28) và dừng bước nhặt ngay khi vừa chạm tầm trên nền đất, cắt bỏ bước nhích chân thừa sau mỗi con quái chết.\n- Khai hỏa ngay khi vào tầm hiệu dụng của chiêu chưởng tầm xa (dx - 20) hoặc tầm cận chiến nối tiếp (<= 34px) trên mặt đất, tiết kiệm 1-3 gói di chuyển mỗi mục tiêu.\n- Đáp thẳng xuống mặt đất T_TOP ở nhịp bay cuối thay vì dừng lơ lửng targetY - 12 rồi rơi thêm 1 nhịp 82ms.\n- Gỡ phạt tốc độ ngay sau 2 đòn đánh trúng liên tiếp hậu RESET_POINT và tối ưu BFS đánh dấu thế hệ O(1) nhẹ CPU khi treo 6 Tab."
 }
