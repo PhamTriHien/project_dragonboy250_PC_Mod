@@ -24,6 +24,7 @@ public static class ModTeleport
 	private static readonly List<TeleportEchoEntry> pendingTeleportEchoes = new List<TeleportEchoEntry>(64);
 
 	private const int ColdSolidMask = TileMap.T_CENTER | TileMap.T_LEFT | TileMap.T_RIGHT | TileMap.T_SOLIDGROUND | TileMap.T_BOTTOM | TileMap.T_DIE;
+	private const int ColdAirHalfWidth = 5;
 	public const int ColdStepIntervalMs = 58;
 	private const int ColdMaxWalkStepX = 90;
 	private static int nextColdStepDelayMs = ColdStepIntervalMs;
@@ -184,6 +185,38 @@ public static class ModTeleport
 		outY = fromY + stepY;
 	}
 
+	private static bool IsColdAirSideBlocked(int sideX, int py)
+	{
+		return (TileMap.tileTypeAtPixel(sideX, py) & ColdSolidMask) != 0 ||
+		       (TileMap.tileTypeAtPixel(sideX, System.Math.Max(0, py - 12)) & ColdSolidMask) != 0 ||
+		       (TileMap.tileTypeAtPixel(sideX, System.Math.Max(0, py - 20)) & ColdSolidMask) != 0;
+	}
+
+	public static bool CanAutoRefillMpWithBean()
+	{
+		return (ModAutoHeal.autoPean || ModAutoHeal.lockHPMP) && ModAutoHeal.GetBeanCount() > 0;
+	}
+
+	public static bool IsLowMpNoBeanForColdFlight(Char me)
+	{
+		if (!IsColdPlanetAntiCheckActive() || me == null || me.cMPFull <= 0 || CanAutoRefillMpWithBean())
+		{
+			return false;
+		}
+		long minLiftoffMp = System.Math.Max(10L, me.cMPFull * 4L / 100L);
+		return me.cMP < minLiftoffMp;
+	}
+
+	public static bool IsCriticalZeroMpNoBean(Char me)
+	{
+		if (!IsColdPlanetAntiCheckActive() || me == null || me.cMPFull <= 0 || CanAutoRefillMpWithBean())
+		{
+			return false;
+		}
+		long criticalAirMp = System.Math.Max(2L, me.cMPFull / 100L);
+		return me.cMP <= criticalAirMp;
+	}
+
 	public static bool IsColdPositionBlocked(int px, int py, bool allowEnterWaypoint = false)
 	{
 		int margin = allowEnterWaypoint ? 12 : 24;
@@ -195,7 +228,18 @@ public static class ModTeleport
 		{
 			return true;
 		}
-		return (TileMap.tileTypeAtPixel(px, py) & ColdSolidMask) != 0;
+		if ((TileMap.tileTypeAtPixel(px, py) & ColdSolidMask) != 0)
+		{
+			return true;
+		}
+		if (!allowEnterWaypoint && !TileMap.tileTypeAt(px, py, TileMap.T_TOP))
+		{
+			if (IsColdAirSideBlocked(px - ColdAirHalfWidth, py) || IsColdAirSideBlocked(px + ColdAirHalfWidth, py))
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public static bool TryEscapeColdUnderground(Char me, long now)
@@ -881,6 +925,8 @@ public static class ModTeleport
 		{
 			return false;
 		}
+		bool checkLeftBody = !allowEnterWaypoint && (!IsColdAirSideBlocked(fromX - ColdAirHalfWidth, fromY) || toX < fromX);
+		bool checkRightBody = !allowEnterWaypoint && (!IsColdAirSideBlocked(fromX + ColdAirHalfWidth, fromY) || toX > fromX);
 		int dist = System.Math.Max(Res.abs(toX - fromX), Res.abs(toY - fromY));
 		int steps = System.Math.Max(2, (dist + 7) / 8);
 		for (int s = 1; s <= steps; s++)
@@ -891,6 +937,11 @@ public static class ModTeleport
 			int tWaist = TileMap.tileTypeAtPixel(sx, System.Math.Max(0, sy - 12));
 			int tHead = TileMap.tileTypeAtPixel(sx, System.Math.Max(0, sy - 20));
 			if ((tFoot & ColdSolidMask) != 0 || (tWaist & ColdSolidMask) != 0 || (tHead & ColdSolidMask) != 0)
+			{
+				return false;
+			}
+			if ((checkLeftBody && IsColdAirSideBlocked(sx - ColdAirHalfWidth, sy)) ||
+			    (checkRightBody && IsColdAirSideBlocked(sx + ColdAirHalfWidth, sy)))
 			{
 				return false;
 			}
@@ -913,6 +964,8 @@ public static class ModTeleport
 			return false;
 		}
 		bool startInWaypoint = allowEnterWaypoint || ModTanSatTargeting.IsInsideWaypoint(fromX, fromY);
+		bool checkLeftBody = !allowEnterWaypoint && (!IsColdAirSideBlocked(fromX - ColdAirHalfWidth, fromY) || toX < fromX);
+		bool checkRightBody = !allowEnterWaypoint && (!IsColdAirSideBlocked(fromX + ColdAirHalfWidth, fromY) || toX > fromX);
 		int dist = System.Math.Max(Res.abs(toX - fromX), Res.abs(toY - fromY));
 		int steps = System.Math.Max(2, (dist + 7) / 8);
 		for (int s = 1; s < steps; s++)
@@ -923,6 +976,11 @@ public static class ModTeleport
 			int tWaist = TileMap.tileTypeAtPixel(sx, System.Math.Max(0, sy - 12));
 			int tHead = TileMap.tileTypeAtPixel(sx, System.Math.Max(0, sy - 20));
 			if ((tFoot & ColdSolidMask) != 0 || (tWaist & ColdSolidMask) != 0 || (tHead & ColdSolidMask) != 0)
+			{
+				return false;
+			}
+			if ((checkLeftBody && IsColdAirSideBlocked(sx - ColdAirHalfWidth, sy)) ||
+			    (checkRightBody && IsColdAirSideBlocked(sx + ColdAirHalfWidth, sy)))
 			{
 				return false;
 			}
@@ -1052,6 +1110,36 @@ public static class ModTeleport
 		}
 
 		bool onTopSurface = TileMap.tileTypeAt(me.cx, me.cy, TileMap.T_TOP);
+		if (!onTopSurface && me.cMPFull > 0 && me.cMP * 100L < me.cMPFull * 10L && CanAutoRefillMpWithBean())
+		{
+			ModAutoHeal.DoRealAutoHeal();
+		}
+		else if (!onTopSurface && IsCriticalZeroMpNoBean(me))
+		{
+			int dropGy = ModTanSatTargeting.FindGroundY(me.cx, me.cy, 600);
+			if (dropGy > me.cy)
+			{
+				int landStepY = me.cy + System.Math.Min(maxClampStep, dropGy - me.cy);
+				SendSingleCharMove(me.cx, landStepY);
+				lastStepTime = now;
+				isCurrentPosSynced = true;
+				bool landedGround = landStepY >= dropGy;
+				isWaitingSettle = !landedGround;
+				RollNextColdStepDelay(landedGround);
+				if (landedGround)
+				{
+					ResetColdStepTracking();
+				}
+				return landedGround && Res.abs(me.cx - targetX) <= 12 && Res.abs(landStepY - targetY) <= arriveTolY;
+			}
+		}
+		else if (onTopSurface && IsLowMpNoBeanForColdFlight(me))
+		{
+			isWaitingSettle = false;
+			isCurrentPosSynced = true;
+			ResetColdStepTracking();
+			return false;
+		}
 		int startAirY = onTopSurface ? System.Math.Max(24, me.cy - 4) : me.cy;
 		int landingStartY = (onTopSurface && targetY <= me.cy) ? startAirY : me.cy;
 		bool canStepDirect = mustLandExact

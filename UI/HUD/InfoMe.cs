@@ -334,6 +334,7 @@ public class InfoMe
 		{
 			ModTdltLogger.LogServerMessage("INFO_TOAST_" + Type, s);
 			ModGoBack.CheckServerKickMessage(s);
+			ModAutoItem.OnServerToast(s);
 		}
 		ModMenu.ProcessServerBossNotice(s);
 		if (info.infoWaitToShow.size() > 0 && s.Equals(((InfoItem)info.infoWaitToShow.lastElement()).s))

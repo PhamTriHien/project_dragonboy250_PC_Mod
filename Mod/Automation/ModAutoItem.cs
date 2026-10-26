@@ -25,6 +25,7 @@ public static class ModAutoItem
 	// Theo dõi thời điểm vừa gửi lệnh dùng từng item để khóa chờ gói tin cmd -106 từ Server (tránh dùng lặp liên tục)
 	private static readonly Dictionary<int, long> s_LastUseTimeByItemId = new Dictionary<int, long>();
 	private static readonly Dictionary<int, short> s_LearnedIconByItemId = new Dictionary<int, short>();
+	private static readonly Dictionary<int, int> s_PreferredItemByGroup = new Dictionary<int, int>();
 	private static int s_LastUsedItemId = -1;
 	private static long s_LastUsedItemTimestamp = 0;
 
@@ -113,6 +114,22 @@ public static class ModAutoItem
 		s_LastUsedItemId = -1;
 	}
 
+	private static int FindSharedGroupIndex(int tplId)
+	{
+		for (int g = 0; g < s_SharedSlotItemGroups.Length; g++)
+		{
+			int[] group = s_SharedSlotItemGroups[g];
+			for (int k = 0; k < group.Length; k++)
+			{
+				if (group[k] == tplId)
+				{
+					return g;
+				}
+			}
+		}
+		return -1;
+	}
+
 	/// <summary>
 	/// Tiếp nhận gói tin cmd -106 (ITEM_TIME) từ Server để học idIcon động cho item bất kỳ và mở khóa ngay khi hết hạn (seconds <= 0).
 	/// </summary>
@@ -124,6 +141,31 @@ public static class ModAutoItem
 			if (s_LastUsedItemId >= 0 && now - s_LastUsedItemTimestamp <= 3500)
 			{
 				s_LearnedIconByItemId[s_LastUsedItemId] = idIcon;
+				int usedGrp = FindSharedGroupIndex(s_LastUsedItemId);
+				if (usedGrp >= 0)
+				{
+					s_PreferredItemByGroup[usedGrp] = s_LastUsedItemId;
+				}
+			}
+			else
+			{
+				Char me = Char.myCharz();
+				if (me != null && me.arrItemBag != null)
+				{
+					for (int b = 0; b < me.arrItemBag.Length; b++)
+					{
+						Item bagItem = me.arrItemBag[b];
+						if (bagItem != null && bagItem.template != null && bagItem.template.iconID == idIcon)
+						{
+							int grp = FindSharedGroupIndex(bagItem.template.id);
+							if (grp >= 0)
+							{
+								s_PreferredItemByGroup[grp] = bagItem.template.id;
+							}
+							break;
+						}
+					}
+				}
 			}
 		}
 		else
@@ -148,6 +190,40 @@ public static class ModAutoItem
 					s_LastUseTimeByItemId.Remove(kv.Key);
 				}
 			}
+		}
+	}
+
+	public static void OnServerToast(string message)
+	{
+		if (string.IsNullOrEmpty(message) || s_LastUsedItemId < 0)
+		{
+			return;
+		}
+		long now = mSystem.currentTimeMillis();
+		if (now - s_LastUsedItemTimestamp > 3500)
+		{
+			return;
+		}
+		string lower = message.ToLowerInvariant();
+		if (lower.Contains("hanya bisa") ||
+		    lower.Contains("menggunakn 1") ||
+		    lower.Contains("menggunakan 1") ||
+		    lower.Contains("chỉ được dùng 1") ||
+		    lower.Contains("chỉ có thể dùng 1") ||
+		    lower.Contains("chỉ sử dụng được 1"))
+		{
+			long lockBase = now + 19000L;
+			s_LastUseTimeByItemId[s_LastUsedItemId] = lockBase;
+			int grp = FindSharedGroupIndex(s_LastUsedItemId);
+			if (grp >= 0)
+			{
+				int[] group = s_SharedSlotItemGroups[grp];
+				for (int k = 0; k < group.Length; k++)
+				{
+					s_LastUseTimeByItemId[group[k]] = lockBase;
+				}
+			}
+			s_LastUsedItemId = -1;
 		}
 	}
 
@@ -389,6 +465,11 @@ public static class ModAutoItem
 		// 2. Kiểm tra trực tiếp iconID của ItemTemplate trong Char.vItemTime
 		if (item.template.iconID > 0 && HasActiveItemTime(item.template.iconID))
 		{
+			int ownGrp = FindSharedGroupIndex(tplId);
+			if (ownGrp >= 0)
+			{
+				s_PreferredItemByGroup[ownGrp] = tplId;
+			}
 			return true;
 		}
 
@@ -448,6 +529,7 @@ public static class ModAutoItem
 					{
 						if (bagItem.template.id == group[k] && bagItem.template.iconID > 0 && HasActiveItemTime(bagItem.template.iconID))
 						{
+							s_PreferredItemByGroup[g] = bagItem.template.id;
 							return true;
 						}
 					}
@@ -478,25 +560,17 @@ public static class ModAutoItem
 		s_LastUsedItemId = tplId;
 		s_LastUsedItemTimestamp = now;
 
-		for (int g = 0; g < s_SharedSlotItemGroups.Length; g++)
+		int grp = FindSharedGroupIndex(tplId);
+		if (grp >= 0)
 		{
-			int[] group = s_SharedSlotItemGroups[g];
-			bool inGroup = false;
+			if (!s_PreferredItemByGroup.ContainsKey(grp))
+			{
+				s_PreferredItemByGroup[grp] = tplId;
+			}
+			int[] group = s_SharedSlotItemGroups[grp];
 			for (int k = 0; k < group.Length; k++)
 			{
-				if (group[k] == tplId)
-				{
-					inGroup = true;
-					break;
-				}
-			}
-			if (inGroup)
-			{
-				for (int k = 0; k < group.Length; k++)
-				{
-					s_LastUseTimeByItemId[group[k]] = now;
-				}
-				break;
+				s_LastUseTimeByItemId[group[k]] = now;
 			}
 		}
 	}
@@ -547,6 +621,33 @@ public static class ModAutoItem
 			if (IsTimedItemCurrentlyActive(item, me, now))
 			{
 				continue;
+			}
+
+			int grp = FindSharedGroupIndex(item.template.id);
+			if (grp >= 0 && s_PreferredItemByGroup.TryGetValue(grp, out int prefTplId) && prefTplId != item.template.id && itemIds.Contains(prefTplId))
+			{
+				int prefIdx = -1;
+				for (int p = 0; p < len; p++)
+				{
+					Item prefCandidate = bag[p];
+					if (prefCandidate != null && prefCandidate.template != null && prefCandidate.template.id == prefTplId)
+					{
+						if (!IsTimedItemCurrentlyActive(prefCandidate, me, now))
+						{
+							prefIdx = p;
+						}
+						break;
+					}
+				}
+				if (prefIdx >= 0)
+				{
+					i = prefIdx;
+					item = bag[prefIdx];
+				}
+				else
+				{
+					s_PreferredItemByGroup.Remove(grp);
+				}
 			}
 
 			lastBagIndex = i;

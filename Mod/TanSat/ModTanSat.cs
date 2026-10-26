@@ -358,6 +358,7 @@ public static class ModTanSat
 		Mob bestMob = null;
 		int minDistance = int.MaxValue;
 		bool coldBfs = ModTeleport.IsColdPlanetAntiCheckActive();
+		bool groundOnlyLowMp = coldBfs && ModTeleport.IsLowMpNoBeanForColdFlight(me);
 
 		for (int i = 0; i < mobs.size(); i++)
 		{
@@ -379,6 +380,10 @@ public static class ModTanSat
 			                    Mob.arrMobTemplate[m.templateId] != null &&
 			                    (Mob.arrMobTemplate[m.templateId].type == 4 || Mob.arrMobTemplate[m.templateId].type == 5));
 			bool sameColdBase = coldBfs && !isFlyingMob && ModTeleport.IsSameColdGroundBase(me.cx, me.cy, m.x, m.y);
+			if (groundOnlyLowMp && !sameColdBase)
+			{
+				continue;
+			}
 			int euclidDist = Res.distance(me.cx, me.cy, m.x, m.y);
 			int dist;
 			if (sameColdBase)
@@ -844,7 +849,18 @@ public static class ModTanSat
 
 			// 1. Xác định kỹ năng tấn công
 			Skill skillToUse = GetBestSkillToUse();
-			if (skillToUse == null) return;
+			if (skillToUse == null)
+			{
+				if (ModTeleport.IsColdPlanetAntiCheckActive() && !TileMap.tileTypeAt(me.cx, me.cy, 2))
+				{
+					int groundY = ModTanSatTargeting.FindGroundY(me.cx, me.cy, 600);
+					if (groundY != -1)
+					{
+						ModTeleport.MoveSteppedTo(me.cx, groundY);
+					}
+				}
+				return;
+			}
 
 			if (me.myskill != skillToUse || lastSentSkillTemplateId != skillToUse.template.id || GameScr.lastSkill != skillToUse)
 			{
@@ -860,6 +876,10 @@ public static class ModTanSat
 			{
 				bool isTrainingDummy = (currentFarmTarget.templateId == 0 && (TileMap.isTrainingMap() || currentFarmTarget.maxHp >= 100000000L));
 				if (currentFarmTarget.isMobMe || currentFarmTarget.status == 0 || currentFarmTarget.status == 1 || currentFarmTarget.hp <= 0 || (avoidSuperMob && (currentFarmTarget.levelBoss > 0 || currentFarmTarget.isBoss)) || !ModTanSatFilter.IsMobAllowed(currentFarmTarget.templateId) || !GameScr.gI().isMeCanAttackMob(currentFarmTarget))
+				{
+					targetDiedOrInvalid = true;
+				}
+				else if (ModTeleport.IsCriticalZeroMpNoBean(me) && !ModTeleport.IsSameColdGroundBase(me.cx, me.cy, currentFarmTarget.x, currentFarmTarget.y))
 				{
 					targetDiedOrInvalid = true;
 				}

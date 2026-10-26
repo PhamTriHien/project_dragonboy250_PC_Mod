@@ -381,9 +381,13 @@ public static class ModAutoHeal
 				{
 					needHeal = true;
 				}
+				else if (ModTeleport.IsColdPlanetAntiCheckActive() && !TileMap.tileTypeAt(me.cx, me.cy, TileMap.T_TOP) && curMpPercent < 10)
+				{
+					needHeal = true;
+				}
 			}
 
-			if (needHeal)
+			if (needHeal && GetBeanCount() > 0)
 			{
 				if (now - lastPeanTime >= 1500)
 				{

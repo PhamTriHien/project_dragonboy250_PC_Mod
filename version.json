@@ -1,9 +1,9 @@
 {
-  "version": "2.5.73",
+  "version": "2.5.74",
   "buildDate": "2026-10-27",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.73/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.73/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.73/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.73/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.73: Vá triệt để lỗi kẹt dao động 4px dưới gầm trần đá & lỗi quệt góc cửa giếng trên Tàn Sát Chống Quét (Anti-Scan):\n- Đồng bộ khoảng hở trần đá trong GetColdCellPixel (py = ty * 24 + 22 với ColdSolidMask) khớp 100% với ngưỡng IsTileBlocked (py - 22), xóa bỏ hoàn toàn điểm mù tự chặn tâm ô BFS dưới gầm đá (444, 622).\n- Khóa đơn điệu tiến trình (Monotonic Forward Progress) cho bộ dò cắt góc Sub-tile Probe (25%/50%/75%) và bổ sung theo dõi tiến triển vị trí thực tế (coldLastProgressTime 2.2s), triệt tiêu vĩnh viễn vòng lặp giật lùi ping-pong 4px (624 <-> 628) kể cả khi quái mục tiêu đi bộ liên tục.\n- Nâng kiểm tra va chạm đỉnh đầu trong IsColdAirSegmentClear & IsColdLandingSegmentClear lên sy - 20 với đầy đủ ColdSolidMask, ngăn cắt sượt mép dưới vách đá cửa giếng gây RESET_POINT."
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.74/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.74/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.74/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.74/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.74: Hoàn thiện độ ổn định thực chiến Tàn Sát Chống Quét (Anti-Scan), Auto Bơm Đậu & Auto Vật Phẩm Thời Gian:\n- Bổ sung kiểm tra khoảng hở ngang thân nhân vật (±5px) trong các giếng hẹp (ModTeleport), chặn dứt điểm các bước cắt góc sát mép vách đá 0px (như x=552 sát vách tx=22) gây RESET_POINT.\n- Chặn spam gói ăn đậu khi hành trang hết sạch đậu thần (GetBeanCount() <= 0) và tự động hạ cánh thẳng đứng + chuyển đánh quái cùng bệ mặt đất (0 MP) để hồi KI tự nhiên khi cạn sạch KI không còn đậu, triệt tiêu hoàn toàn RESET_POINT rơi tự do giữa không trung.\n- Ưu tiên tái sử dụng đúng loại vật phẩm dùng chung ô thời gian đang kích hoạt (như Đồ ăn 663..667) và tự động khóa nhóm chờ cmd -106 khi máy chủ báo 'Hanya bisa menggunakn 1' / 'Chỉ được dùng 1', xóa bỏ hoàn toàn hiện tượng xoay vòng thử 4 món đồ ăn liên tiếp."
 }

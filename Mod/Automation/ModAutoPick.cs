@@ -562,6 +562,7 @@ public static class ModAutoPick
 
 			ItemMap closest = null;
 			int minDistance = int.MaxValue;
+			bool groundOnlyLowMpPick = ModTeleport.IsColdPlanetAntiCheckActive() && ModTeleport.IsLowMpNoBeanForColdFlight(me);
 
 			for (int i = 0; i < items.size(); i++)
 			{
@@ -590,6 +591,14 @@ public static class ModAutoPick
 					if (maxPickDistance > 0 && dist > maxPickDistance)
 					{
 						continue;
+					}
+					if (groundOnlyLowMpPick && dist > 36)
+					{
+						int itemGy = TileMap.isInAirMap() ? iy : ModTanSatTargeting.FindGroundY(ix, iy, 48);
+						if (!ModTeleport.IsSameColdGroundBase(me.cx, me.cy, ix, (itemGy != -1) ? itemGy : iy))
+						{
+							continue;
+						}
 					}
 					if (dist < minDistance)
 					{
