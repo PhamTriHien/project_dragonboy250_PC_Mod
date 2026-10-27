@@ -12,6 +12,8 @@ public static class ModAutoBuyBua
 		ApproachingBaHatMit,
 		WaitingMenu,
 		WaitingShop,
+		ConfirmingPurchase,
+		ReverifyingShop,
 		ReturningToFarm,
 		SwitchingZone
 	}
@@ -117,6 +119,9 @@ public static class ModAutoBuyBua
 	private static int retryShopCount = 0;
 	private static long lastZoneAttemptTime = 0;
 	private static int zoneAttemptCount = 0;
+	private static bool s_HasReverifiedShop = false;
+	private static bool s_TripWasTanSat = false;
+	private static bool s_TripWasGoBack = false;
 
 	public static bool IsBuaSelected(int index)
 	{
@@ -250,15 +255,26 @@ public static class ModAutoBuyBua
 		Char me = Char.myCharz();
 		if (me == null || me.cHP <= 0) return;
 
-		savedFarmMapId = TileMap.mapID;
-		savedFarmZoneId = TileMap.zoneID;
-		savedFarmX = me.cx;
-		savedFarmY = me.cy;
-
 		int targetMap = GetHomeVachNuiMapId();
+		if (!isBusy)
+		{
+			s_TripWasTanSat = ModTanSat.autoTanSat;
+			s_TripWasGoBack = ModGoBack.isGoBackActive;
+			ModTanSat.autoTanSat = false;
+			ModGoBack.isGoBackActive = false;
+		}
+		if (TileMap.mapID != targetMap && (TileMap.mapID < 42 || TileMap.mapID > 44))
+		{
+			savedFarmMapId = TileMap.mapID;
+			savedFarmZoneId = TileMap.zoneID;
+			savedFarmX = me.cx;
+			savedFarmY = me.cy;
+		}
+
 		currentState = AutoBuyBuaState.GoingToVachNui;
 		stateTimer = mSystem.currentTimeMillis();
 		s_BoughtSessionMask = 0;
+		s_HasReverifiedShop = false;
 		lastShopBuyStepTime = 0;
 		retryOpenMenuCount = 0;
 		retryShopCount = 0;
@@ -321,6 +337,8 @@ public static class ModAutoBuyBua
 			case AutoBuyBuaState.WaitingMenu:
 				return "Đang mở menu bùa...";
 			case AutoBuyBuaState.WaitingShop:
+			case AutoBuyBuaState.ConfirmingPurchase:
+			case AutoBuyBuaState.ReverifyingShop:
 				return "Đang mua bùa (" + GetSelectedCount() + " loại)...";
 			case AutoBuyBuaState.ReturningToFarm:
 			case AutoBuyBuaState.SwitchingZone:
@@ -504,7 +522,10 @@ public static class ModAutoBuyBua
 					currentState = AutoBuyBuaState.WaitingShop;
 					stateTimer = now;
 					lastShopBuyStepTime = now;
-					s_BoughtSessionMask = 0;
+					if (!s_HasReverifiedShop)
+					{
+						s_BoughtSessionMask = 0;
+					}
 					retryShopCount = 0;
 				}
 				else if (now - stateTimer > 2500)
@@ -577,7 +598,7 @@ public static class ModAutoBuyBua
 					break;
 				}
 
-				if (nextCharmIdx >= 0 && nextCharmItem != null)
+				if (nextCharmIdx >= 0 && nextCharmItem != null && !s_HasReverifiedShop)
 				{
 					s_BoughtSessionMask |= (1 << nextCharmIdx);
 					lastShopBuyStepTime = now;
@@ -585,16 +606,91 @@ public static class ModAutoBuyBua
 					long pkgAddMs = (selectedPackage == 0) ? 3600000L : ((selectedPackage == 1) ? 28800000L : 2592000000L);
 					long baseTs = (charmExpireTimestamps[nextCharmIdx] > now) ? charmExpireTimestamps[nextCharmIdx] : now;
 					charmExpireTimestamps[nextCharmIdx] = baseTs + pkgAddMs;
-					Service.gI().buyItem(1, nextCharmItem.template.id, 0);
+					Service.gI().buyItem(1, nextCharmItem.template.id, 1);
 					GameScr.info1.addInfo("ĐÃ MUA: " + buaTypeNames[nextCharmIdx] + " (" + packageNames[selectedPackage] + ")", 0);
+					currentState = AutoBuyBuaState.ConfirmingPurchase;
+				}
+				else if (!s_HasReverifiedShop && s_BoughtSessionMask != 0)
+				{
+					s_HasReverifiedShop = true;
+					if (GameCanvas.panel != null && GameCanvas.panel.isShow)
+					{
+						GameCanvas.panel.hideNow();
+					}
+					currentState = AutoBuyBuaState.ReverifyingShop;
+					stateTimer = now;
 				}
 				else
 				{
+					SyncVerifiedCharmTimers(me, now);
 					ModConfig.SaveConfig();
 					if (GameCanvas.panel != null && GameCanvas.panel.isShow)
 					{
 						GameCanvas.panel.hideNow();
 					}
+					ReturnToFarmSpot();
+				}
+				break;
+
+			case AutoBuyBuaState.ConfirmingPurchase:
+				if (now - lastShopBuyStepTime < 550) break;
+				if (Assets.src.g.ClientInput.instance != null && GameCanvas.currentScreen == Assets.src.g.ClientInput.instance)
+				{
+					if (Assets.src.g.ClientInput.instance.tf != null && Assets.src.g.ClientInput.instance.tf.Length > 0 && Assets.src.g.ClientInput.instance.tf[0] != null)
+					{
+						Assets.src.g.ClientInput.instance.tf[0].setText("1");
+						Assets.src.g.ClientInput.instance.perform(2, null);
+					}
+					lastShopBuyStepTime = now;
+					stateTimer = now;
+					currentState = AutoBuyBuaState.WaitingShop;
+					break;
+				}
+				if (GameCanvas.menu != null && GameCanvas.menu.showMenu && GameCanvas.menu.menuItems != null && GameCanvas.menu.menuItems.size() > 0)
+				{
+					Npc npcConfirm = FindBaHatMit();
+					int confirmNpcId = (npcConfirm != null && npcConfirm.template != null) ? npcConfirm.template.npcTemplateId : 21;
+					int pkgOptIdx = 0;
+					string searchPkg2 = (selectedPackage == 0) ? "1 gio" : ((selectedPackage == 1) ? "8 gio" : "1 thang");
+					for (int m = 0; m < GameCanvas.menu.menuItems.size(); m++)
+					{
+						Command cOpt = (Command)GameCanvas.menu.menuItems.elementAt(m);
+						if (cOpt != null && !string.IsNullOrEmpty(cOpt.caption))
+						{
+							string cLow = ModNextMapData.RemoveAccents(cOpt.caption).ToLower();
+							if (cLow.Contains(searchPkg2) || (selectedPackage == 0 && cLow.Contains("1h")) || (selectedPackage == 1 && cLow.Contains("8h")) || cLow.Contains("dong y") || cLow.Contains("mua"))
+							{
+								pkgOptIdx = m;
+								break;
+							}
+						}
+					}
+					Service.gI().confirmMenu((short)confirmNpcId, (sbyte)pkgOptIdx);
+					GameCanvas.menu.showMenu = false;
+				}
+				if (GameCanvas.currentDialog != null)
+				{
+					GameCanvas.endDlg();
+				}
+				lastShopBuyStepTime = now;
+				stateTimer = now;
+				currentState = AutoBuyBuaState.WaitingShop;
+				break;
+
+			case AutoBuyBuaState.ReverifyingShop:
+				if (now - stateTimer < 550) break;
+				Npc reverifyNpc = FindBaHatMit();
+				if (reverifyNpc != null)
+				{
+					int rId = (reverifyNpc.template != null) ? reverifyNpc.template.npcTemplateId : 21;
+					Service.gI().openMenu(rId);
+					currentState = AutoBuyBuaState.WaitingMenu;
+					retryOpenMenuCount = 0;
+					stateTimer = now;
+				}
+				else
+				{
+					ModConfig.SaveConfig();
 					ReturnToFarmSpot();
 				}
 				break;
@@ -622,6 +718,7 @@ public static class ModAutoBuyBua
 							{
 								ModTeleport.TeleportTo(savedFarmX, savedFarmY);
 							}
+							RestorePausedAutos();
 							currentState = AutoBuyBuaState.Idle;
 							GameScr.info1.addInfo("Đã quay về bãi farm an toàn!", 0);
 						}
@@ -633,6 +730,7 @@ public static class ModAutoBuyBua
 				}
 				else
 				{
+					RestorePausedAutos();
 					currentState = AutoBuyBuaState.Idle;
 				}
 				break;
@@ -646,6 +744,7 @@ public static class ModAutoBuyBua
 					{
 						ModTeleport.TeleportTo(savedFarmX, savedFarmY);
 					}
+					RestorePausedAutos();
 					currentState = AutoBuyBuaState.Idle;
 					GameScr.info1.addInfo("Đã quay về bãi farm an toàn!", 0);
 					break;
@@ -669,6 +768,30 @@ public static class ModAutoBuyBua
 			if (FindBuaInShopByIndex(me, c) != null) return true;
 		}
 		return false;
+	}
+
+	private static void RestorePausedAutos()
+	{
+		if (s_TripWasTanSat) ModTanSat.autoTanSat = true;
+		if (s_TripWasGoBack) ModGoBack.isGoBackActive = true;
+		s_TripWasTanSat = false;
+		s_TripWasGoBack = false;
+	}
+
+	private static void SyncVerifiedCharmTimers(Char me, long now)
+	{
+		for (int c = 0; c < buaTypeNames.Length; c++)
+		{
+			Item it = FindBuaInShopByIndex(me, c);
+			if (it != null)
+			{
+				long mins = GetShopItemRemainMinutes(it);
+				if (mins > 0)
+				{
+					charmExpireTimestamps[c] = now + mins * 60000L;
+				}
+			}
+		}
 	}
 
 	private static void SyncAllShopCharmTimers(Char me, long now)
@@ -781,6 +904,7 @@ public static class ModAutoBuyBua
 		}
 		else
 		{
+			RestorePausedAutos();
 			currentState = AutoBuyBuaState.Idle;
 		}
 	}

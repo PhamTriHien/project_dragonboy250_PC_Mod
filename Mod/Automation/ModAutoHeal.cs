@@ -22,9 +22,89 @@ public static class ModAutoHeal
 
 	private static long lastPeanTime = 0;
 	private static long lastHarvestTime = 0;
+	private static long lastBoxStockTime = 0;
+	private static long lastBoxOpenProbeTime = 0;
 	private static long lastClanDonateTime = 0;
 	private static long lastClanRequestTime = 0;
 	private static long lastFeedPetTime = 0;
+	private static bool s_ReopenUiAfterPctInput = false;
+
+	private sealed class PercentInputListener : IActionListener
+	{
+		private readonly int targetMode;
+
+		public PercentInputListener(int targetMode)
+		{
+			this.targetMode = targetMode;
+		}
+
+		public void perform(int idAction, object p)
+		{
+			try
+			{
+				if (idAction == 1 && GameCanvas.inputDlg != null && GameCanvas.inputDlg.tfInput != null)
+				{
+					string raw = (GameCanvas.inputDlg.tfInput.getText() ?? string.Empty).Trim();
+					if (int.TryParse(raw, out int val))
+					{
+						if (val < 0) val = 0;
+						if (val > 100) val = 100;
+						switch (targetMode)
+						{
+							case 0:
+								autoPeanHpPercent = val;
+								GameScr.info1?.addInfo("Ăn đậu khi HP Sư Phụ < " + val + "%", 0);
+								break;
+							case 1:
+								autoPeanMpPercent = val;
+								GameScr.info1?.addInfo("Ăn đậu khi KI Sư Phụ < " + val + "%", 0);
+								break;
+							case 2:
+								petEatBeanHpPercent = val;
+								GameScr.info1?.addInfo("Ăn đậu khi HP Đệ Tử <= " + val + "%", 0);
+								break;
+							case 3:
+								petEatBeanMpPercent = val;
+								GameScr.info1?.addInfo("Ăn đậu khi KI Đệ Tử <= " + val + "%", 0);
+								break;
+						}
+						ModConfig.SaveConfig();
+						SoundMn.gI().buttonClick();
+					}
+				}
+				GameCanvas.endDlg();
+				if (s_ReopenUiAfterPctInput)
+				{
+					s_ReopenUiAfterPctInput = false;
+					ModUI.uiCustomOpen = true;
+				}
+			}
+			catch
+			{
+				GameCanvas.endDlg();
+			}
+		}
+	}
+
+	private static void ShowPercentInputDialog(int mode, string title, int currentVal)
+	{
+		if (GameCanvas.inputDlg == null) return;
+		s_ReopenUiAfterPctInput = ModUI.uiCustomOpen;
+		ModUI.uiCustomOpen = false;
+		ModMenu.modMenuOpen = false;
+		GameCanvas.inputDlg.show(title, new Command("OK", new PercentInputListener(mode), 1, null), TField.INPUT_TYPE_NUMERIC);
+		if (GameCanvas.inputDlg.tfInput != null)
+		{
+			GameCanvas.inputDlg.tfInput.setMaxTextLenght(3);
+			GameCanvas.inputDlg.tfInput.setText(currentVal.ToString());
+			if (!Main.isPC) GameCanvas.inputDlg.tfInput.setFocusWithKb(isFocus: true);
+		}
+	}
+
+	public static void ShowInputHpPercent() => ShowPercentInputDialog(0, "Nhập % HP Sư Phụ ăn đậu (0 - 100):", autoPeanHpPercent);
+	public static void ShowInputMpPercent() => ShowPercentInputDialog(1, "Nhập % KI Sư Phụ ăn đậu (0 - 100):", autoPeanMpPercent);
+	public static void ShowInputPetHpPercent() => ShowPercentInputDialog(2, "Nhập % HP Đệ Tử ăn đậu (0 - 100):", petEatBeanHpPercent);
+	public static void ShowInputPetMpPercent() => ShowPercentInputDialog(3, "Nhập % KI Đệ Tử ăn đậu (0 - 100):", petEatBeanMpPercent);
 
 	public static bool MatchesDonateTarget(string playerName)
 	{
@@ -399,21 +479,46 @@ public static class ModAutoHeal
 				}
 			}
 
-			// 2. Tự động thu đậu thần từ cây đậu khi về map nhà và chưa đầy đậu
+			// 2. Tự động thu đậu thần từ cây đậu khi về map nhà và dự trữ tối thiểu 20 hạt vào Rương Nhà
 			if (autoHarvestPea)
 			{
 				bool isHomeMap = (GameScr.gI() != null && GameScr.gI().magicTree != null)
 					|| TileMap.mapID == 21 || TileMap.mapID == 22 || TileMap.mapID == 23;
 
-				if (isHomeMap && !IsBeanFull())
+				if (isHomeMap)
 				{
-					if (GameScr.gI() != null && GameScr.gI().magicTree != null)
+					if (!IsBeanFull() && GameScr.gI() != null && GameScr.gI().magicTree != null)
 					{
 						MagicTree mt = GameScr.gI().magicTree;
 						if (mt.currPeas > 0 && now - lastHarvestTime > 4000)
 						{
 							lastHarvestTime = now;
 							Service.gI().magicTree(1);
+						}
+					}
+
+					if (!ModSetActivator.isBusy && !ModNextMap.isNextMapActive && !ModGoBack.isReturning && GetBeanCount() > 5)
+					{
+						if (me.arrItemBox == null)
+						{
+							if (now - lastBoxOpenProbeTime > 8000 && ModSetActivator.FindHomeBoxNpc() != null)
+							{
+								lastBoxOpenProbeTime = now;
+								Service.gI().openMenu(3);
+							}
+						}
+						else if (GetBoxBeanCount() < 20 && ModSetActivator.GetFreeBoxSlots() != 0 && now - lastBoxStockTime > 1200 && me.arrItemBag != null)
+						{
+							for (int b = 0; b < me.arrItemBag.Length; b++)
+							{
+								Item bagIt = me.arrItemBag[b];
+								if (bagIt != null && bagIt.template != null && bagIt.template.type == 6)
+								{
+									lastBoxStockTime = now;
+									Service.gI().getItem(1, (sbyte)b);
+									break;
+								}
+							}
 						}
 					}
 				}

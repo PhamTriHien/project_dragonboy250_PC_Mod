@@ -181,6 +181,11 @@ public partial class TileMap
 			{
 				return;
 			}
+			if (ModMenu.graphicsQuality == 4)
+			{
+				ModGraphics.PaintTilemapWireframe(g);
+				return;
+			}
 			if (ModMenu.graphicsQuality == 3)
 			{
 				paintTilemapSuperLow(g);
@@ -264,7 +269,7 @@ public partial class TileMap
 
 	public static void paintOutTilemap(mGraphics g)
 		{
-			if (GameCanvas.lowGraphic || ModMenu.graphicsQuality == 3 || maps == null)
+			if (GameCanvas.lowGraphic || ModMenu.graphicsQuality >= 3 || maps == null)
 			{
 				return;
 			}

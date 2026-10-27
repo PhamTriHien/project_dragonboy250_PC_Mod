@@ -10,17 +10,16 @@ public static class ModUIBoss
 	/// </summary>
 	public static void Paint(int uiX, int uiY, int uiW, int uiH, mGraphics g)
 	{
-		int halfW = (uiW - 14) / 2;
 		int item1X = uiX + 4;
-		int item2X = uiX + 8 + halfW;
 
-		// Hàng 1: Báo Boss, Xóa List & HUD Map
+		// Hàng 1: Báo Boss, Xóa, KS Broly 1HP & HUD Map
 		mFont.tahoma_7_grey.drawString(g, "Báo Boss:", item1X + 2, uiY + 7, mFont.LEFT);
-		ModUI.PaintNativeButton(item1X + 56, uiY + 4, 36, 17, ModBossNotice.isShowBossNotice ? "BẬT" : "TẮT", ModBossNotice.isShowBossNotice, g);
-		ModUI.PaintNativeButton(item1X + 95, uiY + 4, 36, 17, "Xóa", false, g);
+		ModUI.PaintNativeButton(item1X + 54, uiY + 4, 34, 17, ModBossNotice.isShowBossNotice ? "BẬT" : "TẮT", ModBossNotice.isShowBossNotice, g);
+		ModUI.PaintNativeButton(item1X + 91, uiY + 4, 32, 17, "Xóa", false, g);
+		ModUI.PaintNativeButton(item1X + 127, uiY + 4, 108, 17, "KS Broly: " + (ModBossNotice.isKsSuperBroly1Hp ? "BẬT" : "TẮT"), ModBossNotice.isKsSuperBroly1Hp, g);
 
-		mFont.tahoma_7_grey.drawString(g, "HUD Map:", item2X + 2, uiY + 7, mFont.LEFT);
-		ModUI.PaintNativeButton(item2X + halfW - 38, uiY + 4, 36, 17, ModMapEntityHUD.isShowMapEntityHUD ? "BẬT" : "TẮT", ModMapEntityHUD.isShowMapEntityHUD, g);
+		mFont.tahoma_7_grey.drawString(g, "HUD Map:", uiX + uiW - 96, uiY + 7, mFont.LEFT);
+		ModUI.PaintNativeButton(uiX + uiW - 40, uiY + 4, 36, 17, ModMapEntityHUD.isShowMapEntityHUD ? "BẬT" : "TẮT", ModMapEntityHUD.isShowMapEntityHUD, g);
 
 		// Hàng 2: Auto Né Broly, Khinh Công, Khoảng cách an toàn (3 nút đồng đều)
 		int r2W = (uiW - 16) / 3;
@@ -33,10 +32,12 @@ public static class ModUIBoss
 		ModUI.PaintNativeButton(uiX + 8 + r2W, uiY + 40, r2W, 16, "Săn Boss: " + (ModBossNotice.isAutoAttackBoss ? "BẬT" : "TẮT"), ModBossNotice.isAutoAttackBoss, g);
 		ModUI.PaintNativeButton(uiX + 12 + r2W * 2, uiY + 40, r2W, 16, "Đánh Broly: " + (ModKiteBroly.autoAttackBroly ? "BẬT" : "TẮT"), ModKiteBroly.autoAttackBroly, g);
 
-		// Hàng 4: Lọc Boss, Gim Mục Tiêu, KS Broly 1HP
-		ModUI.PaintNativeButton(uiX + 4, uiY + 57, r2W, 16, string.IsNullOrEmpty(ModBossNotice.filterBossNamesRaw) ? "Lọc Boss: Tất cả" : "Lọc: Đang bật", !string.IsNullOrEmpty(ModBossNotice.filterBossNamesRaw), g);
-		ModUI.PaintNativeButton(uiX + 8 + r2W, uiY + 57, r2W, 16, "Gim M.Tiêu: " + (ModMapEntityHUD.isLockTarget ? "BẬT" : "TẮT"), ModMapEntityHUD.isLockTarget, g);
-		ModUI.PaintNativeButton(uiX + 12 + r2W * 2, uiY + 57, r2W, 16, "KS Broly 1HP: " + (ModBossNotice.isKsSuperBroly1Hp ? "BẬT" : "TẮT"), ModBossNotice.isKsSuperBroly1Hp, g);
+		// Hàng 4: Lọc Boss, Gim Mục Tiêu, Gim Boss, Theo Boss (4 nút đồng đều)
+		int r4W = (uiW - 20) / 4;
+		ModUI.PaintNativeButton(uiX + 4, uiY + 57, r4W, 16, string.IsNullOrEmpty(ModBossNotice.filterBossNamesRaw) ? "Lọc: Tất cả" : "Lọc: Đang bật", !string.IsNullOrEmpty(ModBossNotice.filterBossNamesRaw), g);
+		ModUI.PaintNativeButton(uiX + 8 + r4W, uiY + 57, r4W, 16, "Gim MT: " + (ModMapEntityHUD.isLockTarget ? "BẬT" : "TẮT"), ModMapEntityHUD.isLockTarget, g);
+		ModUI.PaintNativeButton(uiX + 12 + r4W * 2, uiY + 57, r4W, 16, "Gim Boss: " + (ModBossNotice.isAutoFocusBoss ? "BẬT" : "TẮT"), ModBossNotice.isAutoFocusBoss, g);
+		ModUI.PaintNativeButton(uiX + 16 + r4W * 3, uiY + 57, r4W, 16, "Theo Boss: " + (ModBossNotice.isAutoFollowBoss ? "BẬT" : "TẮT"), ModBossNotice.isAutoFollowBoss, g);
 
 		int listX = uiX + 4;
 		int listY = uiY + 75;
@@ -102,37 +103,41 @@ public static class ModUIBoss
 	/// </summary>
 	public static bool HandleTap(int px, int py, int uiX, int uiY, int uiW, int uiH)
 	{
-		int halfW = (uiW - 14) / 2;
 		int item1X = uiX + 4;
-		int item2X = uiX + 8 + halfW;
 
-		// 1. Nút Bật/Tắt HUD Báo Boss
-		if (px >= item1X + 56 && px <= item1X + 92 && py >= uiY + 3 && py <= uiY + 21)
+		if (py >= uiY + 3 && py <= uiY + 21)
 		{
-			ModBossNotice.isShowBossNotice = !ModBossNotice.isShowBossNotice;
-			ModConfig.SaveConfig();
-			SoundMn.gI().buttonClick();
-			return true;
-		}
-
-		// 2. Nút Xóa List
-		if (px >= item1X + 95 && px <= item1X + 131 && py >= uiY + 3 && py <= uiY + 21)
-		{
-			lock (ModBossNotice.listBossNotices)
+			if (px >= item1X + 54 && px <= item1X + 88)
 			{
-				ModBossNotice.listBossNotices.Clear();
+				ModBossNotice.isShowBossNotice = !ModBossNotice.isShowBossNotice;
+				ModConfig.SaveConfig();
+				SoundMn.gI().buttonClick();
+				return true;
 			}
-			SoundMn.gI().buttonClick();
-			return true;
-		}
-
-		// 3. Nút Bật/Tắt HUD Map
-		if (px >= item2X + halfW - 38 && px <= item2X + halfW && py >= uiY + 3 && py <= uiY + 21)
-		{
-			ModMapEntityHUD.isShowMapEntityHUD = !ModMapEntityHUD.isShowMapEntityHUD;
-			ModConfig.SaveConfig();
-			SoundMn.gI().buttonClick();
-			return true;
+			if (px >= item1X + 91 && px <= item1X + 123)
+			{
+				lock (ModBossNotice.listBossNotices)
+				{
+					ModBossNotice.listBossNotices.Clear();
+				}
+				SoundMn.gI().buttonClick();
+				return true;
+			}
+			if (px >= item1X + 127 && px <= item1X + 235)
+			{
+				ModBossNotice.isKsSuperBroly1Hp = !ModBossNotice.isKsSuperBroly1Hp;
+				ModConfig.SaveConfig();
+				GameScr.info1.addInfo("KS Super Broly 1HP: " + (ModBossNotice.isKsSuperBroly1Hp ? "BẬT" : "TẮT"), 0);
+				SoundMn.gI().buttonClick();
+				return true;
+			}
+			if (px >= uiX + uiW - 40 && px <= uiX + uiW - 4)
+			{
+				ModMapEntityHUD.isShowMapEntityHUD = !ModMapEntityHUD.isShowMapEntityHUD;
+				ModConfig.SaveConfig();
+				SoundMn.gI().buttonClick();
+				return true;
+			}
 		}
 
 		// 4. Hàng 2: Né Broly, Khinh công, Khoảng cách
@@ -185,27 +190,30 @@ public static class ModUIBoss
 			}
 		}
 
-		// 5b. Hàng 4: Lọc Boss, Gim Mục Tiêu, KS Broly 1HP
+		// 5b. Hàng 4: Lọc Boss, Gim Mục Tiêu, Gim Boss, Theo Boss
+		int r4W = (uiW - 20) / 4;
 		if (py >= uiY + 56 && py <= uiY + 74)
 		{
-			if (px >= uiX + 4 && px <= uiX + 4 + r2W)
+			if (px >= uiX + 4 && px <= uiX + 4 + r4W)
 			{
 				ModUI.uiCustomOpen = false;
 				ModBossNotice.ShowInputFilterBoss();
 				SoundMn.gI().buttonClick();
 				return true;
 			}
-			if (px >= uiX + 8 + r2W && px <= uiX + 8 + r2W * 2)
+			if (px >= uiX + 8 + r4W && px <= uiX + 8 + r4W * 2)
 			{
 				ModMapEntityHUD.ToggleLockTarget();
 				return true;
 			}
-			if (px >= uiX + 12 + r2W * 2 && px <= uiX + 12 + r2W * 3)
+			if (px >= uiX + 12 + r4W * 2 && px <= uiX + 12 + r4W * 3)
 			{
-				ModBossNotice.isKsSuperBroly1Hp = !ModBossNotice.isKsSuperBroly1Hp;
-				ModConfig.SaveConfig();
-				GameScr.info1.addInfo("KS Super Broly 1HP: " + (ModBossNotice.isKsSuperBroly1Hp ? "BẬT" : "TẮT"), 0);
-				SoundMn.gI().buttonClick();
+				ModBossNotice.ToggleAutoFocusBoss();
+				return true;
+			}
+			if (px >= uiX + 16 + r4W * 3 && px <= uiX + 16 + r4W * 4)
+			{
+				ModBossNotice.ToggleAutoFollowBoss();
 				return true;
 			}
 		}

@@ -58,7 +58,7 @@ public static class ModFps
 		try
 		{
 			QualitySettings.vSyncCount = 0;
-			Application.targetFrameRate = ModGraphics.isAfkLowCpu ? 15 : targetFps;
+			Application.targetFrameRate = ModGraphics.isAfkBlackScreen ? 10 : (ModGraphics.isAfkLowCpu ? 15 : targetFps);
 		}
 		catch
 		{

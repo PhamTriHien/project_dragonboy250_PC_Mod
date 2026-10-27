@@ -218,6 +218,7 @@ public static class ModMenu
 	#region Core State & Lifecycle
 
 	private static bool inited = false;
+	private static bool _wasInGameLastTick = false;
 	private static int _lastUiInputFrame = -1;
 	private static long mapChangeWatchdogTime = 0;
 	public static bool modMenuOpen = false;
@@ -240,7 +241,8 @@ public static class ModMenu
 			{
 				return false;
 			}
-			if (GameCanvas.currentScreen != GameScr.instance)
+			if (GameCanvas.currentScreen != GameScr.instance &&
+			    !(Assets.src.g.ClientInput.instance != null && GameCanvas.currentScreen == Assets.src.g.ClientInput.instance))
 			{
 				return false;
 			}
@@ -331,13 +333,16 @@ public static class ModMenu
 			if (curUiFrame <= 0 || curUiFrame != _lastUiInputFrame)
 			{
 				_lastUiInputFrame = curUiFrame;
-				// Tương tác giao diện Modal
-				ModUI.HandleTap();
-
-				// Click logo trên màn hình để mở Mod UI
-				if (GameCanvas.isPointerJustRelease && ModLogo.IsPointerInsideLogo(GameCanvas.px, GameCanvas.py))
+				if (!ModGraphics.CheckWakeFromBlackScreenTap())
 				{
-					OpenMenu();
+					// Tương tác giao diện Modal
+					ModUI.HandleTap();
+
+					// Click logo trên màn hình để mở Mod UI
+					if (GameCanvas.isPointerJustRelease && ModLogo.IsPointerInsideLogo(GameCanvas.px, GameCanvas.py))
+					{
+						OpenMenu();
+					}
 				}
 			}
 
@@ -358,6 +363,11 @@ public static class ModMenu
 
 			if (!IsInGame())
 			{
+				if (_wasInGameLastTick)
+				{
+					_wasInGameLastTick = false;
+					ModAccountManager.NotifyLeftGame();
+				}
 				GameScr.isAutoPlay = false;
 				GameScr.canAutoPlay = false;
 				ModUI.uiCustomOpen = false;
@@ -366,6 +376,7 @@ public static class ModMenu
 				ModGoBack.OnOutOfGame();
 				return;
 			}
+			_wasInGameLastTick = true;
 
 			// Ghi nhận trạng thái Auto khi đang trong game ổn định
 			ModAutoLogin.SnapshotAutoState();
@@ -497,6 +508,7 @@ public static class ModMenu
 			{
 				ModTanSat.UpdateSupportAndFreezeSkills(me, now);
 			}
+			ModAutoSkill.Update();
 			ModTanSat.RunTanSat();
 		}
 		catch

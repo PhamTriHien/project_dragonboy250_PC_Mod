@@ -12,6 +12,8 @@ public static class ModAutoNewAccount
 	private static long lastDuelAttackTime = 0;
 	private static long lastBeanTime = 0;
 	private static bool hasClaimedBaHatMitCharm = false;
+	private static bool hasClaimedGiftcode = false;
+	private static bool pendingGiftcodeInput = false;
 	private static bool movedToTaoPaiPaiSpot = false;
 
 	private static readonly int[] StarterSkillBookIds = new int[] { 227, 228, 229 };
@@ -216,6 +218,10 @@ public static class ModAutoNewAccount
 
 		if (me.arrItemBag != null)
 		{
+			if (!ItemTime.isExistItem(4387))
+			{
+				ModSetActivator.TryUseUnexpiredTdltInBag(me);
+			}
 			for (int i = me.arrItemBag.Length - 1; i >= 0; i--)
 			{
 				Item bagIt = me.arrItemBag[i];
@@ -302,6 +308,100 @@ public static class ModAutoNewAccount
 		}
 	}
 
+	private static bool TryClaimElderGiftOrTalk(Char me, int elderNpcId)
+	{
+		Npc npc = FindNpcInMap(elderNpcId);
+		if (npc != null)
+		{
+			if (Res.distance(me.cx, me.cy, npc.cx, npc.cy) > 36)
+			{
+				ModTeleport.TeleportTo(npc.cx, npc.cy - 3);
+			}
+			me.focusManualTo(npc);
+		}
+
+		if (GameCanvas.menu != null && GameCanvas.menu.showMenu && GameCanvas.menu.menuItems != null && GameCanvas.menu.menuItems.size() > 0)
+		{
+			if (!hasClaimedGiftcode)
+			{
+				for (int i = 0; i < GameCanvas.menu.menuItems.size(); i++)
+				{
+					Command cmd = (Command)GameCanvas.menu.menuItems.elementAt(i);
+					if (cmd == null || string.IsNullOrEmpty(cmd.caption)) continue;
+					string cap = ModNextMapData.RemoveAccents(cmd.caption).ToLower();
+					if (cap.Contains("giftcode") || cap.Contains("ma qua") || cap.Contains("nhap ma"))
+					{
+						hasClaimedGiftcode = true;
+						pendingGiftcodeInput = true;
+						Service.gI().confirmMenu((short)elderNpcId, (sbyte)i);
+						GameCanvas.menu.showMenu = false;
+						return true;
+					}
+					if (cap.Contains("nhan qua") || cap.Contains("qua tan thu"))
+					{
+						Service.gI().confirmMenu((short)elderNpcId, (sbyte)i);
+						GameCanvas.menu.showMenu = false;
+						return true;
+					}
+				}
+				hasClaimedGiftcode = true;
+			}
+			Service.gI().confirmMenu((short)elderNpcId, 0);
+			GameCanvas.menu.showMenu = false;
+			return true;
+		}
+
+		Service.gI().openMenu(elderNpcId);
+		return false;
+	}
+
+	private static bool TryClaimBaHatMitStarterCharm(Char me, int cliffMap)
+	{
+		if (TileMap.mapID != cliffMap)
+		{
+			ModTanSat.autoTanSat = false;
+			ModNextMap.StartNextMap(cliffMap);
+			return true;
+		}
+		Npc baHatMit = FindNpcInMap(21);
+		if (baHatMit == null)
+		{
+			hasClaimedBaHatMitCharm = true;
+			return false;
+		}
+		if (Res.distance(me.cx, me.cy, baHatMit.cx, baHatMit.cy) > 36)
+		{
+			ModTeleport.TeleportTo(baHatMit.cx, baHatMit.cy - 3);
+		}
+		me.focusManualTo(baHatMit);
+
+		if (GameCanvas.menu != null && GameCanvas.menu.showMenu && GameCanvas.menu.menuItems != null && GameCanvas.menu.menuItems.size() > 0)
+		{
+			int charmMenuIdx = -1;
+			for (int i = 0; i < GameCanvas.menu.menuItems.size(); i++)
+			{
+				Command cmd = (Command)GameCanvas.menu.menuItems.elementAt(i);
+				if (cmd == null || string.IsNullOrEmpty(cmd.caption)) continue;
+				string cap = ModNextMapData.RemoveAccents(cmd.caption).ToLower();
+				if (cap.Contains("thuong bua") || cap.Contains("bua 1h") || cap.Contains("nhan bua") || cap.Contains("tang bua"))
+				{
+					charmMenuIdx = i;
+					break;
+				}
+			}
+			if (charmMenuIdx >= 0)
+			{
+				Service.gI().confirmMenu(21, (sbyte)charmMenuIdx);
+			}
+			GameCanvas.menu.showMenu = false;
+			hasClaimedBaHatMitCharm = true;
+			return true;
+		}
+
+		Service.gI().openMenu(21);
+		return true;
+	}
+
 	public static void Update()
 	{
 		if (!isEnabled || !ModMenu.IsInGame()) return;
@@ -313,6 +413,17 @@ public static class ModAutoNewAccount
 		long now = mSystem.currentTimeMillis();
 		if (now - lastActionTime < 550) return;
 		lastActionTime = now;
+
+		if (Assets.src.g.ClientInput.instance != null && GameCanvas.currentScreen == Assets.src.g.ClientInput.instance)
+		{
+			if (pendingGiftcodeInput && Assets.src.g.ClientInput.instance.tf != null && Assets.src.g.ClientInput.instance.tf.Length > 0 && Assets.src.g.ClientInput.instance.tf[0] != null)
+			{
+				pendingGiftcodeInput = false;
+				Assets.src.g.ClientInput.instance.tf[0].setText("tan thu nro");
+				Assets.src.g.ClientInput.instance.perform(2, null);
+				return;
+			}
+		}
 
 		if (me.isDie || me.cHP <= 0)
 		{
@@ -408,6 +519,11 @@ public static class ModAutoNewAccount
 			{
 				if (idx == 0)
 				{
+					if (!hasClaimedGiftcode && TileMap.mapID == homeMap)
+					{
+						TryClaimElderGiftOrTalk(me, elderNpc);
+						return;
+					}
 					if (TileMap.mapID != villageMap)
 					{
 						ModTanSat.autoTanSat = false;
@@ -425,7 +541,7 @@ public static class ModAutoNewAccount
 						ModNextMap.StartNextMap(homeMap);
 						return;
 					}
-					TalkToNpc(me, elderNpc);
+					TryClaimElderGiftOrTalk(me, elderNpc);
 				}
 				return;
 			}
@@ -545,25 +661,12 @@ public static class ModAutoNewAccount
 
 			case 7:
 			{
-				if (!hasClaimedBaHatMitCharm)
+				if (!hasClaimedBaHatMitCharm && me.cPower <= 80000L)
 				{
-					if (TileMap.mapID != cliffMap)
+					if (TryClaimBaHatMitStarterCharm(me, cliffMap))
 					{
-						ModTanSat.autoTanSat = false;
-						ModNextMap.StartNextMap(cliffMap);
 						return;
 					}
-					Npc baHatMit = FindNpcInMap(21);
-					if (baHatMit != null)
-					{
-						TalkToNpc(me, 21, 0);
-						if (GameCanvas.menu != null && !GameCanvas.menu.showMenu)
-						{
-							hasClaimedBaHatMitCharm = true;
-						}
-						return;
-					}
-					hasClaimedBaHatMitCharm = true;
 				}
 
 				if (idx == 0 || me.cPower < 40000L)
@@ -619,6 +722,13 @@ public static class ModAutoNewAccount
 
 			case 8:
 			{
+				if (!hasClaimedBaHatMitCharm && me.cPower <= 140000L)
+				{
+					if (TryClaimBaHatMitStarterCharm(me, cliffMap))
+					{
+						return;
+					}
+				}
 				if (idx == 0 || (idx == 1 && me.cPower < 140000L))
 				{
 					int trainMap = GetPowerTrainMapId(gender);

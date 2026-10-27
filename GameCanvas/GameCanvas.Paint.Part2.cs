@@ -25,7 +25,7 @@ public partial class GameCanvas : IActionListener
 			}
 			if (ModMenu.graphicsQuality >= 2)
 			{
-				if (GameScr.gI() != null && GameScr.gI().isRongThanXuatHien)
+				if (ModMenu.graphicsQuality == 4 || (GameScr.gI() != null && GameScr.gI().isRongThanXuatHien))
 				{
 					g.setColor(0);
 					g.fillRect(0, 0, w, h);

@@ -34,6 +34,8 @@ public sealed class ModAutoCaptcha : IActionListener
 	private static byte[] s_CurrentPngBytes = null;
 	private static string s_SolvedCode = string.Empty;
 	private static int s_TypingIndex = 0;
+	private static bool s_SentEnterConfirm = false;
+	private static int s_NextCharDelayMs = 260;
 	private static long s_StateTimer = 0;
 	private static int s_FailCount = 0;
 	private static volatile bool s_HttpDone = false;
@@ -111,6 +113,8 @@ public sealed class ModAutoCaptcha : IActionListener
 		s_CurrentPngBytes = rawPngBytes;
 		s_SolvedCode = string.Empty;
 		s_TypingIndex = 0;
+		s_SentEnterConfirm = false;
+		s_NextCharDelayMs = 200 + Res.random(0, 201);
 		s_HttpDone = false;
 		s_HttpResponse = null;
 		s_FailCount = 0;
@@ -130,6 +134,8 @@ public sealed class ModAutoCaptcha : IActionListener
 		s_State = CaptchaState.Idle;
 		s_SolvedCode = string.Empty;
 		s_TypingIndex = 0;
+		s_SentEnterConfirm = false;
+		s_NextCharDelayMs = 200 + Res.random(0, 201);
 		s_HttpDone = false;
 		s_HttpResponse = null;
 #if !NET8_0_OR_GREATER
@@ -200,6 +206,8 @@ public sealed class ModAutoCaptcha : IActionListener
 					{
 						s_SolvedCode = parsed;
 						s_TypingIndex = 0;
+						s_SentEnterConfirm = false;
+						s_NextCharDelayMs = 200 + Res.random(0, 201);
 						s_State = CaptchaState.TypingChars;
 						s_StateTimer = now;
 						GameScr.info1.addInfo("Auto Captcha: Nhận mã [" + s_SolvedCode + "], đang nhập...", 0);
@@ -216,13 +224,20 @@ public sealed class ModAutoCaptcha : IActionListener
 				break;
 
 			case CaptchaState.TypingChars:
-				if (now - s_StateTimer >= 260)
+				if (now - s_StateTimer >= s_NextCharDelayMs)
 				{
 					s_StateTimer = now;
+					s_NextCharDelayMs = 200 + Res.random(0, 201);
 					if (s_TypingIndex < s_SolvedCode.Length)
 					{
 						char rawCh = s_SolvedCode[s_TypingIndex++];
 						SendSingleCaptchaChar(rawCh);
+					}
+					else if (!s_SentEnterConfirm)
+					{
+						s_SentEnterConfirm = true;
+						Service.gI().mobCapcha('\r');
+						s_State = CaptchaState.WaitVerifyResult;
 					}
 					else
 					{
@@ -256,6 +271,7 @@ public sealed class ModAutoCaptcha : IActionListener
 			if (disconnectOnFail)
 			{
 				GameScr.info1.addInfo("Auto Captcha sai quá " + maxFailCount + " lần! Tự ngắt kết nối bảo vệ nick.", 0);
+				ModAutoLogin.NotifyIntentionalDisconnect();
 				Session_ME.gI().close();
 			}
 			else

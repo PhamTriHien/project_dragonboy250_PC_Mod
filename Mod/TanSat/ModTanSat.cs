@@ -31,6 +31,7 @@ public static class ModTanSat
 				pointMoveStuckSince = 0;
 				chargeStuckSince = 0;
 				ModTeleport.ClearEchoes();
+				ModAStarPathFinder.ResetPath();
 				ignoredMobUntil.Clear();
 			}
 		}
@@ -74,11 +75,45 @@ public static class ModTanSat
 	private static long lastTrackedXu = -1;
 	private static int lastTrackedCharId = -1;
 	private static long lastResetZoneTime = 0;
+	private static long lastTrainPetKeepAliveTime = 0;
 	public static readonly HashSet<int> frozenSkillIds = new HashSet<int>();
 	public static readonly Dictionary<int, int> customSkillDelays = new Dictionary<int, int>();
 	private static int editingSkillDelayId = -1;
 	private static string editingSkillDelayName = string.Empty;
 	private static bool reopenUiAfterSkillDelayInput = false;
+	private static int numericInputMode = 0;
+
+	public static void ShowInputResetZoneMinutes()
+	{
+		if (GameCanvas.inputDlg == null) return;
+		numericInputMode = 1;
+		reopenUiAfterSkillDelayInput = ModUI.uiCustomOpen;
+		ModUI.uiCustomOpen = false;
+		ModMenu.modMenuOpen = false;
+		GameCanvas.inputDlg.show("Tự Reset Khu sau (phút, 0 = Tắt, 1-999):", new Command("OK", new SkillDelayActionListener(), 2, null), TField.INPUT_TYPE_NUMERIC);
+		if (GameCanvas.inputDlg.tfInput != null)
+		{
+			GameCanvas.inputDlg.tfInput.setMaxTextLenght(4);
+			GameCanvas.inputDlg.tfInput.setText(autoResetZone ? resetZoneMinutes.ToString() : "0");
+			if (!Main.isPC) GameCanvas.inputDlg.tfInput.setFocusWithKb(isFocus: true);
+		}
+	}
+
+	public static void ShowInputTimeAttack()
+	{
+		if (GameCanvas.inputDlg == null) return;
+		numericInputMode = 2;
+		reopenUiAfterSkillDelayInput = ModUI.uiCustomOpen;
+		ModUI.uiCustomOpen = false;
+		ModMenu.modMenuOpen = false;
+		GameCanvas.inputDlg.show("Độ trễ Time Attack chung (50 - 5000 ms):", new Command("OK", new SkillDelayActionListener(), 3, null), TField.INPUT_TYPE_NUMERIC);
+		if (GameCanvas.inputDlg.tfInput != null)
+		{
+			GameCanvas.inputDlg.tfInput.setMaxTextLenght(5);
+			GameCanvas.inputDlg.tfInput.setText(timeAttack.ToString());
+			if (!Main.isPC) GameCanvas.inputDlg.tfInput.setFocusWithKb(isFocus: true);
+		}
+	}
 
 	public static void ToggleSkillFrozen(int skillTplId)
 	{
@@ -142,6 +177,41 @@ public static class ModTanSat
 					}
 					ModConfig.SaveConfig();
 					SoundMn.gI().buttonClick();
+				}
+				else if (idAction == 2 && numericInputMode == 1 && GameCanvas.inputDlg != null && GameCanvas.inputDlg.tfInput != null)
+				{
+					string raw = (GameCanvas.inputDlg.tfInput.getText() ?? string.Empty).Trim();
+					if (int.TryParse(raw, out int mins) && mins > 0)
+					{
+						if (mins > 999) mins = 999;
+						resetZoneMinutes = mins;
+						autoResetZone = true;
+						lastResetZoneTime = mSystem.currentTimeMillis();
+						GameScr.info1?.addInfo("Tự Reset Khu sau mỗi " + resetZoneMinutes + " phút!", 0);
+					}
+					else
+					{
+						autoResetZone = false;
+						lastResetZoneTime = 0;
+						GameScr.info1?.addInfo("Đã tắt Tự Reset Khu", 0);
+					}
+					numericInputMode = 0;
+					ModConfig.SaveConfig();
+					SoundMn.gI().buttonClick();
+				}
+				else if (idAction == 3 && numericInputMode == 2 && GameCanvas.inputDlg != null && GameCanvas.inputDlg.tfInput != null)
+				{
+					string raw = (GameCanvas.inputDlg.tfInput.getText() ?? string.Empty).Trim();
+					if (int.TryParse(raw, out int ms))
+					{
+						if (ms < 50) ms = 50;
+						if (ms > 5000) ms = 5000;
+						timeAttack = ms;
+						ModConfig.SaveConfig();
+						GameScr.info1?.addInfo("Time Attack: " + timeAttack + "ms", 0);
+						SoundMn.gI().buttonClick();
+					}
+					numericInputMode = 0;
 				}
 				GameCanvas.endDlg();
 				if (reopenUiAfterSkillDelayInput)
@@ -412,6 +482,11 @@ public static class ModTanSat
 					dist = (euclidDist / 2) + (tileCost * 20);
 				}
 			}
+			else if (!useTeleport)
+			{
+				int aStarTiles = ModAStarPathFinder.GetPathTileCost(me.cx, me.cy, m.x, m.y);
+				dist = (euclidDist / 2) + (aStarTiles * 18);
+			}
 			else
 			{
 				dist = euclidDist;
@@ -609,8 +684,8 @@ public static class ModTanSat
 		if (now - lastResetZoneTime >= intervalMs)
 		{
 			lastResetZoneTime = now;
-			Service.gI().requestChangeZone(TileMap.zoneID, -1);
-			GameScr.info1?.addInfo("Tự làm mới Khu " + TileMap.zoneID + " (" + resetZoneMinutes + "p)!", 0);
+			Service.gI().requestChangeZone(-1, -1);
+			GameScr.info1?.addInfo("Tự làm mới sang Khu ngẫu nhiên (" + resetZoneMinutes + "p)!", 0);
 		}
 	}
 
@@ -655,9 +730,19 @@ public static class ModTanSat
 			Skill s = skills[i];
 			if (s == null || s.template == null || ModTanSatFilter.IsAttackSkill(s)) continue;
 			int tplId = s.template.id;
-			// Chỉ tự bật các skill buff/hỗ trợ: Thái dương hạ san (6), Trị thương (7), Đẻ trứng (12), Biến khỉ (13), Khiên năng lượng (19), Huýt sáo (21)
-			if (tplId != 6 && tplId != 7 && tplId != 12 && tplId != 13 && tplId != 19 && tplId != 21) continue;
-			if (tplId == 7 && me.cHPFull > 0 && (me.cHP * 100L / me.cHPFull) > 65) continue;
+			if (tplId != 6 && tplId != 7 && tplId != 8 && tplId != 12 && tplId != 13 && tplId != 19 && tplId != 21) continue;
+			if (tplId == 7)
+			{
+				if (me.cgender != 1) continue;
+				if (me.cHPFull > 0 && (me.cHP * 100L / me.cHPFull) > 65) continue;
+			}
+			if (tplId == 8)
+			{
+				if (me.isCharge || me.statusMe == 4) continue;
+				bool lowHp = me.cHPFull > 0 && (me.cHP * 100L / me.cHPFull) < 50;
+				bool lowMp = me.cMPFull > 0 && (me.cMP * 100L / me.cMPFull) < 50;
+				if (!lowHp && !lowMp) continue;
+			}
 			if (tplId == 13 && me.isMonkey == 1) continue;
 			if (tplId == 19 && me.protectEff) continue;
 
@@ -665,6 +750,38 @@ public static class ModTanSat
 			if (now - s.lastTimeUseThisSkill >= cd && ModTanSatFilter.HasEnoughMp(me, s))
 			{
 				lastSupportSkillTime = now;
+				if (tplId == 7)
+				{
+					Skill prevSkill = me.myskill;
+					Service.gI().selectSkill(7);
+					MyVector vChar = new MyVector();
+					vChar.addElement(me);
+					Service.gI().sendPlayerAttack(new MyVector(), vChar, 2);
+					s.lastTimeUseThisSkill = now;
+					if (prevSkill != null && prevSkill.template != null && prevSkill.template.id != 7)
+					{
+						Service.gI().selectSkill(prevSkill.template.id);
+						lastSentSkillTemplateId = prevSkill.template.id;
+					}
+					else
+					{
+						lastSentSkillTemplateId = 7;
+					}
+					waitUntilTime = now + (ModTeleport.IsColdPlanetAntiCheckActive() ? 120 : 350);
+					return true;
+				}
+				if (tplId == 8)
+				{
+					me.myskill = s;
+					Service.gI().selectSkill(8);
+					Service.gI().skill_not_focus(1);
+					me.isCharge = true;
+					me.last = (me.cur = now);
+					s.lastTimeUseThisSkill = now;
+					lastSentSkillTemplateId = 8;
+					waitUntilTime = now + 500;
+					return true;
+				}
 				me.myskill = s;
 				Service.gI().selectSkill(tplId);
 				GameScr.gI().doSelectSkill(s, isShortcut: true);
@@ -730,6 +847,7 @@ public static class ModTanSat
 				pointMoveStuckSince = 0;
 				chargeStuckSince = 0;
 				ModTeleport.ClearEchoes();
+				ModAStarPathFinder.ResetPath();
 				ignoredMobUntil.Clear();
 				waitUntilTime = now + 250;
 				return;
@@ -836,11 +954,23 @@ public static class ModTanSat
 			CheckAndRestoreStamina(me, now);
 			CheckAutoChangeZone(me, now);
 			CheckAutoResetZone(me, now);
-			if (trainPets && me.havePet && Char.myPetz() != null && Char.myPetz().petStatus != 2 && Char.myPetz().petStatus != 1 && now - lastSupportSkillTime > 3000)
+			if (trainPets && me.havePet)
 			{
-				lastSupportSkillTime = now;
-				Service.gI().petStatus(2);
-				Char.myPetz().petStatus = 2;
+				if (!ModAutoPet.petAutoAttackOnBark)
+				{
+					ModAutoPet.petAutoAttackOnBark = true;
+				}
+				if (now - lastTrainPetKeepAliveTime >= 5000)
+				{
+					lastTrainPetKeepAliveTime = now;
+					Char myPet = Char.myPetz();
+					if (myPet == null || myPet.petStatus != 1)
+					{
+						Service.gI().petStatus(1);
+						if (myPet != null) myPet.petStatus = 1;
+						ModAutoPet.RequestSilentPetInfo();
+					}
+				}
 			}
 			if (UpdateSupportAndFreezeSkills(me, now))
 			{
@@ -1207,8 +1337,13 @@ public static class ModTanSat
 				{
 					int safeX, safeY;
 					GetSafeAttackPosition(currentFarmTarget, isRanged, out safeX, out safeY);
-					me.moveTo(safeX, safeY, 0);
-					return;
+					if (!ModAStarPathFinder.StepTowards(safeX, safeY))
+					{
+						targetLockTime = now;
+						return;
+					}
+					lastTeleportTargetMobId = currentFarmTarget.mobId;
+					lastTeleportTime = now;
 				}
 			}
 
@@ -1222,6 +1357,12 @@ public static class ModTanSat
 				me.delayFall = 0;
 				me.cvx = 0;
 				me.cvy = 0;
+			}
+
+			if (trainPets && me.havePet)
+			{
+				targetLockTime = now;
+				return;
 			}
 
 			// Đợi máy chủ xác nhận tọa độ dịch chuyển (RESET_POINT_CONFIRM) trước khi xuất đòn đầu tiên để tránh đấm hụt lúc đang đồng bộ

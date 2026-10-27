@@ -48,9 +48,9 @@ public static class ModUINextMap
 	public static void UpdateDragScroll(int px, int py, int uiX, int uiY, int uiW, int uiH)
 	{
 		int listX = uiX + 4;
-		int listY = uiY + 73;
+		int listY = uiY + 89;
 		int listW = uiW - 8;
-		int listH = uiH - 77;
+		int listH = uiH - 93;
 		if (listH < 40) listH = 40;
 
 		if (ModNextMap.selectedPlanetTab < 0 || ModNextMap.selectedPlanetTab >= ModNextMap.planetMapIds.Length)
@@ -149,17 +149,24 @@ public static class ModUINextMap
 			ModUI.PaintNativeButton(bx, by, bw, 15, tabLabel, ModNextMap.selectedPlanetTab == t, g);
 		}
 
-		// Hàng tùy chọn Xmap nhanh: CS VIP, CS Thường, Tua Tàu
+		// Hàng 1 tùy chọn Xmap: CS VIP, CS Thường, Tua Tàu, Tàu 0s
+		int optW4 = (uiW - 20) / 4;
+		ModUI.PaintNativeButton(uiX + 4, uiY + 55, optW4, 15, "CS VIP: " + (ModNextMap.useCapsuleVip ? "BẬT" : "TẮT"), ModNextMap.useCapsuleVip, g);
+		ModUI.PaintNativeButton(uiX + 8 + optW4, uiY + 55, optW4, 15, "CS Thg: " + (ModNextMap.useNormalCapsule ? "BẬT" : "TẮT"), ModNextMap.useNormalCapsule, g);
+		ModUI.PaintNativeButton(uiX + 12 + optW4 * 2, uiY + 55, optW4, 15, "Tua Tàu: " + (ModNextMap.speedBoostTransport ? "BẬT" : "TẮT"), ModNextMap.speedBoostTransport, g);
+		ModUI.PaintNativeButton(uiX + 16 + optW4 * 3, uiY + 55, optW4, 15, "Tàu 0s: " + (ModNextMap.instantSpaceshipSkip ? "BẬT" : "TẮT"), ModNextMap.instantSpaceshipSkip, g);
+
+		// Hàng 2 tùy chọn Xmap: Đi An Toàn, Nhịp Map, Nhịp Capsule
 		int optBtnW = (uiW - 16) / 3;
-		ModUI.PaintNativeButton(uiX + 4, uiY + 55, optBtnW, 15, "CS VIP: " + (ModNextMap.useCapsuleVip ? "BẬT" : "TẮT"), ModNextMap.useCapsuleVip, g);
-		ModUI.PaintNativeButton(uiX + 8 + optBtnW, uiY + 55, optBtnW, 15, "CS Thường: " + (ModNextMap.useNormalCapsule ? "BẬT" : "TẮT"), ModNextMap.useNormalCapsule, g);
-		ModUI.PaintNativeButton(uiX + 12 + optBtnW * 2, uiY + 55, optBtnW, 15, "Tua Tàu: " + (ModNextMap.speedBoostTransport ? "BẬT" : "TẮT"), ModNextMap.speedBoostTransport, g);
+		ModUI.PaintNativeButton(uiX + 4, uiY + 71, optBtnW, 15, "An Toàn: " + (ModNextMap.useSafeMovement ? "BẬT" : "TẮT"), ModNextMap.useSafeMovement, g);
+		ModUI.PaintNativeButton(uiX + 8 + optBtnW, uiY + 71, optBtnW, 15, "Nhịp Map: " + ModNextMap.delayXmapMs + "ms", false, g);
+		ModUI.PaintNativeButton(uiX + 12 + optBtnW * 2, uiY + 71, optBtnW, 15, "Nhịp CS: " + ModNextMap.delayUseCapsuleMs + "ms", false, g);
 
 		// Khung danh sách các map co dãn động
 		int listX = uiX + 4;
-		int listY = uiY + 73;
+		int listY = uiY + 89;
 		int listW = uiW - 8;
-		int listH = uiH - 77;
+		int listH = uiH - 93;
 		if (listH < 40) listH = 40;
 
 		GameCanvas.paintz.paintFrameSimple(listX, listY, listW, listH, g);
@@ -262,36 +269,69 @@ public static class ModUINextMap
 			}
 		}
 
-		int optBtnW = (uiW - 16) / 3;
-		if (py >= uiY + 54 && py <= uiY + 71)
+		int optW4 = (uiW - 20) / 4;
+		if (py >= uiY + 54 && py <= uiY + 70)
 		{
-			if (px >= uiX + 4 && px <= uiX + 4 + optBtnW)
+			if (px >= uiX + 4 && px <= uiX + 4 + optW4)
 			{
 				ModNextMap.useCapsuleVip = !ModNextMap.useCapsuleVip;
 				ModConfig.SaveConfig();
 				SoundMn.gI().buttonClick();
 				return true;
 			}
-			if (px >= uiX + 8 + optBtnW && px <= uiX + 8 + optBtnW * 2)
+			if (px >= uiX + 8 + optW4 && px <= uiX + 8 + optW4 * 2)
 			{
 				ModNextMap.useNormalCapsule = !ModNextMap.useNormalCapsule;
 				ModConfig.SaveConfig();
 				SoundMn.gI().buttonClick();
 				return true;
 			}
-			if (px >= uiX + 12 + optBtnW * 2 && px <= uiX + 12 + optBtnW * 3)
+			if (px >= uiX + 12 + optW4 * 2 && px <= uiX + 12 + optW4 * 3)
 			{
 				ModNextMap.speedBoostTransport = !ModNextMap.speedBoostTransport;
 				ModConfig.SaveConfig();
 				SoundMn.gI().buttonClick();
 				return true;
 			}
+			if (px >= uiX + 16 + optW4 * 3 && px <= uiX + 16 + optW4 * 4)
+			{
+				ModNextMap.instantSpaceshipSkip = !ModNextMap.instantSpaceshipSkip;
+				ModConfig.SaveConfig();
+				GameScr.info1.addInfo("Bỏ qua Tàu Vũ Trụ 0ms: " + (ModNextMap.instantSpaceshipSkip ? "BẬT" : "TẮT"), 0);
+				SoundMn.gI().buttonClick();
+				return true;
+			}
+		}
+
+		int optBtnW = (uiW - 16) / 3;
+		if (py >= uiY + 71 && py <= uiY + 87)
+		{
+			if (px >= uiX + 4 && px <= uiX + 4 + optBtnW)
+			{
+				ModNextMap.useSafeMovement = !ModNextMap.useSafeMovement;
+				ModConfig.SaveConfig();
+				GameScr.info1.addInfo("Xmap Đi An Toàn: " + (ModNextMap.useSafeMovement ? "BẬT" : "TẮT"), 0);
+				SoundMn.gI().buttonClick();
+				return true;
+			}
+			if (px >= uiX + 8 + optBtnW && px <= uiX + 8 + optBtnW * 2)
+			{
+				ModNextMap.ShowInputDelayXmap();
+				SoundMn.gI().buttonClick();
+				return true;
+			}
+			if (px >= uiX + 12 + optBtnW * 2 && px <= uiX + 12 + optBtnW * 3)
+			{
+				ModNextMap.ShowInputDelayCapsule();
+				SoundMn.gI().buttonClick();
+				return true;
+			}
 		}
 
 		int listX = uiX + 4;
-		int listY = uiY + 73;
+		int listY = uiY + 89;
 		int listW = uiW - 8;
-		int listH = uiH - 77;
+		int listH = uiH - 93;
 		if (listH < 40) listH = 40;
 		int btnW = (listW - 10) / 2;
 		int btnH = 16;

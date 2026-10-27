@@ -666,6 +666,18 @@ public static class ModWaypoint
 		{
 			return (menuLength >= 4) ? 3 : 0;
 		}
+		if (currentMapId == 50 && targetMapId == 154)
+		{
+			return (menuLength > 1) ? 1 : 0;
+		}
+		if (currentMapId == 154 && targetMapId == 155)
+		{
+			return (menuLength > 1) ? 1 : 0;
+		}
+		if (currentMapId == 0 && targetMapId == 149)
+		{
+			return (menuLength >= 4) ? 3 : 0;
+		}
 		return 0;
 	}
 
@@ -739,6 +751,10 @@ public static class ModWaypoint
 					if (TileMap.mapID == 48 && targetPlanetMapId == 50)
 					{
 						Service.gI().confirmMenu((short)npcTemplateId, 1);
+					}
+					else if (TileMap.mapID == 0 && targetPlanetMapId == 149)
+					{
+						Service.gI().confirmMenu((short)npcTemplateId, 0);
 					}
 					GameCanvas.menu.showMenu = false;
 					ModNextMap.NotifyNpcMenuConfirmed();
@@ -849,7 +865,42 @@ public static class ModWaypoint
 					selectedIndex = i;
 					break;
 				}
-				if (targetPlanet == 50 && (text.Contains("thánh địa") || text.Contains("thanh dia") || text.Contains("kaio") || text.Contains("sanctuary") || text.Contains("đi đến") || text.Contains("đồng ý")))
+				if (targetPlanet == 50 && (text.Contains("thánh địa") || text.Contains("thanh dia") || text.Contains("kaio") || text.Contains("sanctuary") || text.Contains("đi đến") || text.Contains("đồng ý") || text.Contains("quay về") || text.Contains("trở về")))
+				{
+					selectedIndex = i;
+					break;
+				}
+				if (targetPlanet == 154 && (text.Contains("bill") || text.Contains("beerus") || text.Contains("hủy diệt") || text.Contains("huy diet") || text.Contains("quay về") || text.Contains("trở về")))
+				{
+					selectedIndex = i;
+					break;
+				}
+				if (targetPlanet == 155 && (text.Contains("ngục tù") || text.Contains("nguc tu") || text.Contains("prison") || text.Contains("đến") || text.Contains("đi đến")))
+				{
+					selectedIndex = i;
+					break;
+				}
+				if (targetPlanet == 153 && (text.Contains("bang hội") || text.Contains("bang hoi") || text.Contains("lãnh địa") || text.Contains("lanh dia") || text.Contains("clan")))
+				{
+					selectedIndex = i;
+					break;
+				}
+				if (targetPlanet == 156 && (text.Contains("đồng ý") || text.Contains("dong y") || text.Contains("vào") || text.Contains("vao") || text.Contains("ok") || text.Contains("yes")))
+				{
+					selectedIndex = i;
+					break;
+				}
+				if (targetPlanet == 5 && TileMap.mapID == 153 && (text.Contains("đảo kame") || text.Contains("dao kame") || text.Contains("kame") || text.Contains("quay về") || text.Contains("trở về")))
+				{
+					selectedIndex = i;
+					break;
+				}
+				if (targetPlanet == 53 && TileMap.mapID == 27 && (text.Contains("vào") || text.Contains("đồng ý") || text.Contains("doanh trại") || text.Contains("độc nhãn") || text.Contains("ok") || text.Contains("yes")))
+				{
+					selectedIndex = i;
+					break;
+				}
+				if (targetPlanet == 149 && TileMap.mapID == 0 && (text.Contains("khí gas") || text.Contains("khi gas") || text.Contains("hủy diệt") || text.Contains("vào") || text.Contains("đồng ý")))
 				{
 					selectedIndex = i;
 					break;
@@ -897,6 +948,7 @@ public static class ModWaypoint
 			int npcTemplateId = (npc != null && npc.template != null) ? npc.template.npcTemplateId : ((npc != null) ? npc.npcId : 10);
 			Service.gI().confirmMenu((short)npcTemplateId, (sbyte)selectedIndex);
 			if ((TileMap.mapID == 48 && targetPlanet == 50 && selectedIndex == 3) ||
+			    (TileMap.mapID == 0 && targetPlanet == 149 && selectedIndex == 3) ||
 			    ((TileMap.mapID == 24 || TileMap.mapID == 25 || TileMap.mapID == 26) && targetPlanet >= 85 && targetPlanet <= 91 && menuItems.Length < 7))
 			{
 				isWaitingShipMenu = true;

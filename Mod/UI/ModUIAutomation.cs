@@ -15,7 +15,7 @@ public static class ModUIAutomation
 
 	private static int GetContentHeight()
 	{
-		return (subTab == 0) ? 340 : 294;
+		return (subTab == 0) ? 340 : 312;
 	}
 
 	public static void OnMouseScroll(float wheel)
@@ -124,12 +124,13 @@ public static class ModUIAutomation
 		mFont.tahoma_7_green2.drawString(g, "SET ĐỒ NHANH (HÀNH TRANG):", x + 2, curY + 2, mFont.LEFT);
 		curY += 18;
 
-		int setBtnW = (w - 6) / 3;
+		int setBtnW = (w - 9) / 4;
 		int c1 = ModInventoryExt.GetSetCount(1);
 		int c2 = ModInventoryExt.GetSetCount(2);
-		ModUI.PaintNativeButton(x, curY, setBtnW, 16, "Mặc Set 1 (" + c1 + ")", c1 > 0, g);
-		ModUI.PaintNativeButton(x + setBtnW + 3, curY, setBtnW, 16, "Mặc Set 2 (" + c2 + ")", c2 > 0, g);
-		ModUI.PaintNativeButton(x + (setBtnW + 3) * 2, curY, setBtnW, 16, "Xóa Set 1/2", false, g);
+		ModUI.PaintNativeButton(x, curY, setBtnW, 16, "Set 1 (" + c1 + ")", c1 > 0, g);
+		ModUI.PaintNativeButton(x + setBtnW + 3, curY, setBtnW, 16, "Set 2 (" + c2 + ")", c2 > 0, g);
+		ModUI.PaintNativeButton(x + (setBtnW + 3) * 2, curY, setBtnW, 16, "Xem Set", (c1 + c2) > 0, g);
+		ModUI.PaintNativeButton(x + (setBtnW + 3) * 3, curY, setBtnW, 16, "Xóa Set", false, g);
 		curY += 21;
 
 		// 1. AUTO CỘNG ĐIỂM TIỀM NĂNG
@@ -278,7 +279,7 @@ public static class ModUIAutomation
 		ModUI.PaintNativeButton(x, curY, petBtnW, 16, "HUD Đệ", ModAutoPet.showPetHUD, g);
 		ModUI.PaintNativeButton(x + (petBtnW + 3), curY, petBtnW, 16, "Né Boss", ModAutoPet.petAvoidBoss, g);
 		ModUI.PaintNativeButton(x + (petBtnW + 3) * 2, curY, petBtnW, 16, "Cờ Đen", ModAutoPet.petAutoFlag, g);
-		ModUI.PaintNativeButton(x + (petBtnW + 3) * 3, curY, petBtnW, 16, "Trị Thương", ModAutoPet.autoNamekHeal, g);
+		ModUI.PaintNativeButton(x + (petBtnW + 3) * 3, curY, petBtnW, 16, ModAutoPet.GetNamekHealShortLabel(), ModAutoPet.autoNamekHeal, g);
 		curY += 18;
 
 		int petW3 = (w - 6) / 3;
@@ -345,6 +346,11 @@ public static class ModUIAutomation
 		ModUI.PaintNativeButton(x + (schedW4 + 3) * 3, curY, schedW4, 16, "Nhập Giờ", !isAllDay && !isDay && !isNight, g);
 		curY += 18;
 
+		int slotTabW = (w - 3) / 2;
+		ModUI.PaintNativeButton(x, curY, slotTabW, 16, "6 Slot Train", ModSchedule.scheduleSlotEditTab == 0, g);
+		ModUI.PaintNativeButton(x + slotTabW + 3, curY, slotTabW, 16, "6 Slot Nghỉ On/Off", ModSchedule.scheduleSlotEditTab == 1, g);
+		curY += 18;
+
 		int slotW3 = (w - 6) / 3;
 		for (int row = 0; row < 2; row++)
 		{
@@ -352,8 +358,17 @@ public static class ModUIAutomation
 			{
 				int sIdx = row * 3 + col;
 				int sx = x + col * (slotW3 + 3);
-				bool hasSlot = !string.IsNullOrEmpty(ModSchedule.trainSlotsRaw[sIdx]);
-				ModUI.PaintNativeButton(sx, curY, slotW3, 16, "Slot " + (sIdx + 1) + (hasSlot ? " *" : ""), hasSlot, g);
+				if (ModSchedule.scheduleSlotEditTab == 0)
+				{
+					bool hasSlot = !string.IsNullOrEmpty(ModSchedule.trainSlotsRaw[sIdx]);
+					ModUI.PaintNativeButton(sx, curY, slotW3, 16, "Train " + (sIdx + 1) + (hasSlot ? " *" : ""), hasSlot, g);
+				}
+				else
+				{
+					bool hasOff = !string.IsNullOrEmpty(ModSchedule.onOffSlotsRaw[sIdx]);
+					string lbl = hasOff ? ModSchedule.onOffSlotsRaw[sIdx] : ("Nghỉ " + (sIdx + 1));
+					ModUI.PaintNativeButton(sx, curY, slotW3, 16, lbl, hasOff, g);
+				}
 			}
 			curY += (row == 0) ? 18 : 21;
 		}
@@ -422,9 +437,9 @@ public static class ModUIAutomation
 	{
 		int curY = y;
 
-		// 0. Set Đồ Nhanh (Set 1 / Set 2 / Xóa)
+		// 0. Set Đồ Nhanh (Set 1 / Set 2 / Xem Set / Xóa)
 		curY += 18;
-		int setBtnW = (w - 6) / 3;
+		int setBtnW = (w - 9) / 4;
 		if (py >= curY - 2 && py <= curY + 18)
 		{
 			if (px >= x && px <= x + setBtnW)
@@ -437,7 +452,12 @@ public static class ModUIAutomation
 				ModInventoryExt.EquipSet(2);
 				return true;
 			}
-			if (px >= x + (setBtnW + 3) * 2 && px <= x + w)
+			if (px >= x + (setBtnW + 3) * 2 && px <= x + (setBtnW + 3) * 2 + setBtnW)
+			{
+				ModInventoryExt.ShowEquipSetsInfo();
+				return true;
+			}
+			if (px >= x + (setBtnW + 3) * 3 && px <= x + w)
 			{
 				ModInventoryExt.ClearSets();
 				return true;
@@ -716,10 +736,8 @@ public static class ModUIAutomation
 			}
 			if (px >= x + (petBtnW + 3) * 3 && px <= x + w)
 			{
-				ModAutoPet.autoNamekHeal = !ModAutoPet.autoNamekHeal;
-				ModConfig.SaveConfig();
-				GameScr.info1.addInfo("Auto Trị Thương Đệ: " + (ModAutoPet.autoNamekHeal ? "BẬT" : "TẮT"), 0);
 				SoundMn.gI().buttonClick();
+				ModAutoPet.ShowNamekHealMenu();
 				return true;
 			}
 		}
@@ -893,6 +911,24 @@ public static class ModUIAutomation
 		}
 		curY += 18;
 
+		int slotTabW = (w - 3) / 2;
+		if (py >= curY - 2 && py <= curY + 18)
+		{
+			if (px >= x && px <= x + slotTabW)
+			{
+				ModSchedule.scheduleSlotEditTab = 0;
+				SoundMn.gI().buttonClick();
+				return true;
+			}
+			if (px >= x + slotTabW + 3 && px <= x + w)
+			{
+				ModSchedule.scheduleSlotEditTab = 1;
+				SoundMn.gI().buttonClick();
+				return true;
+			}
+		}
+		curY += 18;
+
 		int slotW3 = (w - 6) / 3;
 		for (int row = 0; row < 2; row++)
 		{
@@ -904,7 +940,14 @@ public static class ModUIAutomation
 					int sx = x + col * (slotW3 + 3);
 					if (px >= sx && px <= sx + slotW3)
 					{
-						ModSchedule.ShowInputTrainSlot(sIdx);
+						if (ModSchedule.scheduleSlotEditTab == 0)
+						{
+							ModSchedule.ShowInputTrainSlot(sIdx);
+						}
+						else
+						{
+							ModSchedule.ShowInputOnOffSlot(sIdx);
+						}
 						SoundMn.gI().buttonClick();
 						return true;
 					}

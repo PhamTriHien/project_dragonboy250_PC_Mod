@@ -24,6 +24,7 @@ public static class ModBossNotice
 	public static bool isAutoScanBossZone = false;
 	public static bool isAutoAttackBoss = false;
 	public static bool isAutoFocusBoss = false;
+	public static bool isAutoFollowBoss = false;
 	public static bool isKsSuperBroly1Hp = false;
 	public static string filterBossNamesRaw = "";
 	public static int hudStartY = 38;
@@ -33,6 +34,7 @@ public static class ModBossNotice
 	private static long lastScanZoneTime = 0;
 	private static int currentScanZoneIdx = 0;
 	private static long lastAutoAttackBossTime = 0;
+	private static long lastFollowBossMoveTime = 0;
 
 	public static bool MatchesBossFilter(string bossName)
 	{
@@ -112,8 +114,24 @@ public static class ModBossNotice
 		SoundMn.gI().buttonClick();
 	}
 
+	public static void ToggleAutoFocusBoss()
+	{
+		isAutoFocusBoss = !isAutoFocusBoss;
+		ModConfig.SaveConfig();
+		GameScr.info1.addInfo("Tự gim Boss: " + (isAutoFocusBoss ? "BẬT" : "TẮT"), 0);
+		SoundMn.gI().buttonClick();
+	}
+
+	public static void ToggleAutoFollowBoss()
+	{
+		isAutoFollowBoss = !isAutoFollowBoss;
+		ModConfig.SaveConfig();
+		GameScr.info1.addInfo("Tự đi theo Boss: " + (isAutoFollowBoss ? "BẬT" : "TẮT"), 0);
+		SoundMn.gI().buttonClick();
+	}
+
 	/// <summary>
-	/// Tìm kiếm thực thể Boss đang còn sống trong bản đồ hiện tại.
+	/// Tìm kiếm thực thể Boss đang còn sống trong bản đồ hiện tại (ưu tiên Boss có lượng máu thấp nhất).
 	/// </summary>
 	public static Char FindLiveBossInMap()
 	{
@@ -121,6 +139,7 @@ public static class ModBossNotice
 		{
 			return null;
 		}
+		Char bestBoss = null;
 		for (int i = 0; i < GameScr.vCharInMap.size(); i++)
 		{
 			Char c = (Char)GameScr.vCharInMap.elementAt(i);
@@ -128,11 +147,38 @@ public static class ModBossNotice
 			{
 				if ((c.cTypePk == 5 || IsBossName(c.cName)) && MatchesBossFilter(c.cName))
 				{
-					return c;
+					if (bestBoss == null || c.cHP < bestBoss.cHP)
+					{
+						bestBoss = c;
+					}
 				}
 			}
 		}
-		return null;
+		return bestBoss;
+	}
+
+	public static Char FindSuperBrolyInMap()
+	{
+		if (GameScr.vCharInMap == null)
+		{
+			return null;
+		}
+		Char bestBroly = null;
+		for (int i = 0; i < GameScr.vCharInMap.size(); i++)
+		{
+			Char c = (Char)GameScr.vCharInMap.elementAt(i);
+			if (c != null && c.charID < 0 && c.cHP > 0 && !c.isDie && c.statusMe != 14 && c.statusMe != 5 && !string.IsNullOrEmpty(c.cName))
+			{
+				if (c.cName.IndexOf("Super Broly", StringComparison.OrdinalIgnoreCase) >= 0)
+				{
+					if (bestBroly == null || c.cHP < bestBroly.cHP)
+					{
+						bestBroly = c;
+					}
+				}
+			}
+		}
+		return bestBroly;
 	}
 
 	/// <summary>
@@ -140,7 +186,7 @@ public static class ModBossNotice
 	/// </summary>
 	public static void UpdateAutoBoss()
 	{
-		if ((!isAutoScanBossZone && !isAutoAttackBoss && !isAutoFocusBoss && !isKsSuperBroly1Hp) || !ModMenu.IsInGame())
+		if ((!isAutoScanBossZone && !isAutoAttackBoss && !isAutoFocusBoss && !isAutoFollowBoss && !isKsSuperBroly1Hp) || !ModMenu.IsInGame())
 		{
 			return;
 		}
@@ -155,6 +201,38 @@ public static class ModBossNotice
 		}
 
 		long now = mSystem.currentTimeMillis();
+
+		if (isKsSuperBroly1Hp)
+		{
+			Char superBroly = FindSuperBrolyInMap();
+			if (superBroly != null)
+			{
+				me.charFocus = superBroly;
+				me.mobFocus = null;
+				me.npcFocus = null;
+				me.itemFocus = null;
+				if (superBroly.cHP <= 100)
+				{
+					int sbDist = Res.distance(me.cx, me.cy, superBroly.cx, superBroly.cy);
+					if (sbDist > 48 && now - lastAutoAttackBossTime >= 150)
+					{
+						ModTeleport.TeleportTo(superBroly.cx, superBroly.cy);
+					}
+					Skill sbSkill = me.myskill;
+					if (sbSkill != null && !sbSkill.paintCanNotUseSkill && now - sbSkill.lastTimeUseThisSkill >= System.Math.Min(sbSkill.coolDown, 120))
+					{
+						lastAutoAttackBossTime = now;
+						sbSkill.lastTimeUseThisSkill = now;
+						MyVector vMob = new MyVector();
+						MyVector vChar = new MyVector();
+						vChar.addElement(superBroly);
+						Service.gI().sendPlayerAttack(vMob, vChar, 2);
+					}
+					return;
+				}
+			}
+		}
+
 		Char liveBoss = FindLiveBossInMap();
 
 		if (liveBoss != null)
@@ -167,7 +245,7 @@ public static class ModBossNotice
 				SoundMn.gI().buttonClick();
 			}
 
-			if (isAutoFocusBoss || isAutoAttackBoss || isKsSuperBroly1Hp)
+			if (isAutoFocusBoss || isAutoFollowBoss || isAutoAttackBoss)
 			{
 				me.charFocus = liveBoss;
 				me.mobFocus = null;
@@ -175,25 +253,48 @@ public static class ModBossNotice
 				me.itemFocus = null;
 			}
 
-			bool shouldAttack = isAutoAttackBoss;
-			if (isKsSuperBroly1Hp && liveBoss.cName != null && liveBoss.cName.IndexOf("Broly", StringComparison.OrdinalIgnoreCase) >= 0)
+			if (isAutoFollowBoss && !isAutoAttackBoss)
 			{
-				shouldAttack = (liveBoss.cHP <= 500 || (liveBoss.cHPFull > 0 && liveBoss.cHP * 100L / liveBoss.cHPFull <= 1));
+				int followDist = Res.distance(me.cx, me.cy, liveBoss.cx, liveBoss.cy);
+				if (followDist > 36)
+				{
+					if (ItemTime.isExistItem(4387))
+					{
+						if (now - lastFollowBossMoveTime >= 250)
+						{
+							lastFollowBossMoveTime = now;
+							ModTeleport.TeleportTo(liveBoss.cx, liveBoss.cy);
+						}
+					}
+					else
+					{
+						ModAStarPathFinder.StepTowards(liveBoss.cx, liveBoss.cy);
+					}
+				}
 			}
 
-			if (shouldAttack)
+			if (isAutoAttackBoss)
 			{
 				int dist = Res.distance(me.cx, me.cy, liveBoss.cx, liveBoss.cy);
-				if (dist > 48 && now - lastAutoAttackBossTime >= 350)
+				if (dist > 48)
 				{
-					ModTeleport.TeleportTo(liveBoss.cx, liveBoss.cy);
+					if (ItemTime.isExistItem(4387) || !isAutoFollowBoss)
+					{
+						if (now - lastAutoAttackBossTime >= 350)
+						{
+							ModTeleport.TeleportTo(liveBoss.cx, liveBoss.cy);
+						}
+					}
+					else
+					{
+						ModAStarPathFinder.StepTowards(liveBoss.cx, liveBoss.cy);
+					}
 				}
 
-				long attackInterval = isKsSuperBroly1Hp ? 60 : 250;
-				if (now - lastAutoAttackBossTime >= attackInterval)
+				if (now - lastAutoAttackBossTime >= 250)
 				{
 					Skill sk = me.myskill;
-					if (sk != null && !sk.paintCanNotUseSkill && (isKsSuperBroly1Hp || now - sk.lastTimeUseThisSkill >= sk.coolDown))
+					if (sk != null && !sk.paintCanNotUseSkill && now - sk.lastTimeUseThisSkill >= sk.coolDown)
 					{
 						lastAutoAttackBossTime = now;
 						sk.lastTimeUseThisSkill = now;
@@ -677,6 +778,34 @@ public static class ModBossNotice
 		return d + "d";
 	}
 
+	private static bool IsBossActiveHere(BossNoticeEntry entry)
+	{
+		if (entry == null || entry.isDefeated)
+		{
+			return false;
+		}
+		if (!string.IsNullOrEmpty(entry.bossName) && GameScr.vCharInMap != null)
+		{
+			for (int i = 0; i < GameScr.vCharInMap.size(); i++)
+			{
+				Char c = (Char)GameScr.vCharInMap.elementAt(i);
+				if (c != null && c.charID < 0 && c.cHP > 0 && !c.isDie && !string.IsNullOrEmpty(c.cName) &&
+				    c.cName.IndexOf(entry.bossName, StringComparison.OrdinalIgnoreCase) >= 0)
+				{
+					return true;
+				}
+			}
+		}
+		if (!string.IsNullOrEmpty(entry.mapName) && !entry.mapName.Equals("Không rõ map", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(TileMap.mapName))
+		{
+			if (ModNextMapData.MatchMapName(TileMap.mapName, entry.mapName))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/// <summary>
 	/// Thực hiện vẽ và hiển thị thành phần PaintBossNotice lên canvas đồ họa.
 	/// </summary>
@@ -719,17 +848,25 @@ public static class ModBossNotice
 					BossNoticeEntry entry = listBossNotices[j];
 					if (entry != null)
 					{
-						string bossPart = entry.bossName ?? string.Empty;
+						bool isHere = IsBossActiveHere(entry);
+						string bossPart = (isHere ? "[★] " : string.Empty) + (entry.bossName ?? string.Empty);
 						string mapPart = " - " + (entry.mapName ?? string.Empty) + " - ";
 						string timePart = GetTimeAgoString(entry.timestamp);
 
-						mFont bossF = entry.isDefeated
-							? (mFont.tahoma_7_white ?? mFont.tahoma_7_yellow)
-							: (mFont.tahoma_7_yellow ?? mFont.tahoma_7_white);
-						mFont mapF = mFont.tahoma_7_white ?? mFont.tahoma_7_yellow;
-						mFont timeF = entry.isDefeated
-							? (mFont.tahoma_7_white ?? mFont.tahoma_7_yellow)
-							: (mFont.tahoma_7_yellow ?? mFont.tahoma_7_white);
+						mFont brightYellow = mFont.tahoma_7b_yellow ?? mFont.tahoma_7_yellow ?? mFont.tahoma_7_white;
+						mFont bossF = isHere
+							? brightYellow
+							: (entry.isDefeated
+								? (mFont.tahoma_7_white ?? mFont.tahoma_7_yellow)
+								: (mFont.tahoma_7_yellow ?? mFont.tahoma_7_white));
+						mFont mapF = isHere
+							? brightYellow
+							: (mFont.tahoma_7_white ?? mFont.tahoma_7_yellow);
+						mFont timeF = isHere
+							? brightYellow
+							: (entry.isDefeated
+								? (mFont.tahoma_7_white ?? mFont.tahoma_7_yellow)
+								: (mFont.tahoma_7_yellow ?? mFont.tahoma_7_white));
 						if (bossF == null || mapF == null || timeF == null)
 						{
 							break;

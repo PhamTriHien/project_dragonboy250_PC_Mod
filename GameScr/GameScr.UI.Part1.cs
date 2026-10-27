@@ -445,11 +445,16 @@ public partial class GameScr : mScreen, IChatable
 			if (text.StartsWith("nextmap=", StringComparison.OrdinalIgnoreCase))
 			{
 				string arg = text.Substring(8).Trim();
-				ModNextMap.useSafeMovement = true;
-				if (arg.StartsWith("safe:", StringComparison.OrdinalIgnoreCase)) arg = arg.Substring(5).Trim();
+				if (arg.StartsWith("safe:", StringComparison.OrdinalIgnoreCase))
+				{
+					ModNextMap.useSafeMovement = true;
+					ModConfig.SaveConfig();
+					arg = arg.Substring(5).Trim();
+				}
 				else if (arg.StartsWith("fast:", StringComparison.OrdinalIgnoreCase))
 				{
 					ModNextMap.useSafeMovement = false;
+					ModConfig.SaveConfig();
 					arg = arg.Substring(5).Trim();
 				}
 				if (int.TryParse(arg, out int targetMap))
@@ -613,10 +618,15 @@ public partial class GameScr : mScreen, IChatable
 			}
 			if (text.Equals("set1", StringComparison.OrdinalIgnoreCase)) { ModInventoryExt.EquipSet(1); return; }
 			if (text.Equals("set2", StringComparison.OrdinalIgnoreCase)) { ModInventoryExt.EquipSet(2); return; }
+			if (text.Equals("xemset", StringComparison.OrdinalIgnoreCase)) { ModInventoryExt.ShowEquipSetsInfo(); return; }
 			if (text.Equals("xoaset", StringComparison.OrdinalIgnoreCase)) { ModInventoryExt.ClearSets(); return; }
+			if (text.Equals("tudanh", StringComparison.OrdinalIgnoreCase) || text.Equals("ak", StringComparison.OrdinalIgnoreCase)) { ModAutoSkill.ToggleAutoAttackInPlace(); return; }
 			if (text.Equals("xoanguoi", StringComparison.OrdinalIgnoreCase)) { ModGraphics.ToggleHideOtherPlayers(); return; }
-			if (text.Equals("ttsp", StringComparison.OrdinalIgnoreCase)) { ModMapEntityHUD.isShowTargetStatus = !ModMapEntityHUD.isShowTargetStatus; ModConfig.SaveConfig(); info1.addInfo("HUD Trạng thái Sư Phụ (TTSP): " + (ModMapEntityHUD.isShowTargetStatus ? "BẬT" : "TẮT"), 0); return; }
+			if (text.Equals("ttsp", StringComparison.OrdinalIgnoreCase)) { ModMapEntityHUD.ToggleMasterHUD(); return; }
+			if (text.Equals("ttmt", StringComparison.OrdinalIgnoreCase)) { ModMapEntityHUD.isShowTargetStatus = !ModMapEntityHUD.isShowTargetStatus; ModConfig.SaveConfig(); info1.addInfo("HUD Trạng thái Mục Tiêu: " + (ModMapEntityHUD.isShowTargetStatus ? "BẬT" : "TẮT"), 0); return; }
+			if (text.Equals("manden", StringComparison.OrdinalIgnoreCase)) { ModGraphics.ToggleAfkBlackScreen(); return; }
 			if (text.Equals("tusat", StringComparison.OrdinalIgnoreCase)) { ModSelfKill.Toggle(); return; }
+			if (text.Equals("update", StringComparison.OrdinalIgnoreCase)) { ModAutoUpdate.CheckManual(); return; }
 			if (text.Equals("captcha", StringComparison.OrdinalIgnoreCase)) { if (string.IsNullOrEmpty(ModAutoCaptcha.captchaApiUrl)) ModAutoCaptcha.PromptApiUrl(); else { ModAutoCaptcha.isEnabled = !ModAutoCaptcha.isEnabled; ModConfig.SaveConfig(); info1.addInfo("Auto Giải Captcha: " + (ModAutoCaptcha.isEnabled ? "BẬT" : "TẮT"), 0); } return; }
 			if (text.StartsWith("captcha=", StringComparison.OrdinalIgnoreCase)) { ModAutoCaptcha.captchaApiUrl = text.Substring(8).Trim(); ModAutoCaptcha.isEnabled = !string.IsNullOrEmpty(ModAutoCaptcha.captchaApiUrl); ModConfig.SaveConfig(); info1.addInfo(ModAutoCaptcha.isEnabled ? ("Đã đặt API Captcha & BẬT: " + ModAutoCaptcha.captchaApiUrl) : "Đã xóa API Captcha.", 0); return; }
 			if (to.Equals(mResources.chat_player))

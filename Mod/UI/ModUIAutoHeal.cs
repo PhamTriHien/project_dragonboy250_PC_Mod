@@ -23,11 +23,11 @@ public static class ModUIAutoHeal
 		mFont.tahoma_7_grey.drawString(g, "Khóa HP/MP:", item2X + 2, uiY + 6, mFont.LEFT);
 		ModUI.PaintNativeButton(item2X + halfW - 38, uiY + 3, 38, 16, ModAutoHeal.lockHPMP ? "BẬT" : "TẮT", ModAutoHeal.lockHPMP, g);
 
-		// Hàng 2: Ngưỡng HP & Ngưỡng KI riêng biệt + Ngưỡng tuyệt đối
-		int pStartX = uiX + 44;
+		// Hàng 2: Ngưỡng HP & Ngưỡng KI riêng biệt + Ngưỡng tuyệt đối (chạm nhãn % hoặc nút đang chọn để nhập % tùy ý)
+		int pStartX = uiX + 52;
 		int totalCols = pcts.Length + 1;
-		int pBtnW = (uiW - 48 - (totalCols - 1) * 3) / totalCols;
-		mFont.tahoma_7_grey.drawString(g, "HP dưới:", uiX + 5, uiY + 24, mFont.LEFT);
+		int pBtnW = (uiW - 56 - (totalCols - 1) * 3) / totalCols;
+		mFont.tahoma_7_grey.drawString(g, "HP<" + ModAutoHeal.autoPeanHpPercent + "%:", uiX + 4, uiY + 24, mFont.LEFT);
 		for (int p = 0; p < pcts.Length; p++)
 		{
 			int pbx = pStartX + p * (pBtnW + 3);
@@ -38,7 +38,7 @@ public static class ModUIAutoHeal
 		string absHpLbl = (ModAutoHeal.autoPeanMinHp > 0) ? ("<" + mSystem.numberTostring(ModAutoHeal.autoPeanMinHp)) : "Nhập HP";
 		ModUI.PaintNativeButton(absHpX, uiY + 21, pBtnW, 16, absHpLbl, ModAutoHeal.autoPeanMinHp > 0, g);
 
-		mFont.tahoma_7_grey.drawString(g, "KI dưới:", uiX + 5, uiY + 42, mFont.LEFT);
+		mFont.tahoma_7_grey.drawString(g, "KI<" + ModAutoHeal.autoPeanMpPercent + "%:", uiX + 4, uiY + 42, mFont.LEFT);
 		for (int p = 0; p < pcts.Length; p++)
 		{
 			int pbx = pStartX + p * (pBtnW + 3);
@@ -67,8 +67,10 @@ public static class ModUIAutoHeal
 		mFont.tahoma_7_grey.drawString(g, "Tự hồi sinh:", item1X + 2, uiY + 96, mFont.LEFT);
 		ModUI.PaintNativeButton(item1X + halfW - 38, uiY + 93, 38, 16, ModAutoRevive.isEnabled ? "BẬT" : "TẮT", ModAutoRevive.isEnabled, g);
 
-		ModUI.PaintNativeButton(item2X, uiY + 93, (halfW - 4) / 2, 16, "Đệ <" + ModAutoHeal.petEatBeanHpPercent + "%", ModAutoHeal.autoFeedPetOnAsk, g);
-		ModUI.PaintNativeButton(item2X + (halfW - 4) / 2 + 4, uiY + 93, (halfW - 4) / 2, 16, string.IsNullOrEmpty(ModAutoHeal.donateTargetNamesRaw) ? "Lọc Bang" : "Đang Lọc", !string.IsNullOrEmpty(ModAutoHeal.donateTargetNamesRaw), g);
+		int subThird = (halfW - 6) / 3;
+		ModUI.PaintNativeButton(item2X, uiY + 93, subThird, 16, "Đ.HP<" + ModAutoHeal.petEatBeanHpPercent + "%", ModAutoHeal.autoFeedPetOnAsk, g);
+		ModUI.PaintNativeButton(item2X + subThird + 3, uiY + 93, subThird, 16, "Đ.KI<" + ModAutoHeal.petEatBeanMpPercent + "%", ModAutoHeal.autoFeedPetOnAsk, g);
+		ModUI.PaintNativeButton(item2X + (subThird + 3) * 2, uiY + 93, halfW - (subThird + 3) * 2, 16, string.IsNullOrEmpty(ModAutoHeal.donateTargetNamesRaw) ? "Lọc Bang" : "Lọc*", !string.IsNullOrEmpty(ModAutoHeal.donateTargetNamesRaw), g);
 
 		int actBtnW = (uiW - 16) / 3;
 		ModUI.PaintNativeButton(uiX + 4, uiY + 112, actBtnW, 16, "Thu Đậu", false, g);
@@ -118,14 +120,35 @@ public static class ModUIAutoHeal
 		}
 
 		// 3a. Ngưỡng ăn đậu HP & KI (% và Tuyệt đối)
-		int pStartX = uiX + 44;
+		int pStartX = uiX + 52;
 		int totalCols = pcts.Length + 1;
-		int pBtnW = (uiW - 48 - (totalCols - 1) * 3) / totalCols;
+		int pBtnW = (uiW - 56 - (totalCols - 1) * 3) / totalCols;
+		if (px >= uiX + 4 && px < pStartX)
+		{
+			if (py >= uiY + 20 && py <= uiY + 38)
+			{
+				SoundMn.gI().buttonClick();
+				ModAutoHeal.ShowInputHpPercent();
+				return true;
+			}
+			if (py >= uiY + 38 && py <= uiY + 56)
+			{
+				SoundMn.gI().buttonClick();
+				ModAutoHeal.ShowInputMpPercent();
+				return true;
+			}
+		}
 		for (int p = 0; p < pcts.Length; p++)
 		{
 			int pbx = pStartX + p * (pBtnW + 3);
 			if (px >= pbx && px <= pbx + pBtnW && py >= uiY + 20 && py <= uiY + 38)
 			{
+				if (ModAutoHeal.autoPeanHpPercent == pcts[p])
+				{
+					SoundMn.gI().buttonClick();
+					ModAutoHeal.ShowInputHpPercent();
+					return true;
+				}
 				ModAutoHeal.autoPeanHpPercent = pcts[p];
 				ModConfig.SaveConfig();
 				SoundMn.gI().buttonClick();
@@ -133,6 +156,12 @@ public static class ModUIAutoHeal
 			}
 			if (px >= pbx && px <= pbx + pBtnW && py >= uiY + 38 && py <= uiY + 56)
 			{
+				if (ModAutoHeal.autoPeanMpPercent == pcts[p])
+				{
+					SoundMn.gI().buttonClick();
+					ModAutoHeal.ShowInputMpPercent();
+					return true;
+				}
 				ModAutoHeal.autoPeanMpPercent = pcts[p];
 				ModConfig.SaveConfig();
 				SoundMn.gI().buttonClick();
@@ -207,14 +236,20 @@ public static class ModUIAutoHeal
 				SoundMn.gI().buttonClick();
 				return true;
 			}
-			int subHalf = (halfW - 4) / 2;
-			if (px >= item2X && px <= item2X + subHalf)
+			int subThird = (halfW - 6) / 3;
+			if (px >= item2X && px <= item2X + subThird)
 			{
-				ModAutoHeal.CyclePetEatBeanPercent();
-				GameScr.info1.addInfo("Ăn đậu khi HP/KI đệ < " + ModAutoHeal.petEatBeanHpPercent + "%", 0);
+				SoundMn.gI().buttonClick();
+				ModAutoHeal.ShowInputPetHpPercent();
 				return true;
 			}
-			if (px >= item2X + subHalf + 4 && px <= item2X + halfW)
+			if (px >= item2X + subThird + 3 && px <= item2X + subThird * 2 + 3)
+			{
+				SoundMn.gI().buttonClick();
+				ModAutoHeal.ShowInputPetMpPercent();
+				return true;
+			}
+			if (px >= item2X + (subThird + 3) * 2 && px <= item2X + halfW)
 			{
 				ModUI.uiCustomOpen = false;
 				ModAutoHeal.ShowInputDonateTarget();

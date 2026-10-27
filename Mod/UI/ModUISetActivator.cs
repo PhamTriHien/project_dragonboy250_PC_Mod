@@ -275,9 +275,8 @@ public static class ModUISetActivator
 							break;
 						case 2:
 							ModSetActivator.autoBuyTdlt = !ModSetActivator.autoBuyTdlt;
-							if (ModSetActivator.autoBuyTdlt) ModSetActivator.autoUseTdlt = true;
 							ModConfig.SaveConfig();
-							GameScr.info1.addInfo("Tự mua TĐLT tại Santa khi hết: " + (ModSetActivator.autoBuyTdlt ? "BẬT" : "TẮT"), 0);
+							GameScr.info1.addInfo("Tự mua/gia hạn TĐLT tại Santa (<10p): " + (ModSetActivator.autoBuyTdlt ? "BẬT" : "TẮT"), 0);
 							SoundMn.gI().buttonClick();
 							break;
 						case 3:
@@ -307,11 +306,12 @@ public static class ModUISetActivator
 							SoundMn.gI().buttonClick();
 							break;
 						case 2:
-							ModSetActivator.CycleSellMaxLevel();
+							SoundMn.gI().buttonClick();
+							ModSetActivator.ShowInputSellMaxLevel();
 							break;
 						case 3:
-							ModSetActivator.CycleMinEmptyBagSlots();
-							GameScr.info1.addInfo("Bán rác khi ô trống <= " + ModSetActivator.minEmptyBagSlots, 0);
+							SoundMn.gI().buttonClick();
+							ModSetActivator.ShowInputMinEmptyBagSlots();
 							break;
 					}
 					return true;

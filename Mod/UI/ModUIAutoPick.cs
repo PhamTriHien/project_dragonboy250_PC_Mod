@@ -17,6 +17,9 @@ public static class ModUIAutoPick
 
 		int distBtnW = 58;
 		int distBtnX = uiX + uiW - distBtnW - 4;
+		int inputDistW = 52;
+		int inputDistX = distBtnX - inputDistW - 3;
+		ModUI.PaintNativeButton(inputDistX, uiY + 4, inputDistW, 17, "Nhập px", false, g);
 		ModUI.PaintNativeButton(distBtnX, uiY + 4, distBtnW, 17, ModAutoPick.GetPickDistanceLabel(), ModAutoPick.maxPickDistance > 0, g);
 
 		int footerH = 18;
@@ -109,9 +112,17 @@ public static class ModUIAutoPick
 			return true;
 		}
 
-		// Nút Phạm vi nhặt
+		// Nút Nhập cự ly & Phạm vi nhặt
 		int distBtnW = 58;
 		int distBtnX = uiX + uiW - distBtnW - 4;
+		int inputDistW = 52;
+		int inputDistX = distBtnX - inputDistW - 3;
+		if (px >= inputDistX && px <= inputDistX + inputDistW && py >= uiY + 3 && py <= uiY + 22)
+		{
+			SoundMn.gI().buttonClick();
+			ModAutoPick.ShowInputMaxPickDistance();
+			return true;
+		}
 		if (px >= distBtnX && px <= distBtnX + distBtnW && py >= uiY + 3 && py <= uiY + 22)
 		{
 			ModAutoPick.CycleMaxPickDistance();

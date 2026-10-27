@@ -90,6 +90,9 @@ public static class ModConfig
 				delayPairs.Add(kv.Key + ":" + kv.Value);
 			}
 			sb.AppendLine("customSkillDelays=" + string.Join(",", delayPairs.ToArray()));
+			sb.AppendLine("aStarStepSize=" + ModAStarPathFinder.stepSize);
+			sb.AppendLine("aStarStepDelayMs=" + ModAStarPathFinder.stepDelayMs);
+			sb.AppendLine("autoSkillSlots=" + ModAutoSkill.ExportConfig());
 
 			// Tự Nhặt & Vứt Đồ
 			sb.AppendLine("autoPick=" + ModAutoPick.autoPick);
@@ -123,6 +126,7 @@ public static class ModConfig
 			sb.AppendLine("autoFeedPetOnAsk=" + ModAutoHeal.autoFeedPetOnAsk);
 			sb.AppendLine("donateTargetNames=" + ModAutoHeal.donateTargetNamesRaw);
 			sb.AppendLine("petEatBeanHpPercent=" + ModAutoHeal.petEatBeanHpPercent);
+			sb.AppendLine("petEatBeanMpPercent=" + ModAutoHeal.petEatBeanMpPercent);
 			sb.AppendLine("autoPeanMinHp=" + ModAutoHeal.autoPeanMinHp);
 			sb.AppendLine("autoPeanMinMp=" + ModAutoHeal.autoPeanMinMp);
 
@@ -150,6 +154,7 @@ public static class ModConfig
 			sb.AppendLine("isAutoScanBossZone=" + ModBossNotice.isAutoScanBossZone);
 			sb.AppendLine("isAutoAttackBoss=" + ModBossNotice.isAutoAttackBoss);
 			sb.AppendLine("isAutoFocusBoss=" + ModBossNotice.isAutoFocusBoss);
+			sb.AppendLine("isAutoFollowBoss=" + ModBossNotice.isAutoFollowBoss);
 			sb.AppendLine("isKsSuperBroly1Hp=" + ModBossNotice.isKsSuperBroly1Hp);
 			sb.AppendLine("filterBossNames=" + ModBossNotice.filterBossNamesRaw);
 
@@ -160,6 +165,7 @@ public static class ModConfig
 			// HUD Player & Boss trong map
 			sb.AppendLine("isShowMapEntityHUD=" + ModMapEntityHUD.isShowMapEntityHUD);
 			sb.AppendLine("isShowTargetStatus=" + ModMapEntityHUD.isShowTargetStatus);
+			sb.AppendLine("isShowMasterHUD=" + ModMapEntityHUD.isShowMasterHUD);
 			sb.AppendLine("isLockTarget=" + ModMapEntityHUD.isLockTarget);
 
 #if NET8_0_OR_GREATER
@@ -182,6 +188,10 @@ public static class ModConfig
 			sb.AppendLine("useCapsuleVip=" + ModNextMap.useCapsuleVip);
 			sb.AppendLine("useNormalCapsule=" + ModNextMap.useNormalCapsule);
 			sb.AppendLine("speedBoostTransport=" + ModNextMap.speedBoostTransport);
+			sb.AppendLine("useSafeMovement=" + ModNextMap.useSafeMovement);
+			sb.AppendLine("instantSpaceshipSkip=" + ModNextMap.instantSpaceshipSkip);
+			sb.AppendLine("delayXmapMs=" + ModNextMap.delayXmapMs);
+			sb.AppendLine("delayUseCapsuleMs=" + ModNextMap.delayUseCapsuleMs);
 
 			// Úp Set Kích Hoạt & Lọc Đồ
 			sb.AppendLine("autoSetKHActive=" + ModSetActivator.isActive);
@@ -233,6 +243,8 @@ public static class ModConfig
 			sb.AppendLine("autoReconnect=" + ModAutoLogin.isEnabled);
 			sb.AppendLine("keepSavedZone=" + ModAutoLogin.keepSavedZone);
 			sb.AppendLine("savedKeepZoneId=" + ModAutoLogin.savedKeepZoneId);
+			sb.AppendLine("savedKeepZoneMapId=" + ModAutoLogin.savedKeepZoneMapId);
+			sb.AppendLine("autoNewAccountEnabled=" + ModAutoNewAccount.isEnabled);
 			sb.AppendLine("autoChat=" + ModAutoChat.isEnabled);
 			sb.AppendLine("autoChatMessage=" + Convert.ToBase64String(Encoding.UTF8.GetBytes(ModAutoChat.message ?? string.Empty)));
 			sb.AppendLine("autoChatIntervalMs=" + ModAutoChat.intervalMs);
@@ -257,6 +269,7 @@ public static class ModConfig
 			for (int s = 0; s < 6; s++)
 			{
 				sb.AppendLine("trainSlot" + s + "=" + (ModSchedule.trainSlotsRaw[s] ?? ""));
+				sb.AppendLine("onOffSlot" + s + "=" + (ModSchedule.onOffSlotsRaw[s] ?? ""));
 			}
 			sb.AppendLine("autoRevive=" + ModAutoRevive.isEnabled);
 			sb.AppendLine("autoPet=" + ModAutoPet.isEnabled);
@@ -266,6 +279,7 @@ public static class ModConfig
 			sb.AppendLine("petAvoidBoss=" + ModAutoPet.petAvoidBoss);
 			sb.AppendLine("petAutoFlag=" + ModAutoPet.petAutoFlag);
 			sb.AppendLine("autoNamekHeal=" + ModAutoPet.autoNamekHeal);
+			sb.AppendLine("namekHealThresholdPercent=" + ModAutoPet.namekHealThresholdPercent);
 			sb.AppendLine("petAutoAttackOnBark=" + ModAutoPet.petAutoAttackOnBark);
 			sb.AppendLine("petAutoKok=" + ModAutoPet.petAutoKok);
 			sb.AppendLine("disconnectOnPetPowerLimit=" + ModAutoPet.disconnectOnPetPowerLimit);
@@ -280,8 +294,12 @@ public static class ModConfig
 			sb.AppendLine("customSvName=" + (ModProxyServer.customSvName ?? string.Empty));
 			sb.AppendLine("customSvIp=" + (ModProxyServer.customSvIp ?? string.Empty));
 			sb.AppendLine("customSvPort=" + ModProxyServer.customSvPort);
+			sb.AppendLine("lobbyBtnX=" + ModProxyServer.lobbyBtnX);
+			sb.AppendLine("lobbyBtnY=" + ModProxyServer.lobbyBtnY);
 			sb.AppendLine("equipSet1Raw=" + (ModInventoryExt.equipSet1Raw ?? string.Empty));
 			sb.AppendLine("equipSet2Raw=" + (ModInventoryExt.equipSet2Raw ?? string.Empty));
+			sb.AppendLine("autoUseItemsMulti=" + ModInventoryExt.ExportAutoUseItems());
+			sb.AppendLine("savedAccountsList=" + ModAccountManager.ExportConfig());
 			sb.AppendLine("autoCaptchaEnabled=" + ModAutoCaptcha.isEnabled);
 			sb.AppendLine("captchaDisconnectOnFail=" + ModAutoCaptcha.disconnectOnFail);
 			sb.AppendLine("captchaMaxFailCount=" + ModAutoCaptcha.maxFailCount);
@@ -603,14 +621,22 @@ public static class ModConfig
 						ModAutoHeal.donateTargetNamesRaw = val ?? "";
 						break;
 					case "petEatBeanHpPercent":
-						if (int.TryParse(val, out int pebhp) && pebhp >= 10 && pebhp <= 90)
+						if (int.TryParse(val, out int pebhp) && pebhp >= 0 && pebhp <= 100)
 						{
 							ModAutoHeal.petEatBeanHpPercent = pebhp;
-							ModAutoHeal.petEatBeanMpPercent = pebhp;
+						}
+						break;
+					case "petEatBeanMpPercent":
+						if (int.TryParse(val, out int pebmp) && pebmp >= 0 && pebmp <= 100)
+						{
+							ModAutoHeal.petEatBeanMpPercent = pebmp;
 						}
 						break;
 					case "graphicsQuality":
-						int.TryParse(val, out ModGraphics.graphicsQuality);
+						if (int.TryParse(val, out int gq) && gq >= 0 && gq < ModGraphics.graphicsNames.Length)
+						{
+							ModGraphics.graphicsQuality = gq;
+						}
 						break;
 					case "renderMode":
 					case "renderBitDepth":
@@ -712,7 +738,7 @@ public static class ModConfig
 						bool.TryParse(val, out ModGoBack.gobackOnLowMp);
 						break;
 					case "lowMpPercent":
-						if (int.TryParse(val, out int lmp) && lmp >= 5 && lmp <= 80) ModGoBack.lowMpPercent = lmp;
+						if (int.TryParse(val, out int lmp) && lmp >= 1 && lmp <= 99) ModGoBack.lowMpPercent = lmp;
 						break;
 					case "savedMapId":
 						int.TryParse(val, out ModGoBack.savedMapId);
@@ -751,10 +777,10 @@ public static class ModConfig
 						bool.TryParse(val, out ModSetActivator.sellSkhItems);
 						break;
 					case "sellMaxLevel":
-						if (int.TryParse(val, out int sml) && (sml == 12 || sml == 13 || sml == 99)) ModSetActivator.sellMaxLevel = sml;
+						if (int.TryParse(val, out int sml) && sml >= 1 && sml <= 99) ModSetActivator.sellMaxLevel = sml;
 						break;
 					case "minEmptyBagSlots":
-						if (int.TryParse(val, out int mebs) && mebs >= 1 && mebs <= 10) ModSetActivator.minEmptyBagSlots = mebs;
+						if (int.TryParse(val, out int mebs) && mebs >= 1 && mebs <= 50) ModSetActivator.minEmptyBagSlots = mebs;
 						break;
 					case "keepItemIds":
 						ModSetActivator.keepItemIdsRaw = val ?? "";
@@ -947,6 +973,63 @@ public static class ModConfig
 					case "trainSlot5":
 						int slotIdx = key[key.Length - 1] - '0';
 						if (slotIdx >= 0 && slotIdx < 6) ModSchedule.trainSlotsRaw[slotIdx] = val ?? "";
+						break;
+					case "onOffSlot0":
+					case "onOffSlot1":
+					case "onOffSlot2":
+					case "onOffSlot3":
+					case "onOffSlot4":
+					case "onOffSlot5":
+						int offIdx = key[key.Length - 1] - '0';
+						if (offIdx >= 0 && offIdx < 6) ModSchedule.onOffSlotsRaw[offIdx] = val ?? "";
+						break;
+					case "aStarStepSize":
+						if (int.TryParse(val, out int ass) && ass >= 1 && ass <= 3) ModAStarPathFinder.stepSize = ass;
+						break;
+					case "aStarStepDelayMs":
+						if (int.TryParse(val, out int asd) && asd >= 25 && asd <= 100) ModAStarPathFinder.stepDelayMs = asd;
+						break;
+					case "autoSkillSlots":
+						ModAutoSkill.ImportConfig(val);
+						break;
+					case "isShowMasterHUD":
+						bool.TryParse(val, out ModMapEntityHUD.isShowMasterHUD);
+						break;
+					case "isAutoFollowBoss":
+						bool.TryParse(val, out ModBossNotice.isAutoFollowBoss);
+						break;
+					case "useSafeMovement":
+						bool.TryParse(val, out ModNextMap.useSafeMovement);
+						break;
+					case "instantSpaceshipSkip":
+						bool.TryParse(val, out ModNextMap.instantSpaceshipSkip);
+						break;
+					case "delayXmapMs":
+						if (int.TryParse(val, out int dxm) && dxm >= 100 && dxm <= 3000) ModNextMap.delayXmapMs = dxm;
+						break;
+					case "delayUseCapsuleMs":
+						if (int.TryParse(val, out int duc) && duc >= 200 && duc <= 5000) ModNextMap.delayUseCapsuleMs = duc;
+						break;
+					case "savedKeepZoneMapId":
+						int.TryParse(val, out ModAutoLogin.savedKeepZoneMapId);
+						break;
+					case "autoNewAccountEnabled":
+						bool.TryParse(val, out ModAutoNewAccount.isEnabled);
+						break;
+					case "namekHealThresholdPercent":
+						if (int.TryParse(val, out int nht) && nht >= 5 && nht <= 95) ModAutoPet.namekHealThresholdPercent = nht;
+						break;
+					case "lobbyBtnX":
+						if (int.TryParse(val, out int lbx)) ModProxyServer.lobbyBtnX = lbx;
+						break;
+					case "lobbyBtnY":
+						if (int.TryParse(val, out int lby)) ModProxyServer.lobbyBtnY = lby;
+						break;
+					case "autoUseItemsMulti":
+						ModInventoryExt.ImportAutoUseItems(val);
+						break;
+					case "savedAccountsList":
+						ModAccountManager.ImportConfig(val);
 						break;
 				}
 			}

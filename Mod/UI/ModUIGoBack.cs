@@ -111,7 +111,8 @@ public static class ModUIGoBack
 		{
 			if (px >= uiX + 4 && px <= uiX + 4 + r2W)
 			{
-				ModGoBack.CycleLowMpPercent();
+				ModGoBack.ShowInputLowMpPercent();
+				SoundMn.gI().buttonClick();
 				return true;
 			}
 			if (px >= uiX + 8 + r2W && px <= uiX + 8 + r2W * 2)

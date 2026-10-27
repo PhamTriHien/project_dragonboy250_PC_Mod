@@ -53,14 +53,21 @@ public static class ModUIHelp
 		new CommandInfo("autorevive", "Bật/tắt tự hồi sinh bằng ngọc", "Chat", 0xff9800),
 		new CommandInfo("autopet=...", "Cấu hình: autopet=mã_trạng_thái|ms", "Chat", 0xff9800),
 		new CommandInfo("autofusion", "Cấu hình: autofusion=type|chu_kỳ_ms", "Chat", 0xff9800),
-		new CommandInfo("set1 / set2 / xoaset", "Mặc nhanh Set Đồ 1 / Set Đồ 2 / Xóa Set", "Chat", 0x00e676),
-		new CommandInfo("xoanguoi / ttsp", "Xóa người chơi khác / Bật HUD Sư Phụ", "Chat", 0x29b6f6),
-		new CommandInfo("tusat / captcha", "Tự sát nhanh / Bật tắt Auto Giải Captcha", "Chat", 0xff9800),
+		new CommandInfo("set1", "Mặc nhanh Set Đồ 1 đã lưu", "Chat", 0x00e676),
+		new CommandInfo("set2", "Mặc nhanh Set Đồ 2 đã lưu", "Chat", 0x00e676),
+		new CommandInfo("xemset", "Xem chi tiết danh sách món trong Set 1 & Set 2", "Chat", 0x00e676),
+		new CommandInfo("xoaset", "Xóa toàn bộ dữ liệu Set Đồ 1 & Set Đồ 2", "Chat", 0x00e676),
+		new CommandInfo("tudanh", "Bật / Tắt Tự Đánh Tại Chỗ (lệnh ak / Phím Q)", "Chat", 0xff9800),
+		new CommandInfo("xoanguoi", "Bật / Tắt ẩn người chơi khác trong map", "Chat", 0x29b6f6),
+		new CommandInfo("ttsp", "Bật / Tắt HUD chỉ số & hiệu ứng Sư Phụ", "Chat", 0x29b6f6),
+		new CommandInfo("manden", "Bật / Tắt Treo Màn Đen tiết kiệm GPU (F9)", "Chat", 0x29b6f6),
+		new CommandInfo("tusat", "Tự sát nhanh (đổi Cờ Đen / tháo giáp)", "Chat", 0xff9800),
+		new CommandInfo("captcha", "Bật / Tắt hoặc nhập API Auto Giải Captcha", "Chat", 0xff9800),
 		new CommandInfo("Phím ~ / F2", "Bật / Tắt Giao diện Menu Mod", "Phím", 0xffca28),
-		new CommandInfo("F11", "Bật / Tắt Toàn Màn Hình (Fullscreen)", "Phím", 0xffca28),
+		new CommandInfo("F9 / F10 / F11", "Màn Đen 10 FPS / Đổi Đồ Hoạ / Toàn Màn Hình", "Phím", 0xffca28),
 		new CommandInfo("Phím Home", "Giải kẹt nhân vật khẩn cấp (Unstuck)", "Phím", 0xffca28),
-		new CommandInfo("Phím E / N / Z", "Tự đánh / Auto Nhặt / Bật tắt Cờ đen", "Phím", 0xffca28),
-		new CommandInfo("Phím C / F / T", "Dùng Capsule / Bông tai / Tự Động Luyện Tập", "Phím", 0xffca28),
+		new CommandInfo("Phím Q / E / N / Z", "Đánh tại chỗ / Tàn Sát / Auto Nhặt / Cờ đen", "Phím", 0xffca28),
+		new CommandInfo("Phím C / F / T / O", "Capsule / Bông tai / TĐLT / Mở hành trang", "Phím", 0xffca28),
 		new CommandInfo("Phím J / K / L", "Qua nhanh cổng Map Trái / Giữa / Phải", "Phím", 0xffca28),
 		new CommandInfo("Phím B / G / I / M / X", "Bạn bè / Giao dịch / Khóa mục tiêu / Khu / Menu Mod", "Phím", 0xffca28),
 		new CommandInfo("Click Logo", "Bấm Logo TriHienKun để mở Menu Mod", "Chuột", 0x26a69a),
@@ -284,8 +291,24 @@ public static class ModUIHelp
 			else if (cmd.Equals("autorevive")) ModAutoRevive.Toggle();
 			else if (cmd.StartsWith("autopet")) ModAutoPet.Toggle();
 			else if (cmd.StartsWith("autofusion")) ModAutoFusion.Toggle();
-			else if (cmd.StartsWith("set1")) ModInventoryExt.EquipSet(1);
-			else if (cmd.StartsWith("xoanguoi")) ModGraphics.ToggleHideOtherPlayers();
+			else if (cmd.Equals("set1")) ModInventoryExt.EquipSet(1);
+			else if (cmd.Equals("set2")) ModInventoryExt.EquipSet(2);
+			else if (cmd.Equals("xemset")) ModInventoryExt.ShowEquipSetsInfo();
+			else if (cmd.Equals("xoaset")) ModInventoryExt.ClearSets();
+			else if (cmd.Equals("tudanh")) ModAutoSkill.ToggleAutoAttackInPlace();
+			else if (cmd.Equals("xoanguoi")) ModGraphics.ToggleHideOtherPlayers();
+			else if (cmd.Equals("ttsp")) ModMapEntityHUD.ToggleMasterHUD();
+			else if (cmd.Equals("manden")) { ModGraphics.ToggleAfkBlackScreen(); if (ModGraphics.isAfkBlackScreen) ModMenu.CloseMenu(); }
+			else if (cmd.Equals("captcha"))
+			{
+				if (string.IsNullOrEmpty(ModAutoCaptcha.captchaApiUrl)) ModAutoCaptcha.PromptApiUrl();
+				else
+				{
+					ModAutoCaptcha.isEnabled = !ModAutoCaptcha.isEnabled;
+					ModConfig.SaveConfig();
+					GameScr.info1.addInfo("Auto Giải Captcha: " + (ModAutoCaptcha.isEnabled ? "BẬT" : "TẮT"), 0);
+				}
+			}
 			else if (cmd.StartsWith("tusat")) ModSelfKill.Toggle();
 			else if (cmd.Contains("F11")) ModGraphics.ToggleFullscreen();
 			else if (cmd.Contains("Home")) ModHotkey.EmergencyUnstuck();

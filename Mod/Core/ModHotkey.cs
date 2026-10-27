@@ -122,6 +122,16 @@ public static class ModHotkey
 					ConsumeKey();
 					return true;
 
+				case 'o':
+					ToggleGameMenu();
+					ConsumeKey();
+					return true;
+
+				case 'q':
+					ModAutoSkill.ToggleAutoAttackInPlace();
+					ConsumeKey();
+					return true;
+
 				case 't':
 					ModArrowButton.UseTdltQuick();
 					ConsumeKey();
@@ -194,6 +204,11 @@ public static class ModHotkey
 			if (ChatTextField.gI() != null && ChatTextField.gI().isShow)
 			{
 				return;
+			}
+
+			if (Input.GetKeyDown(KeyCode.F9))
+			{
+				ModGraphics.ToggleAfkBlackScreen();
 			}
 
 			if (Input.GetKeyDown(KeyCode.BackQuote) || Input.GetKeyDown(KeyCode.F2))

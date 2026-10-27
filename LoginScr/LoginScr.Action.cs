@@ -292,6 +292,10 @@ public partial class LoginScr : mScreen, IActionListener
 			}
 			if ((GameCanvas.isPointerJustRelease || GameCanvas.isPointerClick) && (!isLogin2 || isRes))
 			{
+				if (ModAccountManager.CheckLoginButtonTap(this, xLog, yLog, (GameCanvas.w < 200) ? 160 : 180))
+				{
+					return;
+				}
 				if (GameCanvas.isPointerHoldIn(tfUser.x, tfUser.y, tfUser.width, tfUser.height) || GameCanvas.isPointer(tfUser.x, tfUser.y, tfUser.width, tfUser.height))
 				{
 					focus = 0;
@@ -310,7 +314,7 @@ public partial class LoginScr : mScreen, IActionListener
 					GameCanvas.isPointerClick = false;
 					GameCanvas.clearKeyPressed();
 				}
-				else if (GameCanvas.isPointerHoldIn(xLog + 10, yLog + 72, 130, 22) || GameCanvas.isPointer(xLog + 10, yLog + 72, 130, 22))
+				else if (GameCanvas.isPointerHoldIn(xLog + 10, yLog + 72, 96, 22) || GameCanvas.isPointer(xLog + 10, yLog + 72, 96, 22))
 				{
 					isCheck = !isCheck;
 					DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.SaveCredentials(tfUser.getText(), tfPass.getText(), isCheck);
@@ -449,6 +453,9 @@ public partial class LoginScr : mScreen, IActionListener
 			case 2004:
 				actRegister();
 				break;
+			case 2010:
+				ModAccountManager.OpenAccountMenu();
+				break;
 			case 2008:
 			{
 				string user = (tfUser != null && tfUser.getText() != null) ? tfUser.getText().Trim() : string.Empty;
@@ -486,6 +493,10 @@ public partial class LoginScr : mScreen, IActionListener
 				Rms.saveRMSString(Rms.RMS_acc, user);
 				Rms.saveRMSString(Rms.RMS_pass, pass);
 				DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.SaveCredentials(user, pass, isCheck);
+				if (isCheck)
+				{
+					ModAccountManager.UpsertAccount(user, pass, ServerListScreen.ipSelect);
+				}
 
 				GameCanvas.clearAllPointerEvent();
 				GameCanvas.clearKeyPressed();

@@ -13,6 +13,9 @@ public static class ModNextMap
 	public static bool useCapsuleVip = true;
 	public static bool useNormalCapsule = false;
 	public static bool speedBoostTransport = true;
+	public static bool instantSpaceshipSkip = true;
+	public static int delayXmapMs = 180;
+	public static int delayUseCapsuleMs = 650;
 	public static int lastMapId = -1;
 	public static Waypoint currentTargetWaypoint = null;
 	public static int resetPenaltyCount = 0;
@@ -24,6 +27,78 @@ public static class ModNextMap
 	private static long lastStepUpdateTime = 0;
 	private static bool s_WaitingCapsuleMenu = false;
 	private static long s_LastCapsuleUseTime = 0;
+	private static long s_HomeChickenWaitStartTime = 0;
+
+	private class XmapDelayInputListener : IActionListener
+	{
+		public const int ACTION_DELAY_XMAP = 99201;
+		public const int ACTION_DELAY_CAPSULE = 99202;
+
+		public void perform(int idAction, object p)
+		{
+			try
+			{
+				if (GameCanvas.inputDlg == null || GameCanvas.inputDlg.tfInput == null)
+				{
+					GameCanvas.endDlg();
+					return;
+				}
+				string text = (GameCanvas.inputDlg.tfInput.getText() ?? string.Empty).Trim();
+				GameCanvas.endDlg();
+				if (!int.TryParse(text, out int val))
+				{
+					return;
+				}
+				if (idAction == ACTION_DELAY_XMAP)
+				{
+					delayXmapMs = System.Math.Max(100, System.Math.Min(3000, val));
+					ModConfig.SaveConfig();
+					GameScr.info1.addInfo("Đã đặt nhịp Xmap: " + delayXmapMs + "ms", 0);
+				}
+				else if (idAction == ACTION_DELAY_CAPSULE)
+				{
+					delayUseCapsuleMs = System.Math.Max(200, System.Math.Min(5000, val));
+					ModConfig.SaveConfig();
+					GameScr.info1.addInfo("Đã đặt nhịp Capsule: " + delayUseCapsuleMs + "ms", 0);
+				}
+				SoundMn.gI().buttonClick();
+			}
+			catch
+			{
+				GameCanvas.endDlg();
+			}
+		}
+	}
+
+	private static readonly XmapDelayInputListener s_DelayInputListener = new XmapDelayInputListener();
+
+	public static void ShowInputDelayXmap()
+	{
+		if (GameCanvas.inputDlg == null) return;
+		ModUI.uiCustomOpen = false;
+		ModMenu.modMenuOpen = false;
+		GameCanvas.inputDlg.show("Nhập nhịp chờ chuyển Map Xmap (100 - 3000 ms):", new Command("OK", s_DelayInputListener, XmapDelayInputListener.ACTION_DELAY_XMAP, null), TField.INPUT_TYPE_NUMERIC);
+		if (GameCanvas.inputDlg.tfInput != null)
+		{
+			GameCanvas.inputDlg.tfInput.setMaxTextLenght(5);
+			GameCanvas.inputDlg.tfInput.setText(delayXmapMs.ToString());
+			if (!Main.isPC) GameCanvas.inputDlg.tfInput.setFocusWithKb(isFocus: true);
+		}
+	}
+
+	public static void ShowInputDelayCapsule()
+	{
+		if (GameCanvas.inputDlg == null) return;
+		ModUI.uiCustomOpen = false;
+		ModMenu.modMenuOpen = false;
+		GameCanvas.inputDlg.show("Nhập nhịp chờ dùng Capsule Xmap (200 - 5000 ms):", new Command("OK", s_DelayInputListener, XmapDelayInputListener.ACTION_DELAY_CAPSULE, null), TField.INPUT_TYPE_NUMERIC);
+		if (GameCanvas.inputDlg.tfInput != null)
+		{
+			GameCanvas.inputDlg.tfInput.setMaxTextLenght(5);
+			GameCanvas.inputDlg.tfInput.setText(delayUseCapsuleMs.ToString());
+			if (!Main.isPC) GameCanvas.inputDlg.tfInput.setFocusWithKb(isFocus: true);
+		}
+	}
 
 	/// <summary>
 	/// Phản hồi khi server gửi gói RESET_POINT (cmd 46) kéo lùi nhân vật để tạm hoãn và giảm bước nhảy chống giật lặp lại.
@@ -504,6 +579,10 @@ public static class ModNextMap
 			{
 				if (tplId == 10 || tplId == 11 || tplId == 12) return npc;
 			}
+			else if (currMapId == 84 && (nextMapId == 24 || nextMapId == 25 || nextMapId == 26))
+			{
+				if (tplId == 10) return npc;
+			}
 			else if ((currMapId == 19 && (nextMapId == 68 || nextMapId == 109)) ||
 			         ((currMapId == 68 || currMapId == 109) && nextMapId == 19))
 			{
@@ -518,6 +597,26 @@ public static class ModNextMap
 			{
 				if (tplId == 38) return npc;
 			}
+			else if (currMapId == 27 && nextMapId == 53)
+			{
+				if (tplId == 25) return npc;
+			}
+			else if (currMapId == 0 && nextMapId == 149)
+			{
+				if (tplId == 67) return npc;
+			}
+			else if (currMapId == 5 && nextMapId == 153)
+			{
+				if (tplId == 13) return npc;
+			}
+			else if (currMapId == 153 && nextMapId == 5)
+			{
+				if (tplId == 10) return npc;
+			}
+			else if (currMapId == 153 && nextMapId == 156)
+			{
+				if (tplId == 47) return npc;
+			}
 			else if (currMapId == 48 && nextMapId == 50)
 			{
 				if (tplId == 20) return npc;
@@ -525,6 +624,18 @@ public static class ModNextMap
 			else if (currMapId == 50 && nextMapId == 48)
 			{
 				if (tplId == 44 || tplId == 20) return npc;
+			}
+			else if (currMapId == 50 && nextMapId == 154)
+			{
+				if (tplId == 44) return npc;
+			}
+			else if (currMapId == 154 && nextMapId == 50)
+			{
+				if (tplId == 55 || tplId == 44) return npc;
+			}
+			else if ((currMapId == 154 && nextMapId == 155) || (currMapId == 155 && nextMapId == 154))
+			{
+				if (tplId == 44) return npc;
 			}
 			else if ((currMapId == 24 || currMapId == 25 || currMapId == 26) && nextMapId >= 85 && nextMapId <= 91)
 			{
@@ -620,7 +731,7 @@ public static class ModNextMap
 			long now = mSystem.currentTimeMillis();
 			Char.ischangingMap = true;
 			lastChangeAttemptTime = now;
-			mapEnterWaitUntil = now + 650;
+			mapEnterWaitUntil = now + System.Math.Max(300, delayUseCapsuleMs);
 			Service.gI().requestMapSelect(bestMenuIndex);
 		}
 		return true;
@@ -809,6 +920,25 @@ public static class ModNextMap
 			return;
 		}
 
+		// Khi đi ngang qua Nhà riêng (21/22/23), tự dừng tối đa 2.5s để ăn Đùi gà nướng hồi HP/KI trước khi ra cổng
+		if ((TileMap.mapID == 21 || TileMap.mapID == 22 || TileMap.mapID == 23) &&
+		    ModGoBack.eatChickenAtHome && (me.cHP < me.cHPFull || me.cMP < me.cMPFull) && ModGoBack.HasHomeChickenOnFloor(me))
+		{
+			if (s_HomeChickenWaitStartTime == 0)
+			{
+				s_HomeChickenWaitStartTime = now;
+			}
+			if (now - s_HomeChickenWaitStartTime < 2500)
+			{
+				ModGoBack.TryPickHomeChicken(me);
+				return;
+			}
+		}
+		else
+		{
+			s_HomeChickenWaitStartTime = 0;
+		}
+
 		// Watchdog chống kẹt trạng thái ischangingMap khi server rớt gói tin hoặc phản hồi chậm
 		if (Char.ischangingMap)
 		{
@@ -851,7 +981,8 @@ public static class ModNextMap
 			return;
 		}
 
-		int stepIntervalMs = (useSafeMovement || resetPenaltyCount > 0) ? 260 : 180;
+		int baseStepMs = System.Math.Max(100, delayXmapMs);
+		int stepIntervalMs = (useSafeMovement || resetPenaltyCount > 0) ? System.Math.Max(260, baseStepMs) : baseStepMs;
 		if (now < mapEnterWaitUntil || now - lastStepUpdateTime < stepIntervalMs)
 		{
 			return;
@@ -873,7 +1004,7 @@ public static class ModNextMap
 
 		if (s_WaitingCapsuleMenu)
 		{
-			if (now - s_LastCapsuleUseTime < 1800)
+			if (now - s_LastCapsuleUseTime < System.Math.Max(1500, delayUseCapsuleMs * 3))
 			{
 				return;
 			}
@@ -983,6 +1114,17 @@ public static class ModNextMap
 		}
 	}
 
+	private static string BuildHudMapTagText()
+	{
+		Char me = Char.myCharz();
+		string coords = (me != null) ? (" (" + me.cx + ", " + me.cy + ")") : string.Empty;
+		if (isNextMapActive && nextMapTargetId >= 0)
+		{
+			return "-> " + GetMapName(nextMapTargetId) + " [Map " + TileMap.mapID + " - K." + TileMap.zoneID + "]" + coords;
+		}
+		return "[Map " + TileMap.mapID + "] " + TileMap.mapName + " [K." + TileMap.zoneID + "]" + coords;
+	}
+
 	/// <summary>
 	/// Thực hiện vẽ và hiển thị thành phần PaintHUDMapTag lên canvas đồ họa.
 	/// </summary>
@@ -1011,9 +1153,7 @@ public static class ModNextMap
 			int drawX = 160;
 			int drawY = 16;
 
-			string mapTag = (isNextMapActive && nextMapTargetId >= 0)
-				? ("-> " + GetMapName(nextMapTargetId) + " [K." + TileMap.zoneID + "]")
-				: (TileMap.mapName + " [K." + TileMap.zoneID + "]");
+			string mapTag = BuildHudMapTagText();
 
 			mFont mapTagFont = isNextMapActive
 				? (mFont.tahoma_7b_white ?? mFont.tahoma_7_white ?? mFont.tahoma_7b_yellow)
@@ -1085,9 +1225,7 @@ public static class ModNextMap
 			int drawX = 160;
 			int drawY = 16;
 
-			string mapTag = (isNextMapActive && nextMapTargetId >= 0)
-				? ("-> " + GetMapName(nextMapTargetId) + " [K." + TileMap.zoneID + "]")
-				: (TileMap.mapName + " [K." + TileMap.zoneID + "]");
+			string mapTag = BuildHudMapTagText();
 
 			int tagW = (mFont.tahoma_7b_yellow != null) ? mFont.tahoma_7b_yellow.getWidth(mapTag) : 90;
 

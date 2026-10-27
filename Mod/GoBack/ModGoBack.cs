@@ -27,6 +27,73 @@ public static class ModGoBack
 
 	private static long s_LastPickChickenTime = 0;
 
+	private class LowMpInputListener : IActionListener
+	{
+		public void perform(int idAction, object p)
+		{
+			try
+			{
+				if (GameCanvas.inputDlg == null || GameCanvas.inputDlg.tfInput == null)
+				{
+					GameCanvas.endDlg();
+					return;
+				}
+				string text = (GameCanvas.inputDlg.tfInput.getText() ?? string.Empty).Trim();
+				GameCanvas.endDlg();
+				if (int.TryParse(text, out int val))
+				{
+					lowMpPercent = System.Math.Max(1, System.Math.Min(99, val));
+					ModConfig.SaveConfig();
+					GameScr.info1.addInfo("Mức KI về nhà hồi phục: < " + lowMpPercent + "%", 0);
+					SoundMn.gI().buttonClick();
+				}
+			}
+			catch
+			{
+				GameCanvas.endDlg();
+			}
+		}
+	}
+
+	private static readonly LowMpInputListener s_LowMpListener = new LowMpInputListener();
+
+	public static void ShowInputLowMpPercent()
+	{
+		if (GameCanvas.inputDlg == null) return;
+		ModUI.uiCustomOpen = false;
+		ModMenu.modMenuOpen = false;
+		GameCanvas.inputDlg.show("Nhập mức % KI tự về nhà hồi phục (1 - 99%):", new Command("OK", s_LowMpListener, 1, null), TField.INPUT_TYPE_NUMERIC);
+		if (GameCanvas.inputDlg.tfInput != null)
+		{
+			GameCanvas.inputDlg.tfInput.setMaxTextLenght(3);
+			GameCanvas.inputDlg.tfInput.setText(lowMpPercent.ToString());
+			if (!Main.isPC) GameCanvas.inputDlg.tfInput.setFocusWithKb(isFocus: true);
+		}
+	}
+
+	public static bool HasHomeChickenOnFloor(Char me)
+	{
+		if (!eatChickenAtHome || me == null || GameScr.vItemMap == null)
+		{
+			return false;
+		}
+		if (TileMap.mapID != 21 && TileMap.mapID != 22 && TileMap.mapID != 23)
+		{
+			return false;
+		}
+		for (int i = 0; i < GameScr.vItemMap.size(); i++)
+		{
+			ItemMap itm = (ItemMap)GameScr.vItemMap.elementAt(i);
+			if (itm != null && itm.template != null &&
+			    (itm.template.id == 73 || itm.template.id == 74 || itm.template.id == 75) &&
+			    (itm.playerId == me.charID || itm.playerId == -1))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public static void CycleLowMpPercent()
 	{
 		if (lowMpPercent <= 10) lowMpPercent = 20;

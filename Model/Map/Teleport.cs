@@ -116,6 +116,7 @@ public class Teleport
 
 	public void paintHole(mGraphics g)
 	{
+		if (ModNextMap.instantSpaceshipSkip) return;
 		if (planet > 2 && tHole)
 		{
 			g.drawImage(hole, x, y2 + 20, StaticObj.BOTTOM_HCENTER);
@@ -124,7 +125,7 @@ public class Teleport
 
 	public void paint(mGraphics g)
 	{
-		if (Char.isLoadingMap || x < GameScr.cmx || x > GameScr.cmx + GameCanvas.w)
+		if (ModNextMap.instantSpaceshipSkip || Char.isLoadingMap || x < GameScr.cmx || x > GameScr.cmx + GameCanvas.w)
 		{
 			return;
 		}
@@ -181,6 +182,68 @@ public class Teleport
 
 	public void update()
 	{
+		if (ModNextMap.instantSpaceshipSkip)
+		{
+			if (isMe)
+			{
+				if (type == 0)
+				{
+					Controller.isStopReadMessage = false;
+					Char.ischangingMap = true;
+				}
+				else
+				{
+					Char me = Char.myCharz();
+					if (me != null)
+					{
+						if (me.isTeleport)
+						{
+							me.cx = x;
+							y = y2;
+							me.cy = y2;
+							GameScr.cmtoX = x - GameScr.gW2;
+							GameScr.cmtoY = y2 - GameScr.gH23 - 1;
+						}
+						me.isTeleport = false;
+					}
+					if (GameScr.info1 != null)
+					{
+						GameScr.info1.isUpdate = true;
+					}
+				}
+				SoundMn.gI().pauseAirShip();
+			}
+			else
+			{
+				Char ch = GameScr.findCharInMap(id);
+				if (ch != null)
+				{
+					if (type == 0)
+					{
+						if (isDown)
+						{
+							y = y2;
+						}
+						if (GameScr.vCharInMap != null)
+						{
+							GameScr.vCharInMap.removeElement(ch);
+						}
+					}
+					else
+					{
+						if (ch.isTeleport)
+						{
+							ch.cx = x;
+							y = y2;
+							ch.cy = y2;
+						}
+						ch.isTeleport = false;
+					}
+				}
+			}
+			vTeleport.removeElement(this);
+			return;
+		}
 		lifeTicks++;
 		if (isMe && lifeTicks > 120)
 		{

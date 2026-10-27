@@ -43,6 +43,90 @@ public static class ModSetActivator
 	public static bool autoBuyTdlt = false;
 	private static long lastTdltActionTime = 0;
 	private static int s_SantaBuyStep = 0;
+	private static int s_SantaRetryCount = 0;
+	private static bool s_TripWasTanSat = false;
+	private static bool s_TripWasGoBack = false;
+	private static bool s_ReopenUiAfterNumericInput = false;
+
+	private sealed class NumericSettingListener : IActionListener
+	{
+		private readonly int mode;
+
+		public NumericSettingListener(int mode)
+		{
+			this.mode = mode;
+		}
+
+		public void perform(int idAction, object p)
+		{
+			try
+			{
+				if (idAction == 1 && GameCanvas.inputDlg != null && GameCanvas.inputDlg.tfInput != null)
+				{
+					string raw = (GameCanvas.inputDlg.tfInput.getText() ?? string.Empty).Trim();
+					if (int.TryParse(raw, out int val))
+					{
+						if (mode == 0)
+						{
+							if (val < 1) val = 1;
+							if (val > 20) val = 20;
+							sellMaxLevel = val;
+							GameScr.info1?.addInfo("Bán trang bị tối đa Cấp <= " + sellMaxLevel, 0);
+						}
+						else
+						{
+							if (val < 0) val = 0;
+							if (val > 20) val = 20;
+							minEmptyBagSlots = val;
+							GameScr.info1?.addInfo("Dọn hành trang khi ô trống <= " + minEmptyBagSlots, 0);
+						}
+						ModConfig.SaveConfig();
+						SoundMn.gI().buttonClick();
+					}
+				}
+				GameCanvas.endDlg();
+				if (s_ReopenUiAfterNumericInput)
+				{
+					s_ReopenUiAfterNumericInput = false;
+					ModUI.uiCustomOpen = true;
+				}
+			}
+			catch
+			{
+				GameCanvas.endDlg();
+			}
+		}
+	}
+
+	public static void ShowInputSellMaxLevel()
+	{
+		if (GameCanvas.inputDlg == null) return;
+		s_ReopenUiAfterNumericInput = ModUI.uiCustomOpen;
+		ModUI.uiCustomOpen = false;
+		ModMenu.modMenuOpen = false;
+		GameCanvas.inputDlg.show("Nhập cấp đồ tối đa cho phép bán rác (1 - 20):", new Command("OK", new NumericSettingListener(0), 1, null), TField.INPUT_TYPE_NUMERIC);
+		if (GameCanvas.inputDlg.tfInput != null)
+		{
+			GameCanvas.inputDlg.tfInput.setMaxTextLenght(2);
+			GameCanvas.inputDlg.tfInput.setText(sellMaxLevel.ToString());
+			if (!Main.isPC) GameCanvas.inputDlg.tfInput.setFocusWithKb(isFocus: true);
+		}
+	}
+
+	public static void ShowInputMinEmptyBagSlots()
+	{
+		if (GameCanvas.inputDlg == null) return;
+		s_ReopenUiAfterNumericInput = ModUI.uiCustomOpen;
+		ModUI.uiCustomOpen = false;
+		ModMenu.modMenuOpen = false;
+		GameCanvas.inputDlg.show("Nhập ngưỡng ô trống đi cất/bán đồ (0 - 20):", new Command("OK", new NumericSettingListener(1), 1, null), TField.INPUT_TYPE_NUMERIC);
+		if (GameCanvas.inputDlg.tfInput != null)
+		{
+			GameCanvas.inputDlg.tfInput.setMaxTextLenght(2);
+			GameCanvas.inputDlg.tfInput.setText(minEmptyBagSlots.ToString());
+			if (!Main.isPC) GameCanvas.inputDlg.tfInput.setFocusWithKb(isFocus: true);
+		}
+	}
 
 	private class IdListChatListener : IChatable
 	{
@@ -328,20 +412,28 @@ public static class ModSetActivator
 			if (opt == null || opt.optionTemplate == null) continue;
 			int optId = opt.optionTemplate.id;
 
-			if (optId == 102 && opt.param > stars)
-			{
-				stars = opt.param;
-			}
-			if (optId == 107 && opt.param > stars)
-			{
-				stars = opt.param;
-			}
-			if ((optId == 34 || optId == 35 || optId == 36) && opt.param > stars)
+			if ((optId == 102 || optId == 107) && opt.param > stars)
 			{
 				stars = opt.param;
 			}
 		}
 		return stars;
+	}
+
+	public static bool HasRareSealOption(Item item)
+	{
+		if (item == null || item.itemOption == null) return false;
+		for (int i = 0; i < item.itemOption.Length; i++)
+		{
+			ItemOption opt = item.itemOption[i];
+			if (opt == null || opt.optionTemplate == null) continue;
+			int optId = opt.optionTemplate.id;
+			if (optId == 34 || optId == 35 || optId == 36)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/// <summary>
@@ -407,7 +499,7 @@ public static class ModSetActivator
 	}
 
 	/// <summary>
-	/// Kiểm tra trang bị có phải là Đồ Thần Linh (level >= 13) hay không.
+	/// Kiểm tra trang bị có phải là Đồ Thần Linh, Hủy Diệt hoặc Thiên Sứ (level >= 13) hay không.
 	/// </summary>
 	public static bool IsGodItem(Item item)
 	{
@@ -417,31 +509,40 @@ public static class ModSetActivator
 		if (!string.IsNullOrEmpty(name))
 		{
 			string lower = name.ToLower();
-			if (lower.Contains("thần ") || lower.EndsWith(" thần")) return true;
+			if (lower.Contains("thần ") || lower.EndsWith(" thần") || lower.Contains("thần linh") || lower.Contains("than linh") ||
+			    lower.Contains("hủy diệt") || lower.Contains("huy diet") ||
+			    lower.Contains("thiên sứ") || lower.Contains("thien su"))
+			{
+				return true;
+			}
 		}
 		return false;
 	}
 
 	public static void CycleMinEmptyBagSlots()
 	{
-		if (minEmptyBagSlots <= 1) minEmptyBagSlots = 2;
+		if (minEmptyBagSlots < 0) minEmptyBagSlots = 0;
+		else if (minEmptyBagSlots == 0) minEmptyBagSlots = 1;
+		else if (minEmptyBagSlots == 1) minEmptyBagSlots = 2;
 		else if (minEmptyBagSlots == 2) minEmptyBagSlots = 3;
 		else if (minEmptyBagSlots == 3) minEmptyBagSlots = 5;
-		else minEmptyBagSlots = 1;
+		else minEmptyBagSlots = 0;
 		ModConfig.SaveConfig();
 		SoundMn.gI().buttonClick();
 	}
 
 	/// <summary>
-	/// Kiểm tra xem trang bị có phải là đồ SKH hoặc đồ Sao cần cất vào rương hay không.
+	/// Kiểm tra xem trang bị có phải là đồ SKH, Thần/HĐ/TS hoặc đồ Sao cần cất vào rương hay không.
 	/// </summary>
 	public static bool IsValuableStoreItem(Item item)
 	{
 		if (item == null || item.template == null) return false;
 		int type = item.template.type;
 		if (type < 0 || type > 4) return false;
-		if (IsSetKichHoat(item)) return true;
-		if (IsGodItem(item)) return true;
+		if (IsInIdList(sellItemIdsRaw, item.template.id) && !item.isLock && item.upgrade <= 0) return false;
+		if (IsInIdList(keepItemIdsRaw, item.template.id)) return true;
+		if (!sellSkhItems && (IsSetKichHoat(item) || HasRareSealOption(item))) return true;
+		if (!sellGodItems && (IsGodItem(item) || item.template.level > sellMaxLevel)) return true;
 		if (minStarToKeep > 0 && GetItemStarCount(item) >= minStarToKeep) return true;
 		return false;
 	}
@@ -510,7 +611,7 @@ public static class ModSetActivator
 		if (item == null || item.template == null) return false;
 		if (IsInIdList(sellItemIdsRaw, item.template.id) && !item.isLock && item.upgrade <= 0) return true;
 		if (IsImportantItem(item)) return false;
-		if (!sellSkhItems && IsSetKichHoat(item)) return false;
+		if (!sellSkhItems && (IsSetKichHoat(item) || HasRareSealOption(item))) return false;
 		if (minStarToKeep > 0 && GetItemStarCount(item) >= minStarToKeep) return false;
 
 		return true;
@@ -642,6 +743,44 @@ public static class ModSetActivator
 		return null;
 	}
 
+	private static bool IsNonFarmServiceMap(int mapId)
+	{
+		return mapId == 5 || (mapId >= 21 && mapId <= 26);
+	}
+
+	private static void CaptureCurrentFarmAndPauseAutos(Char me, bool preserveExistingSpot = false)
+	{
+		if (!isBusy)
+		{
+			s_TripWasTanSat = ModTanSat.autoTanSat;
+			s_TripWasGoBack = ModGoBack.isGoBackActive;
+			ModTanSat.autoTanSat = false;
+			ModGoBack.isGoBackActive = false;
+		}
+		if (me != null && TileMap.mapID >= 0 && (!preserveExistingSpot || savedFarmMapId < 0) && !IsNonFarmServiceMap(TileMap.mapID))
+		{
+			savedFarmMapId = TileMap.mapID;
+			savedFarmZoneId = TileMap.zoneID;
+			savedFarmX = me.cx;
+			savedFarmY = me.cy;
+			ModConfig.SaveConfig();
+		}
+	}
+
+	private static void RestorePausedAutosAfterTrip()
+	{
+		if (isActive || s_TripWasTanSat)
+		{
+			ModTanSat.autoTanSat = true;
+		}
+		if (s_TripWasGoBack)
+		{
+			ModGoBack.isGoBackActive = true;
+		}
+		s_TripWasTanSat = false;
+		s_TripWasGoBack = false;
+	}
+
 	public static void StartBuyTdltNow()
 	{
 		Char me = Char.myCharz();
@@ -651,16 +790,10 @@ public static class ModSetActivator
 			GameScr.info1.addInfo("Không đủ Ngọc/Hồng Ngọc để mua TĐLT!", 0);
 			return;
 		}
-		if (TileMap.mapID != 5 && savedFarmMapId < 0)
-		{
-			savedFarmMapId = TileMap.mapID;
-			savedFarmZoneId = TileMap.zoneID;
-			savedFarmX = me.cx;
-			savedFarmY = me.cy;
-			ModConfig.SaveConfig();
-		}
+		CaptureCurrentFarmAndPauseAutos(me);
 		currentState = SetActivatorState.MovingToSanta;
 		s_SantaBuyStep = 0;
+		s_SantaRetryCount = 0;
 		stateTimer = mSystem.currentTimeMillis();
 		GameScr.info1.addInfo("Đang sang Đảo Kamê gặp Santa mua TĐLT...", 0);
 		if (TileMap.mapID != 5)
@@ -672,22 +805,21 @@ public static class ModSetActivator
 	/// <summary>
 	/// Thực thi phương thức nghiệp vụ StartGoSellJunkNow.
 	/// </summary>
-	public static void StartGoSellJunkNow()
+	public static void StartGoSellJunkNow(bool preserveSavedSpot = false)
 	{
 		Char me = Char.myCharz();
 		if (me == null || !ModMenu.IsInGame()) return;
 
-		savedFarmMapId = TileMap.mapID;
-		savedFarmZoneId = TileMap.zoneID;
-		savedFarmX = me.cx;
-		savedFarmY = me.cy;
-		ModConfig.SaveConfig();
+		CaptureCurrentFarmAndPauseAutos(me, preserveExistingSpot: preserveSavedSpot);
 
 		int targetMap = GetTargetSpaceshipMapId();
 		currentState = SetActivatorState.MovingToUron;
 		stateTimer = mSystem.currentTimeMillis();
 		GameScr.info1.addInfo("Bắt đầu di chuyển đến Trạm Tàu Vũ Trụ gặp Urôn để bán đồ...", 0);
-		ModNextMap.StartNextMap(targetMap);
+		if (TileMap.mapID != targetMap)
+		{
+			ModNextMap.StartNextMap(targetMap);
+		}
 	}
 
 	/// <summary>
@@ -698,20 +830,16 @@ public static class ModSetActivator
 		Char me = Char.myCharz();
 		if (me == null || !ModMenu.IsInGame()) return;
 
-		if (savedFarmMapId == -1)
-		{
-			savedFarmMapId = TileMap.mapID;
-			savedFarmZoneId = TileMap.zoneID;
-			savedFarmX = me.cx;
-			savedFarmY = me.cy;
-			ModConfig.SaveConfig();
-		}
+		CaptureCurrentFarmAndPauseAutos(me);
 
 		int homeMap = GetHomeMapId();
 		currentState = SetActivatorState.MovingToHomeBox;
 		stateTimer = mSystem.currentTimeMillis();
 		GameScr.info1.addInfo("Bắt đầu về Nhà cất đồ SKH/Đồ Sao vào Rương...", 0);
-		ModNextMap.StartNextMap(homeMap);
+		if (TileMap.mapID != homeMap)
+		{
+			ModNextMap.StartNextMap(homeMap);
+		}
 	}
 
 	/// <summary>
@@ -752,6 +880,11 @@ public static class ModSetActivator
 				if (isActive)
 				{
 					currentState = SetActivatorState.Farming;
+					break;
+				}
+				if ((autoStoreToBox || autoSellJunk) && !ModNextMap.isNextMapActive && !ModGoBack.isReturning && !Char.isLoadingMap && !Char.ischangingMap && !IsNonFarmServiceMap(TileMap.mapID))
+				{
+					CheckFullBagAndDispatch(me, now);
 				}
 				break;
 
@@ -763,29 +896,9 @@ public static class ModSetActivator
 				}
 
 				ModDropRate.ScanBagForSpecialItems(me);
-
-				// Kiểm tra hành trang khi đầy (<= minEmptyBagSlots ô trống)
-				if (GetFreeBagSlots() <= minEmptyBagSlots)
+				if (!ModNextMap.isNextMapActive && !ModGoBack.isReturning && !Char.isLoadingMap && !Char.ischangingMap && !IsNonFarmServiceMap(TileMap.mapID))
 				{
-					if (autoSellJunk && HasSellableJunkInBag(me))
-					{
-						GameScr.info1.addInfo("Hành trang đã đầy! Tự động lưu bãi và đi bán đồ rác tại Urôn...", 0);
-						StartGoSellJunkNow();
-					}
-					else if (autoStoreToBox && !isBoxFullWarned && HasValuableStoreItemInBag(me))
-					{
-						savedFarmMapId = TileMap.mapID;
-						savedFarmZoneId = TileMap.zoneID;
-						savedFarmX = me.cx;
-						savedFarmY = me.cy;
-						ModConfig.SaveConfig();
-						StartGoStoreBoxNow();
-					}
-					else if (now - lastFullNonJunkWarnTime > 30000)
-					{
-						lastFullNonJunkWarnTime = now;
-						GameScr.info1.addInfo("Hành trang đã đầy vật phẩm giá trị (không còn đồ rác để bán)!", 0);
-					}
+					CheckFullBagAndDispatch(me, now);
 				}
 				break;
 
@@ -965,8 +1078,8 @@ public static class ModSetActivator
 				if (freeBox == 0)
 				{
 					isBoxFullWarned = true;
-					GameScr.info1.addInfo("Rương đồ ở nhà đã đầy! Quay lại bãi úp...", 0);
-					ReturnToSavedFarm();
+					GameScr.info1.addInfo("Rương đồ ở nhà đã đầy!", 0);
+					FinishStoringAndNext(me);
 					break;
 				}
 
@@ -992,8 +1105,8 @@ public static class ModSetActivator
 				}
 				else
 				{
-					GameScr.info1.addInfo("Đã cất đồ SKH/Đồ Sao vào rương! Quay lại bãi úp...", 0);
-					ReturnToSavedFarm();
+					GameScr.info1.addInfo("Đã cất đồ giá trị vào rương!", 0);
+					FinishStoringAndNext(me);
 				}
 				break;
 
@@ -1006,6 +1119,7 @@ public static class ModSetActivator
 					}
 					currentState = SetActivatorState.BuyingTdltAtSanta;
 					s_SantaBuyStep = 0;
+					s_SantaRetryCount = 0;
 					stateTimer = now;
 				}
 				else if (!ModNextMap.isNextMapActive && !Char.isLoadingMap && !Char.ischangingMap && now - stateTimer > 3000)
@@ -1028,7 +1142,7 @@ public static class ModSetActivator
 					break;
 				}
 
-				int santaY = TileMap.tileYofPixel(santa.cy - 3);
+				int santaY = santa.cy - 3;
 				if (Res.distance(me.cx, me.cy, santa.cx, santaY) > 28)
 				{
 					ModTeleport.TeleportTo(santa.cx, santaY);
@@ -1036,25 +1150,42 @@ public static class ModSetActivator
 				me.focusManualTo(santa);
 				int santaId = (santa.template != null) ? santa.template.npcTemplateId : 39;
 
-				if (s_SantaBuyStep == 0 && now - stateTimer >= 700)
+				if (s_SantaBuyStep == 0 && now - stateTimer >= 550)
 				{
 					Service.gI().openMenu(santaId);
-					Service.gI().confirmMenu((short)santaId, 0);
+					s_SantaBuyStep = 1;
+					stateTimer = now;
+				}
+				else if (s_SantaBuyStep == 1 && now - stateTimer >= 550)
+				{
+					int shopIdx = FindSantaShopMenuIndex();
+					Service.gI().confirmMenu((short)santaId, (sbyte)(shopIdx >= 0 ? shopIdx : 0));
 					if (GameCanvas.menu != null)
 					{
 						GameCanvas.menu.showMenu = false;
 					}
-					s_SantaBuyStep = 1;
+					s_SantaBuyStep = 2;
 					stateTimer = now;
 				}
-				else if (s_SantaBuyStep == 1 && now - stateTimer >= 900)
+				else if (s_SantaBuyStep == 2 && now - stateTimer >= 600)
 				{
+					if (GameCanvas.menu != null && GameCanvas.menu.showMenu)
+					{
+						int subIdx = FindSantaShopMenuIndex();
+						Service.gI().confirmMenu((short)santaId, (sbyte)(subIdx >= 0 ? subIdx : 0));
+						GameCanvas.menu.showMenu = false;
+						stateTimer = now;
+						break;
+					}
+
+					GetBagTdltInfo(me, out _, out bool hasBase521);
 					int totalGems = me.luong + me.luongKhoa;
-					int tdltBuyId = 521;
+					int[] prefIds = hasBase521 ? new int[] { 1524, 1523, 521 } : new int[] { 521, 1524, 1523 };
+					int tdltBuyId = hasBase521 ? ((totalGems >= 22) ? 1524 : ((totalGems >= 9) ? 1523 : 521)) : 521;
 					sbyte tdltBuyType = 1;
+
 					if (me.arrItemShop != null)
 					{
-						int[] prefIds = new int[] { 1524, 1523, 521 };
 						bool matchedInShop = false;
 						for (int p = 0; p < prefIds.Length && !matchedInShop; p++)
 						{
@@ -1066,10 +1197,7 @@ public static class ModSetActivator
 									Item sIt = me.arrItemShop[t][k];
 									if (sIt != null && sIt.template != null && sIt.template.id == prefIds[p])
 									{
-										if (sIt.isBuySpec && sIt.buySpec > 0)
-										{
-											continue;
-										}
+										if (sIt.isBuySpec && sIt.buySpec > 0) continue;
 										if (sIt.buyGold > 0 && totalGems >= sIt.buyGold)
 										{
 											tdltBuyId = prefIds[p];
@@ -1089,14 +1217,26 @@ public static class ModSetActivator
 							}
 						}
 					}
-					Service.gI().buyItem(tdltBuyType, tdltBuyId, 0);
-					s_SantaBuyStep = 2;
+
+					Service.gI().buyItem(tdltBuyType, tdltBuyId, 1);
+					s_SantaRetryCount++;
+					s_SantaBuyStep = 3;
 					stateTimer = now;
 				}
-				else if (s_SantaBuyStep == 2 && now - stateTimer >= 800)
+				else if (s_SantaBuyStep == 3 && now - stateTimer >= 750)
 				{
-					TryUseUnexpiredTdltInBag(me);
-					GameScr.info1.addInfo("Đã mua & kích hoạt TĐLT tại Santa!", 0);
+					int bagMins = GetBagTdltInfo(me, out int usableIdx, out _);
+					if (usableIdx < 0 && s_SantaRetryCount < 3 && (me.luong + me.luongKhoa) >= 1)
+					{
+						s_SantaBuyStep = 2;
+						stateTimer = now;
+						break;
+					}
+					if (usableIdx >= 0 && (autoUseTdlt || !ItemTime.isExistItem(4387)))
+					{
+						Service.gI().useItem(0, 1, (sbyte)usableIdx, -1);
+					}
+					GameScr.info1.addInfo((bagMins > 0 || usableIdx >= 0) ? "Đã mua & gia hạn TĐLT tại Santa!" : "Đã hoàn tất giao dịch Santa!", 0);
 					ReturnToSavedFarm();
 				}
 				break;
@@ -1104,7 +1244,8 @@ public static class ModSetActivator
 			case SetActivatorState.ReturningToFarm:
 				if (savedFarmMapId == -1)
 				{
-					currentState = SetActivatorState.Idle;
+					RestorePausedAutosAfterTrip();
+					currentState = isActive ? SetActivatorState.Farming : SetActivatorState.Idle;
 					break;
 				}
 
@@ -1173,19 +1314,70 @@ public static class ModSetActivator
 				if (savedFarmX != -1 && savedFarmY != -1)
 				{
 					ModTeleport.TeleportTo(savedFarmX, savedFarmY);
-					GameScr.info1.addInfo("Đã về đúng vị trí bãi úp! Tiếp tục úp set kích hoạt.", 0);
+					GameScr.info1.addInfo("Đã về đúng vị trí bãi úp!", 0);
 					SoundMn.gI().buttonClick();
 				}
 
-				// Kích hoạt lại Tàn Sát để tự động đánh quái
-				if (isActive)
-				{
-					ModTanSat.autoTanSat = true;
-				}
-
-				currentState = SetActivatorState.Farming;
+				RestorePausedAutosAfterTrip();
+				currentState = isActive ? SetActivatorState.Farming : SetActivatorState.Idle;
 				break;
 		}
+	}
+
+	private static void CheckFullBagAndDispatch(Char me, long now)
+	{
+		if (GetFreeBagSlots() > minEmptyBagSlots) return;
+
+		if (autoStoreToBox && !isBoxFullWarned && HasValuableStoreItemInBag(me))
+		{
+			GameScr.info1.addInfo("Hành trang đầy! Ưu tiên về Nhà cất đồ SKH/Sao/Thần vào Rương trước...", 0);
+			StartGoStoreBoxNow();
+		}
+		else if (autoSellJunk && HasSellableJunkInBag(me))
+		{
+			GameScr.info1.addInfo("Hành trang đầy! Tự động đi bán đồ rác tại Urôn...", 0);
+			StartGoSellJunkNow();
+		}
+		else if (now - lastFullNonJunkWarnTime > 30000)
+		{
+			lastFullNonJunkWarnTime = now;
+			GameScr.info1.addInfo("Hành trang đã đầy vật phẩm giá trị (không còn đồ rác để bán)!", 0);
+		}
+	}
+
+	private static void FinishStoringAndNext(Char me)
+	{
+		if (GameCanvas.panel != null && GameCanvas.panel.isShow)
+		{
+			GameCanvas.panel.hide();
+		}
+		if (autoSellJunk && me != null && HasSellableJunkInBag(me))
+		{
+			StartGoSellJunkNow(preserveSavedSpot: true);
+			return;
+		}
+		ReturnToSavedFarm();
+	}
+
+	private static int FindSantaShopMenuIndex()
+	{
+		if (GameCanvas.menu == null || !GameCanvas.menu.showMenu || GameCanvas.menu.menuItems == null)
+		{
+			return 0;
+		}
+		for (int i = 0; i < GameCanvas.menu.menuItems.size(); i++)
+		{
+			Command cmd = (Command)GameCanvas.menu.menuItems.elementAt(i);
+			if (cmd != null && !string.IsNullOrEmpty(cmd.caption))
+			{
+				string cap = ModNextMapData.RemoveAccents(cmd.caption).ToLower();
+				if (cap.Contains("cua hang") || cap.Contains("shop") || cap.Contains("tiem"))
+				{
+					return i;
+				}
+			}
+		}
+		return 0;
 	}
 
 	/// <summary>
@@ -1261,17 +1453,23 @@ public static class ModSetActivator
 		}
 	}
 
-	private static bool TryUseUnexpiredTdltInBag(Char me)
+	public static int GetBagTdltInfo(Char me, out int usableBagIdx, out bool hasBase521)
 	{
-		if (me == null || me.arrItemBag == null) return false;
+		usableBagIdx = -1;
+		hasBase521 = false;
+		if (me == null || me.arrItemBag == null) return 0;
+
+		int maxMins = 0;
 		for (int i = 0; i < me.arrItemBag.Length; i++)
 		{
 			Item item = me.arrItemBag[i];
 			if (item == null || item.template == null) continue;
 			int tid = item.template.id;
+			if (tid == 521) hasBase521 = true;
 			if (tid != 521 && tid != 1523 && tid != 1524) continue;
 
 			bool expired = false;
+			int itemMins = (tid == 1524) ? 1440 : 60;
 			if (item.itemOption != null)
 			{
 				for (int j = 0; j < item.itemOption.Length; j++)
@@ -1279,38 +1477,89 @@ public static class ModSetActivator
 					ItemOption opt = item.itemOption[j];
 					if (opt == null || opt.optionTemplate == null) continue;
 					int oid = opt.optionTemplate.id;
-					if ((oid == 1 || oid == 63 || oid == 64 || oid == 65 || oid == 73 || oid == 93) && opt.param <= 0)
+					if (oid == 9)
+					{
+						itemMins = opt.param;
+						if (opt.param <= 0)
+						{
+							expired = true;
+							break;
+						}
+					}
+					else if ((oid == 1 || oid == 63 || oid == 64 || oid == 65 || oid == 73 || oid == 93) && opt.param <= 0)
 					{
 						expired = true;
 						break;
 					}
+					else if (!string.IsNullOrEmpty(opt.optionTemplate.name))
+					{
+						string oname = ModNextMapData.RemoveAccents(opt.optionTemplate.name).ToLower();
+						if (oname.Contains("phut") && opt.param <= 0)
+						{
+							expired = true;
+							break;
+						}
+						if (oname.Contains("phut") && opt.param > 0)
+						{
+							itemMins = opt.param;
+						}
+					}
 				}
 			}
+
 			if (!expired)
 			{
-				Service.gI().useItem(0, 1, (sbyte)i, -1);
-				return true;
+				if (usableBagIdx < 0 || tid == 1524 || tid == 1523)
+				{
+					usableBagIdx = i;
+				}
+				if (itemMins > maxMins)
+				{
+					maxMins = itemMins;
+				}
 			}
+		}
+		return maxMins;
+	}
+
+	public static bool TryUseUnexpiredTdltInBag(Char me)
+	{
+		GetBagTdltInfo(me, out int usableIdx, out _);
+		if (usableIdx >= 0)
+		{
+			Service.gI().useItem(0, 1, (sbyte)usableIdx, -1);
+			return true;
 		}
 		return false;
 	}
 
 	private static void UpdateAutoTdlt(Char me, long now)
 	{
-		if (!autoUseTdlt || me == null || me.isDie) return;
+		if ((!autoUseTdlt && !autoBuyTdlt) || me == null || me.isDie) return;
 		if (isBusy || ModNextMap.isNextMapActive || ModGoBack.isReturning || Char.isLoadingMap || Char.ischangingMap) return;
 		if (now - lastTdltActionTime < 3500) return;
-		if (ItemTime.isExistItem(4387)) return;
 
-		lastTdltActionTime = now;
-		if (TryUseUnexpiredTdltInBag(me))
+		ItemTime activeTdlt = ItemTime.getItemById(4387);
+		bool isTdltActive = activeTdlt != null;
+		int activeMins = isTdltActive ? activeTdlt.minute : 0;
+		int bagMins = GetBagTdltInfo(me, out int usableBagIdx, out _);
+
+		if (!isTdltActive && autoUseTdlt && usableBagIdx >= 0)
 		{
+			lastTdltActionTime = now;
+			Service.gI().useItem(0, 1, (sbyte)usableBagIdx, -1);
 			return;
 		}
 
 		if (autoBuyTdlt && (me.luong + me.luongKhoa) >= 1)
 		{
-			StartBuyTdltNow();
+			bool needBuy = (!isTdltActive && (usableBagIdx < 0 || (!autoUseTdlt && bagMins < 10))) ||
+			               (isTdltActive && activeMins >= 0 && activeMins < 10 && bagMins < 10);
+			if (needBuy)
+			{
+				lastTdltActionTime = now;
+				StartBuyTdltNow();
+			}
 		}
 	}
 
@@ -1322,6 +1571,7 @@ public static class ModSetActivator
 		"Kaioshin",
 		"Gohan",
 		"Piccolo",
+		"Ốc Tiêu",
 		"Nail",
 		"Daimao",
 		"Nail M",
@@ -1339,6 +1589,14 @@ public static class ModSetActivator
 		for (int i = 0; i < item.itemOption.Length; i++)
 		{
 			ItemOption opt = item.itemOption[i];
+			if (opt == null || opt.optionTemplate == null || string.IsNullOrEmpty(opt.optionTemplate.name)) continue;
+			string low = opt.optionTemplate.name.ToLower();
+			if (low.Contains("ốc tiêu") || low.Contains("oc tieu")) return 6;
+		}
+
+		for (int i = 0; i < item.itemOption.Length; i++)
+		{
+			ItemOption opt = item.itemOption[i];
 			if (opt == null || opt.optionTemplate == null) continue;
 			switch (opt.optionTemplate.id)
 			{
@@ -1348,14 +1606,14 @@ public static class ModSetActivator
 				case 245: case 246: case 247: case 248: return 3; // Kaioshin
 				case 233: case 234: return 4; // Gohan
 				case 130: case 142: return 5; // Piccolo
-				case 131: case 143: return 6; // Nail
-				case 132: case 144: return 7; // Daimao
-				case 237: case 238: case 239: case 240: return 8; // Nail M
-				case 254: case 255: case 256: case 257: return 9; // Champa
-				case 133: case 136: return 10; // Kakarot
-				case 134: case 137: return 11; // Cađíc
-				case 135: case 138: return 12; // Nappa
-				case 241: case 242: case 243: case 244: return 13; // Cađíc M
+				case 131: case 143: return 7; // Nail
+				case 132: case 144: return 8; // Daimao
+				case 237: case 238: case 239: case 240: return 9; // Nail M
+				case 254: case 255: case 256: case 257: return 10; // Champa
+				case 133: case 136: return 11; // Kakarot
+				case 134: case 137: return 12; // Cađíc
+				case 135: case 138: return 13; // Nappa
+				case 241: case 242: case 243: case 244: return 14; // Cađíc M
 			}
 		}
 
@@ -1369,17 +1627,18 @@ public static class ModSetActivator
 			if (low.Contains("krillin") || low.Contains("kirin")) return 2;
 			if (low.Contains("kaioshin") || low.Contains("kaio-ken") || low.Contains("kaioken") || low.Contains("thần vũ trụ")) return 3;
 			if (low.Contains("gohan")) return 4;
-			if (low.Contains("piccolo daimao") || low.Contains("daimao")) return 7;
-			if (low.Contains("piccolo") || low.Contains("pikkoro") || low.Contains("ốc tiêu") || low.Contains("oc tieu")) return 5;
-			if (low.Contains("nail namek")) return 8;
-			if (low.Contains("nail")) return 6;
-			if (low.Contains("champa")) return 9;
-			if (low.Contains("kakarot") || low.Contains("galick")) return 10;
-			if (low.Contains("vegeta m") || low.Contains("cađíc m") || low.Contains("cadic m")) return 13;
-			if (low.Contains("cađíc") || low.Contains("cadic") || low.Contains("vegeta")) return 11;
-			if (low.Contains("nappa")) return 12;
+			if (low.Contains("piccolo daimao") || low.Contains("daimao")) return 8;
+			if (low.Contains("ốc tiêu") || low.Contains("oc tieu")) return 6;
+			if (low.Contains("piccolo") || low.Contains("pikkoro")) return 5;
+			if (low.Contains("nail namek")) return 9;
+			if (low.Contains("nail")) return 7;
+			if (low.Contains("champa")) return 10;
+			if (low.Contains("kakarot") || low.Contains("galick")) return 11;
+			if (low.Contains("vegeta m") || low.Contains("cađíc m") || low.Contains("cadic m")) return 14;
+			if (low.Contains("cađíc") || low.Contains("cadic") || low.Contains("vegeta")) return 12;
+			if (low.Contains("nappa")) return 13;
 		}
-		return IsSetKichHoat(item) ? 14 : -1;
+		return IsSetKichHoat(item) ? 15 : -1;
 	}
 
 	private static void ScanArrayForSkh(Item[] arr, int[,] planetCounts, int[,] setCounts)

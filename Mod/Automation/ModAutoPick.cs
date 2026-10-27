@@ -10,6 +10,7 @@ public class AutoPickActionListener : IActionListener
 	public const int ACTION_SET_FILTER_NAMES = 99102;
 	public const int ACTION_SET_DROP_IDS = 99103;
 	public const int ACTION_SET_BLACKLIST_IDS = 99104;
+	public const int ACTION_SET_PICK_DISTANCE = 99105;
 
 	/// <summary>
 	/// Thực thi hành động tương tác khi người dùng kích hoạt lệnh hoặc nút bấm.
@@ -49,6 +50,27 @@ public class AutoPickActionListener : IActionListener
 				ModAutoPick.SetBlacklistIds(text);
 				ModConfig.SaveConfig();
 				SoundMn.gI().buttonClick();
+			}
+			else if (idAction == ACTION_SET_PICK_DISTANCE)
+			{
+				string cleaned = (text ?? string.Empty).Trim();
+				if (int.TryParse(cleaned, out int dist))
+				{
+					if (dist <= 0)
+					{
+						ModAutoPick.maxPickDistance = 0;
+						GameScr.info1?.addInfo("Phạm vi tự nhặt: Toàn Map", 0);
+					}
+					else
+					{
+						if (dist < 10) dist = 10;
+						if (dist > 2000) dist = 2000;
+						ModAutoPick.maxPickDistance = dist;
+						GameScr.info1?.addInfo("Phạm vi tự nhặt: " + dist + "px", 0);
+					}
+					ModConfig.SaveConfig();
+					SoundMn.gI().buttonClick();
+				}
 			}
 			if (ModAutoPick.reopenModUiAfterInput)
 			{
@@ -252,6 +274,21 @@ public static class ModAutoPick
 		}
 	}
 
+	public static void ShowInputMaxPickDistance()
+	{
+		if (GameCanvas.inputDlg == null) return;
+		reopenModUiAfterInput = ModUI.uiCustomOpen;
+		ModUI.uiCustomOpen = false;
+		ModMenu.modMenuOpen = false;
+		GameCanvas.inputDlg.show("Nhập cự ly nhặt vật phẩm (0 = Toàn Map, 10 - 2000px):", new Command("OK", listener, AutoPickActionListener.ACTION_SET_PICK_DISTANCE, null), TField.INPUT_TYPE_NUMERIC);
+		if (GameCanvas.inputDlg.tfInput != null)
+		{
+			GameCanvas.inputDlg.tfInput.setMaxTextLenght(4);
+			GameCanvas.inputDlg.tfInput.setText(maxPickDistance.ToString());
+			if (!Main.isPC) GameCanvas.inputDlg.tfInput.setFocusWithKb(isFocus: true);
+		}
+	}
+
 	public static void CycleMaxPickDistance()
 	{
 		if (maxPickDistance <= 0) maxPickDistance = 50;
@@ -418,6 +455,21 @@ public static class ModAutoPick
 		if (it == null || it.status == 2) return false;
 		Char me = Char.myCharz();
 		int myId = (me != null) ? me.charID : -1;
+
+		if (it.template != null)
+		{
+			int checkTid = it.template.id;
+			if (blacklistIds.Count > 0 && blacklistIds.Contains(checkTid))
+			{
+				return false;
+			}
+			// Đùi gà nướng (ID 74): Luôn ưu tiên nhặt trừ khi nằm trong Blacklist
+			if (checkTid == 74)
+			{
+				return it.playerId == myId || it.playerId == -1 || it.playerId == -2 || it.playerId == 0;
+			}
+		}
+
 		if (onlyMyItems)
 		{
 			if (it.playerId != myId) return false;
@@ -435,11 +487,6 @@ public static class ModAutoPick
 		}
 		int tId = it.template.id;
 		string name = it.template.name;
-
-		if (blacklistIds.Count > 0 && blacklistIds.Contains(tId))
-		{
-			return false;
-		}
 
 		// Vật phẩm 673 (cờ/vật phẩm cần xác nhận askToPick) chỉ nhặt khi người chơi chỉ định đích danh trong lọc ID
 		if (tId == 673 && !(filterById && filterIds.Contains(673)))
@@ -509,7 +556,8 @@ public static class ModAutoPick
 			if (ignoredItemUntil.TryGetValue(it.itemMapID, out long ignoreUntil) && now < ignoreUntil) continue;
 			int ix = (it.xEnd != 0) ? it.xEnd : it.x;
 			int iy = (it.yEnd != 0) ? it.yEnd : it.y;
-			if (maxPickDistance > 0 && Res.distance(me.cx, me.cy, ix, iy) > maxPickDistance) continue;
+			bool isChicken = it.template != null && it.template.id == 74;
+			if (!isChicken && maxPickDistance > 0 && Res.distance(me.cx, me.cy, ix, iy) > maxPickDistance) continue;
 			if (ShouldPickItem(it)) return true;
 		}
 		return false;
@@ -588,7 +636,8 @@ public static class ModAutoPick
 					int ix = (it.xEnd != 0) ? it.xEnd : it.x;
 					int iy = (it.yEnd != 0) ? it.yEnd : it.y;
 					int dist = Res.distance(me.cx, me.cy, ix, iy);
-					if (maxPickDistance > 0 && dist > maxPickDistance)
+					bool isChicken = it.template != null && it.template.id == 74;
+					if (!isChicken && maxPickDistance > 0 && dist > maxPickDistance)
 					{
 						continue;
 					}

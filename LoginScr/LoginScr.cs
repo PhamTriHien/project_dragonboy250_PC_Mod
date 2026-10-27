@@ -341,6 +341,7 @@ public partial class LoginScr : mScreen, IActionListener
 	protected void doMenu()
 		{
 			MyVector myVector = new MyVector();
+			myVector.addElement(new Command("Quản lý Tài khoản", this, 2010, null));
 			myVector.addElement(new Command(mResources.registerNewAcc, this, 2004, null));
 			if (!isLogin2)
 			{
@@ -554,6 +555,10 @@ public partial class LoginScr : mScreen, IActionListener
 	public void savePass()
 		{
 			DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.SaveCredentials(tfUser.getText(), tfPass.getText(), isCheck);
+			if (isCheck)
+			{
+				ModAccountManager.UpsertAccount(tfUser.getText(), tfPass.getText(), ServerListScreen.ipSelect);
+			}
 		}
 
 	private void doChangeTip()

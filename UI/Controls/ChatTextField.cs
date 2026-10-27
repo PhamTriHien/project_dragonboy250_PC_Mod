@@ -64,7 +64,7 @@ public class ChatTextField : IActionListener
 		tfChat.height = mScreen.ITEM_HEIGHT + 2;
 		tfChat.x = GameCanvas.w / 2 - tfChat.width / 2;
 		tfChat.isFocus = true;
-		tfChat.setMaxTextLenght(250);
+		tfChat.setMaxTextLenght(500);
 	}
 
 	public void initChatTextField()

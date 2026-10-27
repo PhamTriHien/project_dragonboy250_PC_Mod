@@ -31,9 +31,10 @@ public static class ModNextMapPathFinder
 		int gender = meForKey != null ? meForKey.cgender : -1;
 		int taskId = (meForKey != null && meForKey.taskMaint != null) ? meForKey.taskMaint.taskId : -1;
 		long cPower = (meForKey != null) ? meForKey.cPower : 0L;
+		bool hasClan = meForKey == null || meForKey.clan != null || meForKey.clanID >= 0;
 		int powerTier = (cPower >= 60000000000L) ? 2 : ((cPower >= 40000000000L) ? 1 : 0);
 		int taskKey = (taskId < 0) ? 63 : (taskId > 62 ? 62 : taskId);
-		long cacheKey = ((long)startMapId << 40) | ((long)targetMapId << 16) | ((long)taskKey << 8) | ((long)powerTier << 4) | (byte)(gender + 1);
+		long cacheKey = ((long)startMapId << 40) | ((hasClan ? 1L : 0L) << 32) | ((long)targetMapId << 16) | ((long)taskKey << 8) | ((long)powerTier << 4) | (byte)(gender + 1);
 		if (s_PathCache.TryGetValue(cacheKey, out var cachedPath))
 		{
 			return new List<int>(cachedPath);
@@ -76,6 +77,12 @@ public static class ModNextMapPathFinder
 					{
 						if (taskId >= 0 && taskId <= 30 && targetMapId != next) continue;
 						if (!isColdEndpoint) continue;
+					}
+
+					// Ràng buộc Bang Hội cho Doanh Trại Độc Nhãn (53..62), Khí Gas (147..149, 151..152) và Lãnh Địa Bang Hội (153, 156..159)
+					if (!hasClan && ((next >= 53 && next <= 62) || (next >= 147 && next <= 153 && next != 150) || (next >= 156 && next <= 159)))
+					{
+						continue;
 					}
 
 					// Ràng buộc sức mạnh tối thiểu (153..159: 40 tỷ, 155/166: 60 tỷ)

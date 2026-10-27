@@ -46,6 +46,7 @@ public static class ModAutoRevive
 			return;
 		}
 		if (now - deathDetectTime < 600 || now < nextAt) return;
+		if ((me.luong + me.luongKhoa) <= 0) return;
 		Service.gI().wakeUpFromDead();
 		nextAt = now + intervalMs;
 	}

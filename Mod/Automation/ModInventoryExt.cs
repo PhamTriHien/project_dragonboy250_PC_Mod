@@ -41,8 +41,45 @@ public sealed class ModInventoryExt : IActionListener
 	public static int autoUseTemplateId = -1;
 	public static string autoUseItemName = string.Empty;
 	public static int autoUseIntervalSec = 10;
-	private static long s_LastAutoUseTick = 0;
+	public static readonly Dictionary<int, int> autoUseItemsSec = new Dictionary<int, int>();
+	private static readonly Dictionary<int, long> s_LastMultiAutoUseTick = new Dictionary<int, long>();
+	private static readonly List<int> s_AutoUseKeyBuffer = new List<int>();
 	private static Item s_PendingBagItem = null;
+
+	public static string ExportAutoUseItems()
+	{
+		if (autoUseItemsSec.Count == 0) return string.Empty;
+		StringBuilder sb = new StringBuilder();
+		foreach (KeyValuePair<int, int> kv in autoUseItemsSec)
+		{
+			if (kv.Key < 0 || kv.Value < 1) continue;
+			if (sb.Length > 0) sb.Append(';');
+			sb.Append(kv.Key).Append(':').Append(kv.Value);
+		}
+		return sb.ToString();
+	}
+
+	public static void ImportAutoUseItems(string raw)
+	{
+		autoUseItemsSec.Clear();
+		s_LastMultiAutoUseTick.Clear();
+		if (string.IsNullOrEmpty(raw)) return;
+		string[] parts = raw.Split(new char[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries);
+		for (int i = 0; i < parts.Length; i++)
+		{
+			string p = parts[i].Trim();
+			int sep = p.IndexOf(':');
+			if (sep > 0)
+			{
+				if (int.TryParse(p.Substring(0, sep).Trim(), out int tid) &&
+				    int.TryParse(p.Substring(sep + 1).Trim(), out int sec) &&
+				    tid >= 0 && sec >= 1)
+				{
+					autoUseItemsSec[tid] = sec;
+				}
+			}
+		}
+	}
 
 	public static ModInventoryExt gI()
 	{
@@ -170,6 +207,98 @@ public sealed class ModInventoryExt : IActionListener
 		SoundMn.gI().buttonClick();
 	}
 
+	public static void ShowEquipSetsInfo()
+	{
+		StringBuilder sb = new StringBuilder();
+		AppendSingleSetSummary(sb, 1, equipSet1Raw);
+		sb.Append('\n');
+		AppendSingleSetSummary(sb, 2, equipSet2Raw);
+		if (ModUI.uiCustomOpen)
+		{
+			ModUI.uiCustomOpen = false;
+			ModMenu.modMenuOpen = false;
+		}
+		GameCanvas.startOKDlg(sb.ToString());
+		SoundMn.gI().buttonClick();
+	}
+
+	private static void AppendSingleSetSummary(StringBuilder sb, int setIndex, string raw)
+	{
+		List<string> list = ParseSetList(raw);
+		sb.Append("[Set Đồ ").Append(setIndex).Append(" - ").Append(list.Count).Append(" món]");
+		if (list.Count == 0)
+		{
+			sb.Append("\n  (Chưa lưu món nào)");
+			return;
+		}
+		Char me = Char.myCharz();
+		for (int i = 0; i < list.Count; i++)
+		{
+			string sig = list[i];
+			string itemName = sig;
+			string extraTag = string.Empty;
+			string statusTag = string.Empty;
+			int hashIdx = sig.IndexOf('#');
+			int tid = -1;
+			if (hashIdx > 0 && int.TryParse(sig.Substring(0, hashIdx), out tid))
+			{
+				ItemTemplate tmpl = ItemTemplates.get((short)tid);
+				itemName = (tmpl != null && !string.IsNullOrEmpty(tmpl.name)) ? tmpl.name : ("ID " + tid);
+			}
+			Item matched = FindLiveItemForSummary(me, sig, tid, out bool onBody);
+			if (matched != null)
+			{
+				statusTag = onBody ? " [Đang mặc]" : " [Trong túi]";
+				string tag = ModSetActivator.GetCompactOptionTag(matched);
+				if (!string.IsNullOrEmpty(tag))
+				{
+					extraTag = " (" + tag + ")";
+				}
+			}
+			else
+			{
+				statusTag = " [Chưa thấy]";
+			}
+			sb.Append("\n  ").Append(i + 1).Append(". ").Append(itemName).Append(extraTag).Append(statusTag);
+		}
+	}
+
+	private static Item FindLiveItemForSummary(Char me, string sig, int tid, out bool onBody)
+	{
+		onBody = false;
+		if (me == null) return null;
+		if (me.arrItemBody != null)
+		{
+			for (int i = 0; i < me.arrItemBody.Length; i++)
+			{
+				Item it = me.arrItemBody[i];
+				if (it != null && string.Equals(BuildItemSignature(it), sig, StringComparison.Ordinal))
+				{
+					onBody = true;
+					return it;
+				}
+			}
+		}
+		if (me.arrItemBag != null)
+		{
+			int bagIdx = FindBagIndexBySignature(me.arrItemBag, sig);
+			if (bagIdx >= 0) return me.arrItemBag[bagIdx];
+		}
+		if (tid >= 0 && me.arrItemBody != null)
+		{
+			for (int i = 0; i < me.arrItemBody.Length; i++)
+			{
+				Item it = me.arrItemBody[i];
+				if (it != null && it.template != null && it.template.id == tid)
+				{
+					onBody = true;
+					return it;
+				}
+			}
+		}
+		return null;
+	}
+
 	public static void EquipSet(int setIndex)
 	{
 		List<string> list = ParseSetList(setIndex == 1 ? equipSet1Raw : equipSet2Raw);
@@ -207,10 +336,10 @@ public sealed class ModInventoryExt : IActionListener
 			else
 				menu.addElement(new Command("Thêm Vào\nSet 2", panel, ACT_SET2_ADD, currItem));
 		}
-		else if (!isBodySlot && currItem.template.id != 457)
+		if (!isBodySlot && currItem.template.id != 457)
 		{
-			if (autoUseTemplateId == currItem.template.id)
-				menu.addElement(new Command("Ngưng Auto\nSử Dụng", panel, ACT_BAG_AUTO_STOP, currItem));
+			if (autoUseItemsSec.TryGetValue(currItem.template.id, out int curSec))
+				menu.addElement(new Command("Ngưng Auto\n(" + curSec + "s)", panel, ACT_BAG_AUTO_STOP, currItem));
 			else
 				menu.addElement(new Command("Auto\nSử Dụng", panel, ACT_BAG_AUTO_USE, currItem));
 		}
@@ -279,17 +408,36 @@ public sealed class ModInventoryExt : IActionListener
 				if (item != null && item.template != null)
 				{
 					s_PendingBagItem = item;
+					int initSec = autoUseItemsSec.TryGetValue(item.template.id, out int existingSec) ? existingSec : autoUseIntervalSec;
 					GameCanvas.inputDlg.show(
 						"Nhập chu kỳ giây sử dụng [" + item.template.name + "]:",
 						new Command(mResources.OK, gI(), DLG_AUTO_USE_SEC, null),
 						TField.INPUT_TYPE_NUMERIC);
-					GameCanvas.inputDlg.tfInput.setText(autoUseIntervalSec.ToString());
+					GameCanvas.inputDlg.tfInput.setText(initSec.ToString());
 				}
 				return true;
 			case ACT_BAG_AUTO_STOP:
-				autoUseTemplateId = -1;
-				autoUseItemName = string.Empty;
-				GameScr.info1.addInfo("Đã ngưng Auto Sử Dụng vật phẩm.", 0);
+				if (item != null && item.template != null)
+				{
+					autoUseItemsSec.Remove(item.template.id);
+					s_LastMultiAutoUseTick.Remove(item.template.id);
+					if (autoUseTemplateId == item.template.id)
+					{
+						autoUseTemplateId = -1;
+						autoUseItemName = string.Empty;
+					}
+					ModConfig.SaveConfig();
+					GameScr.info1.addInfo("Đã ngưng Auto Sử Dụng [" + item.template.name + "].", 0);
+				}
+				else
+				{
+					autoUseItemsSec.Clear();
+					s_LastMultiAutoUseTick.Clear();
+					autoUseTemplateId = -1;
+					autoUseItemName = string.Empty;
+					ModConfig.SaveConfig();
+					GameScr.info1.addInfo("Đã ngưng toàn bộ Auto Sử Dụng vật phẩm.", 0);
+				}
 				return true;
 		}
 		return false;
@@ -350,14 +498,17 @@ public sealed class ModInventoryExt : IActionListener
 				return;
 			}
 			autoUseIntervalSec = sec;
-			autoUseTemplateId = s_PendingBagItem.template.id;
+			int targetTplId = s_PendingBagItem.template.id;
+			autoUseTemplateId = targetTplId;
 			autoUseItemName = s_PendingBagItem.template.name;
-			s_LastAutoUseTick = 0;
+			autoUseItemsSec[targetTplId] = sec;
+			s_LastMultiAutoUseTick.Remove(targetTplId);
+			ModConfig.SaveConfig();
 			if (GameCanvas.panel != null && GameCanvas.panel.isShow)
 			{
 				GameCanvas.panel.hide();
 			}
-			GameScr.info1.addInfo("Auto Sử Dụng [" + autoUseItemName + "] mỗi " + autoUseIntervalSec + "s: BẬT", 0);
+			GameScr.info1.addInfo("Auto Sử Dụng [" + autoUseItemName + "] mỗi " + sec + "s: BẬT (" + autoUseItemsSec.Count + " món)", 0);
 		}
 	}
 
@@ -435,30 +586,37 @@ public sealed class ModInventoryExt : IActionListener
 			}
 		}
 
-		if (autoUseTemplateId >= 0 && GameCanvas.gameTick % 5 == 0 && now - s_LastAutoUseTick >= autoUseIntervalSec * 1000L)
+		if (autoUseItemsSec.Count > 0 && GameCanvas.gameTick % 5 == 0 && me.arrItemBag != null)
 		{
-			s_LastAutoUseTick = now;
-			int foundIdx = -1;
-			if (me.arrItemBag != null)
+			s_AutoUseKeyBuffer.Clear();
+			foreach (int k in autoUseItemsSec.Keys)
 			{
+				s_AutoUseKeyBuffer.Add(k);
+			}
+			for (int kIdx = 0; kIdx < s_AutoUseKeyBuffer.Count; kIdx++)
+			{
+				int tplId = s_AutoUseKeyBuffer[kIdx];
+				if (!autoUseItemsSec.TryGetValue(tplId, out int intervalSec) || intervalSec < 1) continue;
+				if (s_LastMultiAutoUseTick.TryGetValue(tplId, out long lastTick) && now - lastTick < intervalSec * 1000L)
+				{
+					continue;
+				}
+				int foundIdx = -1;
 				for (int i = 0; i < me.arrItemBag.Length; i++)
 				{
 					Item it = me.arrItemBag[i];
-					if (it != null && it.template != null && it.template.id == autoUseTemplateId)
+					if (it != null && it.template != null && it.template.id == tplId)
 					{
 						foundIdx = i;
 						break;
 					}
 				}
-			}
-			if (foundIdx >= 0)
-			{
-				Service.gI().useItem(0, 1, (sbyte)foundIdx, -1);
-			}
-			else
-			{
-				autoUseTemplateId = -1;
-				GameScr.info1.addInfo("Hết [" + autoUseItemName + "] trong túi! Đã tắt Auto Sử Dụng.", 0);
+				if (foundIdx >= 0)
+				{
+					s_LastMultiAutoUseTick[tplId] = now;
+					Service.gI().useItem(0, 1, (sbyte)foundIdx, -1);
+					break;
+				}
 			}
 		}
 	}

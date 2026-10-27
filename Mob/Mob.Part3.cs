@@ -8,6 +8,11 @@ public partial class Mob
 				{
 					return;
 				}
+				if (ModMenu.graphicsQuality == 4)
+				{
+					ModGraphics.PaintMobWireframe(this, g);
+					return;
+				}
 				if (isMafuba)
 				{
 					if (!changBody)

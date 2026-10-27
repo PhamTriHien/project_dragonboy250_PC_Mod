@@ -195,21 +195,26 @@ public static class ModUITanSat
 			out int listW,
 			out int listH);
 
-		// Hàng 0: Tàn sát, Tự nhặt & Tiếp cận
+		// Hàng 0: TS, Tự đánh tại chỗ, Tự nhặt, Tiếp cận & Cấu hình A*
 		int row0H = 16;
-		mFont.tahoma_7_grey.drawString(g, "Tàn sát:", uiX + 5, row0Y + 2, mFont.LEFT);
-		ModUI.PaintNativeButton(uiX + 46, row0Y, 36, row0H, ModTanSat.autoTanSat ? "BẬT" : "TẮT", ModTanSat.autoTanSat, g);
+		mFont.tahoma_7_grey.drawString(g, "TS:", uiX + 4, row0Y + 2, mFont.LEFT);
+		ModUI.PaintNativeButton(uiX + 23, row0Y, 32, row0H, ModTanSat.autoTanSat ? "BẬT" : "TẮT", ModTanSat.autoTanSat, g);
 
-		mFont.tahoma_7_grey.drawString(g, "Tự nhặt:", uiX + 87, row0Y + 2, mFont.LEFT);
-		ModUI.PaintNativeButton(uiX + 128, row0Y, 36, row0H, ModAutoPick.autoPick ? "BẬT" : "TẮT", ModAutoPick.autoPick, g);
+		mFont.tahoma_7_grey.drawString(g, "Tự đánh:", uiX + 59, row0Y + 2, mFont.LEFT);
+		ModUI.PaintNativeButton(uiX + 104, row0Y, 32, row0H, ModAutoSkill.isAutoAttackInPlace ? "BẬT" : "TẮT", ModAutoSkill.isAutoAttackInPlace, g);
 
-		int tpBtnW = 72;
-		int tpBtnX = uiX + uiW - tpBtnW - 4;
+		mFont.tahoma_7_grey.drawString(g, "Nhặt:", uiX + 140, row0Y + 2, mFont.LEFT);
+		ModUI.PaintNativeButton(uiX + 169, row0Y, 32, row0H, ModAutoPick.autoPick ? "BẬT" : "TẮT", ModAutoPick.autoPick, g);
+
+		int astarCfgW = 54;
+		int astarCfgX = uiX + uiW - astarCfgW - 4;
+		int tpBtnW = astarCfgX - (uiX + 205) - 3;
+		if (tpBtnW < 64) tpBtnW = 64;
 		string tpLabel = !ModTanSat.useTeleport
-			? "Chạy bộ"
+			? "Chạy A*"
 			: (ModTanSat.antiScanMode ? "Lướt BFS" : "Dịch chuyển");
-		mFont.tahoma_7_grey.drawString(g, "Tiếp cận:", tpBtnX - 44, row0Y + 2, mFont.LEFT);
-		ModUI.PaintNativeButton(tpBtnX, row0Y, tpBtnW, row0H, tpLabel, ModTanSat.useTeleport, g);
+		ModUI.PaintNativeButton(uiX + 205, row0Y, tpBtnW, row0H, tpLabel, ModTanSat.useTeleport, g);
+		ModUI.PaintNativeButton(astarCfgX, row0Y, astarCfgW, row0H, "Cài A*", !ModTanSat.useTeleport, g);
 
 		// Hàng Chế độ úp: Chuyển đổi giữa Map Thường và Chống Quét (dành cho các map dễ bị quét đưa về nhà)
 		int modeRowH = 16;
@@ -324,6 +329,7 @@ public static class ModUITanSat
 					ModUI.DrawCheckbox(itemX, itemY + 1, ModTanSat.autoResetZone, g);
 					string rzLabel = "Reset Khu (" + ModTanSat.resetZoneMinutes + "p)";
 					(ModTanSat.autoResetZone ? mFont.tahoma_7_green2 : mFont.tahoma_7_grey).drawString(g, rzLabel, itemX + 22, itemY + 2, mFont.LEFT);
+					ModUI.PaintNativeButton(itemX + colW - 34, itemY + 1, 34, 15, "Nhập", ModTanSat.autoResetZone, g);
 				}
 				else if (idx == 6)
 				{
@@ -349,13 +355,16 @@ public static class ModUITanSat
 		}
 		else
 		{
-			mFont.tahoma_7_grey.drawString(g, "Chế độ chiêu:", uiX + 5, row2Y + 2, mFont.LEFT);
+			mFont.tahoma_7_grey.drawString(g, "Chiêu:", uiX + 5, row2Y + 2, mFont.LEFT);
+			int activeAutoSlots = ModAutoSkill.CountEnabledAutoSlots();
+			string autoSlotLabel = activeAutoSlots > 0 ? ("Auto 10 Ô (" + activeAutoSlots + ")") : "Auto 10 Ô";
+			ModUI.PaintNativeButton(uiX + 38, row2Y, 88, row2H, autoSlotLabel, activeAutoSlots > 0, g);
 
-			int modeAllW = 54;
+			int modeAllW = 50;
 			int modeAllX = uiX + uiW - modeAllW - 4;
-			int modeComboW = 62;
+			int modeComboW = 56;
 			int modeComboX = modeAllX - modeComboW - 3;
-			int modeSingleW = 70;
+			int modeSingleW = 64;
 			int modeSingleX = modeComboX - modeSingleW - 3;
 
 			int curMode = ModTanSatFilter.selectAllSkills ? 2 : ModTanSatFilter.skillSelectionMode;
@@ -484,33 +493,50 @@ public static class ModUITanSat
 		int row2H = 16;
 		int footerH = 17;
 
-		// 1. Bật/Tắt Tàn sát
-		if (px >= uiX + 46 && px <= uiX + 82 && py >= row0Y - 1 && py <= row0Y + row0H + 1)
+		// 1. Bật/Tắt Tàn sát, Tự đánh tại chỗ, Tự nhặt, Tiếp cận & Cấu hình A*
+		if (py >= row0Y - 1 && py <= row0Y + row0H + 1)
 		{
-			ModTanSat.autoTanSat = !ModTanSat.autoTanSat;
-			ModConfig.SaveConfig();
-			SoundMn.gI().buttonClick();
-			return true;
-		}
-
-		// 1b. Bật/Tắt Tự nhặt item
-		if (px >= uiX + 128 && px <= uiX + 164 && py >= row0Y - 1 && py <= row0Y + row0H + 1)
-		{
-			ModAutoPick.autoPick = !ModAutoPick.autoPick;
-			ModConfig.SaveConfig();
-			SoundMn.gI().buttonClick();
-			return true;
-		}
-
-		// 2. Nút Tiếp cận
-		int tpBtnW = 72;
-		int tpBtnX = uiX + uiW - tpBtnW - 4;
-		if (px >= tpBtnX && px <= tpBtnX + tpBtnW && py >= row0Y - 1 && py <= row0Y + row0H + 1)
-		{
-			ModTanSat.useTeleport = !ModTanSat.useTeleport;
-			ModConfig.SaveConfig();
-			SoundMn.gI().buttonClick();
-			return true;
+			if (px >= uiX + 23 && px <= uiX + 55)
+			{
+				ModTanSat.autoTanSat = !ModTanSat.autoTanSat;
+				if (ModTanSat.autoTanSat)
+				{
+					ModAutoSkill.isAutoAttackInPlace = false;
+				}
+				ModConfig.SaveConfig();
+				SoundMn.gI().buttonClick();
+				return true;
+			}
+			if (px >= uiX + 104 && px <= uiX + 136)
+			{
+				ModAutoSkill.ToggleAutoAttackInPlace();
+				return true;
+			}
+			if (px >= uiX + 169 && px <= uiX + 201)
+			{
+				ModAutoPick.autoPick = !ModAutoPick.autoPick;
+				ModConfig.SaveConfig();
+				SoundMn.gI().buttonClick();
+				return true;
+			}
+			int astarCfgW = 54;
+			int astarCfgX = uiX + uiW - astarCfgW - 4;
+			int tpBtnW = astarCfgX - (uiX + 205) - 3;
+			if (tpBtnW < 64) tpBtnW = 64;
+			if (px >= uiX + 205 && px <= uiX + 205 + tpBtnW)
+			{
+				ModTanSat.useTeleport = !ModTanSat.useTeleport;
+				ModAStarPathFinder.ResetPath();
+				ModConfig.SaveConfig();
+				SoundMn.gI().buttonClick();
+				return true;
+			}
+			if (px >= astarCfgX && px <= astarCfgX + astarCfgW)
+			{
+				SoundMn.gI().buttonClick();
+				ModAStarPathFinder.ShowConfigMenu();
+				return true;
+			}
 		}
 
 		// 2a. Hàng Chế độ úp: Map Thường vs Chống Quét Về Nhà
@@ -611,11 +637,18 @@ public static class ModUITanSat
 		}
 		else if (py >= row2Y - 1 && py <= row2Y + row2H + 1)
 		{
-			int modeAllW = 54;
+			if (px >= uiX + 38 && px <= uiX + 126)
+			{
+				SoundMn.gI().buttonClick();
+				ModAutoSkill.ShowSlotListMenu();
+				return true;
+			}
+
+			int modeAllW = 50;
 			int modeAllX = uiX + uiW - modeAllW - 4;
-			int modeComboW = 62;
+			int modeComboW = 56;
 			int modeComboX = modeAllX - modeComboW - 3;
-			int modeSingleW = 70;
+			int modeSingleW = 64;
 			int modeSingleX = modeComboX - modeSingleW - 3;
 
 			if (px >= modeSingleX && px <= modeSingleX + modeSingleW)
@@ -688,10 +721,16 @@ public static class ModUITanSat
 						}
 						else if (idx == 5)
 						{
+							if (px >= itemX + colW - 34 && px <= itemX + colW)
+							{
+								SoundMn.gI().buttonClick();
+								ModTanSat.ShowInputResetZoneMinutes();
+								return true;
+							}
 							if (!ModTanSat.autoResetZone)
 							{
 								ModTanSat.autoResetZone = true;
-								ModTanSat.resetZoneMinutes = 15;
+								if (ModTanSat.resetZoneMinutes <= 0) ModTanSat.resetZoneMinutes = 15;
 							}
 							else if (ModTanSat.resetZoneMinutes == 15) ModTanSat.resetZoneMinutes = 30;
 							else if (ModTanSat.resetZoneMinutes == 30) ModTanSat.resetZoneMinutes = 60;
@@ -803,33 +842,18 @@ public static class ModUITanSat
 				SoundMn.gI().buttonClick();
 				return true;
 			}
-			// Nút current [ xxx ms ]
+			// Nút current [ xxx ms ] -> Mở ô nhập số tùy ý
 			if (px >= uiX + 86 && px <= uiX + 134)
 			{
-				int[] cycle = new int[] { 100, 200, 300, 400, 500, 700, 1000 };
-				int nextVal = 300;
-				for (int c = 0; c < cycle.Length; c++)
-				{
-					if (cycle[c] > ModTanSat.timeAttack)
-					{
-						nextVal = cycle[c];
-						break;
-					}
-					if (c == cycle.Length - 1)
-					{
-						nextVal = cycle[0];
-					}
-				}
-				ModTanSat.timeAttack = nextVal;
-				ModConfig.SaveConfig();
 				SoundMn.gI().buttonClick();
+				ModTanSat.ShowInputTimeAttack();
 				return true;
 			}
 			// Nút [+]
 			if (px >= uiX + 136 && px <= uiX + 152)
 			{
 				ModTanSat.timeAttack += 50;
-				if (ModTanSat.timeAttack > 3000) ModTanSat.timeAttack = 3000;
+				if (ModTanSat.timeAttack > 5000) ModTanSat.timeAttack = 5000;
 				ModConfig.SaveConfig();
 				SoundMn.gI().buttonClick();
 				return true;

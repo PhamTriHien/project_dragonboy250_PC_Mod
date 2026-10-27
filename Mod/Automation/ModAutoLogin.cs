@@ -8,12 +8,21 @@ public static class ModAutoLogin
 	public static bool isEnabled = true;
 	public static bool keepSavedZone = false;
 	public static int savedKeepZoneId = -1;
+	public static int savedKeepZoneMapId = -1;
 	private static long lastKeepZoneCheckTime = 0;
 	public static bool isReconnecting = false;
+	public static bool s_IntentionalDisconnect = false;
 	public static int retryCount = 0;
 	public static long lastRetryTime = 0;
 	public static int reconnectDelayMs = 8000;
 	public static string statusMessage = "";
+
+	public static void NotifyIntentionalDisconnect()
+	{
+		s_IntentionalDisconnect = true;
+		isReconnecting = false;
+		statusMessage = "";
+	}
 
 	public static void ToggleKeepZone()
 	{
@@ -21,7 +30,8 @@ public static class ModAutoLogin
 		if (keepSavedZone && ModMenu.IsInGame())
 		{
 			savedKeepZoneId = TileMap.zoneID;
-			GameScr.info1.addInfo("Giữ Khu Cố Định: BẬT (Khu " + savedKeepZoneId + ")", 0);
+			savedKeepZoneMapId = TileMap.mapID;
+			GameScr.info1.addInfo("Giữ Khu Cố Định: BẬT (" + ModNextMap.GetMapName(savedKeepZoneMapId) + " - Khu " + savedKeepZoneId + ")", 0);
 		}
 		else
 		{
@@ -32,6 +42,7 @@ public static class ModAutoLogin
 	}
 
 	public static bool wasTanSatActive = false;
+	public static bool wasAutoAttackInPlaceActive = false;
 	public static bool wasAutoPickActive = false;
 	public static bool wasAutoHealActive = false;
 	public static bool wasGoBackActive = false;
@@ -52,11 +63,13 @@ public static class ModAutoLogin
 	public static void ResetSession()
 	{
 		isReconnecting = false;
+		s_IntentionalDisconnect = false;
 		hasEnteredGameOnce = false;
 		retryCount = 0;
 		lastRetryTime = 0;
 		statusMessage = "";
 		wasTanSatActive = false;
+		wasAutoAttackInPlaceActive = false;
 		wasAutoPickActive = false;
 		wasAutoHealActive = false;
 		wasGoBackActive = false;
@@ -76,8 +89,10 @@ public static class ModAutoLogin
 	{
 		if (ModMenu.IsInGame())
 		{
+			s_IntentionalDisconnect = false;
 			hasEnteredGameOnce = true;
 			wasTanSatActive = ModTanSat.autoTanSat;
+			wasAutoAttackInPlaceActive = ModAutoSkill.isAutoAttackInPlace;
 			wasAutoPickActive = ModAutoPick.autoPick;
 			wasAutoHealActive = ModAutoHeal.autoPean;
 			wasGoBackActive = ModGoBack.isGoBackActive;
@@ -118,6 +133,7 @@ public static class ModAutoLogin
 	public static void TriggerScheduledReconnect()
 	{
 		if (!isEnabled) return;
+		s_IntentionalDisconnect = false;
 		hasEnteredGameOnce = true;
 		isReconnecting = true;
 		retryCount = 0;
@@ -130,7 +146,12 @@ public static class ModAutoLogin
 	/// </summary>
 	public static void OnDisconnected()
 	{
-		if (ModSchedule.isEnabled && ModSchedule.disconnectOnOffWindow && ModSchedule.isOffWindowDisconnected)
+		if (s_IntentionalDisconnect)
+		{
+			isReconnecting = false;
+			return;
+		}
+		if (ModSchedule.isEnabled && (ModSchedule.IsInScheduledOffPeriod() || (ModSchedule.disconnectOnOffWindow && ModSchedule.isOffWindowDisconnected)))
 		{
 			isReconnecting = false;
 			return;
@@ -156,8 +177,13 @@ public static class ModAutoLogin
 	{
 		if (keepSavedZone && savedKeepZoneId >= 0 && ModMenu.IsInGame() && !Char.isLoadingMap && !Char.ischangingMap)
 		{
-			if (!ModNextMap.isNextMapActive && !ModBossNotice.isAutoScanBossZone && !ModGoBack.isReturning && !ModSetActivator.isBusy && !ModAutoBuyBua.isBusy)
+			if ((savedKeepZoneMapId < 0 || TileMap.mapID == savedKeepZoneMapId) &&
+			    !ModNextMap.isNextMapActive && !ModBossNotice.isAutoScanBossZone && !ModGoBack.isReturning && !ModSetActivator.isBusy && !ModAutoBuyBua.isBusy)
 			{
+				if (savedKeepZoneMapId < 0)
+				{
+					savedKeepZoneMapId = TileMap.mapID;
+				}
 				long tNow = mSystem.currentTimeMillis();
 				if (TileMap.zoneID != savedKeepZoneId && tNow - lastKeepZoneCheckTime >= 3500)
 				{
@@ -167,8 +193,12 @@ public static class ModAutoLogin
 			}
 		}
 
-		if (!isEnabled || !isReconnecting) return;
-		if (ModSchedule.isEnabled && ModSchedule.disconnectOnOffWindow && ModSchedule.isOffWindowDisconnected)
+		if (!isEnabled || !isReconnecting || s_IntentionalDisconnect)
+		{
+			if (s_IntentionalDisconnect) isReconnecting = false;
+			return;
+		}
+		if (ModSchedule.isEnabled && (ModSchedule.IsInScheduledOffPeriod() || (ModSchedule.disconnectOnOffWindow && ModSchedule.isOffWindowDisconnected)))
 		{
 			isReconnecting = false;
 			return;
@@ -185,22 +215,19 @@ public static class ModAutoLogin
 		}
 
 		long now = mSystem.currentTimeMillis();
-		int currentBackoff = reconnectDelayMs * (retryCount + 1);
+		long currentBackoff = (long)reconnectDelayMs * (retryCount + 1);
+		if (currentBackoff > 60000L)
+		{
+			currentBackoff = 60000L;
+		}
 		if (now - lastRetryTime < currentBackoff)
 		{
 			return;
 		}
 
 		lastRetryTime = now;
-		if (retryCount >= 3)
-		{
-			Res.outz("[ModAutoLogin] Max reconnect attempts reached (3). Pausing auto-reconnect to prevent server rate limiting.");
-			isReconnecting = false;
-			statusMessage = "";
-			return;
-		}
 		retryCount++;
-		statusMessage = "Tự động kết nối lại lần " + retryCount + "/3...";
+		statusMessage = "Tự động kết nối lại lần " + retryCount + "...";
 		Res.outz("[ModAutoLogin] " + statusMessage);
 
 		PerformLoginSequence();
@@ -280,6 +307,10 @@ public static class ModAutoLogin
 			if (wasTanSatActive)
 			{
 				ModTanSat.autoTanSat = true;
+			}
+			if (wasAutoAttackInPlaceActive)
+			{
+				ModAutoSkill.isAutoAttackInPlace = true;
 			}
 
 			// 2. Tu Nhat

@@ -3,9 +3,9 @@ using UnityEngine;
 
 public static class ModGraphics
 {
-	// 0: Ultra (mặc định), 1: Medium (xóa hiệu ứng động), 2: Low (xóa bg), 3: Super Low
+	// 0: Ultra (mặc định), 1: Medium (xóa hiệu ứng động), 2: Low (xóa bg), 3: Super Low, 4: Hình Học (Wireframe)
 	public static int graphicsQuality = 0;
-	public static readonly string[] graphicsNames = new string[4] { "Ultra", "Medium", "Low", "Super Low" };
+	public static readonly string[] graphicsNames = new string[5] { "Ultra", "Medium", "Low", "Super Low", "Hình Học" };
 
 	// 2 chế độ đồ hoạ: 0: Đồ Hoạ Java (tài nguyên x1 + font bitmap từ src Java gốc), 1: Đồ Hoạ HD (tài nguyên x2 sắc nét)
 	public static int renderMode = 0;
@@ -31,7 +31,223 @@ public static class ModGraphics
 	public static readonly string[] resolutionNames = new string[4] { "1024x600", "1280x720", "1600x900", "1920x1080" };
 	public static bool isFullscreen = false;
 	public static bool isAfkLowCpu = false;
+	public static bool isAfkBlackScreen = false;
 	public static bool hideOtherPlayers = false;
+	private static long s_LastBlackScreenTapMs = 0L;
+
+	public static void ToggleAfkBlackScreen()
+	{
+		isAfkBlackScreen = !isAfkBlackScreen;
+		s_LastBlackScreenTapMs = 0L;
+		ModFps.ApplyFPS();
+		if (!isAfkBlackScreen && GameScr.info1 != null && ModMenu.IsInGame())
+		{
+			GameScr.info1.addInfo("Đã tắt Treo Màn Đen, khôi phục hình ảnh.", 0);
+		}
+		SoundMn.gI().buttonClick();
+	}
+
+	public static bool ShouldRenderAfkBlackScreen()
+	{
+		if (!isAfkBlackScreen || !ModMenu.IsInGame())
+		{
+			return false;
+		}
+		if (ModUI.uiCustomOpen || GameCanvas.currentDialog != null || ModAutoCaptcha.IsCaptchaActive())
+		{
+			return false;
+		}
+		return true;
+	}
+
+	public static bool CheckWakeFromBlackScreenTap()
+	{
+		if (!ShouldRenderAfkBlackScreen())
+		{
+			return false;
+		}
+		if (GameCanvas.isPointerJustRelease)
+		{
+			long now = mSystem.currentTimeMillis();
+			if (now - s_LastBlackScreenTapMs <= 450L)
+			{
+				s_LastBlackScreenTapMs = 0L;
+				ToggleAfkBlackScreen();
+			}
+			else
+			{
+				s_LastBlackScreenTapMs = now;
+			}
+			GameCanvas.clearAllPointerEvent();
+			return true;
+		}
+		if (GameCanvas.isPointerDown || GameCanvas.isPointerClick)
+		{
+			GameCanvas.clearAllPointerEvent();
+			return true;
+		}
+		return false;
+	}
+
+	public static void PaintAfkBlackScreen(mGraphics g)
+	{
+		if (g == null) return;
+		g.translate(-g.getTranslateX(), -g.getTranslateY());
+		g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
+		g.setColor(0);
+		g.fillRect(0, 0, GameCanvas.w, GameCanvas.h);
+
+		int cx = GameCanvas.w / 2;
+		int cy = GameCanvas.h / 2 - 34;
+		int fps = (Main.realFPS > 0) ? Main.realFPS : 10;
+
+		(mFont.tahoma_7b_yellow ?? mFont.tahoma_7_yellow).drawString(g, "[ TREO MÀN ĐEN TIẾT KIỆM GPU - " + fps + " FPS ]", cx, cy, mFont.CENTER);
+		cy += 14;
+
+		string mapLine = "Map: [" + TileMap.mapID + "] " + ModNextMap.GetMapName(TileMap.mapID) + " - Khu " + TileMap.zoneID;
+		(mFont.tahoma_7_white ?? mFont.tahoma_7_yellow).drawString(g, mapLine, cx, cy, mFont.CENTER);
+		cy += 13;
+
+		Char me = Char.myCharz();
+		if (me != null)
+		{
+			string statLine = me.cName + " | HP: " + ModMapEntityHUD.FormatHp(me.cHP) + "/" + ModMapEntityHUD.FormatHp(me.cHPFull) + " | KI: " + ModMapEntityHUD.FormatHp(me.cMP) + "/" + ModMapEntityHUD.FormatHp(me.cMPFull);
+			(mFont.tahoma_7_yellow ?? mFont.tahoma_7_white).drawString(g, statLine, cx, cy, mFont.CENTER);
+			cy += 13;
+
+			string autoLine = "Tàn Sát: " + (ModTanSat.autoTanSat ? "BẬT" : "TẮT") + " | Tự Đánh: " + (ModAutoSkill.isAutoAttackInPlace ? "BẬT" : "TẮT") + " | Vàng: " + ModMapEntityHUD.FormatHp(me.xu);
+			(mFont.tahoma_7_white ?? mFont.tahoma_7_yellow).drawString(g, autoLine, cx, cy, mFont.CENTER);
+			cy += 16;
+		}
+
+		(mFont.tahoma_7_yellow ?? mFont.tahoma_7_white).drawString(g, "Chạm đúp màn hình hoặc bấm F9 để mở lại hình ảnh", cx, cy, mFont.CENTER);
+	}
+
+	public static void PaintTilemapWireframe(mGraphics g)
+	{
+		if (Char.isLoadingMap || TileMap.maps == null || g == null)
+		{
+			return;
+		}
+		int tmw = TileMap.tmw;
+		int tmh = TileMap.tmh;
+		int sz = TileMap.size;
+		int startX = System.Math.Max(0, GameScr.gssx);
+		int endX = System.Math.Min(tmw, GameScr.gssxe);
+		int startY = System.Math.Max(0, GameScr.gssy);
+		int endY = System.Math.Min(tmh, GameScr.gssye);
+
+		for (int i = startX; i < endX; i++)
+		{
+			for (int j = startY; j < endY; j++)
+			{
+				int idx = j * tmw + i;
+				if (idx < 0 || idx >= TileMap.maps.Length)
+				{
+					continue;
+				}
+				int type = TileMap.tileTypeAt(i, j);
+				bool isSolidTop = (type & 2) == 2;
+				bool isWallBlock = (type & (4 | 8 | 8192)) != 0;
+				if (!isSolidTop && !isWallBlock)
+				{
+					continue;
+				}
+				int px = i * sz;
+				int py = j * sz;
+				if (isSolidTop)
+				{
+					g.setColor(0x14331E);
+					g.fillRect(px, py, sz, sz);
+					g.setColor(0x2EA043);
+					g.drawRect(px, py, sz - 1, sz - 1);
+				}
+				else
+				{
+					g.setColor(0x1C2128);
+					g.fillRect(px, py, sz, sz);
+					g.setColor(0x484F58);
+					g.drawRect(px, py, sz - 1, sz - 1);
+				}
+			}
+		}
+
+		if (TileMap.vGo != null)
+		{
+			for (int w = 0; w < TileMap.vGo.size(); w++)
+			{
+				Waypoint wp = (Waypoint)TileMap.vGo.elementAt(w);
+				if (wp == null) continue;
+				int wx = wp.minX;
+				int wy = wp.minY;
+				int ww = System.Math.Max(16, wp.maxX - wp.minX);
+				int wh = System.Math.Max(16, wp.maxY - wp.minY);
+				g.setColor(0x00BCD4);
+				g.drawRect(wx, wy, ww, wh);
+				if (wp.popup != null && wp.popup.command != null && !string.IsNullOrEmpty(wp.popup.command.caption))
+				{
+					(mFont.tahoma_7_yellow ?? mFont.tahoma_7_white).drawString(g, wp.popup.command.caption, wx + ww / 2, wy - 12, mFont.CENTER);
+				}
+			}
+		}
+	}
+
+	public static void PaintMobWireframe(Mob mob, mGraphics g)
+	{
+		if (mob == null || g == null || mob.hp <= 0 || mob.status == 0 || mob.status == 1)
+		{
+			return;
+		}
+		if (mob.x < GameScr.cmx - 40 || mob.x > GameScr.cmx + GameScr.gW + 40 ||
+		    mob.y < GameScr.cmy - 40 || mob.y > GameScr.cmy + GameScr.gH + 60)
+		{
+			return;
+		}
+		int mw = mob.w > 12 ? (mob.w * 2 / 3) : 16;
+		int mh = mob.h > 12 ? (mob.h * 2 / 3) : 16;
+		int bx = mob.x - mw / 2;
+		int by = mob.y - mh;
+		bool focused = (Char.myCharz() != null && Char.myCharz().mobFocus == mob);
+
+		g.setColor(focused ? 0x9E2A2B : 0x4A2525);
+		g.fillRect(bx, by, mw, mh);
+		g.setColor(focused ? 0xFFD600 : 0xFF5252);
+		g.drawRect(bx, by, mw - 1, mh - 1);
+
+		string mobName = (mob.getTemplate() != null && !string.IsNullOrEmpty(mob.getTemplate().name))
+			? mob.getTemplate().name
+			: ("Mob " + mob.templateId);
+		mFont nf = focused ? (mFont.tahoma_7b_yellow ?? mFont.tahoma_7_yellow) : (mFont.tahoma_7_white ?? mFont.tahoma_7_yellow);
+		nf.drawString(g, mobName, mob.x, by - 12, mFont.CENTER);
+
+		if (mob.maxHp > 0)
+		{
+			int barW = 28;
+			int fillW = (int)(mob.hp * barW / mob.maxHp);
+			if (fillW < 1 && mob.hp > 0) fillW = 1;
+			if (fillW > barW) fillW = barW;
+			int barX = mob.x - barW / 2;
+			int barY = by - 3;
+			g.setColor(0x222222);
+			g.fillRect(barX, barY, barW, 3);
+			g.setColor(focused ? 0x00E676 : 0xFF5252);
+			g.fillRect(barX, barY, fillW, 3);
+		}
+	}
+
+	public static void PaintItemMapWireframe(ItemMap item, mGraphics g)
+	{
+		if (item == null || g == null || item.template == null)
+		{
+			return;
+		}
+		g.setColor(0xFFD54F);
+		g.fillRect(item.x - 4, item.y - 8, 8, 8);
+		g.setColor(0xFF6F00);
+		g.drawRect(item.x - 4, item.y - 8, 7, 7);
+		string label = ModSetActivator.showItemId ? ("[" + item.template.id + "] " + item.template.name) : item.template.name;
+		(mFont.tahoma_7_yellow ?? mFont.tahoma_7_white).drawString(g, label, item.x, item.y - 19, mFont.CENTER);
+	}
 
 	public static void ToggleHideOtherPlayers()
 	{

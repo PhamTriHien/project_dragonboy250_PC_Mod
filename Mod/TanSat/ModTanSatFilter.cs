@@ -567,9 +567,18 @@ public static class ModTanSatFilter
 		// 2. CHẾ ĐỘ KẾT HỢP (COMBO CÁC CHIÊU ĐÃ TICK TRONG DANH SÁCH)
 		if (!selectAllSkills && tickedSkillTemplateIds.Count > 0)
 		{
+			bool hasNamekLienHoan = me.cgender == 1 && tickedSkillTemplateIds.Contains(17) && FindSkillByTemplateId(17) != null;
 			for (int k = 0; k < tickedSkillTemplateIds.Count; k++)
 			{
 				int tplId = tickedSkillTemplateIds[k];
+				if (hasNamekLienHoan && tplId == 2)
+				{
+					Skill lh = FindSkillByTemplateId(17);
+					if (lh != null && now - lh.lastTimeUseThisSkill >= GetEffectiveSkillCooldown(lh) && HasEnoughMp(me, lh))
+					{
+						return lh;
+					}
+				}
 				Skill s = FindSkillByTemplateId(tplId);
 				if (s != null && s.template != null && IsAttackSkill(s))
 				{
@@ -592,7 +601,15 @@ public static class ModTanSatFilter
 			}
 		}
 
-		// 3. CHẾ ĐỘ TẤT CẢ KỸ NĂNG ĐÁNH CƠ BẢN (selectAllSkills == true): Ưu tiên theo thứ tự ô phím thay vì chọn bừa theo cooldown cao nhất
+		// 3. CHẾ ĐỘ TẤT CẢ KỸ NĂNG ĐÁNH CƠ BẢN (selectAllSkills == true): Ưu tiên Liên hoàn (17) hơn Demon (2) cho Namếc giống bản Java
+		if (me.cgender == 1)
+		{
+			Skill lhSkill = FindSkillByTemplateId(17);
+			if (lhSkill != null && IsAutoAttackSkill(lhSkill) && now - lhSkill.lastTimeUseThisSkill >= GetEffectiveSkillCooldown(lhSkill) && HasEnoughMp(me, lhSkill))
+			{
+				return lhSkill;
+			}
+		}
 		if (GameScr.keySkill != null)
 		{
 			for (int i = 0; i < GameScr.keySkill.Length; i++)

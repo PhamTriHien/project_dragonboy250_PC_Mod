@@ -17,6 +17,7 @@ public static class ModMapEntityHUD
 		public bool isBoss;
 		public bool canAttack;
 		public string name;
+		public string tagPrefix;
 		public long hp;
 		public long maxHp;
 		public int x;
@@ -290,6 +291,7 @@ public static class ModMapEntityHUD
 				cy += 10;
 
 				string effStr = string.Empty;
+				if (target.protectEff) effStr += "[Khiên] ";
 				if (target.holdEffID != 0) effStr += "[Bị trói] ";
 				if (target.sleepEff) effStr += "[Thôi miên] ";
 				if (target.blindEff) effStr += "[TDHS] ";
@@ -297,6 +299,7 @@ public static class ModMapEntityHUD
 				if (target.stone) effStr += "[Hóa đá] ";
 				if (target.isMonkey == 1) effStr += "[Biến khỉ] ";
 				if (target.isCharge) effStr += "[Tái tạo] ";
+				if (!TileMap.tileTypeAt(target.cx, target.cy, 2)) effStr += "[Bay] ";
 
 				if (!string.IsNullOrEmpty(effStr))
 				{
@@ -375,12 +378,15 @@ public static class ModMapEntityHUD
 					}
 					else if (c.charID > 0)
 					{
+						string planetTag = (c.cgender == 0) ? "[TĐ]" : ((c.cgender == 1) ? "[NM]" : ((c.cgender == 2) ? "[XD]" : string.Empty));
+						string flagTag = (c.cFlag > 0) ? "[Cờ]" : string.Empty;
 						currentEntries.Add(new MapEntityEntry
 						{
 							entityId = c.charID,
 							isBoss = false,
 							canAttack = isAttackable,
 							name = cleanName,
+							tagPrefix = flagTag + planetTag,
 							hp = c.cHP,
 							maxHp = (c.cHPFull > 0) ? c.cHPFull : c.cHP,
 							x = c.cx,
@@ -506,7 +512,10 @@ public static class ModMapEntityHUD
 						(entry.mobRef != null && me.mobFocus == entry.mobRef)
 					);
 
-					string namePart = isFocused ? ("> " + entry.name) : entry.name;
+					string displayLabel = string.IsNullOrEmpty(entry.tagPrefix)
+						? entry.name
+						: (entry.tagPrefix + " " + entry.name);
+					string namePart = isFocused ? ("> " + displayLabel) : displayLabel;
 					string hpPart = " - " + FormatHp(entry.hp) + "/" + FormatHp(entry.maxHp);
 
 					mFont nameFont;
@@ -695,17 +704,20 @@ public static class ModMapEntityHUD
 						GameCanvas.clearAllPointerEvent();
 
 						Char me = Char.myCharz();
+						bool alreadyFocused = (me != null) && (
+							(entry.charRef != null && me.charFocus == entry.charRef) ||
+							(entry.mobRef != null && me.mobFocus == entry.mobRef)
+						);
+
 						if (me != null)
 						{
-							me.currentMovePoint = null;
-							me.vMovePoints.removeAllElements();
-
-							// Khóa mục tiêu
 							if (entry.charRef != null)
 							{
 								me.charFocus = entry.charRef;
 								me.mobFocus = null;
 								me.npcFocus = null;
+								me.itemFocus = null;
+								Char.isManualFocus = true;
 								lockedCharId = entry.charRef.charID;
 								lockedMobId = -1;
 							}
@@ -714,21 +726,28 @@ public static class ModMapEntityHUD
 								me.mobFocus = entry.mobRef;
 								me.charFocus = null;
 								me.npcFocus = null;
+								me.itemFocus = null;
+								Char.isManualFocus = true;
 								lockedMobId = entry.mobRef.mobId;
 								lockedCharId = 0;
 							}
 
-							// Dịch chuyển tức thời đến tọa độ thực thể
-							ModTeleport.TeleportTo(entry.x, entry.y);
-						}
-
-						if (GameScr.gI() != null)
-						{
-							GameScr.gI().clickMoving = false;
+							if (alreadyFocused)
+							{
+								me.currentMovePoint = null;
+								me.vMovePoints.removeAllElements();
+								ModTeleport.TeleportTo(entry.x, entry.y);
+								if (GameScr.gI() != null)
+								{
+									GameScr.gI().clickMoving = false;
+								}
+							}
 						}
 
 						SoundMn.gI().buttonClick();
-						GameScr.info1.addInfo("Đến: " + entry.name, 0);
+						GameScr.info1.addInfo(alreadyFocused
+							? ("Đến: " + entry.name)
+							: ("Đã chọn: " + entry.name + " (Chạm lần 2 để tới)"), 0);
 						return true;
 					}
 					return true;

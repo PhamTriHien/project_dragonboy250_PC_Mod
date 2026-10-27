@@ -22,6 +22,18 @@ public sealed class ModProxyServer : IActionListener
 	private const int ACT_OPEN_SV_INPUT = 29104;
 	private const int ACT_SAVE_SV_INPUT = 29105;
 	private const int ACT_CLEAR_SV = 29106;
+	private const int ACT_OPEN_ACCOUNT_MENU = 29107;
+	private const int ACT_TOGGLE_CAPTCHA = 29108;
+	private const int ACT_SET_CAPTCHA_API = 29109;
+
+	public static int lobbyBtnX = 6;
+	public static int lobbyBtnY = 4;
+	private static bool s_IsDraggingBtn = false;
+	private static bool s_HasDraggedBtn = false;
+	private static int s_DragStartPx = 0;
+	private static int s_DragStartPy = 0;
+	private static int s_DragOffsetX = 0;
+	private static int s_DragOffsetY = 0;
 
 	public static ModProxyServer gI()
 	{
@@ -38,10 +50,18 @@ public sealed class ModProxyServer : IActionListener
 		return !string.IsNullOrEmpty(customSvIp) && customSvIp.Trim().Length > 0 && customSvPort > 0 && customSvPort <= 65535;
 	}
 
-	public static int GetBtnX() => 6;
-	public static int GetBtnY() => 4;
 	public static int GetBtnW() => 68;
 	public static int GetBtnH() => 22;
+	public static int GetBtnX()
+	{
+		int maxX = GameCanvas.w > GetBtnW() + 4 ? (GameCanvas.w - GetBtnW() - 2) : 2;
+		return lobbyBtnX < 2 ? 2 : (lobbyBtnX > maxX ? maxX : lobbyBtnX);
+	}
+	public static int GetBtnY()
+	{
+		int maxY = GameCanvas.h > GetBtnH() + 4 ? (GameCanvas.h - GetBtnH() - 2) : 2;
+		return lobbyBtnY < 2 ? 2 : (lobbyBtnY > maxY ? maxY : lobbyBtnY);
+	}
 
 	private static IPAddress ResolveSingleIp(string host)
 	{
@@ -480,6 +500,8 @@ public sealed class ModProxyServer : IActionListener
 		if (ModAutoUpdate.isDownloading || ModAutoUpdate.isShowCompletedBoard || ModAutoUpdate.isShowUpdateBoard) return;
 		if (GameCanvas.currentDialog != null || (GameCanvas.menu != null && GameCanvas.menu.showMenu)) return;
 
+		ModAccountManager.PaintReloginCountdown(g);
+
 		int x = GetBtnX();
 		int y = GetBtnY();
 		int w = GetBtnW();
@@ -488,19 +510,90 @@ public sealed class ModProxyServer : IActionListener
 		PopUp.paintPopUp(g, x, y, w, h, active ? 1 : 0, isButton: true);
 		string label = HasProxy() ? "Proxy: BẬT" : (HasCustomServer() ? "SV: RIÊNG" : "Proxy / SV");
 		mFont.tahoma_7b_dark.drawString(g, label, x + w / 2, y + 4, mFont.CENTER);
+
+		if (HasProxy() || ModAutoCaptcha.isEnabled)
+		{
+			string proxyTag = HasProxy() ? ("Proxy: " + ShortenText(proxyRaw, 18)) : "Proxy: TẮT";
+			string capTag = "Captcha: " + (ModAutoCaptcha.isEnabled ? "BẬT" : "TẮT");
+			int infoY = (GameCanvas.currentScreen is LoginScr) ? (GameCanvas.h - mScreen.cmdH - 12) : (GameCanvas.h - 13);
+			if (infoY > 28)
+			{
+				(mFont.tahoma_7_yellow ?? mFont.tahoma_7_white).drawString(g, proxyTag + " | " + capTag, 6, infoY, mFont.LEFT);
+			}
+		}
 	}
 
 	public static bool UpdateLobbyInput()
 	{
-		if (ModAutoUpdate.isDownloading || ModAutoUpdate.isShowCompletedBoard || ModAutoUpdate.isShowUpdateBoard) return false;
-		if (GameCanvas.currentDialog != null || (GameCanvas.menu != null && GameCanvas.menu.showMenu)) return false;
-
-		if (GameCanvas.isPointerJustRelease && GameCanvas.isPointerClick)
+		if (ModAutoUpdate.isDownloading || ModAutoUpdate.isShowCompletedBoard || ModAutoUpdate.isShowUpdateBoard)
 		{
-			int x = GetBtnX();
-			int y = GetBtnY();
-			int w = GetBtnW();
-			int h = GetBtnH();
+			s_IsDraggingBtn = false;
+			return false;
+		}
+		if (GameCanvas.currentDialog != null || (GameCanvas.menu != null && GameCanvas.menu.showMenu))
+		{
+			s_IsDraggingBtn = false;
+			return false;
+		}
+
+		int x = GetBtnX();
+		int y = GetBtnY();
+		int w = GetBtnW();
+		int h = GetBtnH();
+
+		if (GameCanvas.isPointerDown)
+		{
+			if (!s_IsDraggingBtn)
+			{
+				if (GameCanvas.isPointerJustDown && GameCanvas.px >= x && GameCanvas.px <= x + w && GameCanvas.py >= y && GameCanvas.py <= y + h)
+				{
+					s_IsDraggingBtn = true;
+					s_HasDraggedBtn = false;
+					s_DragStartPx = GameCanvas.px;
+					s_DragStartPy = GameCanvas.py;
+					s_DragOffsetX = GameCanvas.px - x;
+					s_DragOffsetY = GameCanvas.py - y;
+				}
+			}
+			else
+			{
+				if (!s_HasDraggedBtn && (Res.abs(GameCanvas.px - s_DragStartPx) > 6 || Res.abs(GameCanvas.py - s_DragStartPy) > 6))
+				{
+					s_HasDraggedBtn = true;
+				}
+				if (s_HasDraggedBtn)
+				{
+					int maxX = GameCanvas.w > w + 4 ? (GameCanvas.w - w - 2) : 2;
+					int maxY = GameCanvas.h > h + 4 ? (GameCanvas.h - h - 2) : 2;
+					int nx = GameCanvas.px - s_DragOffsetX;
+					int ny = GameCanvas.py - s_DragOffsetY;
+					lobbyBtnX = nx < 2 ? 2 : (nx > maxX ? maxX : nx);
+					lobbyBtnY = ny < 2 ? 2 : (ny > maxY ? maxY : ny);
+				}
+			}
+			return s_IsDraggingBtn;
+		}
+
+		if (s_IsDraggingBtn)
+		{
+			s_IsDraggingBtn = false;
+			if (s_HasDraggedBtn)
+			{
+				s_HasDraggedBtn = false;
+				ModConfig.SaveConfig();
+				GameCanvas.clearAllPointerEvent();
+				return true;
+			}
+			if (GameCanvas.px >= x && GameCanvas.px <= x + w && GameCanvas.py >= y && GameCanvas.py <= y + h)
+			{
+				GameCanvas.clearAllPointerEvent();
+				SoundMn.gI().buttonClick();
+				OpenConfigMenu();
+				return true;
+			}
+		}
+		else if (GameCanvas.isPointerJustRelease && GameCanvas.isPointerClick)
+		{
 			if (GameCanvas.px >= x && GameCanvas.px <= x + w && GameCanvas.py >= y && GameCanvas.py <= y + h)
 			{
 				GameCanvas.clearAllPointerEvent();
@@ -515,6 +608,7 @@ public sealed class ModProxyServer : IActionListener
 	public static void OpenConfigMenu()
 	{
 		MyVector items = new MyVector();
+		items.addElement(new Command("Tài Khoản\n(" + ModAccountManager.accounts.Count + " đã lưu)", gI(), ACT_OPEN_ACCOUNT_MENU, null));
 		items.addElement(new Command(HasProxy() ? "Đổi Proxy\n(" + ShortenText(proxyRaw, 14) + ")" : "Cài Proxy\n(SOCKS5/HTTP)", gI(), ACT_OPEN_PROXY_INPUT, null));
 		if (HasProxy())
 		{
@@ -525,6 +619,8 @@ public sealed class ModProxyServer : IActionListener
 		{
 			items.addElement(new Command("Xóa SV Riêng", gI(), ACT_CLEAR_SV, null));
 		}
+		items.addElement(new Command("Auto Captcha:\n" + (ModAutoCaptcha.isEnabled ? "ĐANG BẬT" : "ĐANG TẮT"), gI(), ACT_TOGGLE_CAPTCHA, null));
+		items.addElement(new Command("Cài API\nCaptcha", gI(), ACT_SET_CAPTCHA_API, null));
 		GameCanvas.menu.startAt(items, 0);
 	}
 
@@ -538,6 +634,27 @@ public sealed class ModProxyServer : IActionListener
 	{
 		switch (idAction)
 		{
+			case ACT_OPEN_ACCOUNT_MENU:
+				ModAccountManager.OpenAccountMenu();
+				break;
+
+			case ACT_TOGGLE_CAPTCHA:
+				if (string.IsNullOrEmpty(ModAutoCaptcha.captchaApiUrl))
+				{
+					ModAutoCaptcha.PromptApiUrl();
+				}
+				else
+				{
+					ModAutoCaptcha.isEnabled = !ModAutoCaptcha.isEnabled;
+					ModConfig.SaveConfig();
+					GameCanvas.startOKDlg("Auto Giải Captcha: " + (ModAutoCaptcha.isEnabled ? "BẬT" : "TẮT"));
+				}
+				break;
+
+			case ACT_SET_CAPTCHA_API:
+				ModAutoCaptcha.PromptApiUrl();
+				break;
+
 			case ACT_OPEN_PROXY_INPUT:
 				GameCanvas.inputDlg.show(
 					"Nhập Proxy (host:port[:user:pass] hoặc http://...)",

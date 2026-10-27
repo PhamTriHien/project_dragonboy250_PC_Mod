@@ -19,6 +19,12 @@ public partial class GameCanvas : IActionListener
 			try
 			{
 				debugPaint.removeAllElements();
+				if (ModGraphics.ShouldRenderAfkBlackScreen())
+				{
+					ModGraphics.PaintAfkBlackScreen(g);
+					ModAutoUpdate.PaintDownloadProgress(g);
+					return;
+				}
 				debug("PA", 1);
 				if (currentScreen != null)
 				{

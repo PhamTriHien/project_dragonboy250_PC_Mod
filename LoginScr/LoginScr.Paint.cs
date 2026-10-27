@@ -49,6 +49,7 @@ public partial class LoginScr : mScreen, IActionListener
 				tfPass.paint(g);
 				ModUI.DrawCheckbox(xLog + 10, yLog + 74, isCheck, g);
 				mFont.tahoma_7b_dark.drawString(g, mResources.remember, xLog + 34, yLog + 77, 0);
+				ModAccountManager.PaintLoginButton(g, xLog, yLog, w);
 				int num4 = 0;
 				if (GameCanvas.w >= 176)
 				{

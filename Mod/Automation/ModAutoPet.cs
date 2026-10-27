@@ -12,6 +12,7 @@ public static class ModAutoPet
 	public static bool petAvoidBoss = false;
 	public static bool petAutoFlag = false;
 	public static bool autoNamekHeal = false;
+	public static int namekHealThresholdPercent = 35;
 	public static bool petAutoAttackOnBark = false;
 	public static bool petAutoKok = false;
 	public static bool disconnectOnPetPowerLimit = false;
@@ -24,9 +25,12 @@ public static class ModAutoPet
 	private static long lastHealTime;
 	private static long lastBarkAttackTime;
 	private static long lastKokTime;
+	private static bool kokPhaseToggle;
+	private static int kokBaseY = -1;
 	private static long lastBossZoneSwitchTime;
 	private static bool isEvadingBoss;
 	private static bool reopenUiAfterPowerInput;
+	private static bool reopenUiAfterHealMenu;
 
 	private static readonly string[] petStatusNames = new string[] { "Đi Theo", "Bảo Vệ", "Tấn Công", "Về Nhà" };
 
@@ -97,6 +101,131 @@ public static class ModAutoPet
 		if (exitOnPetPowerLimit == 1_499_000_000L) return "Mốc: 1.49T";
 		if (exitOnPetPowerLimit == 17_990_000_000L) return "Mốc: 17.99T";
 		return "Mốc: " + Res.formatNumber2(exitOnPetPowerLimit);
+	}
+
+	public static void RequestSilentPetInfo()
+	{
+		long now = mSystem.currentTimeMillis();
+		lastSilentPetInfoTime = now;
+		silentPetInfoExpireAt = now + 2500;
+		Service.gI().petInfo();
+	}
+
+	public static string GetNamekHealShortLabel()
+	{
+		if (!autoNamekHeal) return "Trị Thương";
+		if (namekHealThresholdPercent >= 100) return "Trị: Luôn";
+		return "Trị: " + namekHealThresholdPercent + "%";
+	}
+
+	public static void ShowNamekHealMenu()
+	{
+		if (GameCanvas.menu == null) return;
+		reopenUiAfterHealMenu = ModUI.uiCustomOpen;
+		ModUI.uiCustomOpen = false;
+		ModMenu.modMenuOpen = false;
+
+		NamekHealMenuListener listener = new NamekHealMenuListener();
+		MyVector items = new MyVector();
+		items.addElement(new Command(autoNamekHeal ? "Tắt Trị Thương Namếc" : "Bật Trị Thương (" + (namekHealThresholdPercent >= 100 ? "Luôn Buff" : (namekHealThresholdPercent + "%")) + ")", listener, 1, null));
+		items.addElement(new Command("Mốc 35% HP" + (autoNamekHeal && namekHealThresholdPercent == 35 ? " [Đang chọn]" : ""), listener, 2, null));
+		items.addElement(new Command("Mốc 60% HP" + (autoNamekHeal && namekHealThresholdPercent == 60 ? " [Đang chọn]" : ""), listener, 3, null));
+		items.addElement(new Command("100% - Luôn Buff khi hồi chiêu" + (autoNamekHeal && namekHealThresholdPercent >= 100 ? " [Đang chọn]" : ""), listener, 4, null));
+		items.addElement(new Command("Nhập % HP tùy chỉnh (" + namekHealThresholdPercent + "%)...", listener, 5, null));
+		items.addElement(new Command("Quay lại", listener, 6, null));
+		GameCanvas.menu.startAt(items, 0);
+	}
+
+	private sealed class NamekHealMenuListener : IActionListener
+	{
+		public void perform(int idAction, object p)
+		{
+			try
+			{
+				switch (idAction)
+				{
+					case 1:
+						autoNamekHeal = !autoNamekHeal;
+						ModConfig.SaveConfig();
+						GameScr.info1?.addInfo("Trị Thương Namếc: " + (autoNamekHeal ? (namekHealThresholdPercent >= 100 ? "Luôn Buff" : (namekHealThresholdPercent + "% HP")) : "TẮT"), 0);
+						RestoreHealMenuUi();
+						break;
+					case 2:
+						autoNamekHeal = true;
+						namekHealThresholdPercent = 35;
+						ModConfig.SaveConfig();
+						GameScr.info1?.addInfo("Trị Thương Namếc: Mốc 35% HP", 0);
+						RestoreHealMenuUi();
+						break;
+					case 3:
+						autoNamekHeal = true;
+						namekHealThresholdPercent = 60;
+						ModConfig.SaveConfig();
+						GameScr.info1?.addInfo("Trị Thương Namếc: Mốc 60% HP", 0);
+						RestoreHealMenuUi();
+						break;
+					case 4:
+						autoNamekHeal = true;
+						namekHealThresholdPercent = 100;
+						ModConfig.SaveConfig();
+						GameScr.info1?.addInfo("Trị Thương Namếc: Luôn Buff ngay khi hồi chiêu", 0);
+						RestoreHealMenuUi();
+						break;
+					case 5:
+						if (GameCanvas.inputDlg != null)
+						{
+							GameCanvas.inputDlg.show("Nhập % HP Trị Thương (1 - 100, 100 = Luôn Buff):", new Command("OK", this, 10, null), TField.INPUT_TYPE_NUMERIC);
+							if (GameCanvas.inputDlg.tfInput != null)
+							{
+								GameCanvas.inputDlg.tfInput.setMaxTextLenght(3);
+								GameCanvas.inputDlg.tfInput.setText(namekHealThresholdPercent.ToString());
+								if (!Main.isPC) GameCanvas.inputDlg.tfInput.setFocusWithKb(isFocus: true);
+							}
+						}
+						break;
+					case 6:
+						RestoreHealMenuUi();
+						break;
+					case 10:
+						if (GameCanvas.inputDlg != null && GameCanvas.inputDlg.tfInput != null)
+						{
+							string raw = (GameCanvas.inputDlg.tfInput.getText() ?? string.Empty).Trim();
+							if (int.TryParse(raw, out int pct))
+							{
+								if (pct <= 0)
+								{
+									autoNamekHeal = false;
+								}
+								else
+								{
+									if (pct > 100) pct = 100;
+									namekHealThresholdPercent = pct;
+									autoNamekHeal = true;
+								}
+								ModConfig.SaveConfig();
+								GameScr.info1?.addInfo("Trị Thương Namếc: " + (!autoNamekHeal ? "TẮT" : (namekHealThresholdPercent >= 100 ? "Luôn Buff" : (namekHealThresholdPercent + "% HP"))), 0);
+							}
+						}
+						GameCanvas.endDlg();
+						SoundMn.gI().buttonClick();
+						RestoreHealMenuUi();
+						break;
+				}
+			}
+			catch
+			{
+				GameCanvas.endDlg();
+			}
+		}
+
+		private static void RestoreHealMenuUi()
+		{
+			if (reopenUiAfterHealMenu)
+			{
+				reopenUiAfterHealMenu = false;
+				ModUI.uiCustomOpen = true;
+			}
+		}
 	}
 
 	public static bool ConsumeSilentPetInfoRequest()
@@ -290,15 +419,57 @@ public static class ModAutoPet
 		return null;
 	}
 
+	private static void UpdateNamekHeal(Char me, Char petInMap, long now)
+	{
+		if (!autoNamekHeal || me == null || me.cgender != 1 || me.isDie || me.cHP <= 0) return;
+		int minInterval = (namekHealThresholdPercent >= 100) ? 150 : 1200;
+		if (now - lastHealTime < minInterval) return;
+
+		Char target = null;
+		if (namekHealThresholdPercent >= 100)
+		{
+			target = (petInMap != null && (petInMap.isDie || petInMap.cHP <= 0 || (petInMap.cHPFull > 0 && petInMap.cHP < petInMap.cHPFull)))
+				? petInMap
+				: me;
+		}
+		else
+		{
+			bool petNeeds = petInMap != null && (petInMap.isDie || petInMap.cHP <= 0 || (petInMap.cHPFull > 0 && petInMap.cHP * 100L / petInMap.cHPFull <= namekHealThresholdPercent));
+			bool masterNeeds = me.cHPFull > 0 && me.cHP * 100L / me.cHPFull <= namekHealThresholdPercent;
+			if (petNeeds) target = petInMap;
+			else if (masterNeeds) target = me;
+		}
+		if (target == null) return;
+
+		Skill healSkill = FindNamekHealSkill(me);
+		if (healSkill == null || healSkill.paintCanNotUseSkill || now - healSkill.lastTimeUseThisSkill < healSkill.coolDown) return;
+		if (!ModTanSatFilter.HasEnoughMp(me, healSkill)) return;
+
+		lastHealTime = now;
+		healSkill.lastTimeUseThisSkill = now;
+		Skill prevSkill = me.myskill;
+		Service.gI().selectSkill(7);
+		MyVector vMob = new MyVector();
+		MyVector vChar = new MyVector();
+		vChar.addElement(target);
+		Service.gI().sendPlayerAttack(vMob, vChar, 2);
+		if (prevSkill != null && prevSkill.template != null && prevSkill.template.id != 7)
+		{
+			Service.gI().selectSkill(prevSkill.template.id);
+		}
+	}
+
 	public static void Update()
 	{
 		if (!ModMenu.IsInGame()) return;
 		Char me = Char.myCharz();
-		if (me == null || !me.havePet || Char.isLoadingMap || Char.ischangingMap) return;
+		if (me == null || Char.isLoadingMap || Char.ischangingMap) return;
 
 		long now = mSystem.currentTimeMillis();
+		Char petInMap = me.havePet ? FindMyPetInMap(me) : null;
+		UpdateNamekHeal(me, petInMap, now);
+		if (!me.havePet) return;
 
-		Char petInMap = FindMyPetInMap(me);
 		if (petInMap != null)
 		{
 			Char myPet = Char.myPetz();
@@ -316,9 +487,7 @@ public static class ModAutoPet
 		{
 			if (now - lastSilentPetInfoTime >= 12000)
 			{
-				lastSilentPetInfoTime = now;
-				silentPetInfoExpireAt = now + 2500;
-				Service.gI().petInfo();
+				RequestSilentPetInfo();
 			}
 		}
 
@@ -342,23 +511,33 @@ public static class ModAutoPet
 				SoundMn.gI().buttonClick();
 				if (disconnectOnPetPowerLimit)
 				{
-					ModAutoLogin.isEnabled = false;
-					ModAutoLogin.isReconnecting = false;
+					ModAutoLogin.NotifyIntentionalDisconnect();
 					Session_ME.gI().close();
 				}
 				return;
 			}
 		}
 
-		// 0b. Auto KOK (nhấp nhích nhẹ Sư Phụ định kỳ để giữ đồng bộ vị trí giúp Đệ Tử xuất chiêu liên tục)
-		if (petAutoKok && !me.isDie && me.cHP > 0 && me.statusMe == 1 && me.currentMovePoint == null && !ModNextMap.isNextMapActive && now - lastKokTime >= 900)
+		// 0b. Auto KOK (nhấp nhích nhẹ Sư Phụ tách 2 nhịp 600ms để giữ đồng bộ vị trí giúp Đệ Tử xuất chiêu liên tục)
+		if (petAutoKok && !me.isDie && me.cHP > 0 && me.statusMe == 1 && me.currentMovePoint == null && !ModNextMap.isNextMapActive && now - lastKokTime >= 600)
 		{
 			lastKokTime = now;
-			int origY = me.cy;
-			me.cy = origY - 1;
-			Service.gI().charMove();
-			me.cy = origY;
-			Service.gI().charMove();
+			if (!kokPhaseToggle)
+			{
+				kokBaseY = me.cy;
+				kokPhaseToggle = true;
+				me.cy = kokBaseY - 1;
+				Service.gI().charMove();
+			}
+			else
+			{
+				kokPhaseToggle = false;
+				if (kokBaseY > 0 && Res.abs(me.cy - (kokBaseY - 1)) <= 2)
+				{
+					me.cy = kokBaseY;
+				}
+				Service.gI().charMove();
+			}
 		}
 
 		// 1. Tự động cho Đệ về nhà & đổi khu an toàn khi phát hiện Boss trong khu
@@ -421,32 +600,7 @@ public static class ModAutoPet
 			}
 		}
 
-		// 3. Tự động dùng Trị Thương (Namếc - Skill ID 7) cứu/bơm máu cho Đệ Tử
-		if (autoNamekHeal && me.cgender == 1 && !me.isDie && me.cHP > 0 && petInMap != null && now - lastHealTime >= 1200)
-		{
-			bool needHeal = petInMap.isDie || petInMap.cHP <= 0 || (petInMap.cHPFull > 0 && petInMap.cHP * 100L / petInMap.cHPFull <= 35);
-			if (needHeal)
-			{
-				Skill healSkill = FindNamekHealSkill(me);
-				if (healSkill != null && !healSkill.paintCanNotUseSkill && now - healSkill.lastTimeUseThisSkill >= healSkill.coolDown)
-				{
-					lastHealTime = now;
-					healSkill.lastTimeUseThisSkill = now;
-					Skill prevSkill = me.myskill;
-					Service.gI().selectSkill(7);
-					MyVector vMob = new MyVector();
-					MyVector vChar = new MyVector();
-					vChar.addElement(petInMap);
-					Service.gI().sendPlayerAttack(vMob, vChar, 2);
-					if (prevSkill != null && prevSkill.template != null && prevSkill.template.id != 7)
-					{
-						Service.gI().selectSkill(prevSkill.template.id);
-					}
-				}
-			}
-		}
-
-		// 4. Duy trì trạng thái lệnh Đệ Tử
+		// 3. Duy trì trạng thái lệnh Đệ Tử
 		if (!isEnabled) return;
 		if (status < 0 || status > 3) status = 2;
 		if (now < nextAt) return;

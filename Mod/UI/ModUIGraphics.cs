@@ -3,7 +3,7 @@ using UnityEngine;
 
 public static class ModUIGraphics
 {
-	public const int ContentHeight = 406;
+	public const int ContentHeight = 446;
 	private static readonly int[] fpsOptions = new int[8] { 30, 60, 90, 120, 144, 165, 185, 240 };
 
 	public static void Paint(int uiX, int uiY, int uiW, int uiH, mGraphics g)
@@ -22,10 +22,12 @@ public static class ModUIGraphics
 		}
 
 		mFont.tahoma_7_grey.drawString(g, "Chất lượng đồ họa (GPU Khử răng cưa):", uiX + 6, uiY + 66, mFont.LEFT);
-		for (int q = 0; q < 4; q++)
+		int qCount = ModGraphics.graphicsNames.Length;
+		int qBtnW = (uiW - 10 - (qCount - 1) * 3) / qCount;
+		for (int q = 0; q < qCount; q++)
 		{
-			int qx = uiX + 5 + q * (rBtnW + 3);
-			ModUI.PaintNativeButton(qx, uiY + 81, rBtnW, 16, ModGraphics.graphicsNames[q], ModGraphics.graphicsQuality == q, g);
+			int qx = uiX + 5 + q * (qBtnW + 3);
+			ModUI.PaintNativeButton(qx, uiY + 81, qBtnW, 16, ModGraphics.graphicsNames[q], ModGraphics.graphicsQuality == q, g);
 		}
 
 		int descY = uiY + 101;
@@ -44,6 +46,10 @@ public static class ModUIGraphics
 		else if (ModGraphics.graphicsQuality == 3)
 		{
 			mFont.tahoma_7_green2.drawString(g, "* Super Low: Xóa cây cỏ trang trí, chỉ giữ base map.", uiX + 6, descY, mFont.LEFT);
+		}
+		else if (ModGraphics.graphicsQuality == 4)
+		{
+			mFont.tahoma_7_green2.drawString(g, "* Hình Học: Khung lưới địa hình & hitbox quái siêu nhẹ.", uiX + 6, descY, mFont.LEFT);
 		}
 
 		mFont.tahoma_7_grey.drawString(g, "Chế Độ Đồ Hoạ (F10):", uiX + 6, uiY + 116, mFont.LEFT);
@@ -110,6 +116,9 @@ public static class ModUIGraphics
 
 		string bgBtnText = "HÌNH NỀN PHONG CẢNH (GIT)" + (ModBackground.isCustomBGActive ? " [ĐANG BẬT]" : "");
 		ModUI.PaintNativeButton(uiX + 6, uiY + 373, uiW - 12, 18, bgBtnText, ModBackground.isCustomBGActive, g);
+
+		ModUI.PaintNativeButton(uiX + 6, uiY + 395, optBtnW, 18, "HUD Sư Phụ: " + (ModMapEntityHUD.isShowMasterHUD ? "BẬT" : "TẮT"), ModMapEntityHUD.isShowMasterHUD, g);
+		ModUI.PaintNativeButton(uiX + 10 + optBtnW, uiY + 395, optBtnW, 18, "Màn Đen (F9): " + (ModGraphics.isAfkBlackScreen ? "BẬT" : "TẮT"), ModGraphics.isAfkBlackScreen, g);
 	}
 
 	public static bool HandleTap(int px, int py, int uiX, int uiY, int uiW, int uiH)
@@ -133,10 +142,12 @@ public static class ModUIGraphics
 			}
 		}
 
-		for (int q = 0; q < 4; q++)
+		int qCount = ModGraphics.graphicsNames.Length;
+		int qBtnW = (uiW - 10 - (qCount - 1) * 3) / qCount;
+		for (int q = 0; q < qCount; q++)
 		{
-			int qx = uiX + 5 + q * (rBtnW + 3);
-			if (px >= qx && px <= qx + rBtnW && py >= uiY + 80 && py <= uiY + 98)
+			int qx = uiX + 5 + q * (qBtnW + 3);
+			if (px >= qx && px <= qx + qBtnW && py >= uiY + 80 && py <= uiY + 98)
 			{
 				ModGraphics.SetQuality(q);
 				SoundMn.gI().buttonClick();
@@ -265,6 +276,23 @@ public static class ModUIGraphics
 			ModUI.detailScrollY = 0;
 			SoundMn.gI().buttonClick();
 			return true;
+		}
+		if (py >= uiY + 394 && py <= uiY + 414)
+		{
+			if (px >= uiX + 6 && px <= uiX + 6 + optBtnW)
+			{
+				ModMapEntityHUD.ToggleMasterHUD();
+				return true;
+			}
+			if (px >= uiX + 10 + optBtnW && px <= uiX + 10 + optBtnW * 2)
+			{
+				ModGraphics.ToggleAfkBlackScreen();
+				if (ModGraphics.isAfkBlackScreen)
+				{
+					ModMenu.CloseMenu();
+				}
+				return true;
+			}
 		}
 
 		return false;
