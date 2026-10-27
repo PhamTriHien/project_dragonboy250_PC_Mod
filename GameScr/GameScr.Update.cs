@@ -341,7 +341,7 @@ public partial class GameScr : mScreen, IChatable
 				{
 					return;
 				}
-				if (GameCanvas.isPointerHoldIn(xF - 2, yF - 2, 58, 58))
+				if (ModArrowButton.IsPointerHoldInCircle(xF + 20, yF + 20, ModArrowButton.FAN_FIRE_RADIUS))
 				{
 					mScreen.keyTouch = 5;
 					if (GameCanvas.isPointerJustRelease)
@@ -351,7 +351,7 @@ public partial class GameScr : mScreen, IChatable
 					}
 				}
 				gamePad.update();
-				if (GameCanvas.isPointerHoldIn(xTG - 4, yTG - 4, 38, 38))
+				if (ModArrowButton.IsPointerHoldInCircle(xTG + 16, yTG + 16, ModArrowButton.FAN_BTN_RADIUS))
 				{
 					mScreen.keyTouch = 13;
 					GameCanvas.isPointerJustDown = false;

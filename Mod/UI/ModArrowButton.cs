@@ -1,13 +1,129 @@
 using System;
 
 /// <summary>
-/// Quản lý nút mở Menu Mod và cụm nút tác vụ nhanh (Bông Tai, Khóa Mục Tiêu, Capsule, Khu, Qua Map Nhanh, Dừng Xmap) bằng 100% asset gốc NRO.
+/// Quản lý nút mở Menu Mod và cụm nút tác vụ góc dưới phải xếp theo cung tròn hình quạt tay 2 tầng đồng tâm bằng 100% asset gốc NRO.
 /// </summary>
 public static class ModArrowButton
 {
 	public static readonly short[] PotaraTemplateIds = new short[] { 1884, 921, 454, 933, 1155, 1165, 1228, 1852 };
 
 	public static bool showExtraQuickButtons = false;
+
+	public const int FAN_PIVOT_MARGIN = 26;
+	public const int FAN_INNER_RADIUS = 45;
+	public const int FAN_OUTER_RADIUS = 80;
+	public const int FAN_EXTRA_RADIUS = 115;
+	public const int FAN_BTN_SIZE = 32;
+	public const int FAN_BTN_RADIUS = 16;
+	public const int FAN_FIRE_SIZE = 40;
+	public const int FAN_FIRE_RADIUS = 21;
+
+	public static void GetFanPivot(out int pivotX, out int pivotY)
+	{
+		pivotX = GameCanvas.w - SafeArea.Right - FAN_PIVOT_MARGIN;
+		pivotY = GameCanvas.h - FAN_PIVOT_MARGIN;
+	}
+
+	public static void GetFanPoint(int radius, double angleDeg, out int cx, out int cy)
+	{
+		int px, py;
+		GetFanPivot(out px, out py);
+		double rad = angleDeg * System.Math.PI / 180.0;
+		cx = px + (int)System.Math.Round(radius * System.Math.Cos(rad));
+		cy = py - (int)System.Math.Round(radius * System.Math.Sin(rad));
+	}
+
+	private static void GetFanButtonBounds(int radius, double angleDeg, out int x, out int y, out int w, out int h)
+	{
+		int cx, cy;
+		GetFanPoint(radius, angleDeg, out cx, out cy);
+		w = FAN_BTN_SIZE;
+		h = FAN_BTN_SIZE;
+		x = cx - w / 2;
+		y = cy - h / 2;
+	}
+
+	public static bool IsCursorInCircle(int cx, int cy, int radius)
+	{
+		int dx = GameCanvas.px - cx;
+		int dy = GameCanvas.py - cy;
+		return dx * dx + dy * dy <= radius * radius;
+	}
+
+	public static bool IsPointerHoldInCircle(int cx, int cy, int radius)
+	{
+		if (!GameCanvas.isPointerDown && !GameCanvas.isPointerJustRelease && !GameCanvas.isPointerClick)
+		{
+			return false;
+		}
+		int dx = GameCanvas.px - cx;
+		int dy = GameCanvas.py - cy;
+		return dx * dx + dy * dy <= radius * radius;
+	}
+
+	public static void GetAttackBounds(out int x, out int y, out int w, out int h)
+	{
+		int px, py;
+		GetFanPivot(out px, out py);
+		w = FAN_FIRE_SIZE;
+		h = FAN_FIRE_SIZE;
+		x = px - w / 2;
+		y = py - h / 2;
+	}
+
+	public static void GetFocusBounds(out int x, out int y, out int w, out int h)
+	{
+		GetFanButtonBounds(FAN_INNER_RADIUS, 90.0, out x, out y, out w, out h);
+	}
+
+	public static void GetCapsuleBounds(out int x, out int y, out int w, out int h)
+	{
+		GetFanButtonBounds(FAN_INNER_RADIUS, 135.0, out x, out y, out w, out h);
+	}
+
+	public static void GetPeaBounds(out int x, out int y, out int w, out int h)
+	{
+		if (GameScr.isAnalog != 0)
+		{
+			GetFanButtonBounds(FAN_INNER_RADIUS, 180.0, out x, out y, out w, out h);
+		}
+		else
+		{
+			int px, py;
+			GetFanPivot(out px, out py);
+			w = FAN_FIRE_SIZE;
+			h = FAN_FIRE_SIZE;
+			x = px - w / 2;
+			y = py - h / 2;
+		}
+	}
+
+	public static void GetLockTargetBounds(out int x, out int y, out int w, out int h)
+	{
+		if (GameScr.isAnalog != 0)
+		{
+			GetFanButtonBounds(FAN_OUTER_RADIUS, 90.0, out x, out y, out w, out h);
+		}
+		else
+		{
+			GetFanButtonBounds(FAN_INNER_RADIUS, 90.0, out x, out y, out w, out h);
+		}
+	}
+
+	public static void GetPotaraBounds(out int x, out int y, out int w, out int h)
+	{
+		GetFanButtonBounds(FAN_OUTER_RADIUS, 118.0, out x, out y, out w, out h);
+	}
+
+	public static void GetAutoTrainBounds(out int x, out int y, out int w, out int h)
+	{
+		GetFanButtonBounds(FAN_OUTER_RADIUS, 146.0, out x, out y, out w, out h);
+	}
+
+	public static void GetZoneBounds(out int x, out int y, out int w, out int h)
+	{
+		GetFanButtonBounds(FAN_EXTRA_RADIUS, 104.0, out x, out y, out w, out h);
+	}
 
 	public static void GetBounds(out int x, out int y, out int w, out int h)
 	{
@@ -24,38 +140,6 @@ public static class ModArrowButton
 		{
 			y = maxMenuY;
 		}
-	}
-
-	public static void GetLockTargetBounds(out int x, out int y, out int w, out int h)
-	{
-		w = 32;
-		h = 32;
-		x = GameCanvas.w - 40 - SafeArea.Right;
-		y = GameCanvas.h - 146;
-	}
-
-	public static void GetPotaraBounds(out int x, out int y, out int w, out int h)
-	{
-		w = 32;
-		h = 32;
-		x = GameCanvas.w - 76 - SafeArea.Right;
-		y = GameCanvas.h - 146;
-	}
-
-	public static void GetCapsuleBounds(out int x, out int y, out int w, out int h)
-	{
-		w = 32;
-		h = 32;
-		x = GameCanvas.w - 112 - SafeArea.Right;
-		y = GameCanvas.h - 146;
-	}
-
-	public static void GetZoneBounds(out int x, out int y, out int w, out int h)
-	{
-		w = 32;
-		h = 32;
-		x = GameCanvas.w - 148 - SafeArea.Right;
-		y = GameCanvas.h - 146;
 	}
 
 	public static void GetMapDirBounds(int dir, out int x, out int y, out int w, out int h)
@@ -79,12 +163,20 @@ public static class ModArrowButton
 
 	public static bool IsQuickButtonsVisible()
 	{
-		if (!ModMenu.IsInGame())
+		if (!ModMenu.IsInGame() || ModGraphics.isAfkBlackScreen || !GameCanvas.isTouch)
 		{
 			return false;
 		}
 		Char me = Char.myCharz();
-		if (me == null || me.statusMe == 14)
+		if (me == null || me.statusMe == 14 || (me.taskMaint != null && me.taskMaint.taskId == 0))
+		{
+			return false;
+		}
+		if (GameScr.instance != null && (GameScr.instance.mobCapcha != null || GameScr.instance.isPaintPopup() || GameScr.instance.popUpYesNo != null))
+		{
+			return false;
+		}
+		if (InfoDlg.isShow || GameCanvas.currentScreen == MoneyCharge.instance)
 		{
 			return false;
 		}
@@ -167,9 +259,9 @@ public static class ModArrowButton
 	public static bool FindCapsuleInBag(out int bagIndex, out int iconId)
 	{
 		bagIndex = -1;
-		iconId = 1088;
+		iconId = (!GameScr.isudungCapsun4 && GameScr.isudungCapsun3) ? 1087 : 1088;
 		ItemTemplate tpl194 = ItemTemplates.get(194);
-		if (tpl194 != null && tpl194.iconID > 0) iconId = tpl194.iconID;
+		if (tpl194 != null && tpl194.iconID > 0 && iconId == 1088) iconId = tpl194.iconID;
 
 		Char me = Char.myCharz();
 		if (me == null || me.arrItemBag == null) return false;
@@ -180,7 +272,7 @@ public static class ModArrowButton
 			for (int i = 0; i < me.arrItemBag.Length; i++)
 			{
 				Item it = me.arrItemBag[i];
-				if (it != null && it.template != null && it.template.id == ids[k])
+				if (it != null && it.template != null && it.template.id == ids[k] && it.quantity > 0)
 				{
 					bagIndex = i;
 					if (it.template.iconID > 0) iconId = it.template.iconID;
@@ -195,6 +287,14 @@ public static class ModArrowButton
 	{
 		Char me = Char.myCharz();
 		if (me == null || Char.isLoadingMap || Char.ischangingMap || me.isDie || me.statusMe == 14) return;
+		if (GameScr.isPickNgocRong)
+		{
+			GameCanvas.keyPressed[14] = true;
+			GameScr.isPickNgocRong = false;
+			Service.gI().useItem(-1, -1, -1, -1);
+			SoundMn.gI().buttonClick();
+			return;
+		}
 		int idx;
 		int iconId;
 		if (FindCapsuleInBag(out idx, out iconId) && idx >= 0)
@@ -261,7 +361,7 @@ public static class ModArrowButton
 	{
 		try
 		{
-			if (!ModMenu.IsInGame())
+			if (!ModMenu.IsInGame() || ModGraphics.isAfkBlackScreen)
 			{
 				return;
 			}
@@ -317,31 +417,39 @@ public static class ModArrowButton
 			{
 				Char me = Char.myCharz();
 
-				int potX, potY, potW, potH;
-				GetPotaraBounds(out potX, out potY, out potW, out potH);
-				int potCenterX = potX + potW / 2;
-				int potCenterY = potY + potH / 2;
-				bool isFused = me != null && (me.isFusion || me.isNhapThe);
-				bool isHoverPot = GameCanvas.px >= potX && GameCanvas.px <= potX + potW && GameCanvas.py >= potY && GameCanvas.py <= potY + potH;
-
-				Image potBg = (isFused || isHoverPot) ? GameScr.imgNutF : GameScr.imgNut;
-				if (potBg != null)
+				int capX, capY, capW, capH;
+				GetCapsuleBounds(out capX, out capY, out capW, out capH);
+				int capCx = capX + capW / 2;
+				int capCy = capY + capH / 2;
+				bool hoverCap = IsCursorInCircle(capCx, capCy, FAN_BTN_RADIUS) || mScreen.keyTouch == 14;
+				if (GameScr.isPickNgocRong)
 				{
-					g.drawImage(potBg, potCenterX, potCenterY, mGraphics.HCENTER | mGraphics.VCENTER);
+					if (GameScr.imgNR3 == null) GameScr.imgNR3 = GameCanvas.loadImage("/mainImage/myTexture2dPea_2.png");
+					if (GameScr.imgNR4 == null) GameScr.imgNR4 = GameCanvas.loadImage("/mainImage/myTexture2dPea_3.png");
+					Image nrImg = hoverCap ? GameScr.imgNR4 : GameScr.imgNR3;
+					if (nrImg != null)
+					{
+						g.drawImage(nrImg, capCx, capCy, mGraphics.HCENTER | mGraphics.VCENTER);
+					}
 				}
-
-				int bagIdx;
-				int potIconId;
-				string potName;
-				FindPotaraInBag(out bagIdx, out potIconId, out potName);
-				SmallImage.drawSmallImage(g, potIconId, potCenterX, potCenterY, 0, mGraphics.VCENTER | mGraphics.HCENTER);
+				else
+				{
+					Image capBg = hoverCap ? GameScr.imgNutF : GameScr.imgNut;
+					if (capBg != null)
+					{
+						g.drawImage(capBg, capCx, capCy, mGraphics.HCENTER | mGraphics.VCENTER);
+					}
+					int capIdx, capIcon;
+					FindCapsuleInBag(out capIdx, out capIcon);
+					SmallImage.drawSmallImage(g, capIcon, capCx, capCy, 0, mGraphics.VCENTER | mGraphics.HCENTER);
+				}
 
 				int lockX, lockY, lockW, lockH;
 				GetLockTargetBounds(out lockX, out lockY, out lockW, out lockH);
 				int lockCenterX = lockX + lockW / 2;
 				int lockCenterY = lockY + lockH / 2;
 				bool isLocked = ModMapEntityHUD.isLockTarget;
-				bool isHoverLock = GameCanvas.px >= lockX && GameCanvas.px <= lockX + lockW && GameCanvas.py >= lockY && GameCanvas.py <= lockY + lockH;
+				bool isHoverLock = IsCursorInCircle(lockCenterX, lockCenterY, FAN_BTN_RADIUS);
 
 				Image lockBg = (isLocked || isHoverLock) ? GameScr.imgNutF : GameScr.imgNut;
 				if (lockBg != null)
@@ -370,6 +478,56 @@ public static class ModArrowButton
 					}
 				}
 
+				int potX, potY, potW, potH;
+				GetPotaraBounds(out potX, out potY, out potW, out potH);
+				int potCenterX = potX + potW / 2;
+				int potCenterY = potY + potH / 2;
+				bool isFused = me != null && (me.isFusion || me.isNhapThe);
+				bool isHoverPot = IsCursorInCircle(potCenterX, potCenterY, FAN_BTN_RADIUS);
+
+				Image potBg = (isFused || isHoverPot) ? GameScr.imgNutF : GameScr.imgNut;
+				if (potBg != null)
+				{
+					g.drawImage(potBg, potCenterX, potCenterY, mGraphics.HCENTER | mGraphics.VCENTER);
+				}
+
+				int bagIdx;
+				int potIconId;
+				string potName;
+				FindPotaraInBag(out bagIdx, out potIconId, out potName);
+				SmallImage.drawSmallImage(g, potIconId, potCenterX, potCenterY, 0, mGraphics.VCENTER | mGraphics.HCENTER);
+
+				int autoX, autoY, autoW, autoH;
+				GetAutoTrainBounds(out autoX, out autoY, out autoW, out autoH);
+				int autoCx = autoX + autoW / 2;
+				int autoCy = autoY + autoH / 2;
+				bool isAutoTrainOn = AutoTrainMenu.isChecked != null && AutoTrainMenu.isChecked.Length > 0 && AutoTrainMenu.isChecked[0];
+				bool hoverAuto = IsCursorInCircle(autoCx, autoCy, FAN_BTN_RADIUS) || mScreen.keyTouch == 16;
+
+				Image autoBg = (isAutoTrainOn || hoverAuto) ? GameScr.imgNutF : GameScr.imgNut;
+				if (autoBg != null)
+				{
+					g.drawImage(autoBg, autoCx, autoCy, mGraphics.HCENTER | mGraphics.VCENTER);
+				}
+
+				if (GameScr.fraAuto == null)
+				{
+					Image imgAuto = GameCanvas.loadImage("/mainImage/img_auto.png");
+					if (imgAuto != null)
+					{
+						GameScr.fraAuto = new FrameImage(imgAuto, 1, 6, 0);
+					}
+				}
+				if (GameScr.fraAuto != null)
+				{
+					int idxAuto = isAutoTrainOn ? (GameCanvas.gameTick / 4 % 5 + 1) : 0;
+					GameScr.fraAuto.drawFrame(idxAuto, autoCx, autoCy, 0, mGraphics.HCENTER | mGraphics.VCENTER, g);
+				}
+				else if (mFont.tahoma_7b_yellow != null)
+				{
+					mFont.tahoma_7b_yellow.drawString(g, "AT", autoCx, autoCy - 5, mFont.CENTER);
+				}
+
 				if (HasStoppableTask())
 				{
 					int sx, sy, sw, sh;
@@ -380,21 +538,14 @@ public static class ModArrowButton
 
 				if (showExtraQuickButtons)
 				{
-					int capX, capY, capW, capH;
-					GetCapsuleBounds(out capX, out capY, out capW, out capH);
-					bool hoverCap = GameCanvas.px >= capX && GameCanvas.px <= capX + capW && GameCanvas.py >= capY && GameCanvas.py <= capY + capH;
-					Image capBg = hoverCap ? GameScr.imgNutF : GameScr.imgNut;
-					if (capBg != null) g.drawImage(capBg, capX + capW / 2, capY + capH / 2, mGraphics.HCENTER | mGraphics.VCENTER);
-					int capIdx, capIcon;
-					FindCapsuleInBag(out capIdx, out capIcon);
-					SmallImage.drawSmallImage(g, capIcon, capX + capW / 2, capY + capH / 2, 0, mGraphics.VCENTER | mGraphics.HCENTER);
-
 					int znX, znY, znW, znH;
 					GetZoneBounds(out znX, out znY, out znW, out znH);
-					bool hoverZn = GameCanvas.px >= znX && GameCanvas.px <= znX + znW && GameCanvas.py >= znY && GameCanvas.py <= znY + znH;
+					int znCx = znX + znW / 2;
+					int znCy = znY + znH / 2;
+					bool hoverZn = IsCursorInCircle(znCx, znCy, FAN_BTN_RADIUS);
 					Image znBg = hoverZn ? GameScr.imgNutF : GameScr.imgNut;
-					if (znBg != null) g.drawImage(znBg, znX + znW / 2, znY + znH / 2, mGraphics.HCENTER | mGraphics.VCENTER);
-					mFont.tahoma_7b_yellow.drawString(g, "K." + TileMap.zoneID, znX + znW / 2, znY + znH / 2 - 5, mFont.CENTER);
+					if (znBg != null) g.drawImage(znBg, znCx, znCy, mGraphics.HCENTER | mGraphics.VCENTER);
+					mFont.tahoma_7b_yellow.drawString(g, "K." + TileMap.zoneID, znCx, znCy - 5, mFont.CENTER);
 
 					int[] dirs = new int[] { 0, 2, 1 };
 					string[] dirLabels = new string[] { "<", "^", ">" };
@@ -421,7 +572,7 @@ public static class ModArrowButton
 	{
 		try
 		{
-			if (!ModMenu.IsInGame())
+			if (!ModMenu.IsInGame() || ModGraphics.isAfkBlackScreen)
 			{
 				return false;
 			}
@@ -449,17 +600,18 @@ public static class ModArrowButton
 					}
 				}
 
-				int potX, potY, potW, potH;
-				GetPotaraBounds(out potX, out potY, out potW, out potH);
-				if (GameCanvas.isPointerHoldIn(potX, potY, potW, potH))
+				int capX, capY, capW, capH;
+				GetCapsuleBounds(out capX, out capY, out capW, out capH);
+				if (IsPointerHoldInCircle(capX + capW / 2, capY + capH / 2, FAN_BTN_RADIUS))
 				{
-					mScreen.keyTouch = -1;
+					mScreen.keyTouch = 14;
 					GameCanvas.isPointerJustDown = false;
 					if (GameCanvas.isPointerClick || GameCanvas.isPointerJustRelease)
 					{
+						mScreen.keyTouch = -1;
 						GameCanvas.clearAllPointerEvent();
 						StopCharacterClickMove();
-						UsePotaraFusion();
+						UseCapsuleQuick();
 						return true;
 					}
 					return true;
@@ -467,7 +619,7 @@ public static class ModArrowButton
 
 				int lockX, lockY, lockW, lockH;
 				GetLockTargetBounds(out lockX, out lockY, out lockW, out lockH);
-				if (GameCanvas.isPointerHoldIn(lockX, lockY, lockW, lockH))
+				if (IsPointerHoldInCircle(lockX + lockW / 2, lockY + lockH / 2, FAN_BTN_RADIUS))
 				{
 					mScreen.keyTouch = -1;
 					GameCanvas.isPointerJustDown = false;
@@ -481,27 +633,45 @@ public static class ModArrowButton
 					return true;
 				}
 
-				if (showExtraQuickButtons)
+				int potX, potY, potW, potH;
+				GetPotaraBounds(out potX, out potY, out potW, out potH);
+				if (IsPointerHoldInCircle(potX + potW / 2, potY + potH / 2, FAN_BTN_RADIUS))
 				{
-					int capX, capY, capW, capH;
-					GetCapsuleBounds(out capX, out capY, out capW, out capH);
-					if (GameCanvas.isPointerHoldIn(capX, capY, capW, capH))
+					mScreen.keyTouch = -1;
+					GameCanvas.isPointerJustDown = false;
+					if (GameCanvas.isPointerClick || GameCanvas.isPointerJustRelease)
 					{
-						mScreen.keyTouch = -1;
-						GameCanvas.isPointerJustDown = false;
-						if (GameCanvas.isPointerClick || GameCanvas.isPointerJustRelease)
-						{
-							GameCanvas.clearAllPointerEvent();
-							StopCharacterClickMove();
-							UseCapsuleQuick();
-							return true;
-						}
+						GameCanvas.clearAllPointerEvent();
+						StopCharacterClickMove();
+						UsePotaraFusion();
 						return true;
 					}
+					return true;
+				}
 
+				int autoX, autoY, autoW, autoH;
+				GetAutoTrainBounds(out autoX, out autoY, out autoW, out autoH);
+				if (IsPointerHoldInCircle(autoX + autoW / 2, autoY + autoH / 2, FAN_BTN_RADIUS))
+				{
+					mScreen.keyTouch = 16;
+					GameCanvas.isPointerJustDown = false;
+					if (GameCanvas.isPointerClick || GameCanvas.isPointerJustRelease)
+					{
+						mScreen.keyTouch = -1;
+						GameCanvas.clearAllPointerEvent();
+						StopCharacterClickMove();
+						AutoTrainMenu.gI().show();
+						SoundMn.gI().buttonClick();
+						return true;
+					}
+					return true;
+				}
+
+				if (showExtraQuickButtons)
+				{
 					int znX, znY, znW, znH;
 					GetZoneBounds(out znX, out znY, out znW, out znH);
-					if (GameCanvas.isPointerHoldIn(znX, znY, znW, znH))
+					if (IsPointerHoldInCircle(znX + znW / 2, znY + znH / 2, FAN_BTN_RADIUS))
 					{
 						mScreen.keyTouch = -1;
 						GameCanvas.isPointerJustDown = false;

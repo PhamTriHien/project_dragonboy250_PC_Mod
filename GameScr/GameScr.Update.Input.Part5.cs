@@ -119,17 +119,20 @@ public partial class GameScr : mScreen, IChatable
 			{
 				if (isAnalog != 0)
 				{
-					// Nút Đấm (Attack) góc dưới bên phải - Kích thước to hơn
-					xF = GameCanvas.w - 58;
-					yF = GameCanvas.h - 58;
+					int ax, ay, aw, ah;
+					ModArrowButton.GetAttackBounds(out ax, out ay, out aw, out ah);
+					xF = ax;
+					yF = ay;
 
-					// Nút Đổi Mục Tiêu (Target) nằm phía trên nút đấm, lệch sát mép phải xíu
-					xTG = GameCanvas.w - 40;
-					yTG = yF - 50;
+					int fx, fy, fw, fh;
+					ModArrowButton.GetFocusBounds(out fx, out fy, out fw, out fh);
+					xTG = fx;
+					yTG = fy;
 
-					// Nút Ăn Đậu Thần (Pea) nằm kế nút đấm, dịch sang trái
-					xHP = xF - 56;
-					yHP = yF + 4;
+					int hx, hy, hw, hh;
+					ModArrowButton.GetPeaBounds(out hx, out hy, out hw, out hh);
+					xHP = hx;
+					yHP = hy;
 				}
 			}
 

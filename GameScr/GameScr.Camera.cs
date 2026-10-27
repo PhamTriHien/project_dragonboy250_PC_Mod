@@ -134,18 +134,7 @@ public partial class GameScr : mScreen, IChatable
 					xC = gW - 35;
 					yC = 5;
 				}
-				xF = gW - 55;
-				yF = yTouchBar + 35;
-				xTG = gW - 37;
-				yTG = yTouchBar - 1;
-				if (GameCanvas.w >= 450)
-				{
-					yTG -= 12;
-					yHP -= 7;
-					xF -= 10;
-					yF -= 5;
-					xTG -= 10;
-				}
+				setTouchBtn();
 			}
 			setSkillBarPosition();
 			disXC = ((GameCanvas.w <= 200) ? 30 : 40);

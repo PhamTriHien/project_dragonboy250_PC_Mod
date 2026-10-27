@@ -252,15 +252,12 @@ public partial class GameScr : mScreen, IChatable
 					// 1. Nút di chuyển Analog bên trái
 					gamePad.paint(g);
 
-					// 2. Nút Đấm (Attack) góc dưới bên phải - Kích thước to hơn
 					Image btnFire = (mScreen.keyTouch != 5 && mScreen.keyMouse != 5) ? imgFire0 : imgFire1;
 					if (btnFire != null)
 					{
-						// Viền nút to rõ nét
-						g.drawImage(btnFire, xF + 28, yF + 28, mGraphics.HCENTER | mGraphics.VCENTER);
+						g.drawImage(btnFire, xF + 20, yF + 20, mGraphics.HCENTER | mGraphics.VCENTER);
 					}
 
-					// 3. Nút Đổi Mục Tiêu (Target) bên trên nút đấm, lệch sát mép phải xíu
 					Image btnFocus = (mScreen.keyTouch != 13) ? imgFocus : imgFocus2;
 					if (btnFocus != null)
 					{

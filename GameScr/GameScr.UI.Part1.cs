@@ -139,14 +139,14 @@ public partial class GameScr : mScreen, IChatable
 					mScreen.keyMouse = 15;
 				}
 			}
-			else if (GameCanvas.isMouseFocus(xHP, yHP, 40, 40))
+			else if (ModArrowButton.IsCursorInCircle(xHP + ((isAnalog != 0) ? 16 : 20), yHP + ((isAnalog != 0) ? 16 : 20), (isAnalog != 0) ? ModArrowButton.FAN_BTN_RADIUS : 20))
 			{
 				if (Char.myCharz().statusMe != 14)
 				{
 					mScreen.keyMouse = 10;
 				}
 			}
-			else if (GameCanvas.isMouseFocus(xF, yF, 40, 40))
+			else if (isAnalog != 0 && ModArrowButton.IsCursorInCircle(xF + 20, yF + 20, ModArrowButton.FAN_FIRE_RADIUS))
 			{
 				if (Char.myCharz().statusMe != 14)
 				{

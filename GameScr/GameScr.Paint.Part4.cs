@@ -35,118 +35,29 @@ public partial class GameScr : mScreen, IChatable
 					}
 					else if (Char.myCharz().statusMe != 14)
 					{
-						if (gamePad.isSmallGamePad)
+						if (isAnalog != 0)
 						{
-							if (isAnalog != 1)
-							{
-								g.setColor(9670800);
-								g.fillRect(xHP + 9, yHP + 10 + 10, 22, 20);
-								g.setColor(16777215);
-								g.fillRect(xHP + 9, yHP + 10 + ((num3 != 0) ? (20 - num3) : 0) + 10, 22, (num3 == 0) ? 20 : num3);
-								g.drawImage((mScreen.keyTouch != 10) ? imgHP1 : imgHP2, xHP, yHP + 10, 0);
-								mFont.tahoma_7_red.drawString(g, string.Empty + hpPotion, xHP + 20, yHP + 15 + 10, 2);
-								if (isPickNgocRong)
-								{
-									g.drawImage((mScreen.keyTouch != 14) ? imgNR1 : imgNR2, xHP + 5, yHP - 6 - 40 + 10, 0);
-								}
-								else if (isudungCapsun4)
-								{
-									g.drawImage((mScreen.keyTouch != 14) ? imgNutF : imgNut, xHP + 5, yHP - 6 - 40 + 10, 0);
-									SmallImage.drawSmallImage(g, 1088, xHP - 7 + 5, yHP - 6 - 40 - 7 + 10, 0, 0);
-								}
-								else if (isudungCapsun3)
-								{
-									g.drawImage((mScreen.keyTouch != 14) ? imgNutF : imgNut, xHP + 5, yHP - 6 - 40 + 10, 0);
-									SmallImage.drawSmallImage(g, 1087, xHP - 7 + 5, yHP - 6 - 40 - 7 + 10, 0, 0);
-								}
-							}
-							else if (isAnalog == 1)
-							{
-								int num4 = 10;
-								g.drawImage((mScreen.keyTouch != 10) ? imgSkill : imgSkill2, xSkill + xHP - 1, yHP - 1 + num4, 0);
-								SmallImage.drawSmallImage(g, 542, xSkill + xHP + 3, yHP + 3 + num4, 0, 0);
-								mFont.number_gray.drawString(g, string.Empty + hpPotion, xSkill + xHP + 22, yHP + 13 + num4, 1);
-								if (num2 < 10000)
-								{
-									g.setColor(2721889);
-									num3 = (int)(num2 * 20 / 10000);
-									g.fillRect(xSkill + xHP + 3, yHP + 3 + num3 + num4, 20, 20 - num3);
-								}
-								if (isPickNgocRong)
-								{
-									g.drawImage((mScreen.keyTouch != 14) ? imgNR3 : imgNR4, xHP + 20 + 5, yHP + 20 - 6 - 40 + 10, mGraphics.HCENTER | mGraphics.VCENTER);
-								}
-								else if (isudungCapsun4)
-								{
-									g.drawImage((mScreen.keyTouch != 14) ? imgNut : imgNutF, xHP + 20 + 5, yHP + 20 - 6 - 40 + 10, mGraphics.HCENTER | mGraphics.VCENTER);
-									SmallImage.drawSmallImage(g, 1088, xHP + 20 - 7 + 5, yHP + 20 - 6 - 40 - 7 + 10, 0, 0);
-								}
-								else if (isudungCapsun3)
-								{
-									g.drawImage((mScreen.keyTouch != 14) ? imgNut : imgNutF, xHP + 20 + 5, yHP + 20 - 6 - 40 + 10, mGraphics.HCENTER | mGraphics.VCENTER);
-									SmallImage.drawSmallImage(g, 1087, xHP + 20 - 7 + 5, yHP + 20 - 6 - 40 - 7 + 10, 0, 0);
-								}
-							}
-						}
-						else if (isAnalog != 1)
-						{
+							int peaCx = xHP + 16;
+							int peaCy = yHP + 16;
+							int fillH = (num3 == 0) ? 18 : (num3 * 18 / 20);
 							g.setColor(9670800);
-							g.fillRect(xHP + 9, yHP + 10 - 6, 22, 20);
+							g.fillRect(peaCx - 10, peaCy - 10, 20, 18);
 							g.setColor(16777215);
-							g.fillRect(xHP + 9, yHP + 10 + ((num3 != 0) ? (20 - num3) : 0) - 6, 22, (num3 == 0) ? 20 : num3);
-							g.drawImage((mScreen.keyTouch != 10) ? imgHP1 : imgHP2, xHP, yHP - 6, 0);
-							mFont.tahoma_7_red.drawString(g, string.Empty + hpPotion, xHP + 20, yHP + 15 - 6, 2);
-							if (isPickNgocRong)
-							{
-								g.drawImage((mScreen.keyTouch != 14) ? imgNR1 : imgNR2, xHP, yHP - 6 - 40, 0);
-							}
-							else if (isudungCapsun4)
-							{
-								g.drawImage((mScreen.keyTouch != 14) ? imgNut : imgNutF, xHP + 20, yHP + 20 - 6 - 40, mGraphics.HCENTER | mGraphics.VCENTER);
-								SmallImage.drawSmallImage(g, 1088, xHP + 20 - 7, yHP + 20 - 6 - 40 - 7, 0, 0);
-							}
-							else if (isudungCapsun3)
-							{
-								g.drawImage((mScreen.keyTouch != 14) ? imgNut : imgNutF, xHP + 20, yHP + 20 - 6 - 40, mGraphics.HCENTER | mGraphics.VCENTER);
-								SmallImage.drawSmallImage(g, 1087, xHP + 20 - 7, yHP + 20 - 6 - 40 - 7, 0, 0);
-							}
+							g.fillRect(peaCx - 10, peaCy + 8 - fillH, 20, fillH);
+							g.drawImage((mScreen.keyTouch != 10) ? imgHP3 : imgHP4, peaCx, peaCy, mGraphics.HCENTER | mGraphics.VCENTER);
+							mFont.tahoma_7_red.drawString(g, string.Empty + hpPotion, peaCx, peaCy - 5, 2);
 						}
 						else
 						{
+							int peaCx = xHP + 20;
+							int peaCy = yHP + 20;
+							int fillH = (num3 == 0) ? 20 : num3;
 							g.setColor(9670800);
-							g.fillRect(xHP + 10, yHP + 10 - 6 + 10, 20, 18);
+							g.fillRect(peaCx - 11, peaCy - 10, 22, 20);
 							g.setColor(16777215);
-							g.fillRect(xHP + 10, yHP + 10 + ((num3 != 0) ? (20 - num3) : 0) - 6 + 10, 20, (num3 == 0) ? 18 : num3);
-							g.drawImage((mScreen.keyTouch != 10) ? imgHP3 : imgHP4, xHP + 20, yHP + 20 - 6 + 10, mGraphics.HCENTER | mGraphics.VCENTER);
-							mFont.tahoma_7_red.drawString(g, string.Empty + hpPotion, xHP + 20, yHP + 15 - 6 + 10, 2);
-							if (isPickNgocRong)
-							{
-								g.drawImage((mScreen.keyTouch != 14) ? imgNR3 : imgNR4, xHP + 20 + 5, yHP + 20 - 6 - 40 + 10, mGraphics.HCENTER | mGraphics.VCENTER);
-							}
-							else if (isudungCapsun4)
-							{
-								g.drawImage((mScreen.keyTouch != 14) ? imgNut : imgNutF, xHP + 20 + 5, yHP + 20 - 6 - 40 + 10, mGraphics.HCENTER | mGraphics.VCENTER);
-								SmallImage.drawSmallImage(g, 1088, xHP + 20 - 7 + 5, yHP + 20 - 6 - 40 - 7 + 10, 0, 0);
-							}
-							else if (isudungCapsun3)
-							{
-								g.drawImage((mScreen.keyTouch != 14) ? imgNut : imgNutF, xHP + 20 + 5, yHP + 20 - 6 - 40 + 10, mGraphics.HCENTER | mGraphics.VCENTER);
-								SmallImage.drawSmallImage(g, 1087, xHP + 20 - 7 + 5, yHP + 20 - 6 - 40 - 7 + 10, 0, 0);
-							}
-						}
-						Image imgSkillBg = ((mScreen.keyTouch == 16) ? imgSkill2 : imgSkill);
-						if (imgSkillBg != null)
-						{
-							g.drawImage(imgSkillBg, xHP - 45, yHP - 16, mGraphics.HCENTER | mGraphics.VCENTER);
-						}
-						if (fraAuto != null)
-						{
-							int idxAuto = (AutoTrainMenu.isChecked[0] ? (GameCanvas.gameTick / 4 % 5 + 1) : 0);
-							fraAuto.drawFrame(idxAuto, xHP - 45, yHP - 16, 0, mGraphics.HCENTER | mGraphics.VCENTER, g);
-						}
-						else
-						{
-							mFont.tahoma_7b_yellow.drawString(g, "AT", xHP - 45, yHP - 21, 2);
+							g.fillRect(peaCx - 11, peaCy + 10 - fillH, 22, fillH);
+							g.drawImage((mScreen.keyTouch != 10) ? imgHP1 : imgHP2, peaCx, peaCy, mGraphics.HCENTER | mGraphics.VCENTER);
+							mFont.tahoma_7_red.drawString(g, string.Empty + hpPotion, peaCx, peaCy - 5, 2);
 						}
 					}
 					if (isHaveSelectSkill)

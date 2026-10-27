@@ -26,9 +26,10 @@ public partial class GameScr : mScreen, IChatable
 					xSkill = 10;
 				}
 
-				// Nút Đậu Thần đặt ở góc dưới bên phải
-				xHP = GameCanvas.w - 45;
-				yHP = GameCanvas.h - 45;
+				int hx, hy, hw, hh;
+				ModArrowButton.GetPeaBounds(out hx, out hy, out hw, out hh);
+				xHP = hx;
+				yHP = hy;
 			}
 			else
 			{

@@ -161,7 +161,8 @@ public partial class GameScr : mScreen, IChatable
 						}
 					}
 					updateGamePad();
-					if (((isAnalog != 0) ? GameCanvas.isPointerHoldIn(xHP - 2, yHP - 2, 44, 44) : GameCanvas.isPointerHoldIn(xHP, yHP + 10, 40, 40)) && Char.myCharz().statusMe != 14 && mobCapcha == null)
+					int peaR = (isAnalog != 0) ? ModArrowButton.FAN_BTN_RADIUS : 20;
+					if (ModArrowButton.IsPointerHoldInCircle(xHP + peaR, yHP + peaR, peaR) && Char.myCharz().statusMe != 14 && mobCapcha == null)
 					{
 						mScreen.keyTouch = 10;
 						GameCanvas.isPointerJustDown = false;
@@ -170,86 +171,6 @@ public partial class GameScr : mScreen, IChatable
 						{
 							GameCanvas.keyPressed[10] = true;
 							GameCanvas.isPointerClick = (GameCanvas.isPointerJustDown = (GameCanvas.isPointerJustRelease = false));
-						}
-					}
-					if (((isAnalog != 0) ? GameCanvas.isPointerHoldIn(xHP + 5, yHP - 6 - 34 + 10, 34, 34) : GameCanvas.isPointerHoldIn(xHP + 5, yHP - 6 - 40 + 10, 40, 40)) && Char.myCharz().statusMe != 14 && mobCapcha == null)
-					{
-						if (isPickNgocRong)
-						{
-							mScreen.keyTouch = 14;
-							GameCanvas.isPointerJustDown = false;
-							isPointerDowning = false;
-							if (GameCanvas.isPointerClick && GameCanvas.isPointerJustRelease)
-							{
-								GameCanvas.keyPressed[14] = true;
-								GameCanvas.isPointerClick = (GameCanvas.isPointerJustDown = (GameCanvas.isPointerJustRelease = false));
-								isPickNgocRong = false;
-								Service.gI().useItem(-1, -1, -1, -1);
-							}
-						}
-						else if (isudungCapsun4)
-						{
-							mScreen.keyTouch = 14;
-							GameCanvas.isPointerJustDown = false;
-							isPointerDowning = false;
-							if (GameCanvas.isPointerClick && GameCanvas.isPointerJustRelease)
-							{
-								GameCanvas.keyPressed[14] = true;
-								GameCanvas.isPointerClick = (GameCanvas.isPointerJustDown = (GameCanvas.isPointerJustRelease = false));
-								for (int i = 0; i < Char.myCharz().arrItemBag.Length; i++)
-								{
-									Item item = Char.myCharz().arrItemBag[i];
-									if (item == null)
-									{
-										continue;
-									}
-									Res.err("find " + item.template.id);
-									if (item.template.id == 194)
-									{
-										isudungCapsun4 = item.quantity > 0;
-										if (isudungCapsun4)
-										{
-											Service.gI().useItem(0, 1, (sbyte)i, -1);
-											break;
-										}
-									}
-								}
-							}
-						}
-						else if (isudungCapsun3)
-						{
-							mScreen.keyTouch = 14;
-							GameCanvas.isPointerJustDown = false;
-							isPointerDowning = false;
-							if (GameCanvas.isPointerClick && GameCanvas.isPointerJustRelease)
-							{
-								GameCanvas.keyPressed[14] = true;
-								GameCanvas.isPointerClick = (GameCanvas.isPointerJustDown = (GameCanvas.isPointerJustRelease = false));
-								for (int j = 0; j < Char.myCharz().arrItemBag.Length; j++)
-								{
-									Item item2 = Char.myCharz().arrItemBag[j];
-									if (item2 != null && item2.template.id == 193)
-									{
-										isudungCapsun3 = item2.quantity > 0;
-										if (isudungCapsun3)
-										{
-											Service.gI().useItem(0, 1, (sbyte)j, -1);
-											break;
-										}
-									}
-								}
-							}
-						}
-					}
-					if (GameCanvas.isPointerHoldIn(xHP - 65, yHP - 36, 40, 40) && Char.myCharz().statusMe != 14 && mobCapcha == null)
-					{
-						mScreen.keyTouch = 16;
-						GameCanvas.isPointerJustDown = false;
-						isPointerDowning = false;
-						if (GameCanvas.isPointerClick && GameCanvas.isPointerJustRelease)
-						{
-							GameCanvas.isPointerClick = (GameCanvas.isPointerJustDown = (GameCanvas.isPointerJustRelease = false));
-							AutoTrainMenu.gI().show();
 						}
 					}
 				}
