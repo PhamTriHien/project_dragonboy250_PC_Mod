@@ -509,6 +509,70 @@ public partial class mResources
 
 	public static string potential_to_learn_tuyetKi = string.Empty;
 
+	public static string tuDongDanh = string.Empty;
+
+	public static string autoTrain = string.Empty;
+
+	public static string tanSat = string.Empty;
+
+	public static string tuDongTDLT = string.Empty;
+
+	public static string boQuaSieuQuai = string.Empty;
+
+	public static string suDungPhieuSaoVang = string.Empty;
+
+	public static string doiKhuKhiHetQuai = string.Empty;
+
+	public static string danhTheoHp = string.Empty;
+
+	public static string chonQuaiTheoTen = string.Empty;
+
+	public static string khongCoMucTieu = string.Empty;
+
+	public static string tatCa = string.Empty;
+
+	public static string danhSachSkillTuDanh = string.Empty;
+
+	public static string muaBuaHoTroKills = string.Empty;
+
+	public static string hpTren = string.Empty;
+
+	public static string hpDuoi = string.Empty;
+
+	public static string khongGioiHan = string.Empty;
+
+	public static string percentHpDungDau = string.Empty;
+
+	public static string percentMpDungDau = string.Empty;
+
+	public static string tuDungDau = string.Empty;
+
+	public static string dsIdNhat = string.Empty;
+
+	public static string dsIdLoaiTru = string.Empty;
+
+	public static string dsIdVutBo = string.Empty;
+
+	public static string dsItemIdNhat = string.Empty;
+
+	public static string dsItemIdLoaiTru = string.Empty;
+
+	public static string dsItemIdVutBo = string.Empty;
+
+	public static string quai = string.Empty;
+
+	public static string cannot_connect_server;
+
+	public static string sualoi;
+
+	public static string[] autoTrain_TabNames = new string[3] { "", "", "" };
+
+	public static string[] autoTrain_TabNames_2 = new string[2] { "", "" };
+
+	public static string[] autoPick_Names = new string[4] { "", "", "", "" };
+
+	public static string[] autoBua_Names = new string[4] { "", "", "", "" };
+
 	public static string replace(string str, string replacement)
 			{
 				return NinjaUtil.replace(str, "#", replacement);

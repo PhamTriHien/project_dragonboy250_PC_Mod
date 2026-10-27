@@ -137,6 +137,10 @@ public partial class Controller : IMessageHandler
 			}
 			ModNextMapData.SyncLiveWaypointsForCurrentMap();
 			GameScr.gI().switchToMe();
+			if ((TileMap.mapID == 155 || TileMap.mapID == 166) && AutoTrainMenu.isCheckItem[24] && !AutoTrainMenu.isChecked[0])
+			{
+				AutoTrainMenu.setAutoAttack(true, "Dùng Phiếu Sao Vàng vào Map " + TileMap.mapID + " (loadCurrMap)");
+			}
 			if (Char.myCharz().cy <= 10 && teleport3 != 0 && teleport3 != 2)
 			{
 				Teleport p = new Teleport(Char.myCharz().cx, Char.myCharz().cy, Char.myCharz().head, Char.myCharz().cdir, 1, isMe: true, (teleport3 != 1) ? teleport3 : Char.myCharz().cgender);
@@ -453,6 +457,8 @@ public partial class Controller : IMessageHandler
 				TileMap.bgType = msg.reader().readByte();
 				sbyte teleport = msg.reader().readByte();
 				loadCurrMap(teleport);
+				AutoTrainMenu.captureMobNameSnapshot();
+				AutoTrainMenu.autoTrainNextZoneAllowedTime = mSystem.currentTimeMillis() + 10000L;
 				ModTdltLogger.LogMapInfo(TileMap.mapID, TileMap.mapName, TileMap.zoneID, TileMap.planetID, Char.myCharz().cx, Char.myCharz().cy, teleport);
 				GameCanvas.debug("SA75x8", 2);
 			}
@@ -539,6 +545,7 @@ public partial class Controller : IMessageHandler
 					GameScr.vsSkill = msg.reader().readByte();
 					GameScr.vsItem = msg.reader().readByte();
 					sbyte b3 = msg.reader().readByte();
+					GameScr.resetItemUpdateFlags();
 					if (GameCanvas.loginScr.isLogin2)
 					{
 						Rms.saveRMSString(Rms.RMS_acc, string.Empty);
@@ -611,11 +618,14 @@ public partial class Controller : IMessageHandler
 					}
 					if (GameScr.vsItem != GameScr.vcItem)
 					{
+						GameScr.isWaitingItemUpdate = true;
+						GameScr.lastItemUpdateTime = mSystem.currentTimeMillis();
 						GameScr.isLoadAllData = false;
 						Service.gI().updateItem();
 					}
 					else
 					{
+						GameScr.isWaitingItemUpdate = false;
 						try
 						{
 							DataInputStream dataInputStream3 = new DataInputStream(Rms.loadRMS("NRitem0"));

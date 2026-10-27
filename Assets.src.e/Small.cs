@@ -18,6 +18,19 @@ public class Small
 		timeUpdate = 0;
 	}
 
+	public void clean()
+	{
+		if (img != null && img != SmallImage.imgEmpty)
+		{
+			if (img.texture != null)
+			{
+				UnityEngine.Object.Destroy(img.texture);
+				img.texture = null;
+			}
+		}
+		img = null;
+	}
+
 	public void paint(mGraphics g, int transform, int x, int y, int anchor)
 	{
 		if (img == null || img == SmallImage.imgEmpty || mGraphics.getImageWidth(img) <= 1)
@@ -56,6 +69,7 @@ public class Small
 		timeUpdate++;
 		if (timeUpdate - timePaint > 300 && !isUsedInMap(id))
 		{
+			clean();
 			SmallImage.setSmall(id, null);
 		}
 	}

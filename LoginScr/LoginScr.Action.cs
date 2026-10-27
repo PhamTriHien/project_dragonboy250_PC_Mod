@@ -402,7 +402,7 @@ public partial class LoginScr : mScreen, IActionListener
 				}
 				GameCanvas.loginScr.isLogin2 = true;
 				GameCanvas.connect();
-				Service.gI().setClientType();
+
 				Service.gI().login(text, string.Empty, GameMidlet.VERSION, 1);
 				break;
 			}

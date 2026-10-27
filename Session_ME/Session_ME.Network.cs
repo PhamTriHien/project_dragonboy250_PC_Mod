@@ -179,6 +179,14 @@ public partial class Session_ME
 			key = null;
 			curR = 0;
 			curW = 0;
+			getKeyComplete = false;
+			if (sender != null && sender.sendingMessage != null)
+			{
+				lock (sender.sendingMessage)
+				{
+					sender.sendingMessage.Clear();
+				}
+			}
 			Debug.LogError(">>>cleanNetwork ...!");
 			try
 			{
@@ -232,7 +240,10 @@ public partial class Session_ME
 				{
 					ServerListScreen.testConnect = 0;
 				}
-				instance.timeWaitConnect = 0;
+				if (instance != null)
+				{
+					instance.timeWaitConnect = 0;
+				}
 				Controller.isGet_CLIENT_INFO = false;
 			}
 			catch (Exception)

@@ -415,12 +415,17 @@ public partial class Controller : IMessageHandler
 						Service.gI().getResource(3, null);
 						SmallImage.loadBigRMS();
 						SplashScr.imgLogo = null;
-						if (Rms.loadRMSString(Rms.RMS_acc) != null || Rms.loadRMSString(Rms.RMS_userAo + ServerListScreen.ipSelect) != null)
+						bool flushedNoRes = Service.markImageSourceReadyAndFlushPendingLogin();
+						bool handledNoRes = ServerListScreen.performPendingLoginActionAfterImageSource(!flushedNoRes);
+						if (!flushedNoRes && !handledNoRes)
 						{
-							LoginScr.isContinueToLogin = true;
+							if (Rms.loadRMSString(Rms.RMS_acc) != null || Rms.loadRMSString(Rms.RMS_userAo + ServerListScreen.ipSelect) != null)
+							{
+								LoginScr.isContinueToLogin = true;
+							}
+							GameCanvas.loginScr = new LoginScr();
+							GameCanvas.loginScr.switchToMe();
 						}
-						GameCanvas.loginScr = new LoginScr();
-						GameCanvas.loginScr.switchToMe();
 						return true;
 					}
 					bool flag3 = true;
@@ -434,29 +439,38 @@ public partial class Controller : IMessageHandler
 						string text2 = Rms.loadRMSString(Rms.RMS_ResVersion);
 						int num23 = ((text2 == null || !(text2 != string.Empty)) ? (-1) : int.Parse(text2));
 						Res.outz("4>>>GET_IMAGE_SOURCE: version>> " + text2 + " <> " + num23 + "!=" + num22);
-
-						if (GameCanvas.currentScreen is SplashScr || GameCanvas.currentScreen == null)
+						if (num23 == -1 || num23 != num22)
 						{
-							if (num23 == -1 || num23 != num22)
+							ServerListScreen.clearPendingLoginActionAfterImageSource();
+							GameCanvas.serverScreen.show2();
+						}
+						else
+						{
+							bool flushedPendingLogin = Service.markImageSourceReadyAndFlushPendingLogin();
+							SmallImage.loadBigRMS();
+							SplashScr.imgLogo = null;
+							ServerListScreen.loadScreen = true;
+							Res.outz(">>>vo ne: " + GameCanvas.currentScreen);
+							ServerListScreen.bigOk = true;
+							bool handledPendingAction = ServerListScreen.performPendingLoginActionAfterImageSource(!flushedPendingLogin);
+							if (!flushedPendingLogin && !handledPendingAction)
 							{
-								GameCanvas.serverScreen.show2();
-							}
-							else
-							{
-								SmallImage.loadBigRMS();
-								SplashScr.imgLogo = null;
-								ServerListScreen.loadScreen = true;
-								Res.outz(">>>vo ne: " + GameCanvas.currentScreen);
-								ServerListScreen.bigOk = true;
-								if (ServerListScreen.cmdDownload != null)
+								if (GameCanvas.currentScreen != GameCanvas.loginScr)
 								{
-									ServerListScreen.cmdDownload = null;
+									if (ServerListScreen.cmdDownload != null)
+									{
+										ServerListScreen.cmdDownload = null;
+									}
+									if (GameCanvas.serverScreen == null)
+									{
+										GameCanvas.serverScreen = new ServerListScreen();
+									}
+									GameCanvas.serverScreen.switchToMe();
 								}
-								if (GameCanvas.serverScreen == null)
+								else
 								{
-									GameCanvas.serverScreen = new ServerListScreen();
+									GameCanvas.loginScr.doLogin();
 								}
-								GameCanvas.serverScreen.switchToMe();
 							}
 						}
 					}
@@ -513,7 +527,9 @@ public partial class Controller : IMessageHandler
 						GameScr.gI().loadGameScr();
 						GameScr.isLoadAllData = false;
 						Service.gI().updateData();
-						if (GameCanvas.currentScreen is SplashScr || GameCanvas.currentScreen == null || (GameCanvas.serverScreen != null && GameCanvas.currentScreen == GameCanvas.serverScreen && !ServerListScreen.loadScreen))
+						bool flushedAfterDownload = Service.markImageSourceReadyAndFlushPendingLogin();
+						bool handledAfterDownload = ServerListScreen.performPendingLoginActionAfterImageSource(!flushedAfterDownload);
+						if (!flushedAfterDownload && !handledAfterDownload && GameCanvas.currentScreen != GameCanvas.loginScr)
 						{
 							if (GameCanvas.serverScreen == null)
 							{
@@ -664,5 +680,4 @@ public partial class Controller : IMessageHandler
 		}
 		return true;
 	}
-
 }

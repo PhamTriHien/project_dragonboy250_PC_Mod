@@ -10,6 +10,8 @@ public partial class GameCanvas : IActionListener
 
 	public static bool lowGraphic = false;
 
+	public static bool mediumGraphic = false;
+
 	public static bool serverchat = false;
 
 	public static bool isMoveNumberPad = true;

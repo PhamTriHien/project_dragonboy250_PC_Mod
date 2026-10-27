@@ -280,10 +280,34 @@ public partial class TileMap
 			return false;
 		}
 
+	public static void cleanTile()
+		{
+			if (imgTile != null)
+			{
+				bool isCached = tileDataCache != null && tileDataCache.ContainsValue(imgTile);
+				if (!isCached)
+				{
+					for (int i = 0; i < imgTile.Length; i++)
+					{
+						if (imgTile[i] != null)
+						{
+							if (imgTile[i].texture != null)
+							{
+								UnityEngine.Object.Destroy(imgTile[i].texture);
+								imgTile[i].texture = null;
+							}
+							imgTile[i] = null;
+						}
+					}
+				}
+				imgTile = null;
+			}
+			mSystem.gcc();
+		}
+
 	public static void freeTilemap()
 		{
-			imgTile = null;
-			mSystem.gcc();
+			cleanTile();
 		}
 
 	public static bool isExistMoreOne(int id)

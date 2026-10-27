@@ -539,7 +539,7 @@ public partial class LoginScr : mScreen, IActionListener
 		{
 			GameCanvas.connect();
 		}
-			Service.gI().setClientType();
+
 			Service.gI().login(text, text2, GameMidlet.VERSION, (sbyte)(isLogin2 ? 1 : 0));
 			Res.outz(Controller.isEXTRA_LINK + " = Controller.isEXTRA_LINK " + text + " " + text2 + " " + GameMidlet.VERSION + " " + (sbyte)(isLogin2 ? 1 : 0));
 			Rms.saveRMSInt(ServerListScreen.RMS_svselect, ServerListScreen.ipSelect);

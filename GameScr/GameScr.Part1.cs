@@ -59,6 +59,11 @@ public partial class GameScr : mScreen, IChatable
 		{
 			fra_PVE_Bar_0 = new FrameImage(mSystem.loadImage("/mainImage/i_pve_bar_0.png"), 6, 15);
 			fra_PVE_Bar_1 = new FrameImage(mSystem.loadImage("/mainImage/i_pve_bar_1.png"), 38, 21);
+			Image imgAuto = GameCanvas.loadImage("/mainImage/img_auto.png");
+			if (imgAuto != null)
+			{
+				fraAuto = new FrameImage(imgAuto, 1, 6, 0);
+			}
 			imgVS = mSystem.loadImage("/mainImage/i_vs.png");
 			imgBall = mSystem.loadImage("/mainImage/i_charlife.png");
 			imgHP_NEW = mSystem.loadImage("/mainImage/i_hp.png");
@@ -167,6 +172,11 @@ public partial class GameScr : mScreen, IChatable
 		{
 			fra_PVE_Bar_0 = new FrameImage(mSystem.loadImage("/mainImage/i_pve_bar_0.png"), 6, 15);
 			fra_PVE_Bar_1 = new FrameImage(mSystem.loadImage("/mainImage/i_pve_bar_1.png"), 38, 21);
+			Image imgAuto = GameCanvas.loadImage("/mainImage/img_auto.png");
+			if (imgAuto != null)
+			{
+				fraAuto = new FrameImage(imgAuto, 1, 6, 0);
+			}
 			imgVS = mSystem.loadImage("/mainImage/i_vs.png");
 			imgBall = mSystem.loadImage("/mainImage/i_charlife.png");
 			imgHP_NEW = mSystem.loadImage("/mainImage/i_hp.png");
@@ -444,18 +454,29 @@ public partial class GameScr : mScreen, IChatable
 		{
 			try
 			{
+				if (isSentClientOK)
+				{
+					return;
+				}
 				Res.outz("<readOk><vsData<" + vsData + "==" + vcData);
 				Res.outz("<readOk><vsMap<" + vsMap + "==" + vcMap);
 				Res.outz("<readOk><vsSkill<" + vsSkill + "==" + vcSkill);
 				Res.outz("<readOk><vsItem<" + vsItem + "==" + vcItem);
 				if (vsData == vcData && vsMap == vcMap && vsSkill == vcSkill && vsItem == vcItem)
 				{
-					Res.outz(vsData + "," + vsMap + "," + vsSkill + "," + vsItem);
-					gI().readDart();
-					gI().readEfect();
-					gI().readArrow();
-					gI().readSkill();
-					Service.gI().clientOk();
+					bool flag = hasItemType0 && hasItemType1 && hasItemType100 && hasItemType101;
+					bool flag2 = hasItemType0 && hasItemType1 && lastItemUpdateTime > 0 && mSystem.currentTimeMillis() - lastItemUpdateTime >= 500;
+					if (!isWaitingItemUpdate || flag || flag2)
+					{
+						isSentClientOK = true;
+						isWaitingItemUpdate = false;
+						Res.outz(vsData + "," + vsMap + "," + vsSkill + "," + vsItem);
+						gI().readDart();
+						gI().readEfect();
+						gI().readArrow();
+						gI().readSkill();
+						Service.gI().clientOk();
+					}
 				}
 			}
 			catch (Exception ex)

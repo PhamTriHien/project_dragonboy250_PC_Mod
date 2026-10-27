@@ -128,7 +128,7 @@ public partial class ServerListScreen : mScreen, IActionListener
 			{
 				cmdDeleteRMS.x = GameCanvas.w - 78;
 				cmdDeleteRMS.y = GameCanvas.h - 26;
-				mFont.tahoma_7_white.drawString(g, mResources.xoadulieu, GameCanvas.w - 2, GameCanvas.h - 15, 1, mFont.tahoma_7_grey);
+				mFont.tahoma_7_white.drawString(g, mResources.sualoi, GameCanvas.w - 2, GameCanvas.h - 15, 1, mFont.tahoma_7_grey);
 			}
 		}
 

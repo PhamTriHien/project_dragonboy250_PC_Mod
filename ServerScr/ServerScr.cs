@@ -135,6 +135,8 @@ public partial class ServerScr : mScreen, IActionListener
 	public override void switchToMe()
 		{
 			Res.outz("switchToMe >>>>ServerScr: " + Rms.loadRMSInt(ServerListScreen.RMS_svselect));
+			GameCanvas.clearTransientPopupState();
+			AutoTrainMenu.setAutoAttack(false, "Về màn hình chọn Server");
 			SoundMn.gI().stopAll();
 			base.switchToMe();
 			loadIconHead();

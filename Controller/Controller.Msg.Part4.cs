@@ -40,14 +40,7 @@ public partial class Controller : IMessageHandler
 						{
 							SmallImage.ensureImgNew(num154);
 							Image imgSmall = (mGraphics.zoomLevel > 1) ? Image.createServerZoomImage(array17, 0, array17.Length) : createImage(array17);
-							if (SmallImage.imgNew[num154] == null)
-							{
-								SmallImage.imgNew[num154] = new Small(imgSmall, num154);
-							}
-							else
-							{
-								SmallImage.imgNew[num154].img = imgSmall;
-							}
+							SetSmallImageSlotImage(num154, imgSmall);
 						}
 					}
 					catch (Exception)
@@ -56,15 +49,7 @@ public partial class Controller : IMessageHandler
 						if (num154 >= 0)
 						{
 							SmallImage.ensureImgNew(num154);
-							Image emptyImg = Image.createRGBImage(new int[1], 1, 1, bl: true);
-							if (SmallImage.imgNew[num154] == null)
-							{
-								SmallImage.imgNew[num154] = new Small(emptyImg, num154);
-							}
-							else
-							{
-								SmallImage.imgNew[num154].img = emptyImg;
-							}
+							SetSmallImageSlotImage(num154, Image.createRGBImage(new int[1], 1, 1, bl: true));
 						}
 					}
 					if (array17 != null && mGraphics.zoomLevel > 1)

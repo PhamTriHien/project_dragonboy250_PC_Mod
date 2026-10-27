@@ -203,6 +203,14 @@ public partial class mFont
 				}
 				return num;
 			}
+			if (ModGraphics.IsIosGraphics && IosBitmapFont.ContainsAllGlyphs(id, s))
+			{
+				int iosW = IosBitmapFont.MeasureWidth(id, s);
+				if (iosW >= 0)
+				{
+					return iosW;
+				}
+			}
 			return getWidthExactOf(s);
 		}
 
@@ -216,9 +224,22 @@ public partial class mFont
 			try
 			{
 				if (string.IsNullOrEmpty(s)) return 0;
-				if (widthCache.TryGetValue(s, out int cachedWidth))
+				int cachedWidth;
+				if (widthCache.TryGetValue(s, out cachedWidth))
 				{
 					return cachedWidth;
+				}
+				if (ModGraphics.IsIosGraphics && IosBitmapFont.ContainsAllGlyphs(id, s))
+				{
+					int iosW = IosBitmapFont.MeasureWidth(id, s);
+					if (iosW >= 0)
+					{
+						if (widthCache.Count < 512)
+						{
+							widthCache[s] = iosW;
+						}
+						return iosW;
+					}
 				}
 				s_CachedMeasureStyle.font = myFont;
 				s_CachedMeasureContent.text = s;
@@ -262,6 +283,14 @@ public partial class mFont
 			{
 				return getWidth(s);
 			}
+			if (ModGraphics.IsIosGraphics && IosBitmapFont.ContainsAllGlyphs(id, s))
+			{
+				int iosW = IosBitmapFont.MeasureWidth(id, s);
+				if (iosW >= 0)
+				{
+					return iosW;
+				}
+			}
 			return s.Length * wO / mGraphics.zoomLevel;
 		}
 
@@ -274,6 +303,10 @@ public partial class mFont
 			if (ModGraphics.IsJavaGraphics && javaHeight > 0)
 			{
 				return javaHeight;
+			}
+			if (ModGraphics.IsIosGraphics && IosBitmapFont.CanRender(id))
+			{
+				return IosBitmapFont.GetLineHeight(id);
 			}
 			if (height > 0)
 			{

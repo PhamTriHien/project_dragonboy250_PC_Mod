@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using UnityEngine;
 
@@ -10,7 +11,16 @@ public class Image
 		public Texture2D hd;
 		public Texture2D java;
 	}
+	private struct RetinaEntry
+	{
+		public Texture2D tex;
+		public int logicalW;
+		public int logicalH;
+		public bool probed;
+	}
 	private static readonly Dictionary<string, Texture2D> s_JavaScaledTextures = new Dictionary<string, Texture2D>();
+	private static readonly Dictionary<string, RetinaEntry> s_IosRetinaTextures = new Dictionary<string, RetinaEntry>();
+	private static readonly Dictionary<string, Texture2D> s_EmbeddedTextures = new Dictionary<string, Texture2D>();
 	private static readonly Dictionary<ulong, ServerTexPair> s_ServerZoomTextures = new Dictionary<ulong, ServerTexPair>();
 	private const int INTERVAL = 5;
 
@@ -49,6 +59,114 @@ public class Image
 	public bool isFallbackFromX1;
 
 	public byte[] rawServerPngBytes;
+
+	private static byte[] ReadEmbeddedPngBytes(string resourceName)
+	{
+		try
+		{
+			using (Stream stream = typeof(Image).Assembly.GetManifestResourceStream(resourceName))
+			{
+				if (stream == null)
+				{
+					return null;
+				}
+				byte[] buffer = new byte[stream.Length];
+				int offset = 0;
+				while (offset < buffer.Length)
+				{
+					int read = stream.Read(buffer, offset, buffer.Length - offset);
+					if (read <= 0)
+					{
+						break;
+					}
+					offset += read;
+				}
+				return buffer;
+			}
+		}
+		catch
+		{
+			return null;
+		}
+	}
+
+	private static byte[] TryLoadExternalOrEmbeddedPng(string relPathNoExt)
+	{
+		string relPng = relPathNoExt.Replace('/', Path.DirectorySeparatorChar) + ".png";
+		try
+		{
+			string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+			string[] roots = new string[3]
+			{
+				Path.Combine(baseDir, "Assets"),
+				baseDir,
+				@"C:\ModNRO\DragonBoy_Shared\Assets"
+			};
+			for (int i = 0; i < roots.Length; i++)
+			{
+				string candidate = Path.Combine(roots[i], relPng);
+				if (File.Exists(candidate))
+				{
+					return File.ReadAllBytes(candidate);
+				}
+			}
+		}
+		catch
+		{
+		}
+		return ReadEmbeddedPngBytes(relPathNoExt + ".png");
+	}
+
+	private static bool TryGetIosRetinaTexture(string cleanName, out Texture2D retinaTex, out int logicalW, out int logicalH)
+	{
+		retinaTex = null;
+		logicalW = 0;
+		logicalH = 0;
+		if (!cleanName.StartsWith("x2/", StringComparison.OrdinalIgnoreCase))
+		{
+			return false;
+		}
+		RetinaEntry entry;
+		if (s_IosRetinaTextures.TryGetValue(cleanName, out entry) && entry.probed)
+		{
+			if (entry.tex != null)
+			{
+				retinaTex = entry.tex;
+				logicalW = entry.logicalW;
+				logicalH = entry.logicalH;
+				return true;
+			}
+			return false;
+		}
+		string suffix = cleanName.Substring(3);
+		byte[] bytes = TryLoadExternalOrEmbeddedPng("x4/" + suffix);
+		int tier = 4;
+		if (bytes == null || bytes.Length == 0)
+		{
+			bytes = TryLoadExternalOrEmbeddedPng("x3/" + suffix);
+			tier = 3;
+		}
+		if (bytes != null && bytes.Length > 0)
+		{
+			Texture2D tex = new Texture2D(2, 2, TextureFormat.RGBA32, true);
+			if (tex.LoadImage(bytes))
+			{
+				tex.wrapMode = TextureWrapMode.Clamp;
+				tex.filterMode = FilterMode.Trilinear;
+				tex.anisoLevel = 2;
+				int lw = (tier == 4) ? ((tex.width + 1) / 2) : ((tex.width * 2 + 1) / 3);
+				int lh = (tier == 4) ? ((tex.height + 1) / 2) : ((tex.height * 2 + 1) / 3);
+				entry = new RetinaEntry { tex = tex, logicalW = lw, logicalH = lh, probed = true };
+				s_IosRetinaTextures[cleanName] = entry;
+				retinaTex = tex;
+				logicalW = lw;
+				logicalH = lh;
+				return true;
+			}
+		}
+		s_IosRetinaTextures[cleanName] = new RetinaEntry { probed = true };
+		return false;
+	}
 
 	private static ulong ComputePngHash(byte[] data)
 	{
@@ -126,7 +244,9 @@ public class Image
 		Texture2D dst = new Texture2D(w, h, TextureFormat.RGBA32, false);
 		dst.SetPixels32(pixels);
 		dst.Apply(false, false);
-		setTextureQuality(dst);
+		dst.filterMode = FilterMode.Point;
+		dst.anisoLevel = 0;
+		dst.wrapMode = TextureWrapMode.Clamp;
 		return dst;
 	}
 
@@ -378,19 +498,53 @@ public class Image
 		{
 			cleanName = cleanName.Substring(1);
 		}
+		bool isX1Asset = cleanName.StartsWith("x1/", StringComparison.OrdinalIgnoreCase) ||
+			cleanName.IndexOf("/x1/", StringComparison.OrdinalIgnoreCase) >= 0;
+		bool isFontAsset = cleanName.IndexOf("myfont", StringComparison.OrdinalIgnoreCase) >= 0;
+
+		if (ModGraphics.IsIosGraphics && !isFontAsset && !isX1Asset && mGraphics.zoomLevel == 2)
+		{
+			Texture2D retinaTex;
+			int logicalW;
+			int logicalH;
+			if (TryGetIosRetinaTexture(cleanName, out retinaTex, out logicalW, out logicalH) && retinaTex != null)
+			{
+				Image retinaImg = new Image();
+				retinaImg.texture = retinaTex;
+				retinaImg.w = logicalW;
+				retinaImg.h = logicalH;
+				retinaImg.isFallbackFromX1 = false;
+				return retinaImg;
+			}
+		}
+
 		Texture2D texture2D = Resources.Load(cleanName) as Texture2D;
+		if (texture2D == null)
+		{
+			if (!s_EmbeddedTextures.TryGetValue(cleanName, out texture2D) || texture2D == null)
+			{
+				byte[] fallbackPng = TryLoadExternalOrEmbeddedPng(cleanName);
+				if (fallbackPng != null && fallbackPng.Length > 0)
+				{
+					Texture2D embeddedTex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+					if (embeddedTex.LoadImage(fallbackPng))
+					{
+						s_EmbeddedTextures[cleanName] = embeddedTex;
+						texture2D = embeddedTex;
+					}
+				}
+			}
+		}
 		if (texture2D == null)
 		{
 			return null;
 		}
-		bool isX1Asset = cleanName.StartsWith("x1/", StringComparison.OrdinalIgnoreCase) ||
-			cleanName.IndexOf("/x1/", StringComparison.OrdinalIgnoreCase) >= 0;
-		bool isFontAsset = cleanName.IndexOf("myfont", StringComparison.OrdinalIgnoreCase) >= 0;
 		bool fallbackFromX1 = false;
 		if (isX1Asset && mGraphics.zoomLevel == 2)
 		{
 			string scaleKey = cleanName + "@x1x2";
-			if (!s_JavaScaledTextures.TryGetValue(scaleKey, out Texture2D scaledTex) || scaledTex == null)
+			Texture2D scaledTex;
+			if (!s_JavaScaledTextures.TryGetValue(scaleKey, out scaledTex) || scaledTex == null)
 			{
 				scaledTex = ScaleTextureNearestNeighbor(texture2D, texture2D.width * 2, texture2D.height * 2);
 				s_JavaScaledTextures[scaleKey] = scaledTex;
@@ -404,7 +558,8 @@ public class Image
 		else if (ModGraphics.IsJavaGraphics && !isFontAsset && mGraphics.zoomLevel == 2)
 		{
 			string quantKey = cleanName + "@java2x2";
-			if (!s_JavaScaledTextures.TryGetValue(quantKey, out Texture2D quantTex) || quantTex == null)
+			Texture2D quantTex;
+			if (!s_JavaScaledTextures.TryGetValue(quantKey, out quantTex) || quantTex == null)
 			{
 				quantTex = QuantizeTextureJava2x2(texture2D);
 				s_JavaScaledTextures[quantKey] = quantTex;
@@ -419,7 +574,17 @@ public class Image
 		image.w = image.texture.width;
 		image.h = image.texture.height;
 		image.isFallbackFromX1 = fallbackFromX1;
-		setTextureQuality(image);
+		if (isFontAsset || fallbackFromX1 || ModGraphics.IsJavaGraphics)
+		{
+			texture2D.anisoLevel = 0;
+			texture2D.filterMode = FilterMode.Point;
+			texture2D.mipMapBias = 0f;
+			texture2D.wrapMode = TextureWrapMode.Clamp;
+		}
+		else
+		{
+			setTextureQuality(image);
+		}
 		return image;
 	}
 
@@ -429,12 +594,13 @@ public class Image
 		{
 			return src;
 		}
-		setTextureQuality(src);
+		src.filterMode = FilterMode.Point;
 		RenderTexture prevActive = RenderTexture.active;
 		RenderTexture rt = RenderTexture.GetTemporary(targetW, targetH, 0, RenderTextureFormat.ARGB32);
 		rt.filterMode = FilterMode.Point;
 		Texture2D dst = new Texture2D(targetW, targetH, TextureFormat.RGBA32, false);
-		setTextureQuality(dst);
+		dst.filterMode = FilterMode.Point;
+		dst.wrapMode = TextureWrapMode.Clamp;
 		try
 		{
 			Graphics.Blit(src, rt);
@@ -460,7 +626,7 @@ public class Image
 		Image image = new Image();
 		try
 		{
-			image.texture = new Texture2D(1, 1, TextureFormat.RGBA32, false);
+			image.texture = new Texture2D(1, 1, TextureFormat.RGBA32, !ModGraphics.IsJavaGraphics);
 			image.texture.LoadImage(imageData);
 			image.w = image.texture.width;
 			image.h = image.texture.height;
@@ -542,15 +708,33 @@ public class Image
 	{
 		if (img != null && img.texture != null)
 		{
-			setTextureQuality(img.texture);
+			if (img.isFallbackFromX1)
+			{
+				img.texture.anisoLevel = 0;
+				img.texture.filterMode = FilterMode.Point;
+				img.texture.mipMapBias = 0f;
+				img.texture.wrapMode = TextureWrapMode.Clamp;
+			}
+			else
+			{
+				setTextureQuality(img.texture);
+			}
 		}
 	}
 
 	public static void setTextureQuality(Texture2D texture)
 	{
 		if (texture == null) return;
-		texture.anisoLevel = 0;
-		texture.filterMode = FilterMode.Point;
+		if (ModGraphics.IsJavaGraphics)
+		{
+			texture.anisoLevel = 0;
+			texture.filterMode = FilterMode.Point;
+		}
+		else
+		{
+			texture.anisoLevel = 2;
+			texture.filterMode = (texture.mipmapCount > 1) ? FilterMode.Trilinear : FilterMode.Bilinear;
+		}
 		texture.mipMapBias = 0f;
 		texture.wrapMode = TextureWrapMode.Clamp;
 	}

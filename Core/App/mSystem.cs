@@ -381,9 +381,16 @@ public class mSystem
 		return DateTime.Now.Hour;
 	}
 
+	public static bool isPC => Main.isPC;
+
 	public static void println(object str)
 	{
 		Debug.Log(str);
+	}
+
+	public static void println(string str)
+	{
+		Res.outz(str);
 	}
 
 	public static void gcc()

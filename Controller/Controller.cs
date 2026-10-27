@@ -64,6 +64,83 @@ public partial class Controller : IMessageHandler
 
 	public static bool isEXTRA_LINK = false;
 
+	private static int mainClientTypeConnectPending;
+
+	private static int secondaryClientTypeConnectPending;
+
+	private static Small GetOrCreateSmallImageSlot(int smallId, Image fallbackImage)
+	{
+		if (smallId < 0 || SmallImage.imgNew == null || smallId >= SmallImage.imgNew.Length)
+		{
+			return null;
+		}
+		Small small = SmallImage.imgNew[smallId];
+		if (small == null)
+		{
+			small = new Small(fallbackImage, smallId);
+			SmallImage.imgNew[smallId] = small;
+		}
+		return small;
+	}
+
+	private static void SetSmallImageSlotImage(int smallId, Image image)
+	{
+		Small small = GetOrCreateSmallImageSlot(smallId, image);
+		if (small == null)
+		{
+			return;
+		}
+		if (small.img != image)
+		{
+			if (small.img != null && small.img != SmallImage.imgEmpty)
+			{
+				small.clean();
+			}
+			small.img = image;
+		}
+		small.timePaint = 0;
+		small.timeUpdate = 0;
+	}
+
+	public static void queueClientTypeConnect(bool isMainSession)
+	{
+		if (isMainSession)
+		{
+			System.Threading.Interlocked.Exchange(ref mainClientTypeConnectPending, 1);
+		}
+		else
+		{
+			System.Threading.Interlocked.Exchange(ref secondaryClientTypeConnectPending, 1);
+		}
+	}
+
+	public static bool consumeClientTypeConnect(bool isMainSession)
+	{
+		if (isMainSession)
+		{
+			return System.Threading.Interlocked.Exchange(ref mainClientTypeConnectPending, 0) != 0;
+		}
+		return System.Threading.Interlocked.Exchange(ref secondaryClientTypeConnectPending, 0) != 0;
+	}
+
+	public static void clearClientTypeConnect(bool isMainSession)
+	{
+		if (isMainSession)
+		{
+			System.Threading.Interlocked.Exchange(ref mainClientTypeConnectPending, 0);
+		}
+		else
+		{
+			System.Threading.Interlocked.Exchange(ref secondaryClientTypeConnectPending, 0);
+		}
+	}
+
+	public static void clearClientTypeConnects()
+	{
+		System.Threading.Interlocked.Exchange(ref mainClientTypeConnectPending, 0);
+		System.Threading.Interlocked.Exchange(ref secondaryClientTypeConnectPending, 0);
+	}
+
 	public static Controller gI()
 		{
 			if (me == null)
@@ -86,6 +163,7 @@ public partial class Controller : IMessageHandler
 		{
 			isMain = isMain1;
 			ClearPendingMapTemplates();
+			queueClientTypeConnect(isMain1);
 			mSystem.onConnectOK();
 		}
 
@@ -93,6 +171,8 @@ public partial class Controller : IMessageHandler
 		{
 			isMain = isMain1;
 			ClearPendingMapTemplates();
+			Service.resetClientTypeSendState(isMain1);
+			clearClientTypeConnect(isMain1);
 			mSystem.onConnectionFail();
 		}
 
@@ -100,6 +180,8 @@ public partial class Controller : IMessageHandler
 		{
 			isMain = isMain1;
 			ClearPendingMapTemplates();
+			Service.resetClientTypeSendState(isMain1);
+			clearClientTypeConnect(isMain1);
 			mSystem.onDisconnected();
 		}
 

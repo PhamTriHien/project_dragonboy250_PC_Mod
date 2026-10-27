@@ -1,6 +1,6 @@
 using System;
 
-public partial class SoundMn
+public partial class SoundMn : IActionListener
 {
 	public class MediaPlayer
 		{
@@ -159,7 +159,7 @@ public partial class SoundMn
 				(!Char.isPaintAura) ? (text2 + mResources.aura_off.Trim()) : (text + mResources.aura_off.Trim()),
 				(!Char.isPaintAura2) ? (text2 + mResources.aura_off_2.Trim()) : (text + mResources.aura_off_2.Trim()),
 				(!GameCanvas.isPlaySound) ? (text2 + mResources.turnOffSound) : (text + mResources.turnOffSound),
-				(!GameCanvas.lowGraphic) ? (text2 + mResources.cauhinhthap) : (text + mResources.cauhinhthap),
+				text + ((Panel.graphics == 0) ? mResources.cauhinhcao : ((Panel.graphics == 2) ? mResources.cauhinhthuong : mResources.cauhinhthap)),
 				text3
 			};
 		}
@@ -268,17 +268,53 @@ public partial class SoundMn
 
 	public void CaseSizeScr()
 		{
-			if (GameCanvas.lowGraphic)
+			MyVector myVector = new MyVector("cau hinh");
+			myVector.addElement(new Command(mResources.cauhinhthap, this, 1, null));
+			myVector.addElement(new Command(mResources.cauhinhthuong, this, 2, null));
+			myVector.addElement(new Command(mResources.cauhinhcao, this, 3, null));
+			GameCanvas.menu.startAt(myVector, 0);
+			if (Panel.graphics == 1)
 			{
-				Rms.saveRMSInt("lowGraphic", 0);
-				GameCanvas.startOK(mResources.plsRestartGame, 8885, null);
+				GameCanvas.menu.menuSelectedItem = 0;
+			}
+			else if (Panel.graphics == 2)
+			{
+				GameCanvas.menu.menuSelectedItem = 1;
 			}
 			else
 			{
-				Rms.saveRMSInt("lowGraphic", 1);
-				GameCanvas.startOK(mResources.plsRestartGame, 8885, null);
+				GameCanvas.menu.menuSelectedItem = 2;
 			}
+		}
+
+	public void applyGraphic(int graphic)
+		{
+			if (graphic < 0 || graphic > 2)
+			{
+				graphic = 0;
+			}
+			Panel.graphics = graphic;
+			GameCanvas.lowGraphic = graphic == 1;
+			GameCanvas.mediumGraphic = graphic == 2;
+			Rms.saveRMSInt("lowGraphic", graphic);
+			GameCanvas.startOK(mResources.plsRestartGame, 8885, null);
 			getStrOption();
+		}
+
+	public void perform(int idAction, object p)
+		{
+			switch (idAction)
+			{
+			case 1:
+				applyGraphic(1);
+				break;
+			case 2:
+				applyGraphic(2);
+				break;
+			case 3:
+				applyGraphic(0);
+				break;
+			}
 		}
 
 	public void AuraToolOption()

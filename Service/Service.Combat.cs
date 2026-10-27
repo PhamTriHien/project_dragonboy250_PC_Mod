@@ -2,8 +2,16 @@ using System;
 using Assets.src.g;
 using UnityEngine;
 
+/// <summary>
+/// Thành phần phân mảnh (partial) của lớp Service: Quản lý kỹ năng chiến đấu, tính toán sát thương, va chạm và kích hoạt chiêu thức ().
+/// </summary>
 public partial class Service
 {
+	private static long lastTimeSendPlayerAttack = 0L;
+
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ speacialSkill.
+	/// </summary>
 	public void speacialSkill(sbyte index)
 		{
 			Message message = null;
@@ -23,6 +31,9 @@ public partial class Service
 			}
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ skill_not_focus.
+	/// </summary>
 	public void skill_not_focus(sbyte status)
 		{
 			Message message = null;
@@ -42,6 +53,9 @@ public partial class Service
 			}
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ magicTree.
+	/// </summary>
 	public void magicTree(sbyte type)
 		{
 			Message message = new Message((sbyte)(-34));
@@ -56,6 +70,9 @@ public partial class Service
 			}
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ requestSkill.
+	/// </summary>
 	public void requestSkill(int skillId)
 		{
 			Message message = null;
@@ -75,6 +92,9 @@ public partial class Service
 			}
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ upSkill.
+	/// </summary>
 	public void upSkill(int skillTemplateId, int point)
 		{
 			Message message = null;
@@ -95,6 +115,9 @@ public partial class Service
 			}
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ selectSkill.
+	/// </summary>
 	public void selectSkill(int skillTemplateId)
 		{
 			Cout.println(Char.myCharz().cName + " SELECT SKILL " + skillTemplateId);
@@ -115,10 +138,20 @@ public partial class Service
 			}
 		}
 
+	/// <summary>
+	/// Đóng gói và gửi thông điệp mạng sendPlayerAttack lên máy chủ.
+	/// </summary>
 	public void sendPlayerAttack(MyVector vMob, MyVector vChar, int type)
 		{
 			try
 			{
+				long now = mSystem.currentTimeMillis();
+				long elapsed = (lastTimeSendPlayerAttack != 0L) ? (now - lastTimeSendPlayerAttack) : 0L;
+				if (lastTimeSendPlayerAttack != 0L && elapsed < 500L)
+				{
+					return;
+				}
+				lastTimeSendPlayerAttack = now;
 				Res.outz(">>SEND ATTACT  vMob=" + vMob.size() + "  vChar=" + vChar.size());
 				Message message = null;
 				if (type == 0)
@@ -191,6 +224,9 @@ public partial class Service
 			}
 		}
 
+	/// <summary>
+	/// Cập nhật trạng thái logic của updateSkill theo chu kỳ khung hình.
+	/// </summary>
 	public void updateSkill()
 		{
 			Message message = null;
@@ -218,6 +254,9 @@ public partial class Service
 			}
 		}
 
+	/// <summary>
+	/// Truy xuất và trả về dữ liệu của getMagicTree.
+	/// </summary>
 	public void getMagicTree(sbyte action)
 		{
 			Message message = null;
@@ -237,6 +276,9 @@ public partial class Service
 			}
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ upPotential.
+	/// </summary>
 	public void upPotential(int typePotential, int num)
 		{
 			Message message = null;
@@ -257,6 +299,9 @@ public partial class Service
 			}
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ petInfo.
+	/// </summary>
 	public void petInfo()
 		{
 			Message message = null;
@@ -274,6 +319,9 @@ public partial class Service
 			}
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ petStatus.
+	/// </summary>
 	public void petStatus(sbyte status)
 		{
 			Message message = null;
@@ -292,6 +340,9 @@ public partial class Service
 			}
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ funsion.
+	/// </summary>
 	public void funsion(sbyte type)
 		{
 			Message message = null;
@@ -312,6 +363,9 @@ public partial class Service
 			}
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ changeOnKeyScr.
+	/// </summary>
 	public void changeOnKeyScr(sbyte[] skill)
 		{
 			Message message = null;
@@ -334,6 +388,9 @@ public partial class Service
 			}
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ requestPean.
+	/// </summary>
 	public void requestPean()
 		{
 			Message message = null;
@@ -352,6 +409,9 @@ public partial class Service
 			}
 		}
 
+	/// <summary>
+	/// Đóng gói và gửi thông điệp mạng sendThachDau lên máy chủ.
+	/// </summary>
 	public void sendThachDau(int id)
 		{
 			Res.outz("GUI THACH DAU");
@@ -372,6 +432,9 @@ public partial class Service
 			}
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ new_skill_not_focus.
+	/// </summary>
 	public void new_skill_not_focus(sbyte idTemplateSkill, sbyte dir, short x, short y)
 		{
 			Message message = null;
@@ -397,6 +460,9 @@ public partial class Service
 			}
 		}
 
+	/// <summary>
+	/// Đóng gói và gửi thông điệp mạng sendCT_ready lên máy chủ.
+	/// </summary>
 	public void sendCT_ready(sbyte sub, sbyte sub_sub)
 		{
 			Message message = null;

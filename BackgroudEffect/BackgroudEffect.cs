@@ -53,6 +53,18 @@ public partial class BackgroudEffect
 
 	private static Image imgFire2;
 
+	private const int LUNAR_YEAR_LEAF_IMAGE_ID = 11120;
+
+	private const long LACAY_RELOAD_INTERVAL_MS = 1000L;
+
+	private const long WATER_RELOAD_INTERVAL_MS = 1000L;
+
+	private static long lastLacayReloadAttemptTime;
+
+	private static long lastWaterReloadAttemptTime;
+
+	private static int lastWaterReloadAttemptId = -1;
+
 	private int[] type;
 
 	private int sum;
@@ -545,6 +557,103 @@ public partial class BackgroudEffect
 			backgroudEffect.colorWater = color;
 			backgroudEffect.yWater = yWater;
 			vBgEffect.addElement(backgroudEffect);
+		}
+
+	private static bool isLacayImageReady(Image img)
+		{
+			return img != null && img != SmallImage.imgEmpty && img.getWidth() > 1 && img.getHeight() >= ((PIXEL > 0) ? PIXEL : 4);
+		}
+
+	private static bool canRetryLacayImage()
+		{
+			long num = mSystem.currentTimeMillis();
+			if (num - lastLacayReloadAttemptTime < LACAY_RELOAD_INTERVAL_MS)
+			{
+				return false;
+			}
+			lastLacayReloadAttemptTime = num;
+			return true;
+		}
+
+	private static bool canRetryWaterImage(int id)
+		{
+			long num = mSystem.currentTimeMillis();
+			if (lastWaterReloadAttemptId == id && num - lastWaterReloadAttemptTime < WATER_RELOAD_INTERVAL_MS)
+			{
+				return false;
+			}
+			lastWaterReloadAttemptId = id;
+			lastWaterReloadAttemptTime = num;
+			return true;
+		}
+
+	private Image getReadyWaterImage()
+		{
+			if (water3 != null && water3 != SmallImage.imgEmpty && water3.getWidth() > 1 && water3.getHeight() > 1)
+			{
+				return water3;
+			}
+			if (id_water1 <= 0)
+			{
+				return null;
+			}
+			Small small = SmallImage.getSmall(id_water1);
+			if (small != null && small.img != null && small.img != SmallImage.imgEmpty && small.img.getWidth() > 1 && small.img.getHeight() > 1)
+			{
+				water3 = small.img;
+				return water3;
+			}
+			if (canRetryWaterImage(id_water1))
+			{
+				SmallImage.createImage(id_water1);
+			}
+			return null;
+		}
+
+	private Image getReadyLacayImage()
+		{
+			if (typeEff == 15)
+			{
+				Small small = SmallImage.getSmall(LUNAR_YEAR_LEAF_IMAGE_ID);
+				if (small != null && isLacayImageReady(small.img))
+				{
+					imgLacay = small.img;
+					return imgLacay;
+				}
+				if (canRetryLacayImage())
+				{
+					SmallImage.createImage(LUNAR_YEAR_LEAF_IMAGE_ID);
+				}
+				return null;
+			}
+			if (isLacayImageReady(imgLacay))
+			{
+				return imgLacay;
+			}
+			if (!canRetryLacayImage())
+			{
+				return null;
+			}
+			switch (typeEff)
+			{
+			case 1:
+			case 2:
+				imgLacay = GameCanvas.loadImageRMS("/bg/lacay.png");
+				break;
+			case 5:
+				imgLacay = GameCanvas.loadImageRMS("/bg/lacay2.png");
+				break;
+			case 6:
+				imgLacay = GameCanvas.loadImageRMS("/bg/lacay3.png");
+				break;
+			case 7:
+				imgLacay = GameCanvas.loadImageRMS("/bg/lacay4.png");
+				break;
+			case 11:
+				imgLacay = GameCanvas.loadImageRMS("/bg/lacay5.png");
+				break;
+			}
+			return isLacayImageReady(imgLacay) ? imgLacay : null;
 		}
 
 }

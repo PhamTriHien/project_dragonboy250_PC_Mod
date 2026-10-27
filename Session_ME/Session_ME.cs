@@ -158,14 +158,21 @@ public partial class Session_ME : ISession
 						ref sbyte reference = ref key[j + 1];
 						reference ^= key[j];
 					}
+					curR = 0;
+					curW = 0;
 					getKeyComplete = true;
-					GameMidlet.IP2 = message.reader().readUTF();
-					GameMidlet.PORT2 = message.reader().readInt();
-					GameMidlet.isConnect2 = ((message.reader().readByte() != 0) ? true : false);
-					if (isMainSession && GameMidlet.isConnect2)
+					if (isMainSession)
 					{
-						GameCanvas.connect2();
+						ServerListScreen.testConnect = 2;
 					}
+					try
+					{
+						string requestedHost = message.reader().readUTF();
+						int requestedPort = message.reader().readInt();
+						bool serverRequestedSecondary = message.reader().readByte() != 0;
+						ServerListScreen.ApplySecondaryEndpointFromHandshake(requestedHost, requestedPort, serverRequestedSecondary, isMainSession);
+					}
+					catch { }
 				}
 				catch (Exception)
 				{
@@ -179,7 +186,6 @@ public partial class Session_ME : ISession
 				int num3 = readKey(dis.ReadSByte()) + 128;
 				int num4 = (num3 * 256 + num2) * 256 + num;
 				sbyte[] array = new sbyte[num4];
-				int num5 = 0;
 				byte[] src = dis.ReadBytes(num4);
 				Buffer.BlockCopy(src, 0, array, 0, num4);
 				recvByteCount += 5 + num4;
@@ -222,8 +228,6 @@ public partial class Session_ME : ISession
 						num = (b4 & 0xFF00) | (b5 & 0xFF);
 					}
 					sbyte[] array = new sbyte[num];
-					int num2 = 0;
-					int num3 = 0;
 					byte[] src = dis.ReadBytes(num);
 					Buffer.BlockCopy(src, 0, array, 0, num);
 					recvByteCount += 5 + num;
@@ -247,6 +251,12 @@ public partial class Session_ME : ISession
 		}
 
 	protected static Session_ME instance = new Session_ME();
+
+	private static readonly object connectLock = new object();
+
+	private static long connectionGeneration;
+
+	public static long ConnectionGeneration => Interlocked.Read(ref connectionGeneration);
 
 	private static NetworkStream dataStream;
 
@@ -349,28 +359,39 @@ public partial class Session_ME : ISession
 
 	public void connect(string host, int port)
 	{
-		if (connected || connecting)
+		lock (connectLock)
 		{
-			if (this.host == host && this.port == port)
+			if (connected || connecting)
+			{
+				if (this.host == host && this.port == port)
+				{
+					return;
+				}
+				close();
+			}
+			if (mSystem.currentTimeMillis() < timeWaitConnect)
 			{
 				return;
 			}
+			timeWaitConnect = mSystem.currentTimeMillis() + 50;
+			if (isMainSession)
+			{
+				ServerListScreen.testConnect = -1;
+			}
+			this.host = host;
+			this.port = port;
+			getKeyComplete = false;
+			Interlocked.Increment(ref connectionGeneration);
 			close();
+			Service.resetClientTypeSendState(isMainSession);
+			Controller.clearClientTypeConnect(isMainSession);
+			connecting = true;
+			Debug.Log("connecting...!");
+			Debug.Log("host: " + host);
+			Debug.Log("port: " + port);
+			initThread = new Thread(NetworkInit);
+			initThread.Start();
 		}
-		timeWaitConnect = mSystem.currentTimeMillis() + 300;
-		if (isMainSession)
-		{
-			ServerListScreen.testConnect = -1;
-		}
-		this.host = host;
-		this.port = port;
-		getKeyComplete = false;
-		close();
-		Debug.Log("connecting...!");
-		Debug.Log("host: " + host);
-		Debug.Log("port: " + port);
-		initThread = new Thread(NetworkInit);
-		initThread.Start();
 	}
 
 	private void NetworkInit()
@@ -417,5 +438,4 @@ public partial class Session_ME : ISession
 		{
 			return Environment.TickCount;
 		}
-
 }

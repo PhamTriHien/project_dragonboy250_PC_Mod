@@ -176,7 +176,9 @@ public partial class mGraphics
 					break;
 				}
 			}
-			Graphics.DrawTexture(new Rect(x + num3 + num14 + (float)num16, y + num4 + (float)num17 + num15, num * num7, num2 * (float)num9), image.texture, new Rect(((float)x0 + num3 + num8) / (float)image.texture.width, ((float)image.texture.height - num2 - ((float)y0 + num4)) / (float)image.texture.height, num / (float)image.texture.width, num2 / (float)image.texture.height), 0, 0, 0, 0);
+			float imgW = (float)((image.w > 0) ? image.w : image.texture.width);
+			float imgH = (float)((image.h > 0) ? image.h : image.texture.height);
+			Graphics.DrawTexture(new Rect(x + num3 + num14 + (float)num16, y + num4 + (float)num17 + num15, num * num7, num2 * (float)num9), image.texture, new Rect(((float)x0 + num3 + num8) / imgW, (imgH - num2 - ((float)y0 + num4)) / imgH, num / imgW, num2 / imgH), 0, 0, 0, 0);
 			if (transform == 5 || transform == 6 || transform == 4 || transform == 7)
 			{
 				GUI.matrix = matrixBackup;
@@ -321,7 +323,9 @@ public partial class mGraphics
 					break;
 				}
 			}
-			Graphics.DrawTexture(new Rect((float)x + num3 + num14 + (float)num16, (float)y + num4 + (float)num17 + num15, num * num7, num2 * (float)num9), image.texture, new Rect((x0 + num3 + num8) / (float)image.texture.width, ((float)image.texture.height - num2 - (y0 + num4)) / (float)image.texture.height, num / (float)image.texture.width, num2 / (float)image.texture.height), 0, 0, 0, 0);
+			float imgW = (float)((image.w > 0) ? image.w : image.texture.width);
+			float imgH = (float)((image.h > 0) ? image.h : image.texture.height);
+			Graphics.DrawTexture(new Rect((float)x + num3 + num14 + (float)num16, (float)y + num4 + (float)num17 + num15, num * num7, num2 * (float)num9), image.texture, new Rect((x0 + num3 + num8) / imgW, (imgH - num2 - (y0 + num4)) / imgH, num / imgW, num2 / imgH), 0, 0, 0, 0);
 			if (transform == 5 || transform == 6 || transform == 4 || transform == 7)
 			{
 				GUI.matrix = matrixBackup;
@@ -425,7 +429,7 @@ public partial class mGraphics
 		{
 			if (image != null && image.texture != null)
 			{
-				drawRegion(image, 0, 0, image.texture.width, image.texture.height, 0, x, y, anchor);
+				drawRegion(image, 0, 0, image.w, image.h, 0, x, y, anchor);
 			}
 		}
 

@@ -134,6 +134,20 @@ public partial class GameScr : mScreen, IChatable
 								SmallImage.drawSmallImage(g, 1087, xHP + 20 - 7 + 5, yHP + 20 - 6 - 40 - 7 + 10, 0, 0);
 							}
 						}
+						Image imgSkillBg = ((mScreen.keyTouch == 16) ? imgSkill2 : imgSkill);
+						if (imgSkillBg != null)
+						{
+							g.drawImage(imgSkillBg, xHP - 45, yHP - 16, mGraphics.HCENTER | mGraphics.VCENTER);
+						}
+						if (fraAuto != null)
+						{
+							int idxAuto = (AutoTrainMenu.isChecked[0] ? (GameCanvas.gameTick / 4 % 5 + 1) : 0);
+							fraAuto.drawFrame(idxAuto, xHP - 45, yHP - 16, 0, mGraphics.HCENTER | mGraphics.VCENTER, g);
+						}
+						else
+						{
+							mFont.tahoma_7b_yellow.drawString(g, "AT", xHP - 45, yHP - 21, 2);
+						}
 					}
 					if (isHaveSelectSkill)
 					{

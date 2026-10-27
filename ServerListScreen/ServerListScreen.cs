@@ -80,6 +80,14 @@ public partial class ServerListScreen : mScreen, IActionListener
 
 	public static int flagServer;
 
+	public static int countConnectServer;
+
+	public static long timeNextConnectServer;
+
+	private static int loginActionPending;
+
+	private static int pendingLoginActionAfterImageSource;
+
 	public static bool bigOk;
 
 	public static int percent;

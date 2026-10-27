@@ -370,6 +370,7 @@ public partial class Controller : IMessageHandler
 					GameScr.gI().magicTree = null;
 					GameCanvas.isLoading = true;
 					GameCanvas.debug("SA75", 2);
+					AutoTrainMenu.resetMobNameSnapshot();
 					GameScr.resetAllvector();
 					GameCanvas.endDlg();
 					TileMap.vGo.removeAllElements();
@@ -379,6 +380,22 @@ public partial class Controller : IMessageHandler
 					TileMap.planetID = msg.reader().readByte();
 					TileMap.tileID = msg.reader().readByte();
 					TileMap.bgID = msg.reader().readByte();
+					if ((TileMap.mapID == 155 || TileMap.mapID == 166) && AutoTrainMenu.isCheckItem[24])
+					{
+						if (!AutoTrainMenu.isChecked[0])
+						{
+							AutoTrainMenu.setAutoAttack(true, "Dùng Phiếu Sao Vàng vào Map " + TileMap.mapID + " (MAP_INFO)");
+						}
+					}
+					else if (AutoTrainMenu.isChecked[2] && AutoTrainMenu.lastMapIdBeforeChange == TileMap.mapID)
+					{
+						AutoTrainMenu.needRescanMobs = true;
+						AutoTrainMenu.lastMapIdBeforeChange = -1;
+					}
+					else
+					{
+						AutoTrainMenu.setAutoAttack(false, "Chuyển sang map mới (Map " + TileMap.mapID + ")");
+					}
 					GameScr.isPaint_CT = TileMap.mapID != 170;
 					Cout.println("load planet from server: " + TileMap.planetID + "bgType= " + TileMap.bgType + ".............................");
 					TileMap.typeMap = msg.reader().readByte();

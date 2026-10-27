@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Assets.src.g;
 public partial class GameScr : mScreen, IChatable
 {
@@ -472,7 +472,56 @@ public partial class GameScr : mScreen, IChatable
 
 	public static Image img_ct_bar_0 = mSystem.loadImage("/mainImage/i_pve_bar_0.png");
 
-	public static Image img_ct_bar_1 = mSystem.loadImage("/mainImage/i_pve_bar_1.png");
+	public static bool isSentClientOK;
+
+	public static bool isWaitingItemUpdate;
+
+	public static bool hasItemType0;
+
+	public static bool hasItemType1;
+
+	public static bool hasItemType100;
+
+	public static bool hasItemType101;
+
+	public static long lastItemUpdateTime;
+
+	public static FrameImage fraAuto;
+
+	private bool preservePanelMenuDuringAutoAction;
+
+	public static void resetItemUpdateFlags()
+	{
+		isSentClientOK = false;
+		isWaitingItemUpdate = false;
+		hasItemType0 = false;
+		hasItemType1 = false;
+		hasItemType100 = false;
+		hasItemType101 = false;
+		lastItemUpdateTime = 0L;
+	}
+
+	private bool shouldPreservePanelMenu()
+	{
+		return preservePanelMenuDuringAutoAction && GameCanvas.panel != null && GameCanvas.panel.isShow && GameCanvas.menu != null && GameCanvas.menu.showMenu;
+	}
+
+	public void doUseSkillForAutoTrain(Skill skill)
+	{
+		if (skill == null)
+		{
+			return;
+		}
+		preservePanelMenuDuringAutoAction = true;
+		try
+		{
+			doSelectSkill(skill, isShortcut: true);
+		}
+		finally
+		{
+			preservePanelMenuDuringAutoAction = false;
+		}
+	}
 
 	public static bool isUseTouch;
 

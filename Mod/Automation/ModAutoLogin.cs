@@ -265,7 +265,7 @@ public static class ModAutoLogin
 			if (GameCanvas.currentScreen == GameCanvas.serverScreen)
 			{
 				ServerListScreen.isAutoLogin = true;
-				GameCanvas.serverScreen.Login_New();
+				GameCanvas.serverScreen.perform(3, null);
 				return;
 			}
 		}
@@ -288,7 +288,7 @@ public static class ModAutoLogin
 			if (GameCanvas.serverScreen != null)
 			{
 				ServerListScreen.isAutoLogin = true;
-				GameCanvas.serverScreen.Login_New();
+				GameCanvas.serverScreen.perform(3, null);
 			}
 		}
 		catch { }

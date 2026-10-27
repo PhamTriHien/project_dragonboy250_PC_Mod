@@ -59,7 +59,7 @@ public partial class GameScr : mScreen, IChatable
 	/// </summary>
 	public void resetButton()
 		{
-			if (!ModMenu.modMenuOpen)
+			if (!ModMenu.modMenuOpen && !shouldPreservePanelMenu() && GameCanvas.menu != null)
 			{
 				GameCanvas.menu.showMenu = false;
 			}
@@ -74,7 +74,10 @@ public partial class GameScr : mScreen, IChatable
 			indexRowMax = 0;
 			indexTitle = 0;
 			typeTrade = (typeTradeOrder = 0);
-			mSystem.endKey();
+			if (!(GameCanvas.currentScreen is AutoTrainMenu))
+			{
+				mSystem.endKey();
+			}
 			if (Char.myCharz().cHP <= 0 || Char.myCharz().statusMe == 14 || Char.myCharz().statusMe == 5)
 			{
 				if (Char.myCharz().meDead)
@@ -320,7 +323,7 @@ public partial class GameScr : mScreen, IChatable
 	/// </summary>
 	private void autoPlay()
 		{
-			if (ModTanSat.autoTanSat)
+			if (ModTanSat.autoTanSat || AutoTrainMenu.isChecked[0])
 			{
 				return;
 			}
@@ -391,7 +394,7 @@ public partial class GameScr : mScreen, IChatable
 			{
 				for (int l = 0; l < onScreenSkill.Length; l++)
 				{
-					if (onScreenSkill[l] == null || onScreenSkill[l].paintCanNotUseSkill || onScreenSkill[l].template.id == 10 || onScreenSkill[l].template.id == 11 || onScreenSkill[l].template.id == 14 || onScreenSkill[l].template.id == 23 || onScreenSkill[l].template.id == 7 || Char.myCharz().skillInfoPaint() != null || onScreenSkill[l].template.isSkillSpec())
+					if ((l < AutoTrainMenu.isCheckedSkill.Length && !AutoTrainMenu.isCheckedSkill[l]) || onScreenSkill[l] == null || onScreenSkill[l].paintCanNotUseSkill || onScreenSkill[l].template.id == 10 || onScreenSkill[l].template.id == 11 || onScreenSkill[l].template.id == 14 || onScreenSkill[l].template.id == 23 || onScreenSkill[l].template.id == 7 || Char.myCharz().skillInfoPaint() != null || onScreenSkill[l].template.isSkillSpec())
 					{
 						continue;
 					}
@@ -418,7 +421,7 @@ public partial class GameScr : mScreen, IChatable
 			}
 			for (int m = 0; m < keySkill.Length; m++)
 			{
-				if (keySkill[m] == null || keySkill[m].paintCanNotUseSkill || keySkill[m].template.id == 10 || keySkill[m].template.id == 11 || keySkill[m].template.id == 14 || keySkill[m].template.id == 23 || keySkill[m].template.id == 7 || Char.myCharz().skillInfoPaint() != null)
+				if ((m < AutoTrainMenu.isCheckedSkill.Length && !AutoTrainMenu.isCheckedSkill[m]) || keySkill[m] == null || keySkill[m].paintCanNotUseSkill || keySkill[m].template.id == 10 || keySkill[m].template.id == 11 || keySkill[m].template.id == 14 || keySkill[m].template.id == 23 || keySkill[m].template.id == 7 || Char.myCharz().skillInfoPaint() != null)
 				{
 					continue;
 				}

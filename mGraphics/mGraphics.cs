@@ -33,13 +33,13 @@ public partial class mGraphics
 
 	public int clipH;
 
-	private bool isClip;
+	public bool isClip;
 
-	private bool isTranslate = true;
+	public bool isTranslate = true;
 
-	private int translateX;
+	public int translateX;
 
-	private int translateY;
+	public int translateY;
 
 	private float translateXf;
 
@@ -73,9 +73,9 @@ public partial class mGraphics
 
 	public static int addYWhenOpenKeyBoard;
 
-	private int clipTX;
+	public int clipTX;
 
-	private int clipTY;
+	public int clipTY;
 
 	private int currentBGColor;
 
@@ -97,11 +97,30 @@ public partial class mGraphics
 
 	private Material lineMaterial;
 
+	public static void clearCached()
+		{
+			try
+			{
+				foreach (System.Collections.DictionaryEntry item in cachedTextures)
+				{
+					Texture texture = item.Value as Texture;
+					if (texture != null)
+					{
+						UnityEngine.Object.Destroy(texture);
+					}
+				}
+			}
+			catch (Exception)
+			{
+			}
+			cachedTextures.Clear();
+		}
+
 	private void cache(string key, Texture value)
 		{
 			if (cachedTextures.Count > 400)
 			{
-				cachedTextures.Clear();
+				clearCached();
 			}
 			if (value.width * value.height < GameCanvas.w * GameCanvas.h)
 			{

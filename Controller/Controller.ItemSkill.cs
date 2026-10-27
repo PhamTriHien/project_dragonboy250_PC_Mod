@@ -143,6 +143,7 @@ public partial class Controller : IMessageHandler
 				GameScr.vcItem = d.readByte();
 				type = d.readByte();
 				Res.err(GameScr.vcItem + ":<<GameScr.vcItem >>>>>>loadItemNew: " + type + "  isSave:" + isSave);
+				GameScr.lastItemUpdateTime = mSystem.currentTimeMillis();
 				if (type == 0)
 				{
 					GameScr.gI().iOptionTemplates = new ItemOptionTemplate[d.readShort()];
@@ -172,6 +173,8 @@ public partial class Controller : IMessageHandler
 						d.readFully(ref data);
 						Rms.saveRMS("NRitem0", data);
 					}
+					GameScr.hasItemType0 = true;
+					GameScr.gI().readOk();
 				}
 				else if (type == 1)
 				{
@@ -191,6 +194,7 @@ public partial class Controller : IMessageHandler
 						sbyte[] data3 = new sbyte[1] { GameScr.vcItem };
 						Rms.saveRMS("NRitemVersion", data3);
 					}
+					GameScr.hasItemType1 = true;
 					LoginScr.isUpdateItem = false;
 					GameScr.gI().readOk();
 				}
@@ -210,6 +214,8 @@ public partial class Controller : IMessageHandler
 							d.readFully(ref data4);
 							Rms.saveRMS("NRitem100", data4);
 						}
+						GameScr.hasItemType100 = true;
+						GameScr.gI().readOk();
 					}
 					else
 					{
@@ -233,6 +239,8 @@ public partial class Controller : IMessageHandler
 								d.readFully(ref data5);
 								Rms.saveRMS("NRitem101", data5);
 							}
+							GameScr.hasItemType101 = true;
+							GameScr.gI().readOk();
 							return;
 						}
 						catch (Exception)

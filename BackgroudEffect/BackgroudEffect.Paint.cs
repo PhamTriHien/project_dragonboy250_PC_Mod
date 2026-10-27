@@ -50,15 +50,12 @@ public partial class BackgroudEffect
 			{
 				g.drawImage((i >= num / 2) ? water1 : water2, x[i], y[i] + yWater, 0);
 			}
-			if (id_water1 != 0 && water3 == null)
-			{
-				water3 = SmallImage.imgNew[id_water1].img;
-			}
-			if (water3 != null)
+			Image readyWaterImage = getReadyWaterImage();
+			if (readyWaterImage != null)
 			{
 				for (int j = 0; j < num / 2; j++)
 				{
-					g.drawImage(water3, x[j], y[j] + yWater, 0);
+					g.drawImage(readyWaterImage, x[j], y[j] + yWater, 0);
 				}
 			}
 		}
@@ -119,19 +116,14 @@ public partial class BackgroudEffect
 				case 7:
 				case 11:
 				case 15:
-					if (typeEff == 15)
+				{
+					Image readyLacayImage = getReadyLacayImage();
+					if (readyLacayImage != null)
 					{
-						if (SmallImage.imgNew[11120] != null && SmallImage.imgNew[11120].img != null)
-						{
-							imgLacay = SmallImage.imgNew[11120].img;
-						}
-						if (imgLacay == null)
-						{
-							break;
-						}
+						paintLacay1(g, readyLacayImage);
 					}
-					paintLacay1(g, imgLacay);
 					break;
+				}
 				case 13:
 					if (!isPaintFar)
 					{
@@ -153,6 +145,10 @@ public partial class BackgroudEffect
 
 	public void paintLacay1(mGraphics g, Image img)
 		{
+			if (!isLacayImageReady(img))
+			{
+				return;
+			}
 			int num = ((typeEff != 11) ? 4 : 3);
 			num = ((typeEff != 15) ? 4 : 4);
 			if (typeEff == 11)
@@ -161,15 +157,23 @@ public partial class BackgroudEffect
 			}
 			for (int i = 0; i < sum; i++)
 			{
-				if (i % 3 == 0 && x[i] >= GameScr.cmx && x[i] <= GameCanvas.w + GameScr.cmx && y[i] >= GameScr.cmy && y[i] <= GameCanvas.h + GameScr.cmy && img != null)
+				if (i % 3 == 0 && x[i] >= GameScr.cmx && x[i] <= GameCanvas.w + GameScr.cmx && y[i] >= GameScr.cmy && y[i] <= GameCanvas.h + GameScr.cmy)
 				{
-					g.drawRegion(img, 0, PIXEL * frame[i], img.getWidth(), PIXEL, 0, x[i], y[i], 0);
+					int num2 = PIXEL * frame[i];
+					if (num2 >= 0 && num2 + PIXEL <= img.getHeight())
+					{
+						g.drawRegion(img, 0, num2, img.getWidth(), PIXEL, 0, x[i], y[i], 0);
+					}
 				}
 			}
 		}
 
 	public void paintLacay2(mGraphics g, Image img)
 		{
+			if (!isLacayImageReady(img))
+			{
+				return;
+			}
 			int num = ((typeEff != 11) ? 4 : 3);
 			num = ((typeEff != 15) ? 4 : 4);
 			if (typeEff == 11)
@@ -178,9 +182,13 @@ public partial class BackgroudEffect
 			}
 			for (int i = 0; i < sum; i++)
 			{
-				if (i % 3 != 0 && x[i] >= GameScr.cmx && x[i] <= GameCanvas.w + GameScr.cmx && y[i] >= GameScr.cmy && y[i] <= GameCanvas.h + GameScr.cmy && img != null)
+				if (i % 3 != 0 && x[i] >= GameScr.cmx && x[i] <= GameCanvas.w + GameScr.cmx && y[i] >= GameScr.cmy && y[i] <= GameCanvas.h + GameScr.cmy)
 				{
-					g.drawRegion(img, 0, PIXEL * frame[i], img.getWidth(), PIXEL, 0, x[i], y[i], 0);
+					int num2 = PIXEL * frame[i];
+					if (num2 >= 0 && num2 + PIXEL <= img.getHeight())
+					{
+						g.drawRegion(img, 0, num2, img.getWidth(), PIXEL, 0, x[i], y[i], 0);
+					}
 				}
 			}
 		}
@@ -238,19 +246,14 @@ public partial class BackgroudEffect
 			case 7:
 			case 11:
 			case 15:
-				if (typeEff == 15)
+			{
+				Image readyLacayImage2 = getReadyLacayImage();
+				if (readyLacayImage2 != null)
 				{
-					if (SmallImage.imgNew[11120] != null && SmallImage.imgNew[11120].img != null)
-					{
-						imgLacay = SmallImage.imgNew[11120].img;
-					}
-					if (imgLacay == null)
-					{
-						break;
-					}
+					paintLacay2(g, readyLacayImage2);
 				}
-				paintLacay2(g, imgLacay);
 				break;
+			}
 			case 4:
 			case 8:
 			case 9:

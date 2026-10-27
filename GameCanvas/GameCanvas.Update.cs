@@ -7,6 +7,10 @@ public partial class GameCanvas : IActionListener
 {
 	public void update()
 		{
+			if (!GameScr.isSentClientOK && GameScr.lastItemUpdateTime > 0 && mSystem.currentTimeMillis() - GameScr.lastItemUpdateTime >= 500)
+			{
+				GameScr.gI().readOk();
+			}
 			if (currentScreen == _SelectCharScr || currentScreen is CreateCharScr || currentScreen is ChooseCharScr)
 			{
 				if (gameTick % 2 == 0 && SmallImage.vt_images_watingDowload.size() > 0)
@@ -214,17 +218,25 @@ public partial class GameCanvas : IActionListener
 					Service.gI().finishUpdate();
 				}
 				debug("Zzz", 0);
+				if (Controller.consumeClientTypeConnect(isMainSession: true) && !Service.gI().setClientType(useSecondarySession: false))
+				{
+					Controller.queueClientTypeConnect(isMainSession: true);
+				}
+				if (Controller.consumeClientTypeConnect(isMainSession: false) && !Service.gI().setClientType(useSecondarySession: true))
+				{
+					Controller.queueClientTypeConnect(isMainSession: false);
+				}
 				if ((currentScreen != serverScr || !serverScr.isPaintNewUi) && Controller.isConnectOK)
 				{
 					if (Controller.isMain)
 					{
 						ServerListScreen.testConnect = 2;
-						Service.gI().setClientType();
+
 						Service.gI().androidPack();
 					}
 					else
 					{
-						Service.gI().setClientType2();
+
 						Service.gI().androidPack2();
 					}
 					Controller.isConnectOK = false;

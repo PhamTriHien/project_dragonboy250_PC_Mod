@@ -257,23 +257,63 @@ public partial class ServerListScreen : mScreen, IActionListener
 			if (waitToLogin)
 			{
 				tWaitToLogin++;
-				if (tWaitToLogin >= 1)
+				if (tWaitToLogin == 50)
 				{
 					GameCanvas.serverScreen.selectServer();
+					waitToLogin = false;
+				}
+				if (tWaitToLogin == 100)
+				{
 					if (GameCanvas.loginScr == null)
 					{
 						GameCanvas.loginScr = new LoginScr();
 					}
-					GameCanvas.loginScr.switchToMe();
+					GameCanvas.loginScr.doLogin();
+					Service.gI().finishUpdate();
 					waitToLogin = false;
 				}
 			}
 			if (flagServer > 0)
 			{
-				flagServer--;
-				if (flagServer == 0)
+				if (testConnect == 2)
 				{
-					GameCanvas.endDlg();
+					flagServer = 0;
+					countConnectServer = 0;
+					timeNextConnectServer = 0L;
+					if (loginActionPending > 0)
+					{
+						pendingLoginActionAfterImageSource = loginActionPending;
+						loginActionPending = 0;
+						performPendingLoginActionAfterImageSource();
+					}
+					else
+					{
+						GameCanvas.endDlg();
+					}
+				}
+				else
+				{
+					long now = mSystem.currentTimeMillis();
+					if (now >= timeNextConnectServer && !Session_ME.gI().isConnected())
+					{
+						if (countConnectServer >= 5)
+						{
+							flagServer = 0;
+							countConnectServer = 0;
+							timeNextConnectServer = 0L;
+							GameCanvas.startYesNoDlg(
+								mResources.maychutathoacmatsong,
+								new Command(mResources.retry, this, 20, null),
+								new Command(mResources.NO, this, 21, null));
+						}
+						else
+						{
+							countConnectServer++;
+							timeNextConnectServer = mSystem.currentTimeMillis() + 1000L;
+							Session_ME.gI().close();
+							ConnectIP();
+						}
+					}
 				}
 			}
 			for (int i = 0; i < cmd.Length; i++)
@@ -302,24 +342,6 @@ public partial class ServerListScreen : mScreen, IActionListener
 				mSystem.gcc();
 				Service.gI().finishUpdate();
 			}
-			if (Char.isLoadingMap || !loadScreen || !isAutoConect || GameCanvas.currentScreen != this)
-			{
-				return;
-			}
-			if (!Session_ME.gI().isConnected() && !Session_ME.connecting)
-			{
-				if (mSystem.currentTimeMillis() > count_reConnect)
-				{
-					SetIpSelect(ipSelect, issave: true);
-					Session_ME.gI().close();
-					ConnectIP();
-					count_reConnect = mSystem.currentTimeMillis() + 5000;
-				}
-			}
-			else
-			{
-				count_reConnect = mSystem.currentTimeMillis() + 5000;
-			}
 		}
 	private void processInput()
 		{
@@ -344,5 +366,4 @@ public partial class ServerListScreen : mScreen, IActionListener
 				}
 			}
 		}
-
 }

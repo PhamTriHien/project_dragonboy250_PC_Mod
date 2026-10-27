@@ -1,5 +1,8 @@
 using System;
 
+/// <summary>
+/// Khung bong bóng hội thoại: Hiển thị lời thoại của nhân vật, NPC và thông điệp chat nổi trên màn hình.
+/// </summary>
 public partial class ChatPopup : Effect2, IActionListener
 {
 	public int sayWidth = 100;
@@ -98,6 +101,42 @@ public partial class ChatPopup : Effect2, IActionListener
 
 	private int pyy;
 
+	public static void clearTransientPopups()
+	{
+		currChatPopup = null;
+		serverChatPopUp = null;
+		Char.chatPopup = null;
+		Char.isLockKey = false;
+		nextMultiChatPopUp = null;
+		nextChar = null;
+		scr = null;
+		isHavePetNpc = false;
+		if (GameScr.info1 != null)
+		{
+			GameScr.info1.isUpdate = true;
+		}
+		removeFromEffectList(Effect2.vEffect2);
+		removeFromEffectList(Effect2.vEffect2Outside);
+	}
+
+	private static void removeFromEffectList(MyVector effects)
+	{
+		if (effects == null)
+		{
+			return;
+		}
+		for (int i = effects.size() - 1; i >= 0; i--)
+		{
+			if (i < effects.size() && effects.elementAt(i) is ChatPopup)
+			{
+				effects.removeElementAt(i);
+			}
+		}
+	}
+
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ addNextPopUpMultiLine.
+	/// </summary>
 	public static void addNextPopUpMultiLine(string strNext, Npc next)
 		{
 			nextMultiChatPopUp = strNext;
@@ -110,6 +149,9 @@ public partial class ChatPopup : Effect2, IActionListener
 			}
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ addBigMessage.
+	/// </summary>
 	public static void addBigMessage(string chat, int howLong, Npc c)
 		{
 			chat = Res.changeString(chat);
@@ -131,6 +173,9 @@ public partial class ChatPopup : Effect2, IActionListener
 			SoundMn.gI().openDialog();
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ addChatPopupMultiLine.
+	/// </summary>
 	public static void addChatPopupMultiLine(string chat, int howLong, Npc c)
 		{
 			chat = Res.changeString(chat);
@@ -150,6 +195,9 @@ public partial class ChatPopup : Effect2, IActionListener
 			SoundMn.gI().openDialog();
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ addChatPopupWithIcon.
+	/// </summary>
 	public static ChatPopup addChatPopupWithIcon(string chat, int howLong, Npc c, int idIcon)
 		{
 			chat = Res.changeString(chat);
@@ -195,6 +243,9 @@ public partial class ChatPopup : Effect2, IActionListener
 			return chatPopup;
 		}
 
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ addChatPopup.
+	/// </summary>
 	public static ChatPopup addChatPopup(string chat, int howLong, Npc c)
 		{
 			chat = Res.changeString(chat);

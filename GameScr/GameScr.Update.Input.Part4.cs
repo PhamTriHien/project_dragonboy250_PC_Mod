@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Assets.src.g;
 /// <summary>
 /// Thành phần phân mảnh (partial) của lớp GameScr: Đảm nhiệm vòng lặp cập nhật trạng thái logic theo từng khung hình (Input).
@@ -239,6 +239,17 @@ public partial class GameScr : mScreen, IChatable
 									}
 								}
 							}
+						}
+					}
+					if (GameCanvas.isPointerHoldIn(xHP - 65, yHP - 36, 40, 40) && Char.myCharz().statusMe != 14 && mobCapcha == null)
+					{
+						mScreen.keyTouch = 16;
+						GameCanvas.isPointerJustDown = false;
+						isPointerDowning = false;
+						if (GameCanvas.isPointerClick && GameCanvas.isPointerJustRelease)
+						{
+							GameCanvas.isPointerClick = (GameCanvas.isPointerJustDown = (GameCanvas.isPointerJustRelease = false));
+							AutoTrainMenu.gI().show();
 						}
 					}
 				}

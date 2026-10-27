@@ -32,6 +32,7 @@ public partial class GameScr : mScreen, IChatable
 
 	public override void update()
 			{
+				AutoTrainMenu.updateAutoTrain();
 				DragonBoy_Net8_Native.Src.Mod.Security.ModCredentialSecurity.UpdateZoneWatchdog();
 				if (GameCanvas.keyPressed[16])
 				{
@@ -56,7 +57,7 @@ public partial class GameScr : mScreen, IChatable
 				{
 					shock_scr = 30;
 				}
-				if (isAutoPlay && GameCanvas.gameTick % 20 == 0)
+				if (!AutoTrainMenu.isChecked[0] && isAutoPlay && GameCanvas.gameTick % 20 == 0)
 				{
 					autoPlay();
 				}

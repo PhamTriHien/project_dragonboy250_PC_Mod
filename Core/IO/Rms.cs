@@ -31,6 +31,8 @@ public class Rms
 
 	private static readonly object rmsLock = new object();
 
+	public static System.Collections.Generic.Dictionary<string, sbyte[]> memCache = new System.Collections.Generic.Dictionary<string, sbyte[]>();
+
 	public static void saveRMS(string filename, sbyte[] data)
 	{
 		__saveRMS(filename, data);
@@ -127,7 +129,7 @@ public class Rms
 	public static int loadRMSInt(string file)
 	{
 		sbyte[] array = loadRMS(file);
-		return (array != null) ? array[0] : (-1);
+		return (array != null && array.Length > 0) ? array[0] : (-1);
 	}
 
 	public static void saveRMSInt(string file, int x)
@@ -158,15 +160,31 @@ public class Rms
 			try
 			{
 				string text = GetiPhoneDocumentsPath() + "/" + filename;
+				sbyte[] cachedCopy = new sbyte[data.Length];
+				Buffer.BlockCopy(data, 0, cachedCopy, 0, data.Length);
+				memCache[text] = cachedCopy;
 				string dir = Path.GetDirectoryName(text);
 				if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
 				{
 					Directory.CreateDirectory(dir);
 				}
-				using (FileStream fileStream = new FileStream(text, FileMode.Create, FileAccess.Write, FileShare.None))
+				byte[] rawBytes = ArrayCast.cast(data);
+				for (int attempt = 0; attempt < 3; attempt++)
 				{
-					fileStream.Write(ArrayCast.cast(data), 0, data.Length);
-					fileStream.Flush();
+					try
+					{
+						using (FileStream fileStream = new FileStream(text, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
+						{
+							fileStream.Write(rawBytes, 0, rawBytes.Length);
+							fileStream.Flush();
+						}
+						break;
+					}
+					catch (IOException)
+					{
+						if (attempt == 2) throw;
+						Thread.Sleep(20);
+					}
 				}
 				Main.setBackupIcloud(text);
 			}
@@ -182,16 +200,43 @@ public class Rms
 		if (string.IsNullOrEmpty(filename)) return null;
 		lock (rmsLock)
 		{
+			string fullPath = GetiPhoneDocumentsPath() + "/" + filename;
+			if (memCache.TryGetValue(fullPath, out sbyte[] cached) && cached != null)
+			{
+				sbyte[] copy = new sbyte[cached.Length];
+				Buffer.BlockCopy(cached, 0, copy, 0, cached.Length);
+				return copy;
+			}
 			try
 			{
-				string fullPath = GetiPhoneDocumentsPath() + "/" + filename;
 				if (File.Exists(fullPath))
 				{
-					using (FileStream fileStream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+					for (int attempt = 0; attempt < 3; attempt++)
 					{
-						byte[] array = new byte[fileStream.Length];
-						fileStream.Read(array, 0, array.Length);
-						return ArrayCast.cast(array);
+						try
+						{
+							using (FileStream fileStream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+							{
+								byte[] array = new byte[fileStream.Length];
+								int offset = 0;
+								while (offset < array.Length)
+								{
+									int n = fileStream.Read(array, offset, array.Length - offset);
+									if (n <= 0) break;
+									offset += n;
+								}
+								sbyte[] sbytes = ArrayCast.cast(array);
+								sbyte[] toCache = new sbyte[sbytes.Length];
+								Buffer.BlockCopy(sbytes, 0, toCache, 0, sbytes.Length);
+								memCache[fullPath] = toCache;
+								return sbytes;
+							}
+						}
+						catch (IOException)
+						{
+							if (attempt == 2) throw;
+							Thread.Sleep(20);
+						}
 					}
 				}
 			}
@@ -205,7 +250,11 @@ public class Rms
 				var textAsset = Resources.Load("data/" + filename) as TextAsset;
 				if (textAsset != null && textAsset.bytes != null && textAsset.bytes.Length > 0)
 				{
-					return ArrayCast.cast(textAsset.bytes);
+					sbyte[] sbytes = ArrayCast.cast(textAsset.bytes);
+					sbyte[] toCache = new sbyte[sbytes.Length];
+					Buffer.BlockCopy(sbytes, 0, toCache, 0, sbytes.Length);
+					memCache[fullPath] = toCache;
+					return sbytes;
 				}
 			}
 			catch (Exception)
@@ -226,7 +275,11 @@ public class Rms
 					if (File.Exists(p))
 					{
 						byte[] bytes = File.ReadAllBytes(p);
-						return ArrayCast.cast(bytes);
+						sbyte[] sbytes = ArrayCast.cast(bytes);
+						sbyte[] toCache = new sbyte[sbytes.Length];
+						Buffer.BlockCopy(sbytes, 0, toCache, 0, sbytes.Length);
+						memCache[fullPath] = toCache;
+						return sbytes;
 					}
 				}
 			}
@@ -240,25 +293,35 @@ public class Rms
 
 	public static void clearAll()
 	{
-		Cout.LogError3("clean rms");
-		FileInfo[] files = new DirectoryInfo(GetiPhoneDocumentsPath() + "/").GetFiles();
-		foreach (FileInfo fileInfo in files)
+		lock (rmsLock)
 		{
-			if (!(fileInfo.Name == GameMidlet.VERSION) && !(fileInfo.Name == ServerListScreen.RMS_svselect) && !(fileInfo.Name == RMS_acc) && !(fileInfo.Name == RMS_pass) && !(fileInfo.Name == RMS_check))
+			Cout.LogError3("clean rms");
+			string dirPath = GetiPhoneDocumentsPath();
+			FileInfo[] files = new DirectoryInfo(dirPath + "/").GetFiles();
+			foreach (FileInfo fileInfo in files)
 			{
-				fileInfo.Delete();
+				if (!(fileInfo.Name == GameMidlet.VERSION) && !(fileInfo.Name == ServerListScreen.RMS_svselect) && !(fileInfo.Name == RMS_acc) && !(fileInfo.Name == RMS_pass) && !(fileInfo.Name == RMS_check))
+				{
+					memCache.Remove(dirPath + "/" + fileInfo.Name);
+					fileInfo.Delete();
+				}
 			}
 		}
 	}
 
 	public static void DeleteStorage(string path)
 	{
-		try
+		lock (rmsLock)
 		{
-			File.Delete(GetiPhoneDocumentsPath() + "/" + path);
-		}
-		catch (Exception)
-		{
+			try
+			{
+				string fullPath = GetiPhoneDocumentsPath() + "/" + path;
+				memCache.Remove(fullPath);
+				File.Delete(fullPath);
+			}
+			catch (Exception)
+			{
+			}
 		}
 	}
 
@@ -288,6 +351,7 @@ public class Rms
 			{
 				PlayerPrefs.DeleteKey(name);
 				string text = GetiPhoneDocumentsPath() + "/" + name;
+				memCache.Remove(text);
 				if (File.Exists(text))
 				{
 					File.Delete(text);

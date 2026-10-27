@@ -1,7 +1,13 @@
 using System;
 using UnityEngine;
+/// <summary>
+/// Thành phần phân mảnh (partial) của lớp ServerListScreen: Đảm nhiệm phân hệ chuyên trách Part3 ().
+/// </summary>
 public partial class ServerListScreen : mScreen, IActionListener
 {
+	/// <summary>
+	/// Khởi tạo và nạp dữ liệu cấu hình cho LoadRMS_ExtraLink.
+	/// </summary>
 	public static void LoadRMS_ExtraLink()
 		{
 			sbyte[] array = Rms.loadRMS(RMS_NR_Extralink);
@@ -42,6 +48,9 @@ public partial class ServerListScreen : mScreen, IActionListener
 			{
 			}
 		}
+	/// <summary>
+	/// Thực thi phương thức nghiệp vụ saveRMS_ExtraLink.
+	/// </summary>
 	public static void saveRMS_ExtraLink()
 		{
 			if (typeClass == null)
@@ -72,6 +81,9 @@ public partial class ServerListScreen : mScreen, IActionListener
 			{
 			}
 		}
+	/// <summary>
+	/// Thiết lập giá trị hoặc trạng thái cho Set_UI_New.
+	/// </summary>
 	public void Set_UI_New()
 		{
 			if (!GameCanvas.isTouch)
@@ -104,6 +116,9 @@ public partial class ServerListScreen : mScreen, IActionListener
 				num += 30;
 			}
 		}
+	/// <summary>
+	/// Kiểm tra điều kiện hợp lệ hoặc trạng thái của CheckBack_ServerListScreen.
+	/// </summary>
 	public static void CheckBack_ServerListScreen()
 		{
 			if (GameCanvas.serverScreen == null)
@@ -139,7 +154,7 @@ public partial class ServerListScreen : mScreen, IActionListener
 			}
 			Controller.isEXTRA_LINK = false;
 			GameCanvas.serverScreen.switchToMe();
-			GameCanvas.serverScreen.Login_New();
+			GameCanvas.serverScreen.connectBeforeLogin(3);
 		}
 
 }

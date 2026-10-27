@@ -9,8 +9,19 @@
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <NoWarn>CS0169;CS0649;CS0414;CS0219;CS0168;CS0114;CS0675;CS0162;CS0108</NoWarn>
   </PropertyGroup>
-  <PropertyGroup />
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\..\DragonBoy_Shared\Assets\login_codes_generated.txt" LogicalName="login_codes_generated.txt" />
+    <EmbeddedResource Include="..\..\..\DragonBoy_Shared\Assets\ios_fonts\x4\barmeneb.fnt" LogicalName="ios_fonts/x4/barmeneb.fnt" />
+    <EmbeddedResource Include="..\..\..\DragonBoy_Shared\Assets\ios_fonts\x4\barmeneb.png" LogicalName="ios_fonts/x4/barmeneb.png" />
+    <EmbeddedResource Include="..\..\..\DragonBoy_Shared\Assets\ios_fonts\x4\chelthm7.fnt" LogicalName="ios_fonts/x4/chelthm7.fnt" />
+    <EmbeddedResource Include="..\..\..\DragonBoy_Shared\Assets\ios_fonts\x4\chelthm7.png" LogicalName="ios_fonts/x4/chelthm7.png" />
+    <EmbeddedResource Include="..\..\..\DragonBoy_Shared\Assets\ios_fonts\x4\staccato.fnt" LogicalName="ios_fonts/x4/staccato.fnt" />
+    <EmbeddedResource Include="..\..\..\DragonBoy_Shared\Assets\ios_fonts\x4\staccato.png" LogicalName="ios_fonts/x4/staccato.png" />
+    <EmbeddedResource Include="..\..\..\DragonBoy_Shared\Assets\x1\mainImage\img_auto.png" LogicalName="x1/mainImage/img_auto.png" />
+    <EmbeddedResource Include="..\..\..\DragonBoy_Shared\Assets\x2\mainImage\img_auto.png" LogicalName="x2/mainImage/img_auto.png" />
+    <EmbeddedResource Include="..\..\..\DragonBoy_Shared\Assets\x3\mainImage\img_auto.png" LogicalName="x3/mainImage/img_auto.png" />
+    <EmbeddedResource Include="..\..\..\DragonBoy_Shared\Assets\x4\mainImage\img_auto.png" LogicalName="x4/mainImage/img_auto.png" />
+  </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
       <HintPath>..\DragonBoy250_pc\DragonBoy250_Data\Managed\UnityEngine.dll</HintPath>

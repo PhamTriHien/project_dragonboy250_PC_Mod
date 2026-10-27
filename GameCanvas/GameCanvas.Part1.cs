@@ -90,7 +90,12 @@ public partial class GameCanvas : IActionListener
 				borderCenterW = mGraphics.getImageWidth(imgBorder[1]);
 				borderCenterH = mGraphics.getImageHeight(imgBorder[1]);
 				Panel.graphics = Rms.loadRMSInt("lowGraphic");
-				lowGraphic = Rms.loadRMSInt("lowGraphic") == 1;
+				if (Panel.graphics == -1)
+				{
+					Panel.graphics = 0;
+				}
+				lowGraphic = Panel.graphics == 1;
+				mediumGraphic = Panel.graphics == 2;
 				GameScr.isPaintChatVip = Rms.loadRMSInt("serverchat") != 1;
 				Char.isPaintAura = Rms.loadRMSInt("isPaintAura") == 1;
 				Char.isPaintAura2 = Rms.loadRMSInt("isPaintAura2") == 1;
@@ -144,10 +149,16 @@ public partial class GameCanvas : IActionListener
 			Session_ME2.gI().clearSendingMessage();
 			Session_ME.gI().close();
 			Session_ME2.gI().close();
+			AutoTrainMenu.setAutoAttack(false, "Mất kết nối (GameCanvas.onDisconnected)");
 			if (Controller.isLoadingData)
 			{
 				startOK(mResources.pls_restart_game_error, 8885, null);
 				Controller.isDisconnected = false;
+				return;
+			}
+			if (ServerListScreen.flagServer > 0)
+			{
+				ServerListScreen.testConnect = 0;
 				return;
 			}
 			Debug.LogError(">>>>onDisconnected");
@@ -188,6 +199,11 @@ public partial class GameCanvas : IActionListener
 			}
 			isResume = true;
 			ModAutoLogin.OnDisconnected();
+			if (ServerListScreen.flagServer > 0)
+			{
+				ServerListScreen.testConnect = 0;
+				return;
+			}
 			LoginScr.isContinueToLogin = false;
 			if (ServerListScreen.nameServer != null && ServerListScreen.ipSelect >= 0 && ServerListScreen.ipSelect < ServerListScreen.nameServer.Length)
 			{
@@ -220,7 +236,7 @@ public partial class GameCanvas : IActionListener
 		}
 	public static void connect()
 		{
-			if (!Session_ME.gI().isConnected())
+			if (!Session_ME.connected && !Session_ME.connecting)
 			{
 				ModProxyServer.ResolveSelectedServerEndpoint(ref GameMidlet.IP, ref GameMidlet.PORT);
 				Session_ME.gI().connect(GameMidlet.IP, GameMidlet.PORT);
@@ -228,7 +244,7 @@ public partial class GameCanvas : IActionListener
 		}
 	public static void connect2()
 		{
-			if (!Session_ME2.gI().isConnected())
+			if (!Session_ME2.connected && !Session_ME2.connecting)
 			{
 				Res.outz("IP2= " + GameMidlet.IP2 + " PORT 2= " + GameMidlet.PORT2);
 				Session_ME2.gI().connect(GameMidlet.IP2, GameMidlet.PORT2);

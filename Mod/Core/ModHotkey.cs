@@ -186,10 +186,9 @@ public static class ModHotkey
 
 			if (Input.GetKeyDown(KeyCode.F10))
 			{
-				ModGraphics.SetRenderMode((ModGraphics.renderMode == 0) ? 1 : 0);
-				string modeStr = (ModGraphics.renderMode == 0)
-					? "Chế độ đồ hoạ: Đồ Hoạ Java (Src Java Gốc)"
-					: "Chế độ đồ hoạ: Đồ Hoạ HD";
+				int nextMode = (ModGraphics.renderMode + 1) % ModGraphics.renderModeNames.Length;
+				ModGraphics.SetRenderMode(nextMode);
+				string modeStr = "Chế độ đồ hoạ: " + ModGraphics.renderModeNames[ModGraphics.renderMode];
 				if (GameScr.info1 != null && ModMenu.IsInGame())
 				{
 					GameScr.info1.addInfo(modeStr, 0);
