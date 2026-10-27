@@ -469,6 +469,10 @@ public static class ModGraphics
 		bool changed = (renderMode != normalized);
 		renderMode = normalized;
 		ApplyRenderMode();
+		if (changed)
+		{
+			mFont.InvalidateFontMetrics();
+		}
 		if (refreshAssets)
 		{
 			ModConfig.SaveConfig();

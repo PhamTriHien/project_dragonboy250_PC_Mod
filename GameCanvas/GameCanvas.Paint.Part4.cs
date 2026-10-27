@@ -38,16 +38,20 @@ public partial class GameCanvas : IActionListener
 					panel.paint(g);
 					if (panel2 != null && panel2.isShow)
 					{
+						resetTrans(g);
 						panel2.paint(g);
 					}
 					if (panel.chatTField != null && panel.chatTField.isShow)
 					{
+						resetTrans(g);
 						panel.chatTField.paint(g);
 					}
 					if (panel2 != null && panel2.chatTField != null && panel2.chatTField.isShow)
 					{
+						resetTrans(g);
 						panel2.chatTField.paint(g);
 					}
+					resetTrans(g);
 				}
 				Res.paintOnScreenDebug(g);
 				InfoDlg.paint(g);

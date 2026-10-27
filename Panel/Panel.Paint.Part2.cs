@@ -172,6 +172,7 @@ public partial class Panel : IActionListener, IChatable
 					break;
 				}
 				GameScr.resetTranslate(g);
+				g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
 				paintDetail(g);
 				if (cmx == cmtoX && !GameCanvas.menu.showMenu)
 				{
@@ -182,6 +183,7 @@ public partial class Panel : IActionListener, IChatable
 					tabIcon.paint(g);
 				}
 				g.translate(-g.getTranslateX(), -g.getTranslateY());
+				g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
 				g.translate(X, Y);
 				g.translate(-cmx, 0);
 			}

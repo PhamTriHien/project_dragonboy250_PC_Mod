@@ -117,11 +117,6 @@ public partial class mGraphics
 				num2 = clipY;
 				num3 = clipW;
 				num4 = clipH;
-				if (isTranslate)
-				{
-					num += clipTX;
-					num2 += clipTY;
-				}
 			}
 			if (isClip)
 			{
@@ -164,11 +159,6 @@ public partial class mGraphics
 				num2 = clipY;
 				num3 = clipW;
 				num4 = clipH;
-				if (isTranslate)
-				{
-					num += clipTX;
-					num2 += clipTY;
-				}
 			}
 			if (isClip)
 			{

@@ -1,9 +1,9 @@
 {
-  "version": "2.5.78",
-  "buildDate": "2026-10-27",
-  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.78/DragonBoy_Net8_Native.exe",
-  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.78/DragonBoy_Net8_Native.exe",
-  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.78/DragonBoy250_Mod_Android.apk",
-  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.78/DragonBoy_Mod_iOS.ipa",
-  "changelog": "v2.5.78: Sắp xếp cụm nút góc phải dưới theo cung tròn hình quạt tay 2 tầng đồng tâm (Hand-Fan Arc HUD) trên cả 4 nền tảng (PC Native, Android APK, PC Unity & Web WASM):\n- Bố cục hình quạt tay đồng tâm quanh Nút Đấm (imgFire0/1 40x40): Tầng trong (bán kính R = 45px) bố trí đều theo góc 90° - 135° - 180° gồm Đổi mục tiêu (Focus), Capsule / Ngọc Rồng và Đậu Thần (imgHP3/4); Tầng ngoài (bán kính R = 80px) bố trí đều theo góc 90° - 118° - 146° gồm Ghim mục tiêu (GIM/KHÓA), Bông tai Porata và Tự động luyện tập (Bánh răng v2.5.2).\n- Đồng bộ nút Tự luyện v2.5.2 (fraAuto) từ khung vuông sang nút tròn gốc (imgNut/imgNutF) ăn khớp 100% thẩm mỹ cánh quạt.\n- Chuẩn hóa kiểm tra vùng chạm/chuột hình tròn (IsPointerHoldInCircle / IsCursorInCircle) chống bấm nhầm ở kẽ góc chéo và giải phóng trọn vẹn khoảng không thanh 10 ô kỹ năng."
+  "version": "2.5.79",
+  "buildDate": "2026-10-28",
+  "downloadUrl": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.79/DragonBoy_Net8_Native.exe",
+  "downloadUrl_win": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.79/DragonBoy_Net8_Native.exe",
+  "downloadUrl_android": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.79/DragonBoy250_Mod_Android.apk",
+  "downloadUrl_ios": "https://github.com/PhamTriHien/project_dragonboy250_PC_Mod/releases/download/v2.5.79/DragonBoy_Mod_iOS.ipa",
+  "changelog": "v2.5.79: Khắc phục triệt để 100% lỗi mất font chữ, thiếu ký tự & cắt chữ ở chế độ Đồ Hoạ iOS trên mọi chức năng và cả 4 nền tảng (PC Native, Android APK, PC Unity & Web WASM):\n- Tách biệt hoàn toàn nạp thông số CPU (.fnt thread-safe) và GPU Texture (OpenGL/Android/WASM), chặn đứng lỗi luồng mạng Session_ME / Tab ngầm tạo Texture rỗng (Id = 0) làm mất sạch chữ trong hành trang, shop, nhiệm vụ, thông báo Boss và bảng Mod.\n- Bổ sung cơ chế mượn ký tự chéo (Cross-Face Glyph Borrowing) tự động giữa 3 bộ atlas iOS x4 (barmeneb / chelthm7 / staccato) kèm chuẩn hóa Unicode tổ hợp NFD -> NFC, loại bỏ ký tự ẩn và ánh xạ đầy đủ ký hiệu đặc biệt (•, ●, ★, ₫, –, —, «, », ¹, ², ³, …, →).\n- Sửa dứt điểm lỗi cộng đúp toạ độ dịch chuyển clip (clipTX/clipTY) và rò rỉ vùng cắt cuộn Panel sang panel2, khung chat, hộp thoại, thông báo và Menu Mod.\n- Chuẩn hóa pixel trong suốt (255,255,255,0) chống viền đen mipmap, bật lọc mượt FilterBitmap cho font iOS trên Android và mở rộng bộ nhớ đệm màu tintCache lên 32 mục trên Web."
 }

@@ -203,7 +203,7 @@ public partial class mFont
 				}
 				return num;
 			}
-			if (ModGraphics.IsIosGraphics && IosBitmapFont.ContainsAllGlyphs(id, s))
+			if (ModGraphics.IsIosGraphics && IosBitmapFont.HasMetrics(id))
 			{
 				int iosW = IosBitmapFont.MeasureWidth(id, s);
 				if (iosW >= 0)
@@ -229,7 +229,7 @@ public partial class mFont
 				{
 					return cachedWidth;
 				}
-				if (ModGraphics.IsIosGraphics && IosBitmapFont.ContainsAllGlyphs(id, s))
+				if (ModGraphics.IsIosGraphics && IosBitmapFont.HasMetrics(id))
 				{
 					int iosW = IosBitmapFont.MeasureWidth(id, s);
 					if (iosW >= 0)
@@ -283,7 +283,7 @@ public partial class mFont
 			{
 				return getWidth(s);
 			}
-			if (ModGraphics.IsIosGraphics && IosBitmapFont.ContainsAllGlyphs(id, s))
+			if (ModGraphics.IsIosGraphics && IosBitmapFont.HasMetrics(id))
 			{
 				int iosW = IosBitmapFont.MeasureWidth(id, s);
 				if (iosW >= 0)
@@ -304,7 +304,7 @@ public partial class mFont
 			{
 				return javaHeight;
 			}
-			if (ModGraphics.IsIosGraphics && IosBitmapFont.CanRender(id))
+			if (ModGraphics.IsIosGraphics && IosBitmapFont.HasMetrics(id))
 			{
 				return IosBitmapFont.GetLineHeight(id);
 			}

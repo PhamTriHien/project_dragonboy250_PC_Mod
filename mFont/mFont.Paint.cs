@@ -29,14 +29,15 @@ public partial class mFont
 					Color bCol = (idFont > 0)
 						? ((b >= 25) ? bigColor(b) : setColor(colorJava[Mathf.Clamp((int)b, 0, colorJava.Length - 1)]))
 						: borderColors[bIdx];
-					if (IosBitmapFont.ContainsAllGlyphs(id, st))
+					if (idFont > 0)
 					{
-						if (idFont > 0)
+						if (IosBitmapFont.DrawString(g, id, bCol, st, x, y, align))
 						{
-							IosBitmapFont.DrawString(g, id, bCol, st, x, y, align);
 							return;
 						}
-						IosBitmapFont.DrawString(g, id, bCol, st, x + 1, y, align);
+					}
+					else if (IosBitmapFont.DrawString(g, id, bCol, st, x + 1, y, align))
+					{
 						IosBitmapFont.DrawString(g, id, bCol, st, x - 1, y, align);
 						IosBitmapFont.DrawString(g, id, bCol, st, x, y - 1, align);
 						IosBitmapFont.DrawString(g, id, bCol, st, x, y + 1, align);
